@@ -1,0 +1,678 @@
+/*!
+ * Tisa OTP — front-end styles.
+ *
+ * Everything is scoped under `.tisa-otp` and driven by a handful of custom
+ * properties, so themes can restyle the form without touching this file:
+ *
+ *   --tisa-accent        main colour
+ *   --tisa-accent-soft   tinted background for focus/hover
+ *   --tisa-surface       card background
+ *   --tisa-radius        corner radius
+ *   --tisa-width         form width
+ */
+
+.tisa-otp {
+	--tisa-accent: #0f766e;
+	--tisa-accent-soft: rgba(15, 118, 110, 0.12);
+	--tisa-surface: #ffffff;
+	--tisa-radius: 14px;
+	--tisa-width: 420px;
+	--tisa-text: #101828;
+	--tisa-muted: #667085;
+	--tisa-line: #e4e7ec;
+	--tisa-danger: #b42318;
+	--tisa-success: #067647;
+	--tisa-space: 14px;
+
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--tisa-width);
+	margin-inline: auto;
+	padding: 0;
+	color: var(--tisa-text);
+	font-size: 15px;
+	line-height: 1.7;
+	direction: rtl;
+	text-align: right;
+}
+
+.tisa-otp *,
+.tisa-otp *::before,
+.tisa-otp *::after {
+	box-sizing: inherit;
+}
+
+.tisa-otp .tisa-screen-reader {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Alignment ---------------------------------------------------------------- */
+
+.tisa-align-start {
+	margin-inline-start: 0;
+	margin-inline-end: auto;
+}
+
+.tisa-align-end {
+	margin-inline-start: auto;
+	margin-inline-end: 0;
+}
+
+/* Brand + status ----------------------------------------------------------- */
+
+.tisa-otp__brand {
+	margin-bottom: var(--tisa-space);
+	text-align: center;
+}
+
+.tisa-otp__brand img {
+	height: auto;
+	max-width: 100%;
+}
+
+.tisa-otp__status {
+	margin-bottom: var(--tisa-space);
+	padding: 10px 14px;
+	border-radius: calc(var(--tisa-radius) * 0.7);
+	border: 1px solid var(--tisa-line);
+	background: #f9fafb;
+	color: var(--tisa-muted);
+	font-size: 14px;
+}
+
+.tisa-otp__status[hidden] {
+	display: none;
+}
+
+.tisa-otp__status.is-error {
+	border-color: rgba(180, 35, 24, 0.25);
+	background: #fef3f2;
+	color: var(--tisa-danger);
+}
+
+.tisa-otp__status.is-success {
+	border-color: rgba(6, 118, 71, 0.25);
+	background: #ecfdf3;
+	color: var(--tisa-success);
+}
+
+/* Form + steps ------------------------------------------------------------- */
+
+.tisa-otp__form {
+	display: block;
+	margin: 0;
+	padding: 0;
+}
+
+.tisa-otp__honeypot {
+	position: absolute !important;
+	inset-inline-start: -9999px;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.tisa-step {
+	display: none;
+}
+
+.tisa-step.is-current {
+	display: block;
+	animation: tisa-step-in 220ms ease-out;
+}
+
+@keyframes tisa-step-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.tisa-step__head {
+	margin-bottom: calc(var(--tisa-space) * 1.25);
+}
+
+.tisa-step__title {
+	margin: 0 0 4px;
+	color: inherit;
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 1.5;
+}
+
+.tisa-step__hint {
+	margin: 0;
+	color: var(--tisa-muted);
+	font-size: 13.5px;
+}
+
+.tisa-otp__masked {
+	direction: ltr;
+	unicode-bidi: embed;
+	font-weight: 600;
+	color: var(--tisa-text);
+}
+
+/* Fields ------------------------------------------------------------------- */
+
+.tisa-fields {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tisa-space);
+	margin-bottom: var(--tisa-space);
+}
+
+.tisa-field {
+	width: 100%;
+	margin-bottom: var(--tisa-space);
+}
+
+.tisa-fields .tisa-field {
+	margin-bottom: 0;
+}
+
+.tisa-field--half {
+	flex: 1 1 calc(50% - (var(--tisa-space) / 2));
+	min-width: 160px;
+}
+
+.tisa-field--full {
+	flex: 1 1 100%;
+}
+
+.tisa-field__label {
+	display: block;
+	margin-bottom: 6px;
+	color: var(--tisa-text);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+
+.tisa-field__star {
+	color: var(--tisa-danger);
+}
+
+.tisa-field__input,
+.tisa-field__select,
+.tisa-phone__input,
+.tisa-code__bulk {
+	width: 100%;
+	padding: 11px 14px;
+	border: 1px solid var(--tisa-line);
+	border-radius: calc(var(--tisa-radius) * 0.7);
+	background: var(--tisa-surface);
+	color: var(--tisa-text);
+	font-family: inherit;
+	font-size: 15px;
+	line-height: 1.6;
+	transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+	appearance: none;
+}
+
+.tisa-field__input::placeholder,
+.tisa-phone__input::placeholder,
+.tisa-code__bulk::placeholder {
+	color: #98a2b3;
+}
+
+.tisa-field__input:focus,
+.tisa-field__select:focus,
+.tisa-phone__input:focus,
+.tisa-code__bulk:focus,
+.tisa-code__box:focus {
+	outline: none;
+	border-color: var(--tisa-accent);
+	box-shadow: 0 0 0 4px var(--tisa-accent-soft);
+}
+
+.tisa-field__input.has-error,
+.tisa-field__select.has-error {
+	border-color: var(--tisa-danger);
+	background: #fffbfa;
+}
+
+.tisa-field__hint {
+	margin: 6px 0 0;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+}
+
+.tisa-field__error {
+	margin: 6px 0 0;
+	color: var(--tisa-danger);
+	font-size: 12.5px;
+}
+
+.tisa-field__error[hidden] {
+	display: none;
+}
+
+.tisa-check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.tisa-check input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--tisa-accent);
+}
+
+/* Phone -------------------------------------------------------------------- */
+
+.tisa-phone {
+	display: flex;
+	align-items: stretch;
+	border: 1px solid var(--tisa-line);
+	border-radius: calc(var(--tisa-radius) * 0.7);
+	background: var(--tisa-surface);
+	overflow: hidden;
+	transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.tisa-phone:focus-within {
+	border-color: var(--tisa-accent);
+	box-shadow: 0 0 0 4px var(--tisa-accent-soft);
+}
+
+.tisa-phone__dial {
+	display: flex;
+	align-items: center;
+	padding: 0 14px;
+	border-inline-end: 1px solid var(--tisa-line);
+	background: #f9fafb;
+	color: var(--tisa-muted);
+	font-size: 15px;
+	direction: ltr;
+}
+
+.tisa-phone__input {
+	flex: 1 1 auto;
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	direction: ltr;
+	text-align: left;
+	letter-spacing: 0.06em;
+}
+
+/* Code --------------------------------------------------------------------- */
+
+.tisa-code {
+	margin-bottom: var(--tisa-space);
+}
+
+.tisa-code__boxes {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-start;
+	direction: ltr;
+}
+
+.tisa-code__box {
+	flex: 1 1 0;
+	min-width: 0;
+	max-width: 58px;
+	height: 56px;
+	padding: 0;
+	border: 1px solid var(--tisa-line);
+	border-radius: calc(var(--tisa-radius) * 0.7);
+	background: var(--tisa-surface);
+	color: var(--tisa-text);
+	font-family: inherit;
+	font-size: 22px;
+	font-weight: 700;
+	text-align: center;
+	transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.tisa-code-single .tisa-code__boxes,
+.tisa-code-boxes .tisa-code__bulk {
+	display: none;
+}
+
+.tisa-code-single .tisa-code__bulk {
+	direction: ltr;
+	text-align: center;
+	letter-spacing: 0.5em;
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.tisa-code__footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: space-between;
+	margin-top: var(--tisa-space);
+	font-size: 13.5px;
+}
+
+.tisa-otp.is-expired .tisa-code__box,
+.tisa-otp.is-expired .tisa-code__bulk {
+	border-color: rgba(180, 35, 24, 0.35);
+}
+
+/* Buttons ------------------------------------------------------------------ */
+
+.tisa-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	width: 100%;
+	min-height: 48px;
+	margin: 0;
+	padding: 12px 20px;
+	border: 1px solid transparent;
+	border-radius: calc(var(--tisa-radius) * 0.7);
+	font-family: inherit;
+	font-size: 15.5px;
+	font-weight: 700;
+	line-height: 1.5;
+	cursor: pointer;
+	transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease, transform 90ms ease, opacity 140ms ease;
+}
+
+.tisa-btn--primary {
+	background: var(--tisa-accent);
+	color: #fff;
+}
+
+.tisa-btn--primary:hover:not(:disabled) {
+	filter: brightness(1.06);
+}
+
+.tisa-btn--primary:active:not(:disabled) {
+	transform: translateY(1px);
+}
+
+.tisa-btn--ghost {
+	margin-top: 10px;
+	background: transparent;
+	border-color: var(--tisa-line);
+	color: var(--tisa-muted);
+	font-weight: 600;
+}
+
+.tisa-btn--ghost:hover:not(:disabled) {
+	background: var(--tisa-accent-soft);
+	border-color: var(--tisa-accent);
+	color: var(--tisa-accent);
+}
+
+.tisa-btn:disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
+}
+
+.tisa-btn:focus-visible,
+.tisa-link:focus-visible {
+	outline: 2px solid var(--tisa-accent);
+	outline-offset: 2px;
+}
+
+.tisa-btn__spinner {
+	display: none;
+	width: 16px;
+	height: 16px;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: tisa-spin 720ms linear infinite;
+}
+
+.tisa-otp.is-busy .tisa-btn--primary .tisa-btn__spinner {
+	display: inline-block;
+}
+
+@keyframes tisa-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.tisa-link {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--tisa-accent);
+	font-family: inherit;
+	font-size: 13.5px;
+	font-weight: 600;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.tisa-link:disabled {
+	color: var(--tisa-muted);
+	text-decoration: none;
+	cursor: default;
+}
+
+/* Captcha + terms ---------------------------------------------------------- */
+
+.tisa-captcha {
+	display: flex;
+	justify-content: center;
+	margin-bottom: var(--tisa-space);
+}
+
+.tisa-captcha[hidden] {
+	display: none;
+}
+
+.tisa-otp__terms {
+	margin: var(--tisa-space) 0 0;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+	text-align: center;
+}
+
+.tisa-otp__terms a {
+	color: var(--tisa-accent);
+}
+
+/* Skins -------------------------------------------------------------------- */
+
+.tisa-skin-card .tisa-otp__form {
+	padding: 26px 24px 24px;
+	border: 1px solid var(--tisa-line);
+	border-radius: var(--tisa-radius);
+	background: var(--tisa-surface);
+	box-shadow: 0 18px 40px -24px rgba(16, 24, 40, 0.35);
+}
+
+.tisa-skin-glass .tisa-otp__form {
+	padding: 26px 24px 24px;
+	border: 1px solid rgba(255, 255, 255, 0.45);
+	border-radius: var(--tisa-radius);
+	background: rgba(255, 255, 255, 0.62);
+	backdrop-filter: blur(14px) saturate(140%);
+	-webkit-backdrop-filter: blur(14px) saturate(140%);
+	box-shadow: 0 20px 44px -28px rgba(16, 24, 40, 0.4);
+}
+
+.tisa-skin-glass .tisa-field__input,
+.tisa-skin-glass .tisa-phone,
+.tisa-skin-glass .tisa-code__box,
+.tisa-skin-glass .tisa-code__bulk {
+	background: rgba(255, 255, 255, 0.75);
+}
+
+.tisa-skin-slate {
+	--tisa-text: #f2f4f7;
+	--tisa-muted: #98a2b3;
+	--tisa-line: #344054;
+	--tisa-surface: #1d2939;
+	color: var(--tisa-text);
+}
+
+.tisa-skin-slate .tisa-otp__form {
+	padding: 26px 24px 24px;
+	border: 1px solid #344054;
+	border-radius: var(--tisa-radius);
+	background: #101828;
+}
+
+.tisa-skin-slate .tisa-otp__status {
+	background: #1d2939;
+	border-color: #344054;
+	color: #d0d5dd;
+}
+
+.tisa-skin-slate .tisa-otp__status.is-error {
+	background: #4a1d1a;
+	border-color: #7a271a;
+	color: #fda29b;
+}
+
+.tisa-skin-slate .tisa-otp__status.is-success {
+	background: #12352a;
+	border-color: #17533c;
+	color: #6ce9a6;
+}
+
+.tisa-skin-slate .tisa-field__input,
+.tisa-skin-slate .tisa-field__select,
+.tisa-skin-slate .tisa-phone,
+.tisa-skin-slate .tisa-code__box,
+.tisa-skin-slate .tisa-code__bulk {
+	background: #1d2939;
+	border-color: #344054;
+	color: var(--tisa-text);
+}
+
+.tisa-skin-slate .tisa-phone__dial {
+	background: #101828;
+	border-color: #344054;
+	color: #98a2b3;
+}
+
+.tisa-skin-slate .tisa-btn--ghost {
+	color: #d0d5dd;
+	border-color: #344054;
+}
+
+.tisa-skin-pill .tisa-btn,
+.tisa-skin-pill .tisa-field__input,
+.tisa-skin-pill .tisa-phone,
+.tisa-skin-pill .tisa-code__box,
+.tisa-skin-pill .tisa-code__bulk {
+	border-radius: 999px;
+}
+
+.tisa-skin-pill .tisa-otp__status {
+	border-radius: 999px;
+}
+
+/* Responsive --------------------------------------------------------------- */
+
+@media (max-width: 480px) {
+	.tisa-otp {
+		font-size: 14.5px;
+	}
+
+	.tisa-field--half {
+		flex: 1 1 100%;
+	}
+
+	.tisa-code__box {
+		height: 50px;
+		font-size: 19px;
+	}
+
+	.tisa-code__boxes {
+		gap: 6px;
+	}
+
+	.tisa-skin-card .tisa-otp__form,
+	.tisa-skin-glass .tisa-otp__form,
+	.tisa-skin-slate .tisa-otp__form {
+		padding: 20px 16px;
+	}
+
+	.tisa-step__title {
+		font-size: 18px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tisa-step.is-current {
+		animation: none;
+	}
+
+	.tisa-btn,
+	.tisa-field__input,
+	.tisa-phone,
+	.tisa-code__box {
+		transition: none;
+	}
+
+	.tisa-btn__spinner {
+		animation-duration: 1.6s;
+	}
+}
+
+@media (forced-colors: active) {
+	.tisa-btn--primary {
+		background: ButtonFace;
+		color: ButtonText;
+		border-color: ButtonText;
+	}
+
+	.tisa-field__input,
+	.tisa-phone,
+	.tisa-code__box {
+		border-color: CanvasText;
+	}
+}
+
+/* wp-login.php takeover ---------------------------------------------------- */
+
+.login.tisa-otp-login #login {
+	width: 100%;
+	max-width: 460px;
+	padding: 24px 12px;
+}
+
+.login.tisa-otp-login h1 a {
+	display: none;
+}
+
+.login.tisa-otp-login #login form#loginform,
+.login.tisa-otp-login #login form#lostpasswordform,
+.login.tisa-otp-login #login form#registerform,
+.login.tisa-otp-login #login #nav,
+.login.tisa-otp-login #login #backtoblog {
+	display: none;
+}
+
+.login.tisa-otp-login #login form#loginform.tisa-keep,
+.login.tisa-otp-login.tisa-allow-classic #login form#loginform,
+.login.tisa-otp-login.tisa-allow-classic #login #nav,
+.login.tisa-otp-login.tisa-allow-classic #login #backtoblog {
+	display: block;
+}
+
+.login.tisa-otp-login #login .tisa-otp {
+	margin-top: 12px;
+}
