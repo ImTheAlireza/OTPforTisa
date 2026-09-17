@@ -34,12 +34,12 @@
 			},
 			body: payload ? JSON.stringify(payload) : undefined
 		}).then(function (response) {
-			return response.json().then(function (data) {
-				if (!response.ok) {
-					throw new Error((data && data.message) || 'Request failed');
+			return response.json().then(function (body) {
+				if (!response.ok || !body || body.success === false) {
+					throw new Error((body && body.message) || 'Request failed');
 				}
 
-				return data;
+				return body.data === undefined ? body : body.data;
 			});
 		});
 	}

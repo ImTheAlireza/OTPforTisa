@@ -396,15 +396,17 @@
 				body: JSON.stringify(body)
 			});
 		}).then(function (response) {
-			return response.json().then(function (data) {
-				if (!response.ok) {
-					var error = new Error((data && data.message) || i18n.network || 'Request failed');
-					error.code = data && data.code ? data.code : 'request_failed';
-					error.data = data && data.data ? data.data : {};
+			return response.json().then(function (body) {
+				// The plugin answers {success, data} and marks rejections with
+				// success:false, sometimes over HTTP 200 — so check the flag too.
+				if (!response.ok || !body || body.success === false) {
+					var error = new Error((body && body.message) || i18n.network || 'Request failed');
+					error.code = body && body.code ? body.code : 'request_failed';
+					error.data = body && body.data ? body.data : {};
 					throw error;
 				}
 
-				return data;
+				return body.data === undefined ? body : body.data;
 			});
 		});
 	};
