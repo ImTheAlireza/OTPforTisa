@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>پیش‌نمایش و دانلود — تیسا OTP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- The plugin's REAL stylesheet, served straight from tisa-otp/assets/css/front.css -->
+<link rel="stylesheet" href="/plugin-assets/css/front.css">
+
+<style>
+	/* Preview chrome only — none of this ships with the plugin. */
+	body {
+		margin: 0;
+		background: #eef1f5;
+		color: #101828;
+		font-family: 'Vazirmatn', Tahoma, sans-serif;
+	}
+
+	.demo-bar {
+		position: sticky;
+		top: 0;
+		z-index: 20;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px 22px;
+		align-items: center;
+		justify-content: space-between;
+		padding: 12px 22px;
+		background: #101828;
+		color: #e4e7ec;
+		font-size: 13px;
+	}
+
+	.demo-bar a { color: #99f6e4; text-decoration: none; font-weight: 600; }
+	.demo-bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
+	.demo-bar strong { color: #fff; }
+
+	.demo-bar .dl {
+		padding: 7px 14px;
+		border-radius: 999px;
+		background: #0f766e;
+		color: #fff;
+	}
+
+	.demo-stage {
+		display: grid;
+		grid-template-columns: 260px minmax(0, 1fr);
+		gap: 24px;
+		max-width: 1160px;
+		margin: 26px auto 60px;
+		padding: 0 20px;
+		align-items: start;
+	}
+
+	.demo-controls {
+		position: sticky;
+		top: 74px;
+		padding: 18px;
+		border-radius: 14px;
+		background: #fff;
+		border: 1px solid #e4e7ec;
+		font-size: 13px;
+	}
+
+	.demo-controls h2 { margin: 0 0 4px; font-size: 14px; }
+
+	.demo-controls p.note {
+		margin: 0 0 14px;
+		color: #667085;
+		font-size: 12px;
+		line-height: 1.7;
+	}
+
+	.demo-controls fieldset { margin: 0 0 14px; padding: 0; border: 0; }
+
+	.demo-controls legend { padding: 0; color: #667085; font-size: 12px; font-weight: 600; }
+
+	.demo-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+	.demo-chip {
+		padding: 6px 11px;
+		border: 1px solid #e4e7ec;
+		border-radius: 999px;
+		background: #fff;
+		color: #344054;
+		font-family: inherit;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.demo-chip.is-active {
+		border-color: #0f766e;
+		background: rgba(15, 118, 110, 0.1);
+		color: #0f766e;
+	}
+
+	.demo-swatch {
+		width: 26px;
+		height: 26px;
+		padding: 0;
+		border: 2px solid #fff;
+		border-radius: 50%;
+		box-shadow: 0 0 0 1px #e4e7ec;
+		cursor: pointer;
+	}
+
+	.demo-swatch.is-active { box-shadow: 0 0 0 2px #101828; }
+
+	.demo-hints {
+		margin-top: 16px;
+		padding: 12px;
+		border-radius: 10px;
+		background: #f9fafb;
+		border: 1px dashed #e4e7ec;
+		color: #475467;
+		font-size: 12px;
+		line-height: 2;
+	}
+
+	.demo-hints code {
+		direction: ltr;
+		unicode-bidi: embed;
+		background: #fff;
+		padding: 1px 6px;
+		border-radius: 6px;
+		border: 1px solid #e4e7ec;
+		color: #0f766e;
+		font-weight: 700;
+	}
+
+	.demo-page {
+		padding: 34px 24px 46px;
+		border-radius: 18px;
+		background: #fff;
+		border: 1px solid #e4e7ec;
+		min-height: 520px;
+	}
+
+	.demo-page--pattern {
+		background-image: radial-gradient(circle at 18% 12%, rgba(15, 118, 110, 0.1), transparent 42%),
+			radial-gradient(circle at 82% 78%, rgba(124, 58, 237, 0.12), transparent 45%);
+	}
+
+	.demo-page--dark {
+		background: #0b1220;
+		background-image: radial-gradient(circle at 20% 10%, rgba(15, 118, 110, 0.35), transparent 45%),
+			radial-gradient(circle at 80% 85%, rgba(124, 58, 237, 0.3), transparent 45%);
+	}
+
+	.demo-caption { margin: 0 0 22px; color: #667085; font-size: 12.5px; text-align: center; }
+
+	@media (max-width: 900px) {
+		.demo-stage { grid-template-columns: minmax(0, 1fr); }
+		.demo-controls { position: static; }
+	}
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+	<strong>تیسا OTP — پیش‌نمایش رابط کاربری</strong>
+	<nav>
+		<a href="/">فرم ورود</a>
+		<a class="dl" href="/download/tisa-otp.zip" download>⬇ دانلود tisa-otp.zip</a>
+	</nav>
+</div>
+
+<div class="demo-stage">
+
+	<aside class="demo-controls">
+		<h2>تنظیمات ظاهری</h2>
+		<p class="note">همان گزینه‌های تب «ظاهر فرم» در پیشخوان؛ در افزونه سمت سرور روی مارک‌آپ اعمال می‌شوند.</p>
+
+		<fieldset>
+			<legend>پوسته (کلیدهای ۱ تا ۵)</legend>
+			<div class="demo-chips" data-skins>
+				<button type="button" class="demo-chip is-active" data-skin="line">خطی</button>
+				<button type="button" class="demo-chip" data-skin="card">کارت</button>
+				<button type="button" class="demo-chip" data-skin="glass">شیشه‌ای</button>
+				<button type="button" class="demo-chip" data-skin="slate">تیره</button>
+				<button type="button" class="demo-chip" data-skin="pill">گرد</button>
+			</div>
+		</fieldset>
+
+		<fieldset>
+			<legend>رنگ تأکیدی</legend>
+			<div class="demo-chips" data-accents>
+				<button type="button" class="demo-swatch is-active" data-accent="#0f766e" style="background:#0f766e" aria-label="سبز"></button>
+				<button type="button" class="demo-swatch" data-accent="#2563eb" style="background:#2563eb" aria-label="آبی"></button>
+				<button type="button" class="demo-swatch" data-accent="#7c3aed" style="background:#7c3aed" aria-label="بنفش"></button>
+				<button type="button" class="demo-swatch" data-accent="#e11d48" style="background:#e11d48" aria-label="سرخابی"></button>
+				<button type="button" class="demo-swatch" data-accent="#ea580c" style="background:#ea580c" aria-label="نارنجی"></button>
+				<button type="button" class="demo-swatch" data-accent="#111827" style="background:#111827" aria-label="مشکی"></button>
+			</div>
+		</fieldset>
+
+		<fieldset>
+			<legend>ورودی کد</legend>
+			<div class="demo-chips" data-code-inputs>
+				<button type="button" class="demo-chip is-active" data-code-input="boxes">خانه‌های جدا</button>
+				<button type="button" class="demo-chip" data-code-input="single">یک کادر</button>
+			</div>
+		</fieldset>
+
+		<fieldset>
+			<legend>چینش و عرض</legend>
+			<div class="demo-chips" data-aligns>
+				<button type="button" class="demo-chip is-active" data-align="center">مرکز</button>
+				<button type="button" class="demo-chip" data-align="start">ابتدا</button>
+				<button type="button" class="demo-chip" data-align="end">انتها</button>
+			</div>
+			<div class="demo-chips" data-widths>
+				<button type="button" class="demo-chip" data-width="360">۳۶۰</button>
+				<button type="button" class="demo-chip is-active" data-width="420">۴۲۰</button>
+				<button type="button" class="demo-chip" data-width="520">۵۲۰</button>
+			</div>
+		</fieldset>
+
+		<fieldset>
+			<legend>پس‌زمینه صفحه</legend>
+			<div class="demo-chips" data-backdrops>
+				<button type="button" class="demo-chip is-active" data-backdrop="plain">ساده</button>
+				<button type="button" class="demo-chip" data-backdrop="pattern">الگودار</button>
+				<button type="button" class="demo-chip" data-backdrop="dark">تیره</button>
+			</div>
+		</fieldset>
+
+		<div class="demo-hints">
+			شماره‌های آزمایشی:<br>
+			<code>09121234567</code> کاربر موجود ← مستقیم کد<br>
+			<code>09351112233</code> کاربر تازه ← فرم عضویت<br>
+			<code>09000000000</code> خطای فاصله ارسال<br>
+			<code>09111111111</code> خطای کپچا<br>
+			کد تأیید: <code>12345</code>
+		</div>
+	</aside>
+
+	<main>
+		<div class="demo-page" id="demo-page">
+			<p class="demo-caption">مارک‌آپ زیر دقیقاً همان چیزی است که <code>templates/form.php</code> و پارتیشن‌هایش چاپ می‌کنند.</p>
+
+			<!-- ↓↓↓ markup produced by FormRenderer::render() ↓↓↓ -->
+			<div
+				class="tisa-otp tisa-skin-line tisa-align-center tisa-code-boxes"
+				id="tisa-form-1-demo"
+				style="--tisa-accent:#0f766e;--tisa-width:420px;--tisa-radius:14px"
+				data-tisa-form
+				data-endpoint="/mock/tisa-otp/v1/"
+				data-nonce="demo-nonce"
+				data-cooldown="60"
+				data-code-length="5"
+				data-flow="fields_then_code"
+				data-registration="1"
+				data-redirect=""
+			>
+				<form class="tisa-otp__form" method="post" novalidate autocomplete="on">
+
+					<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
+					<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="1758146400">
+
+					<div class="tisa-otp__status" role="status" aria-live="polite" hidden></div>
+
+					<!-- step-phone.php -->
+					<section class="tisa-step is-current" data-tisa-step="phone">
+						<header class="tisa-step__head">
+							<h2 class="tisa-step__title">ورود یا عضویت</h2>
+							<p class="tisa-step__hint">شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود.</p>
+						</header>
+
+						<div class="tisa-field">
+							<label class="tisa-field__label" for="tisa-form-1-demo-phone">شماره موبایل</label>
+							<div class="tisa-phone">
+								<span class="tisa-phone__dial" aria-hidden="true">۰۹</span>
+								<input class="tisa-field__input tisa-phone__input" id="tisa-form-1-demo-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09xxxxxxxxx" data-tisa-phone required>
+							</div>
+						</div>
+
+						<div class="tisa-captcha" data-tisa-captcha hidden></div>
+
+						<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="start">
+							<span class="tisa-btn__label">دریافت کد تأیید</span>
+							<span class="tisa-btn__spinner" aria-hidden="true"></span>
+						</button>
+					</section>
+
+					<!-- step-fields.php -->
+					<section class="tisa-step" data-tisa-step="fields">
+						<header class="tisa-step__head">
+							<h2 class="tisa-step__title">تکمیل اطلاعات</h2>
+							<p class="tisa-step__hint">برای ساخت حساب کاربری، اطلاعات زیر را کامل کنید.</p>
+						</header>
+
+						<div class="tisa-fields">
+							<div class="tisa-field tisa-field--half" data-tisa-field="first_name">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-first_name">نام <span class="tisa-field__star" aria-hidden="true">*</span></label>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-first_name" type="text" data-tisa-input="first_name" required>
+								<p class="tisa-field__error" data-tisa-error="first_name" hidden></p>
+							</div>
+
+							<div class="tisa-field tisa-field--half" data-tisa-field="last_name">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-last_name">نام خانوادگی <span class="tisa-field__star" aria-hidden="true">*</span></label>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-last_name" type="text" data-tisa-input="last_name" required>
+								<p class="tisa-field__error" data-tisa-error="last_name" hidden></p>
+							</div>
+
+							<div class="tisa-field tisa-field--full" data-tisa-field="user_email">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-user_email">ایمیل</label>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-user_email" type="email" placeholder="example@mail.com" data-tisa-input="user_email">
+								<p class="tisa-field__error" data-tisa-error="user_email" hidden></p>
+							</div>
+
+							<div class="tisa-field tisa-field--full" data-tisa-field="city">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-city">شهر</label>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-city" type="text" data-tisa-input="city">
+								<p class="tisa-field__error" data-tisa-error="city" hidden></p>
+							</div>
+						</div>
+
+						<div class="tisa-captcha" data-tisa-captcha hidden></div>
+
+						<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="submit-fields">
+							<span class="tisa-btn__label">ادامه</span>
+							<span class="tisa-btn__spinner" aria-hidden="true"></span>
+						</button>
+
+						<button type="button" class="tisa-btn tisa-btn--ghost" data-tisa-action="back">ویرایش شماره</button>
+					</section>
+
+					<!-- step-code.php -->
+					<section class="tisa-step" data-tisa-step="code">
+						<header class="tisa-step__head">
+							<h2 class="tisa-step__title">کد تأیید</h2>
+							<p class="tisa-step__hint">کد ارسال‌شده به <span class="tisa-otp__masked" data-tisa-masked>—</span> را وارد کنید.</p>
+						</header>
+
+						<div class="tisa-code" data-tisa-code>
+							<label class="tisa-screen-reader" for="tisa-form-1-demo-code">کد تأیید</label>
+							<input class="tisa-code__bulk" id="tisa-form-1-demo-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="5" data-tisa-code-bulk>
+							<div class="tisa-code__boxes" id="tisa-form-1-demo-boxes" data-tisa-boxes>
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۱" data-tisa-box="0">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۲" data-tisa-box="1">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۳" data-tisa-box="2">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۴" data-tisa-box="3">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۵" data-tisa-box="4">
+							</div>
+						</div>
+
+						<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="verify">
+							<span class="tisa-btn__label">ورود به حساب</span>
+							<span class="tisa-btn__spinner" aria-hidden="true"></span>
+						</button>
+
+						<div class="tisa-code__footer">
+							<button type="button" class="tisa-link" data-tisa-action="resend" disabled>
+								<span data-tisa-resend-label>ارسال دوباره کد</span>
+							</button>
+							<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+						</div>
+					</section>
+
+				</form>
+			</div>
+			<!-- ↑↑↑ end of FormRenderer output ↑↑↑ -->
+		</div>
+	</main>
+</div>
+
+<script>
+	/* Stands in for wp_localize_script( 'tisa-otp-front', 'tisaOtp', ... ) */
+	window.tisaOtp = {
+		restUrl: '/mock/tisa-otp/v1/',
+		nonce: 'demo-nonce',
+		enabled: true,
+		codeLength: 5,
+		codeInput: 'boxes',
+		cooldown: 60,
+		ttl: 120,
+		channel: 'sms',
+		skin: 'line',
+		captcha: { enabled: false, provider: 'none' },
+		labels: {
+			send: 'دریافت کد تأیید',
+			verify: 'ورود به حساب',
+			resend: 'ارسال دوباره کد',
+			editPhone: 'ویرایش شماره'
+		},
+		i18n: {
+			codePlaceholder: 'کد ۵ رقمی',
+			sending: 'در حال ارسال کد…',
+			checking: 'در حال بررسی کد…',
+			creating: 'در حال ساخت حساب…',
+			resendIn: 'ارسال دوباره تا {s} ثانیه',
+			network: 'خطای شبکه. لطفاً دوباره تلاش کنید.',
+			invalidPhone: 'شماره موبایل معتبر نیست.',
+			fillFields: 'لطفاً فیلدهای ستاره‌دار را کامل کنید.',
+			incompleteCode: 'کد را کامل وارد کنید.',
+			redirecting: 'در حال انتقال…'
+		}
+	};
+</script>
+
+<!-- The plugin's REAL script, served from tisa-otp/assets/js/front.js -->
+<script src="/plugin-assets/js/front.js"></script>
+
+<script>
+	/* Preview-only switcher: mimics Settings → "ظاهر فرم" (server-side in the plugin). */
+	(function () {
+		'use strict';
+
+		var form = document.querySelector('[data-tisa-form]');
+		var page = document.getElementById('demo-page');
+
+		function swapClass(prefix, value) {
+			Array.prototype.slice.call(form.classList).forEach(function (name) {
+				if (name.indexOf(prefix) === 0) {
+					form.classList.remove(name);
+				}
+			});
+			form.classList.add(prefix + value);
+		}
+
+		function activate(group, button) {
+			Array.prototype.slice.call(document.querySelectorAll('[data-' + group + '] .demo-chip, [data-' + group + '] .demo-swatch')).forEach(function (chip) {
+				chip.classList.remove('is-active');
+			});
+			button.classList.add('is-active');
+		}
+
+		function hexToRgba(hex, alpha) {
+			var value = hex.replace('#', '');
+			return 'rgba(' + parseInt(value.substr(0, 2), 16) + ', ' + parseInt(value.substr(2, 2), 16) + ', ' + parseInt(value.substr(4, 2), 16) + ', ' + alpha + ')';
+		}
+
+		function setBackdrop(mode) {
+			page.classList.remove('demo-page--pattern', 'demo-page--dark');
+
+			if (mode !== 'plain') {
+				page.classList.add('demo-page--' + mode);
+			}
+
+			var container = document.querySelector('[data-backdrops]');
+
+			if (container) {
+				Array.prototype.slice.call(container.querySelectorAll('[data-backdrop]')).forEach(function (chip) {
+					chip.classList.toggle('is-active', chip.getAttribute('data-backdrop') === mode);
+				});
+			}
+		}
+
+		function bind(group, attribute, apply) {
+			var container = document.querySelector('[data-' + group + ']');
+
+			if (!container) {
+				return;
+			}
+
+			container.addEventListener('click', function (event) {
+				var chip = event.target.closest('[data-' + attribute + ']');
+
+				if (chip) {
+					activate(group, chip);
+					apply(chip.getAttribute('data-' + attribute));
+				}
+			});
+		}
+
+		bind('skins', 'skin', function (skin) {
+			swapClass('tisa-skin-', skin);
+			window.tisaOtp.skin = skin;
+			setBackdrop(skin === 'slate' || skin === 'glass' ? 'dark' : 'plain');
+		});
+
+		bind('accents', 'accent', function (accent) {
+			form.style.setProperty('--tisa-accent', accent);
+			form.style.setProperty('--tisa-accent-soft', hexToRgba(accent, 0.14));
+		});
+
+		bind('code-inputs', 'code-input', function (mode) {
+			swapClass('tisa-code-', mode);
+			window.tisaOtp.codeInput = mode;
+		});
+
+		bind('aligns', 'align', function (align) {
+			swapClass('tisa-align-', align);
+		});
+
+		bind('widths', 'width', function (width) {
+			form.style.setProperty('--tisa-width', width + 'px');
+		});
+
+		bind('backdrops', 'backdrop', setBackdrop);
+
+		document.addEventListener('keydown', function (event) {
+			if (event.target.matches('input, textarea, select')) {
+				return;
+			}
+
+			var skins = ['line', 'card', 'glass', 'slate', 'pill'];
+			var index = Number(event.key);
+
+			if (index >= 1 && index <= skins.length) {
+				var chip = document.querySelector('[data-skins] [data-skin="' + skins[index - 1] + '"]');
+
+				if (chip) {
+					chip.click();
+				}
+			}
+		});
+	})();
+</script>
+</body>
+</html>
