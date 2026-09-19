@@ -58,7 +58,7 @@ final class SmsIr extends HttpGateway {
 		$apiKey = $this->option( 'smsir_api_key' );
 
 		if ( '' === $apiKey ) {
-			return $this->notConfigured( __( 'کلید API سامانه SMS.ir تنظیم نشده است.', 'tisa-otp' ) );
+			return $this->notConfigured( __( 'برای SMS.ir کلید API را در تنظیمات کامل کنید.', 'tisa-otp' ) );
 		}
 
 		$templateId = trim( $this->option( 'smsir_template_id' ) );

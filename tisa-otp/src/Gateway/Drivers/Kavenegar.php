@@ -55,7 +55,7 @@ final class Kavenegar extends HttpGateway {
 		$apiKey = $this->option( 'kavenegar_api_key' );
 
 		if ( '' === $apiKey ) {
-			return $this->notConfigured( __( 'کلید API کاوه‌نگار تنظیم نشده است.', 'tisa-otp' ) );
+			return $this->notConfigured( __( 'برای کاوه‌نگار کلید API را در تنظیمات کامل کنید.', 'tisa-otp' ) );
 		}
 
 		$template = trim( $this->option( 'kavenegar_template' ) );

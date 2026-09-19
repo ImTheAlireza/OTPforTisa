@@ -271,7 +271,7 @@ final class AuthController {
 		if ( $existing instanceof \WP_User ) {
 			$this->throttle->releaseReservation( $request->phone() );
 
-			throw Rejection::make( 'already_registered', __( 'برای این شماره حساب کاربری وجود دارد. لطفاً وارد شوید.', 'tisa-otp' ) );
+			throw Rejection::make( 'already_registered', __( 'این شماره از قبل ثبت شده است. از همین فرم وارد شوید.', 'tisa-otp' ) );
 		}
 
 		$token   = $this->registration->storeDraft( $request->phone(), $validated['values'] );

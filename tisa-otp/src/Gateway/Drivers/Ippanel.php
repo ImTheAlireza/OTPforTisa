@@ -54,7 +54,7 @@ final class Ippanel extends HttpGateway {
 		$apiKey = $this->option( 'ippanel_api_key' );
 
 		if ( '' === $apiKey ) {
-			return $this->notConfigured( __( 'کلید API آی‌پی‌پنل تنظیم نشده است.', 'tisa-otp' ) );
+			return $this->notConfigured( __( 'برای آی‌پی‌پنل کلید API را در تنظیمات کامل کنید.', 'tisa-otp' ) );
 		}
 
 		$pattern = trim( $this->option( 'ippanel_pattern' ) );

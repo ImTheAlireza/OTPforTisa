@@ -61,7 +61,7 @@ final class MeliPayamak extends HttpGateway {
 
 	public function deliver( DeliveryRequest $request ): GatewayResult {
 		if ( array() !== $this->missing() ) {
-			return $this->notConfigured( __( 'نام کاربری یا رمز ملی پیامک تنظیم نشده است.', 'tisa-otp' ) );
+			return $this->notConfigured( __( 'برای ملی پیامک نام کاربری و رمز را در تنظیمات کامل کنید.', 'tisa-otp' ) );
 		}
 
 		$response = $this->post(

@@ -67,7 +67,7 @@ final class FarazSms extends HttpGateway {
 
 	public function deliver( DeliveryRequest $request ): GatewayResult {
 		if ( array() !== $this->missing() ) {
-			return $this->notConfigured( __( 'نام کاربری یا رمز فراز اس‌ام‌اس تنظیم نشده است.', 'tisa-otp' ) );
+			return $this->notConfigured( __( 'برای فراز اس‌ام‌اس نام کاربری و رمز را در تنظیمات کامل کنید.', 'tisa-otp' ) );
 		}
 
 		$username = $this->option( 'faraz_username' );

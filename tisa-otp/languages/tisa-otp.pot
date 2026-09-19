@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tisa OTP 1.1.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tisa-otp\n"
-"POT-Creation-Date: 2026-09-19 08:23+0000\n"
+"POT-Creation-Date: 2026-09-19 08:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1641,7 +1641,7 @@ msgid "در صورت تنظیم، ارسال از مسیر پترن انجام �
 msgstr ""
 
 #: src/Gateway/Drivers/FarazSms.php:70
-msgid "نام کاربری یا رمز فراز اس‌ام‌اس تنظیم نشده است."
+msgid "برای فراز اس‌ام‌اس نام کاربری و رمز را در تنظیمات کامل کنید."
 msgstr ""
 
 #: src/Gateway/Drivers/Ippanel.php:25
@@ -1655,7 +1655,7 @@ msgid "کلید API"
 msgstr ""
 
 #: src/Gateway/Drivers/Ippanel.php:57
-msgid "کلید API آی‌پی‌پنل تنظیم نشده است."
+msgid "برای آی‌پی‌پنل کلید API را در تنظیمات کامل کنید."
 msgstr ""
 
 #: src/Gateway/Drivers/Kavenegar.php:25
@@ -1671,7 +1671,7 @@ msgid "در صورت تنظیم، از سرویس Verify استفاده می‌�
 msgstr ""
 
 #: src/Gateway/Drivers/Kavenegar.php:58
-msgid "کلید API کاوه‌نگار تنظیم نشده است."
+msgid "برای کاوه‌نگار کلید API را در تنظیمات کامل کنید."
 msgstr ""
 
 #: src/Gateway/Drivers/MeliPayamak.php:25
@@ -1679,7 +1679,7 @@ msgid "ملی پیامک"
 msgstr ""
 
 #: src/Gateway/Drivers/MeliPayamak.php:64
-msgid "نام کاربری یا رمز ملی پیامک تنظیم نشده است."
+msgid "برای ملی پیامک نام کاربری و رمز را در تنظیمات کامل کنید."
 msgstr ""
 
 #: src/Gateway/Drivers/SmsIr.php:27
@@ -1703,7 +1703,7 @@ msgid "فقط برای ارسال متنی لازم است."
 msgstr ""
 
 #: src/Gateway/Drivers/SmsIr.php:61
-msgid "کلید API سامانه SMS.ir تنظیم نشده است."
+msgid "برای SMS.ir کلید API را در تنظیمات کامل کنید."
 msgstr ""
 
 #: src/Gateway/FailoverChain.php:35
@@ -1830,7 +1830,7 @@ msgid "لطفاً خطاهای فرم را اصلاح کنید."
 msgstr ""
 
 #: src/Http/AuthController.php:274
-msgid "برای این شماره حساب کاربری وجود دارد. لطفاً وارد شوید."
+msgid "این شماره از قبل ثبت شده است. از همین فرم وارد شوید."
 msgstr ""
 
 #: src/Http/AuthController.php:341

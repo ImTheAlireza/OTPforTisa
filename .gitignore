@@ -1,0 +1,14 @@
+# Reference/competitor plugin archives must never be committed to this repo.
+# Keeping a third-party plugin in our history invites an unfounded "you copied
+# us" claim even when the code is independent. Study them outside the tree.
+otifa*.zip
+otifa*/
+reference/
+vendor-reference/
+
+# Dependencies pulled in only for the CI checks.
+node_modules/
+
+# Local scratch.
+*.log
+.DS_Store
