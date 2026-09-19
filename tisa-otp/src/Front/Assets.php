@@ -127,6 +127,11 @@ final class Assets implements Bootable {
 		return array(
 			'restUrl'    => esc_url_raw( rest_url( 'tisa-otp/v1/' ) ),
 			'nonce'      => wp_create_nonce( 'wp_rest' ),
+			'configUrl'  => esc_url_raw( rest_url( 'tisa-otp/v1/form-config' ) ),
+			'cacheMode'  => $this->settings->str( 'cache_mode', 'auto' ),
+			'autoVerify' => $this->settings->bool( 'auto_verify', true ),
+			'webOtp'     => $this->settings->bool( 'webotp_enabled', false ),
+			'timeoutMs'  => max( 5, min( 60, $this->settings->int( 'request_timeout', 15 ) ) ) * 1000,
 			'enabled'    => $this->settings->bool( 'enabled', true ),
 			'codeLength' => max( 4, min( 8, $this->settings->int( 'code_length', 5 ) ) ),
 			'codeInput'  => $this->settings->str( 'code_input', 'boxes' ),
@@ -151,8 +156,14 @@ final class Assets implements Bootable {
 				'network'          => __( 'خطای شبکه. لطفاً دوباره تلاش کنید.', 'tisa-otp' ),
 				'invalidPhone'     => __( 'شماره موبایل معتبر نیست.', 'tisa-otp' ),
 				'fillFields'       => __( 'لطفاً فیلدهای ستاره‌دار را کامل کنید.', 'tisa-otp' ),
+				'requiredField'    => __( 'این فیلد الزامی است.', 'tisa-otp' ),
+				'invalidEmail'     => __( 'قالب ایمیل معتبر نیست.', 'tisa-otp' ),
 				'incompleteCode'   => __( 'کد را کامل وارد کنید.', 'tisa-otp' ),
 				'redirecting'      => __( 'در حال انتقال…', 'tisa-otp' ),
+				'timeout'          => __( 'پاسخ سرور به‌موقع نرسید. لطفاً دوباره تلاش کنید.', 'tisa-otp' ),
+				'offline'          => __( 'اتصال اینترنت برقرار نیست.', 'tisa-otp' ),
+				'otpFilled'        => __( 'کد از پیامک خوانده شد.', 'tisa-otp' ),
+				'resendReady'      => __( 'اکنون می‌توانید کد را دوباره ارسال کنید.', 'tisa-otp' ),
 			),
 		);
 	}

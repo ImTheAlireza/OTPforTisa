@@ -155,12 +155,17 @@ final class Api implements Bootable {
 	 * Public bootstrap payload used by lazily rendered forms.
 	 */
 	public function formConfig(): \WP_REST_Response {
-		return new \WP_REST_Response(
+		$response = new \WP_REST_Response(
 			array(
 				'success' => true,
 				'data'    => $this->renderer->clientConfig(),
 			),
 			200
 		);
+
+		// This payload carries a fresh nonce, so a cached copy would defeat it.
+		$response->header( 'Cache-Control', 'no-store, max-age=0' );
+
+		return $response;
 	}
 }

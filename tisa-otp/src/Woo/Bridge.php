@@ -32,6 +32,8 @@ final class Bridge implements Bootable {
 			return;
 		}
 
+		add_action( 'before_woocommerce_init', array( $this, 'declareCompat' ) );
+
 		if ( $this->settings->bool( 'woo_account_form', true ) ) {
 			add_filter( 'woocommerce_locate_template', array( $this, 'locateTemplate' ), 20, 3 );
 			add_action( 'woocommerce_before_customer_login_form', array( $this, 'renderAccountForm' ) );
@@ -49,6 +51,25 @@ final class Bridge implements Bootable {
 
 	public function installed(): bool {
 		return class_exists( 'WooCommerce' );
+	}
+
+	/**
+	 * Tell WooCommerce which of its features this integration supports.
+	 *
+	 * Runs on `before_woocommerce_init` because that is when WooCommerce collects
+	 * the declarations for its compatibility report.
+	 */
+	public function declareCompat(): void {
+		if ( ! class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			return;
+		}
+
+		// Orders are only ever read through wc_get_orders(), which is HPOS-aware.
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_orders_table', TISA_OTP_FILE, true );
+
+		// The block-based cart/checkout is not wired up yet (roadmap item 3.3),
+		// so say so instead of letting WooCommerce guess.
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', TISA_OTP_FILE, false );
 	}
 
 	/**

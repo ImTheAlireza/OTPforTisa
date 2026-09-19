@@ -60,6 +60,25 @@
 		return /^09\d{9}$/.test(digits);
 	}
 
+	function flag(value, fallback) {
+		if (value === undefined || value === null) {
+			return fallback;
+		}
+
+		// wp_localize_script stringifies booleans, the demo config does not.
+		return true === value || 1 === value || '1' === value || 'true' === value;
+	}
+
+	function httpError(code, message, data, status) {
+		var error = new Error(message);
+
+		error.code = code;
+		error.data = data || {};
+		error.status = status || 0;
+
+		return error;
+	}
+
 	function text(template, replacements) {
 		return String(template || '').replace(/\{(\w+)\}/g, function (match, key) {
 			return Object.prototype.hasOwnProperty.call(replacements || {}, key) ? replacements[key] : match;
@@ -191,6 +210,16 @@
 		this.canRegister = '1' === attr(root, 'registration');
 		this.redirect = attr(root, 'redirect') || '';
 
+		this.configUrl = attr(root, 'config-url') || cfg.configUrl || '';
+		this.cacheMode = attr(root, 'cache-mode') || cfg.cacheMode || 'inline';
+		this.timeoutMs = parseInt(cfg.timeoutMs || 15000, 10);
+		this.autoVerify = flag(cfg.autoVerify, true);
+		this.webOtp = flag(cfg.webOtp, false);
+
+		this.nonceRequest = null;
+		this.otpAbort = null;
+		this.autoVerifyTimer = null;
+
 		this.phone = '';
 		this.channel = cfg.channel || 'sms';
 		this.draftToken = '';
@@ -211,6 +240,7 @@
 		this.masked = $(root, '[data-tisa-masked]');
 		this.resendBtn = $(root, '[data-tisa-action="resend"]');
 		this.resendLabel = $(root, '[data-tisa-resend-label]');
+		this.resendLive = $(root, '[data-tisa-resend-live]');
 		this.honeypot = $(root, '.tisa-otp__honeypot');
 		this.timestamp = $(root, '.tisa-otp__rendered');
 
@@ -221,6 +251,11 @@
 
 		this.bind();
 		this.show(this.stepPhone);
+
+		// A cached page carries a stale nonce, so fetch a fresh one up front.
+		if ('auto' === this.cacheMode) {
+			this.refreshNonce();
+		}
 
 		if ('always' === (cfg.captcha || {}).trigger) {
 			this.captcha.showWidget();
@@ -241,6 +276,7 @@
 			this.phoneInput.addEventListener('input', function () {
 				self.phoneInput.value = latinDigits(self.phoneInput.value);
 				self.clearStatus();
+				self.setValid(self.phoneInput);
 			});
 
 			this.phoneInput.addEventListener('keydown', function (event) {
@@ -256,6 +292,9 @@
 				self.bulk.value = digitsOnly(self.bulk.value).substr(0, self.codeLength);
 				self.spread(self.bulk.value);
 				self.clearStatus();
+				self.stopWebOtp();
+				self.setCodeInvalid(false);
+				self.maybeAutoVerify();
 			});
 
 			this.bulk.addEventListener('keydown', function (event) {
@@ -270,14 +309,14 @@
 			box.addEventListener('input', function () {
 				box.value = digitsOnly(box.value).substr(0, 1);
 				self.join();
+				self.stopWebOtp();
+				self.setCodeInvalid(false);
 
 				if (box.value && index < self.boxes.length - 1) {
 					self.boxes[index + 1].focus();
 				}
 
-				if (self.codeValue().length === self.codeLength) {
-					self.act('verify');
-				}
+				self.maybeAutoVerify();
 			});
 
 			box.addEventListener('keydown', function (event) {
@@ -308,21 +347,16 @@
 					event.preventDefault();
 					self.spread(value);
 					self.join();
+					self.stopWebOtp();
+					self.setCodeInvalid(false);
+					self.maybeAutoVerify();
 				}
 			});
 		});
 
 		$$(this.root, '[data-tisa-input]').forEach(function (input) {
 			input.addEventListener('input', function () {
-				var id = input.getAttribute('data-tisa-input');
-				var error = $(self.root, '[data-tisa-error="' + id + '"]');
-
-				if (error) {
-					error.hidden = true;
-					error.textContent = '';
-				}
-
-				input.classList.remove('has-error');
+				self.setValid(input);
 			});
 		});
 
@@ -381,34 +415,151 @@
 
 		delete body.route;
 
+		if (window.navigator && false === navigator.onLine) {
+			return Promise.reject(httpError('offline', i18n.offline || 'Offline'));
+		}
+
 		return this.captcha.value().then(function (token) {
 			if (token) {
 				body.captcha_token = token;
 			}
 
-			return window.fetch(self.endpoint + route, {
-				method: 'POST',
-				credentials: 'same-origin',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-Nonce': self.nonce
-				},
-				body: JSON.stringify(body)
-			});
-		}).then(function (response) {
-			return response.json().then(function (body) {
-				// The plugin answers {success, data} and marks rejections with
-				// success:false, sometimes over HTTP 200 — so check the flag too.
-				if (!response.ok || !body || body.success === false) {
-					var error = new Error((body && body.message) || i18n.network || 'Request failed');
-					error.code = body && body.code ? body.code : 'request_failed';
-					error.data = body && body.data ? body.data : {};
-					throw error;
-				}
+			return self.send(route, body);
+		}).then(function (result) {
+			// A cached page ships somebody else's nonce: refresh and retry once.
+			if (self.isStaleNonce(result)) {
+				return self.refreshNonce().then(function () {
+					return self.send(route, body);
+				}).then(function (retry) {
+					return self.unwrap(retry);
+				});
+			}
 
-				return body.data === undefined ? body : body.data;
-			});
+			return self.unwrap(result);
 		});
+	};
+
+	/**
+	 * Fire one request, with a timeout so a dead gateway cannot hang the form.
+	 */
+	Form.prototype.send = function (route, body) {
+		var controller = window.AbortController ? new window.AbortController() : null;
+		var headers = {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
+		};
+
+		if (this.nonce) {
+			headers['X-WP-Nonce'] = this.nonce;
+		}
+
+		if (controller) {
+			window.setTimeout(function () {
+				controller.abort();
+			}, this.timeoutMs);
+		}
+
+		return window.fetch(this.endpoint + route, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: headers,
+			body: JSON.stringify(body),
+			signal: controller ? controller.signal : undefined
+		}).then(function (response) {
+			return response.json().catch(function () {
+				return null;
+			}).then(function (json) {
+				return { status: response.status, ok: response.ok, json: json };
+			});
+		}).catch(function (error) {
+			var timedOut = error && 'AbortError' === error.name;
+
+			throw httpError(
+				timedOut ? 'request_timeout' : 'network_error',
+				timedOut ? (i18n.timeout || 'Timeout') : (i18n.network || 'Network error')
+			);
+		});
+	};
+
+	/**
+	 * Did WordPress reject the nonce rather than the request itself?
+	 */
+	Form.prototype.isStaleNonce = function (result) {
+		if (!this.configUrl || !result) {
+			return false;
+		}
+
+		return 403 === result.status || 'rest_cookie_invalid_nonce' === (result.json && result.json.code);
+	};
+
+	/**
+	 * Turn a transport result into data, or into an error the UI can explain.
+	 *
+	 * The plugin answers {success, data} and marks rejections with success:false,
+	 * sometimes over HTTP 200 — so the flag is checked as well as the status.
+	 */
+	Form.prototype.unwrap = function (result) {
+		var json = result ? result.json : null;
+
+		if (!result || !result.ok || !json || json.success === false) {
+			throw httpError(
+				json && json.code ? json.code : 'request_failed',
+				(json && json.message) || i18n.network || 'Request failed',
+				json && json.data ? json.data : {},
+				result ? result.status : 0
+			);
+		}
+
+		return json.data === undefined ? json : json.data;
+	};
+
+	/**
+	 * Pull a fresh nonce (and endpoint) from `GET /form-config`.
+	 *
+	 * Full-page caches store the nonce printed into the HTML, so a cached page
+	 * would send a stale token. Refreshing on mount — and retrying once after a
+	 * rejection — keeps the form working behind any cache or CDN.
+	 */
+	Form.prototype.refreshNonce = function () {
+		var self = this;
+
+		if (!this.configUrl || !window.fetch) {
+			return Promise.resolve(this.nonce);
+		}
+
+		if (this.nonceRequest) {
+			return this.nonceRequest;
+		}
+
+		this.nonceRequest = window.fetch(this.configUrl, {
+			method: 'GET',
+			credentials: 'same-origin',
+			cache: 'no-store',
+			headers: { Accept: 'application/json' }
+		}).then(function (response) {
+			return response.json();
+		}).then(function (body) {
+			var data = body && body.data ? body.data : body;
+
+			if (data && data.nonce) {
+				self.nonce = data.nonce;
+			}
+
+			if (data && data.restUrl) {
+				self.endpoint = data.restUrl;
+			}
+
+			self.nonceRequest = null;
+
+			return self.nonce;
+		}).catch(function () {
+			// Offline or REST blocked: keep the nonce we already have.
+			self.nonceRequest = null;
+
+			return self.nonce;
+		});
+
+		return this.nonceRequest;
 	};
 
 	Form.prototype.start = function () {
@@ -417,9 +568,12 @@
 
 		if (!looksLikePhone(value)) {
 			this.say(i18n.invalidPhone || 'Invalid phone', 'error');
+			this.setInvalid(this.phoneInput, i18n.invalidPhone || 'Invalid phone');
+
 			if (this.phoneInput) {
 				this.phoneInput.focus();
 			}
+
 			return;
 		}
 
@@ -437,18 +591,8 @@
 
 		if (collected.errors.length) {
 			this.say(i18n.fillFields || 'Fill required fields', 'error');
-			collected.errors.forEach(function (id) {
-				var input = $(self.root, '[data-tisa-input="' + id + '"]');
-				var error = $(self.root, '[data-tisa-error="' + id + '"]');
-
-				if (input) {
-					input.classList.add('has-error');
-				}
-
-				if (error) {
-					error.hidden = false;
-					error.textContent = '✱';
-				}
+			collected.errors.forEach(function (problem) {
+				self.setInvalid($(self.root, '[data-tisa-input="' + problem.id + '"]'), problem.message);
 			});
 			return;
 		}
@@ -471,6 +615,7 @@
 
 		if (code.length < this.codeLength) {
 			this.say(i18n.incompleteCode || 'Code incomplete', 'error');
+			this.setCodeInvalid(true);
 			return;
 		}
 
@@ -568,6 +713,7 @@
 					this.codeLength = parseInt(data.code_length, 10);
 				}
 				this.focusCode();
+				this.startWebOtp();
 				break;
 
 			default:
@@ -622,11 +768,13 @@
 
 		Object.keys(errors).forEach(function (id) {
 			var input = $(self.root, '[data-tisa-input="' + id + '"]');
-			var error = $(self.root, '[data-tisa-error="' + id + '"]');
 
 			if (input) {
-				input.classList.add('has-error');
+				self.setInvalid(input, String(errors[id]));
+				return;
 			}
+
+			var error = $(self.root, '[data-tisa-error="' + id + '"]');
 
 			if (error) {
 				error.hidden = false;
@@ -646,16 +794,22 @@
 			values[id] = value;
 
 			if (input.hasAttribute('required') && '' === value) {
-				errors.push(id);
-			}
-
-			if ('email' === input.type && value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
-				errors.push(id);
+				errors.push({ id: id, message: i18n.requiredField || 'Required' });
+			} else if ('email' === input.type && value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
+				errors.push({ id: id, message: i18n.invalidEmail || 'Invalid email' });
 			}
 		});
 
-		return { values: values, errors: errors.filter(function (id, index, list) {
-			return list.indexOf(id) === index;
+		var seen = {};
+
+		return { values: values, errors: errors.filter(function (problem) {
+			if (seen[problem.id]) {
+				return false;
+			}
+
+			seen[problem.id] = true;
+
+			return true;
 		}) };
 	};
 
@@ -668,9 +822,76 @@
 			el.hidden = true;
 			el.textContent = '';
 		});
+
+		$$(this.root, '[aria-invalid="true"]').forEach(function (el) {
+			el.setAttribute('aria-invalid', 'false');
+		});
+	};
+
+	/**
+	 * Mark one control invalid and say why right next to it.
+	 */
+	Form.prototype.setInvalid = function (input, message) {
+		if (!input) {
+			return;
+		}
+
+		input.classList.add('has-error');
+		input.setAttribute('aria-invalid', 'true');
+
+		var error = this.errorNodeFor(input);
+
+		if (error && message) {
+			error.hidden = false;
+			error.textContent = message;
+		}
+	};
+
+	/**
+	 * Undo the invalid mark once the visitor starts fixing the value.
+	 */
+	Form.prototype.setValid = function (input) {
+		if (!input) {
+			return;
+		}
+
+		input.classList.remove('has-error');
+		input.setAttribute('aria-invalid', 'false');
+
+		var error = this.errorNodeFor(input);
+
+		if (error) {
+			error.hidden = true;
+			error.textContent = '';
+		}
+	};
+
+	Form.prototype.errorNodeFor = function (input) {
+		var key = input.getAttribute('data-tisa-input') || (input === this.phoneInput ? 'phone' : '');
+
+		return key ? $(this.root, '[data-tisa-error="' + key + '"]') : null;
+	};
+
+	/**
+	 * Flag the code inputs as a group — they share one meaning.
+	 */
+	Form.prototype.setCodeInvalid = function (invalid) {
+		var targets = this.boxes.slice();
+
+		if (this.bulk) {
+			targets.push(this.bulk);
+		}
+
+		targets.forEach(function (el) {
+			el.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+		});
 	};
 
 	Form.prototype.show = function (step) {
+		if (step !== this.stepCode) {
+			this.stopWebOtp();
+		}
+
 		[this.stepPhone, this.stepFields, this.stepCode].forEach(function (el) {
 			if (el) {
 				el.classList.toggle('is-current', el === step);
@@ -729,6 +950,100 @@
 		}
 	};
 
+	/**
+	 * Submit the code as soon as it is complete, without a button press.
+	 */
+	Form.prototype.maybeAutoVerify = function () {
+		var self = this;
+
+		if (!this.autoVerify || this.busy || this.codeValue().length < this.codeLength) {
+			return;
+		}
+
+		window.clearTimeout(this.autoVerifyTimer);
+
+		// A short beat lets a paste or a fast typist land its last digit first.
+		this.autoVerifyTimer = window.setTimeout(function () {
+			if (!self.busy && self.codeValue().length === self.codeLength) {
+				self.act('verify');
+			}
+		}, 180);
+	};
+
+	/**
+	 * Fill the code inputs from a string, e.g. a WebOTP credential.
+	 */
+	Form.prototype.fillCode = function (value) {
+		var digits = digitsOnly(value).substr(0, this.codeLength);
+
+		if (this.bulk) {
+			this.bulk.value = digits;
+		}
+
+		this.spread(digits);
+	};
+
+	/**
+	 * Ask the browser for the SMS code (WebOTP / `navigator.credentials.get`).
+	 *
+	 * Requires the `@example.com #12345` binding line in the message, which the
+	 * plugin appends when WebOTP is on. Android Chrome still asks the visitor to
+	 * confirm the suggestion, so nothing is filled without consent.
+	 */
+	Form.prototype.startWebOtp = function () {
+		var self = this;
+
+		this.stopWebOtp();
+
+		if (!this.webOtp || !window.OTPCredential || !navigator.credentials || !navigator.credentials.get) {
+			return;
+		}
+
+		var options = { otp: { transport: ['sms'] } };
+
+		if (window.AbortController) {
+			this.otpAbort = new window.AbortController();
+			options.signal = this.otpAbort.signal;
+		}
+
+		navigator.credentials.get(options).then(function (credential) {
+			self.otpAbort = null;
+
+			var code = credential && credential.code ? digitsOnly(credential.code).substr(0, self.codeLength) : '';
+
+			if (!code) {
+				return;
+			}
+
+			self.stopWebOtp();
+			self.fillCode(code);
+			self.setCodeInvalid(false);
+			self.say(i18n.otpFilled || '', 'success');
+
+			if (code.length === self.codeLength) {
+				self.act('verify');
+			}
+		}).catch(function () {
+			// Aborted, unsupported or dismissed: the visitor types it instead.
+			self.otpAbort = null;
+		});
+	};
+
+	/**
+	 * Drop a pending WebOTP request, e.g. when the visitor starts typing.
+	 */
+	Form.prototype.stopWebOtp = function () {
+		if (this.otpAbort) {
+			try {
+				this.otpAbort.abort();
+			} catch (error) {
+				// Already settled.
+			}
+
+			this.otpAbort = null;
+		}
+	};
+
 	Form.prototype.spread = function (value) {
 		var digits = digitsOnly(value);
 
@@ -761,6 +1076,7 @@
 		}
 
 		this.spread('');
+		this.setCodeInvalid(false);
 	};
 
 	Form.prototype.startCooldown = function (seconds) {
@@ -775,9 +1091,13 @@
 
 		if (left <= 0) {
 			this.resendBtn.disabled = false;
+
 			if (this.resendLabel) {
 				this.resendLabel.textContent = (cfg.labels || {}).resend || 'Resend';
 			}
+
+			this.announceResend(i18n.resendReady || '');
+
 			return;
 		}
 
@@ -786,6 +1106,12 @@
 		var tick = function () {
 			if (self.resendLabel) {
 				self.resendLabel.textContent = text(i18n.resendIn || '{s}s', { s: left });
+			}
+
+			// The visible label ticks every second; the live region only speaks at
+			// quarter-minute marks so screen readers are not talked over.
+			if (left > 0 && 0 === left % 15) {
+				self.announceResend(text(i18n.resendIn || '{s}s', { s: left }));
 			}
 
 			left -= 1;
@@ -797,11 +1123,22 @@
 				if (self.resendLabel) {
 					self.resendLabel.textContent = (cfg.labels || {}).resend || 'Resend';
 				}
+
+				self.announceResend(i18n.resendReady || '');
 			}
 		};
 
 		tick();
 		this.countdown = window.setInterval(tick, 1000);
+	};
+
+	/**
+	 * Speak the resend countdown at milestones instead of every single second.
+	 */
+	Form.prototype.announceResend = function (message) {
+		if (this.resendLive) {
+			this.resendLive.textContent = message || '';
+		}
 	};
 
 	Form.prototype.startExpiry = function (seconds) {
@@ -833,9 +1170,15 @@
 			return;
 		}
 
+		var isError = 'error' === type;
+
 		this.statusBox.hidden = false;
 		this.statusBox.textContent = message;
 		this.statusBox.className = 'tisa-otp__status is-' + (type || 'info');
+
+		// Errors interrupt; everything else waits for a pause in speech.
+		this.statusBox.setAttribute('role', isError ? 'alert' : 'status');
+		this.statusBox.setAttribute('aria-live', isError ? 'assertive' : 'polite');
 	};
 
 	Form.prototype.clearStatus = function () {
@@ -848,12 +1191,14 @@
 	Form.prototype.setBusy = function (busy, name, working) {
 		this.busy = busy;
 		this.root.classList.toggle('is-busy', busy);
+		this.root.setAttribute('aria-busy', busy ? 'true' : 'false');
 
 		$$(this.root, '[data-tisa-action]').forEach(function (button) {
 			var action = button.getAttribute('data-tisa-action');
 			var label = $(button, '.tisa-btn__label');
 
 			button.disabled = busy;
+			button.setAttribute('aria-disabled', busy ? 'true' : 'false');
 
 			if (busy && label && action === name) {
 				label.dataset.tisaOriginal = label.textContent;

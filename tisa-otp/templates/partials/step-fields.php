@@ -9,21 +9,30 @@
  */
 
 defined( 'ABSPATH' ) || exit;
+
+$fieldsTitleId = $instance . '-fields-title';
+$fieldsHintId  = $instance . '-fields-hint';
 ?>
-<section class="tisa-step" data-tisa-step="fields">
+<section class="tisa-step" data-tisa-step="fields" aria-labelledby="<?php echo esc_attr( $fieldsTitleId ); ?>">
 	<header class="tisa-step__head">
-		<h2 class="tisa-step__title"><?php echo esc_html( $regHeading ); ?></h2>
+		<h2 class="tisa-step__title" id="<?php echo esc_attr( $fieldsTitleId ); ?>" tabindex="-1"><?php echo esc_html( $regHeading ); ?></h2>
 		<?php if ( '' !== trim( (string) $regHint ) ) : ?>
-			<p class="tisa-step__hint"><?php echo esc_html( $regHint ); ?></p>
+			<p class="tisa-step__hint" id="<?php echo esc_attr( $fieldsHintId ); ?>"><?php echo esc_html( $regHint ); ?></p>
 		<?php endif; ?>
 	</header>
 
 	<div class="tisa-fields">
 		<?php foreach ( $fields as $field ) : ?>
 			<?php
-			$fieldId    = $instance . '-f-' . $field['id'];
-			$widthClass = 'half' === $field['width'] ? 'tisa-field--half' : 'tisa-field--full';
-			$required   = ! empty( $field['required'] );
+			$fieldId        = $instance . '-f-' . $field['id'];
+			$widthClass     = 'half' === $field['width'] ? 'tisa-field--half' : 'tisa-field--full';
+			$required       = ! empty( $field['required'] );
+			$fieldHintId    = $fieldId . '-hint';
+			$fieldErrorId   = $fieldId . '-error';
+			$hasFieldHint   = '' !== trim( (string) $field['hint'] );
+
+			// Hint first, error second: readers announce context, then the problem.
+			$fieldDescribedBy = trim( ( $hasFieldHint ? $fieldHintId . ' ' : '' ) . $fieldErrorId );
 			?>
 			<div class="tisa-field <?php echo esc_attr( $widthClass ); ?>" data-tisa-field="<?php echo esc_attr( $field['id'] ); ?>">
 				<label class="tisa-field__label" for="<?php echo esc_attr( $fieldId ); ?>">
@@ -40,6 +49,8 @@ defined( 'ABSPATH' ) || exit;
 						rows="3"
 						placeholder="<?php echo esc_attr( $field['placeholder'] ); ?>"
 						data-tisa-input="<?php echo esc_attr( $field['id'] ); ?>"
+						aria-describedby="<?php echo esc_attr( $fieldDescribedBy ); ?>"
+						aria-invalid="false"
 						<?php echo $required ? 'required' : ''; ?>
 					></textarea>
 
@@ -48,6 +59,8 @@ defined( 'ABSPATH' ) || exit;
 						class="tisa-field__input tisa-field__select"
 						id="<?php echo esc_attr( $fieldId ); ?>"
 						data-tisa-input="<?php echo esc_attr( $field['id'] ); ?>"
+						aria-describedby="<?php echo esc_attr( $fieldDescribedBy ); ?>"
+						aria-invalid="false"
 						<?php echo $required ? 'required' : ''; ?>
 					>
 						<option value=""><?php esc_html_e( 'انتخاب کنید…', 'tisa-otp' ); ?></option>
@@ -62,6 +75,8 @@ defined( 'ABSPATH' ) || exit;
 							type="checkbox"
 							id="<?php echo esc_attr( $fieldId ); ?>"
 							data-tisa-input="<?php echo esc_attr( $field['id'] ); ?>"
+							aria-describedby="<?php echo esc_attr( $fieldDescribedBy ); ?>"
+							aria-invalid="false"
 							<?php echo $required ? 'required' : ''; ?>
 						>
 						<span><?php echo esc_html( $field['placeholder'] ? $field['placeholder'] : $field['label'] ); ?></span>
@@ -75,15 +90,23 @@ defined( 'ABSPATH' ) || exit;
 						<?php echo 'tel' === $field['type'] ? 'inputmode="numeric" dir="ltr"' : ''; ?>
 						placeholder="<?php echo esc_attr( $field['placeholder'] ); ?>"
 						data-tisa-input="<?php echo esc_attr( $field['id'] ); ?>"
+						aria-describedby="<?php echo esc_attr( $fieldDescribedBy ); ?>"
+						aria-invalid="false"
 						<?php echo $required ? 'required' : ''; ?>
 					>
 				<?php endif; ?>
 
-				<?php if ( '' !== trim( (string) $field['hint'] ) ) : ?>
-					<p class="tisa-field__hint"><?php echo esc_html( $field['hint'] ); ?></p>
+				<?php if ( $hasFieldHint ) : ?>
+					<p class="tisa-field__hint" id="<?php echo esc_attr( $fieldHintId ); ?>"><?php echo esc_html( $field['hint'] ); ?></p>
 				<?php endif; ?>
 
-				<p class="tisa-field__error" data-tisa-error="<?php echo esc_attr( $field['id'] ); ?>" hidden></p>
+				<p
+					class="tisa-field__error"
+					id="<?php echo esc_attr( $fieldErrorId ); ?>"
+					data-tisa-error="<?php echo esc_attr( $field['id'] ); ?>"
+					role="alert"
+					hidden
+				></p>
 			</div>
 		<?php endforeach; ?>
 	</div>

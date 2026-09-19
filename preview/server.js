@@ -60,6 +60,70 @@ function buildZip() {
 const attempts = new Map();
 let importCursor = 0;
 let importTotal = 240;
+let nonceSeq = 0;
+
+/**
+ * Every /form-config call hands out a different nonce, like wp_create_nonce()
+ * does for a fresh page load. The demo can then prove the client picks it up.
+ */
+function freshNonce() {
+	nonceSeq += 1;
+
+	return 'demo-nonce-' + nonceSeq;
+}
+
+const demoLabels = {
+	send: 'دریافت کد تأیید',
+	verify: 'ورود به حساب',
+	resend: 'ارسال دوباره کد',
+	editPhone: 'ویرایش شماره',
+};
+
+const demoI18n = {
+	codePlaceholder: 'کد ۵ رقمی',
+	sending: 'در حال ارسال کد…',
+	checking: 'در حال بررسی کد…',
+	creating: 'در حال ساخت حساب…',
+	resendIn: 'ارسال دوباره تا {s} ثانیه',
+	network: 'خطای شبکه. لطفاً دوباره تلاش کنید.',
+	invalidPhone: 'شماره موبایل معتبر نیست.',
+	fillFields: 'لطفاً فیلدهای ستاره‌دار را کامل کنید.',
+	requiredField: 'این فیلد الزامی است.',
+	invalidEmail: 'قالب ایمیل معتبر نیست.',
+	incompleteCode: 'کد را کامل وارد کنید.',
+	redirecting: 'در حال انتقال…',
+	timeout: 'پاسخ سرور به‌موقع نرسید. لطفاً دوباره تلاش کنید.',
+	offline: 'اتصال اینترنت برقرار نیست.',
+	otpFilled: 'کد از پیامک خوانده شد.',
+	resendReady: 'اکنون می‌توانید کد را دوباره ارسال کنید.',
+};
+
+/** Mirrors FormRenderer::clientConfig(). */
+function formConfig() {
+	return {
+		restUrl: '/mock/tisa-otp/v1/',
+		nonce: freshNonce(),
+		configUrl: '/mock/tisa-otp/v1/form-config',
+		cacheMode: 'auto',
+		autoVerify: true,
+		webOtp: false,
+		timeoutMs: 15000,
+		enabled: true,
+		codeLength: 5,
+		codeInput: 'boxes',
+		cooldown: 60,
+		ttl: 120,
+		channel: 'sms',
+		skin: 'line',
+		captcha: { enabled: false, provider: 'none' },
+		labels: demoLabels,
+		i18n: demoI18n,
+		fields: identityFields,
+		headings,
+		flow: 'fields_then_code',
+		register: true,
+	};
+}
 
 function normalizePhone(raw) {
 	let digits = String(raw || '').replace(/[^\d+]/g, '');
@@ -129,11 +193,29 @@ function importState(status, note) {
 	};
 }
 
-function handleRest(route, body) {
+function handleRest(route, body, headers) {
 	const phone = normalizePhone(body.phone);
 
+	// A page cache keeps serving the nonce that was printed into the HTML long
+	// after WordPress stopped accepting it. The client notices, pulls a fresh one
+	// from /form-config and retries — that round trip is part of the demo.
+	if ('stale-nonce-from-cache' === (headers || {})['x-wp-nonce']) {
+		return {
+			status: 403,
+			body: { code: 'rest_cookie_invalid_nonce', message: 'nonce نامعتبر است.', data: { status: 403 } },
+		};
+	}
+
 	switch (route) {
+		case 'form-config':
+			return ok(formConfig());
+
 		case 'start':
+			if (phone === '09129999999') {
+				// A gateway that never answers in time: demos the request timeout.
+				return Object.assign(ok(verifyPayload(phone)), { delay: 4000 });
+			}
+
 			if (phone === '09000000000') {
 				return fail('cooldown', 'برای دریافت کد جدید ۴۵ ثانیه صبر کنید.', { retry_after: 45 });
 			}
@@ -301,7 +383,13 @@ const server = http.createServer(async (req, res) => {
 	if (pathname.startsWith('/mock/tisa-otp/v1/')) {
 		const route = pathname.replace('/mock/tisa-otp/v1/', '').replace(/\/$/, '');
 		const body = req.method === 'POST' ? await readBody(req) : {};
-		sendJson(res, handleRest(route, body));
+		const result = handleRest(route, body, req.headers);
+
+		if (result.delay) {
+			await new Promise((resolve) => setTimeout(resolve, result.delay));
+		}
+
+		sendJson(res, result);
 		return;
 	}
 

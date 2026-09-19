@@ -2,9 +2,9 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Tisa OTP 1.0.0\n"
+"Project-Id-Version: Tisa OTP 1.0.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tisa-otp\n"
-"POT-Creation-Date: 2026-09-17 21:03+0000\n"
+"POT-Creation-Date: 2026-09-18 00:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -13,8 +13,13 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Tisa OTP pot builder 1.0\n"
+"X-Generator: Tisa OTP pot builder 1.1\n"
 "X-Domain: tisa-otp\n"
+
+#. translators: %s: minimum PHP version
+#: tisa-otp.php:39
+msgid "تیسا OTP به PHP نسخه %s یا جدیدتر نیاز دارد و فعلاً غیرفعال است."
+msgstr ""
 
 #: src/Admin/Controls.php:75
 msgid "مقدار ذخیره شده است؛ برای تغییر، مقدار تازه را وارد کنید."
@@ -22,7 +27,7 @@ msgstr ""
 
 #: src/Admin/LogsScreen.php:52
 #: src/Admin/Menu.php:59
-#: src/Admin/SettingsScreen.php:818
+#: src/Admin/SettingsScreen.php:859
 msgid "رویدادها"
 msgstr ""
 
@@ -127,8 +132,8 @@ msgstr ""
 msgid "صفحه قبل"
 msgstr ""
 
-#: src/Admin/LogsScreen.php:163
 #. translators: %d: page number
+#: src/Admin/LogsScreen.php:163
 msgid "صفحه %d"
 msgstr ""
 
@@ -186,8 +191,8 @@ msgstr ""
 msgid "غیرفعال"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:95
 #. translators: %s: plugin version
+#: src/Admin/SettingsScreen.php:95
 msgid "نسخه %s"
 msgstr ""
 
@@ -292,99 +297,148 @@ msgid "هیچ‌کس نمی‌فهمد شماره‌اش قبلاً ثبت شد�
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:209
+msgid "سازگاری با کش صفحه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:214
+msgid "nonce تازه از سرور"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:215
+msgid "هنگام باز شدن فرم یک nonce تازه گرفته می‌شود و در صورت رد شدن، یک بار دیگر تلاش می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:218
+msgid "چاپ در صفحه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:219
+msgid "بدون درخواست اضافه؛ فقط وقتی کش صفحه و CDN خاموش است."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:223
+msgid "اگر کش صفحه، وارنیش یا Cloudflare دارید حالت «nonce تازه از سرور» را نگه دارید؛ وگرنه فرم خطای ۴۰۳ می‌گیرد."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:225
 msgid "رفتار کلی فرم ورود را اینجا تعیین کنید."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:213
+#: src/Admin/SettingsScreen.php:229
 #: src/Elementor/FormWidget.php:64
 msgid "مقصد پس از ورود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:215
+#: src/Admin/SettingsScreen.php:231
 msgid "پس از ورود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:217
+#: src/Admin/SettingsScreen.php:233
 msgid "خالی بگذارید تا کاربر به حساب کاربری (یا صفحه اصلی) برود."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:219
+#: src/Admin/SettingsScreen.php:235
 msgid "پس از عضویت"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:230
+#: src/Admin/SettingsScreen.php:248
+msgid "دامنه شما"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:255
 #: src/Admin/ToolsScreen.php:124
 msgid "کد یکبارمصرف"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:232
+#: src/Admin/SettingsScreen.php:257
 msgid "طول کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:233
+#: src/Admin/SettingsScreen.php:258
 msgid "رقم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:236
+#: src/Admin/SettingsScreen.php:261
 msgid "اعتبار کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:237
-#: src/Admin/SettingsScreen.php:245
+#: src/Admin/SettingsScreen.php:262
+#: src/Admin/SettingsScreen.php:270
+#: src/Admin/SettingsScreen.php:278
 msgid "ثانیه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:240
+#: src/Admin/SettingsScreen.php:265
 msgid "حداکثر تلاش برای وارد کردن کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:241
+#: src/Admin/SettingsScreen.php:266
 msgid "بار"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:244
+#: src/Admin/SettingsScreen.php:269
 msgid "فاصله بین دو ارسال"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:248
+#: src/Admin/SettingsScreen.php:273
+msgid "بررسی خودکار کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:274
+msgid "به‌محض کامل شدن کد، بدون زدن دکمه بررسی شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:275
+msgid "روی هر دو حالت ورودی (خانه‌خانه و یک‌کادر) و نیز هنگام چسباندن کد کار می‌کند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:277
+msgid "مهلت پاسخ سرور"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:279
+msgid "پس از این مدت درخواست لغو و پیام خطای شبکه نمایش داده می‌شود تا کاربر منتظر نماند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:281
 msgid "محل نگهداری کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:252
+#: src/Admin/SettingsScreen.php:285
 msgid "جدول اختصاصی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:252
+#: src/Admin/SettingsScreen.php:285
 msgid "پیش‌فرض؛ بدون نیاز به کش شیء"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:253
+#: src/Admin/SettingsScreen.php:286
 #: src/Admin/ToolsScreen.php:125
 msgid "کش شیء"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:253
+#: src/Admin/SettingsScreen.php:286
 msgid "سبک‌تر؛ فقط با Redis/Memcached پایدار"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:261
+#: src/Admin/SettingsScreen.php:294
 msgid "کانال‌های ارسال"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:263
+#: src/Admin/SettingsScreen.php:296
 msgid "کانال اصلی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:267
-#: src/Admin/SettingsScreen.php:277
+#: src/Admin/SettingsScreen.php:300
+#: src/Admin/SettingsScreen.php:310
 #: src/Admin/ToolsScreen.php:180
 #: src/Channel/SmsChannel.php:35
 msgid "پیامک"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:268
-#: src/Admin/SettingsScreen.php:278
-#: src/Admin/SettingsScreen.php:507
+#: src/Admin/SettingsScreen.php:301
+#: src/Admin/SettingsScreen.php:311
+#: src/Admin/SettingsScreen.php:548
 #: src/Admin/ToolsScreen.php:180
 #: src/Channel/EmailChannel.php:35
 #: src/Registration/FieldCatalog.php:59
@@ -392,725 +446,741 @@ msgstr ""
 msgid "ایمیل"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:273
+#: src/Admin/SettingsScreen.php:306
 msgid "کانال‌های فعال"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:281
+#: src/Admin/SettingsScreen.php:314
 msgid "اگر کانال اصلی ناموفق باشد، به کانال فعال بعدی می‌رویم."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:283
+#: src/Admin/SettingsScreen.php:316
 msgid "جابه‌جایی خودکار"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:284
+#: src/Admin/SettingsScreen.php:317
 msgid "در صورت خطای موقت، کانال/سامانه بعدی امتحان شود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:287
+#: src/Admin/SettingsScreen.php:320
 msgid "متن پیامک"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:289
-#: src/Admin/SettingsScreen.php:302
-msgid "نشانه‌ها: {code} {minutes} {site}"
+#: src/Admin/SettingsScreen.php:322
+msgid "نشانه‌ها: {code} {phone} {minutes} {site} {domain} {webotp}"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:294
+#: src/Admin/SettingsScreen.php:324
+msgid "خواندن خودکار کد (WebOTP)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:325
+msgid "خط شناسایی به انتهای پیامک اضافه شود"
+msgstr ""
+
+#. translators: %s: the WebOTP binding line, for example @example.com #12345
+#: src/Admin/SettingsScreen.php:328
+msgid "با فعال کردن، خط %s به انتهای پیامک‌های متنی اضافه می‌شود تا کروم و اندروید خودشان کد را پیشنهاد دهند. چند نویسه به پیامک اضافه می‌کند، پس اگر هزینه یا طول پیامک برایتان مهم است خاموش نگه دارید. برای سامانه‌های الگودار (Pattern) همین خط را داخل الگوی خود سامانه بگذارید یا از نشانه {webotp} در متن استفاده کنید."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:335
 msgid "کانال ایمیل"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:296
+#: src/Admin/SettingsScreen.php:337
 msgid "موضوع ایمیل"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:300
+#: src/Admin/SettingsScreen.php:341
 msgid "متن ایمیل"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:304
+#: src/Admin/SettingsScreen.php:343
+msgid "نشانه‌ها: {code} {minutes} {site}"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:345
 msgid "فرستنده"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:306
+#: src/Admin/SettingsScreen.php:347
 msgid "خالی بگذارید تا از آدرس پیش‌فرض وردپرس استفاده شود."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:321
+#: src/Admin/SettingsScreen.php:362
 msgid "انتخاب سامانه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:323
+#: src/Admin/SettingsScreen.php:364
 msgid "سامانه اصلی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:327
+#: src/Admin/SettingsScreen.php:368
 msgid "سامانه پشتیبان"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:328
+#: src/Admin/SettingsScreen.php:369
 msgid "بدون پشتیبان"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:329
+#: src/Admin/SettingsScreen.php:370
 msgid "فقط برای خطاهای موقت (تایم‌اوت، خطای ۵xx، اتمام اعتبار) استفاده می‌شود."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:359
+#: src/Admin/SettingsScreen.php:400
 msgid "این سامانه در حال حاضر سامانه اصلی است."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:361
+#: src/Admin/SettingsScreen.php:402
 msgid "این سامانه به‌عنوان پشتیبان انتخاب شده است."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:363
+#: src/Admin/SettingsScreen.php:404
 msgid "اعتبارنامه این سامانه کامل نیست."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:367
+#: src/Admin/SettingsScreen.php:408
 msgid "مستندات سامانه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:374
+#: src/Admin/SettingsScreen.php:415
 msgid "می‌توانید اعتبارنامه‌ها را به‌جای دیتابیس در wp-config.php هم تعریف کنید؛ مثلاً <code>TISA_OTP_SMSIR_API_KEY</code>."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:382
+#: src/Admin/SettingsScreen.php:423
 msgid "محدودیت ارسال"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:384
+#: src/Admin/SettingsScreen.php:425
 msgid "فعال بودن محدودیت‌ها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:385
+#: src/Admin/SettingsScreen.php:426
 msgid "شمارنده‌های ارسال و تأیید اعمال شوند"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:388
+#: src/Admin/SettingsScreen.php:429
 msgid "بازه شمارش"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:389
+#: src/Admin/SettingsScreen.php:430
 msgid "دقیقه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:392
+#: src/Admin/SettingsScreen.php:433
 msgid "سقف هر شماره"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:393
-#: src/Admin/SettingsScreen.php:397
+#: src/Admin/SettingsScreen.php:434
+#: src/Admin/SettingsScreen.php:438
 msgid "ارسال در بازه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:396
+#: src/Admin/SettingsScreen.php:437
 msgid "سقف هر آدرس IP"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:400
+#: src/Admin/SettingsScreen.php:441
 msgid "سقف روزانه هر IP"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:401
+#: src/Admin/SettingsScreen.php:442
 msgid "ارسال در روز"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:404
+#: src/Admin/SettingsScreen.php:445
 msgid "سقف تأیید کد هر IP"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:405
+#: src/Admin/SettingsScreen.php:446
 msgid "تلاش در بازه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:408
+#: src/Admin/SettingsScreen.php:449
 msgid "شمارنده‌ها در جدول اختصاصی و به‌صورت اتمی ثبت می‌شوند."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:412
+#: src/Admin/SettingsScreen.php:453
 msgid "پروکسی و IP واقعی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:414
+#: src/Admin/SettingsScreen.php:455
 msgid "سرآشد معتبر"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:418
+#: src/Admin/SettingsScreen.php:459
 msgid "هیچ (فقط REMOTE_ADDR)"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:419
+#: src/Admin/SettingsScreen.php:460
 msgid "کلادفلر (CF-Connecting-IP)"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:420
+#: src/Admin/SettingsScreen.php:461
 msgid "X-Forwarded-For"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:421
+#: src/Admin/SettingsScreen.php:462
 msgid "X-Real-IP"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:424
+#: src/Admin/SettingsScreen.php:465
 msgid "سرآشد تنها از پروکسی‌های مورد اعتماد پایین پذیرفته می‌شود."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:426
+#: src/Admin/SettingsScreen.php:467
 msgid "پروکسی‌های مورد اعتماد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:428
+#: src/Admin/SettingsScreen.php:469
 msgid "IP یا CIDR، با کاما جدا کنید."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:433
+#: src/Admin/SettingsScreen.php:474
 msgid "کپچا"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:437
+#: src/Admin/SettingsScreen.php:478
 msgid "سرویس"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:441
+#: src/Admin/SettingsScreen.php:482
 msgid "کلید سایت"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:445
+#: src/Admin/SettingsScreen.php:486
 msgid "کلید خصوصی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:449
+#: src/Admin/SettingsScreen.php:490
 msgid "حداقل امتیاز (reCAPTCHA v3)"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:453
+#: src/Admin/SettingsScreen.php:494
 msgid "زمان نمایش"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:457
+#: src/Admin/SettingsScreen.php:498
 msgid "همیشه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:457
+#: src/Admin/SettingsScreen.php:498
 msgid "هر درخواست ارسال کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:458
+#: src/Admin/SettingsScreen.php:499
 msgid "پس از چند تلاش"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:458
+#: src/Admin/SettingsScreen.php:499
 msgid "تجربه روان‌تر برای انسان‌ها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:466
+#: src/Admin/SettingsScreen.php:507
 msgid "نقش‌های محافظت‌شده"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:468
+#: src/Admin/SettingsScreen.php:509
 msgid "مسدودسازی ورود پیامکی نقش‌های حساس"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:469
+#: src/Admin/SettingsScreen.php:510
 msgid "این نقش‌ها فقط با رمز عبور وارد شوند"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:472
+#: src/Admin/SettingsScreen.php:513
 msgid "نقش‌ها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:474
+#: src/Admin/SettingsScreen.php:515
 msgid "نام نقش‌ها با کاما. مدیران کل همیشه مسدود هستند."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:476
+#: src/Admin/SettingsScreen.php:517
 msgid "نقش پیش‌فرض کاربران تازه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:487
+#: src/Admin/SettingsScreen.php:528
 msgid "عضویت"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:489
+#: src/Admin/SettingsScreen.php:530
 msgid "فعال بودن عضویت"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:490
+#: src/Admin/SettingsScreen.php:531
 msgid "شماره‌های تازه بتوانند حساب بسازند"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:493
+#: src/Admin/SettingsScreen.php:534
 msgid "عضویت خودکار"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:494
+#: src/Admin/SettingsScreen.php:535
 msgid "پس از تأیید کد، حساب ساخته شود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:497
+#: src/Admin/SettingsScreen.php:538
 msgid "ترتیب مراحل"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:501
+#: src/Admin/SettingsScreen.php:542
 msgid "اول فرم، بعد کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:501
+#: src/Admin/SettingsScreen.php:542
 msgid "کمترین پیامک هدررفته"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:502
+#: src/Admin/SettingsScreen.php:543
 msgid "اول کد، بعد فرم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:502
+#: src/Admin/SettingsScreen.php:543
 msgid "شماره پیش از دریافت اطلاعات تأیید می‌شود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:511
+#: src/Admin/SettingsScreen.php:552
 msgid "جمع‌آوری نشود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:512
+#: src/Admin/SettingsScreen.php:553
 msgid "اختیاری"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:513
-#: src/Admin/SettingsScreen.php:579
+#: src/Admin/SettingsScreen.php:554
+#: src/Admin/SettingsScreen.php:620
 msgid "الزامی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:518
+#: src/Admin/SettingsScreen.php:559
 #: src/Gateway/Drivers/FarazSms.php:36
 #: src/Gateway/Drivers/MeliPayamak.php:35
 msgid "نام کاربری"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:522
+#: src/Admin/SettingsScreen.php:563
 msgid "بر پایه شماره"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:523
+#: src/Admin/SettingsScreen.php:564
 msgid "شماره با پیشوند user"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:524
+#: src/Admin/SettingsScreen.php:565
 msgid "بر پایه ایمیل"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:529
+#: src/Admin/SettingsScreen.php:570
 msgid "نام نمایشی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:533
+#: src/Admin/SettingsScreen.php:574
 msgid "نام و نام خانوادگی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:534
+#: src/Admin/SettingsScreen.php:575
 msgid "فقط نام"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:535
+#: src/Admin/SettingsScreen.php:576
 msgid "شماره ماسک‌شده"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:540
+#: src/Admin/SettingsScreen.php:581
 msgid "ایمیل خوش‌آمد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:541
+#: src/Admin/SettingsScreen.php:582
 msgid "پس از عضویت ایمیل خوش‌آمد ارسال شود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:544
+#: src/Admin/SettingsScreen.php:585
 msgid "عنوان فرم عضویت"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:548
+#: src/Admin/SettingsScreen.php:589
 msgid "توضیح فرم عضویت"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:555
+#: src/Admin/SettingsScreen.php:596
 msgid "فیلدها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:557
+#: src/Admin/SettingsScreen.php:598
 msgid "مجموعه آماده"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:559
+#: src/Admin/SettingsScreen.php:600
 msgid "گزینه «دلخواه» فیلدهای پایین را اعمال می‌کند."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:568
-#. translators: %s: plugin version */ __( 'نسخه %s', 'tisa-otp' ), TISA_OTP_VERSION ) ) . '</span>'; echo '</div></div>'; } private function tabs( string $current ): void { echo '<nav class="tisa-tabs" aria-label="' . esc_attr__( 'بخش‌های تنظیمات', 'tisa-otp' ) . '"><ul>'; foreach ( $this->tabLabels() as $id => $label ) { $url = admin_url( 'admin.php?page=tisa-otp&tab=' . $id ); printf( '<li><a href="%1$s" class="tisa-tab%2$s">%3$s</a></li>', esc_url( $url ), $current === $id ? ' is-current' : '', esc_html( $label ) ); } echo '</ul></nav>'; } private function currentTab(): string { $tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended return array_key_exists( $tab, $this->tabLabels() ) ? $tab : 'general'; } private function tabLabels(): array { return array( 'general' => __( 'عمومی', 'tisa-otp' ), 'code' => __( 'کد و کانال‌ها', 'tisa-otp' ), 'gateways' => __( 'سامانه‌های پیامکی', 'tisa-otp' ), 'security' => __( 'امنیت و محدودیت', 'tisa-otp' ), 'registration' => __( 'فرم عضویت', 'tisa-otp' ), 'design' => __( 'ظاهر فرم', 'tisa-otp' ), 'store' => __( 'فروشگاه', 'tisa-otp' ), 'data' => __( 'داده و رویدادها', 'tisa-otp' ), ); } private function section( string $tab ): void { echo '<div class="tisa-section" data-tab="' . esc_attr( $tab ) . '">'; switch ( $tab ) { case 'code': $this->codeSection(); break; case 'gateways': $this->gatewaySection(); break; case 'security': $this->securitySection(); break; case 'registration': $this->registrationSection(); break; case 'design': $this->designSection(); break; case 'store': $this->storeSection(); break; case 'data': $this->dataSection(); break; case 'general': default: $this->generalSection(); } echo '</div>'; } private function card( string $title, callable $body, string $intro = '' ): void { echo '<section class="tisa-card"><h2>' . esc_html( $title ) . '</h2>'; if ( '' !== $intro ) { echo '<p class="tisa-card__intro">' . esc_html( $intro ) . '</p>'; } $body(); echo '</section>'; } private function generalSection(): void { $c = $this->controls; $this->card( __( 'رفتار ورود', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'فعال‌سازی افزونه', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'enabled', __( 'ورود و عضویت با کد یکبارمصرف فعال باشد', 'tisa-otp' ) ); } ); $c->row( __( 'حالت احراز', 'tisa-otp' ), function () use ( $c ) { $c->cards( 'auth_mode', array( 'smart' => array( 'label' => __( 'هوشمند', 'tisa-otp' ), 'desc' => __( 'کاربر موجود وارد می‌شود و کاربر تازه عضو', 'tisa-otp' ) ), 'login_only' => array( 'label' => __( 'فقط ورود', 'tisa-otp' ), 'desc' => __( 'عضویت خودکار بسته است', 'tisa-otp' ) ), 'register_only' => array( 'label' => __( 'فقط عضویت', 'tisa-otp' ), 'desc' => __( 'مناسب فرم‌های ثبت‌نام', 'tisa-otp' ) ), ) ); } ); $c->row( __( 'جایگزینی صفحه ورود وردپرس', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'replace_wp_login', __( 'فرم OTP روی wp-login.php نمایش داده شود', 'tisa-otp' ), __( 'فرم کلاسیک وردپرس پنهان می‌شود.', 'tisa-otp' ) ); } ); $c->row( __( 'پنهان‌سازی وجود حساب', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'prevent_enumeration', __( 'پیام‌ها یکسان باشند', 'tisa-otp' ), __( 'هیچ‌کس نمی‌فهمد شماره‌اش قبلاً ثبت شده یا نه.', 'tisa-otp' ) ); } ); }, __( 'رفتار کلی فرم ورود را اینجا تعیین کنید.', 'tisa-otp' ) ); $this->card( __( 'مقصد پس از ورود', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'پس از ورود', 'tisa-otp' ), function () use ( $c ) { $c->text( 'login_redirect', home_url( '/' ), 'url' ); }, __( 'خالی بگذارید تا کاربر به حساب کاربری (یا صفحه اصلی) برود.', 'tisa-otp' ) ); $c->row( __( 'پس از عضویت', 'tisa-otp' ), function () use ( $c ) { $c->text( 'register_redirect', '', 'url' ); } ); } ); } private function codeSection(): void { $c = $this->controls; $this->card( __( 'کد یکبارمصرف', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'طول کد', 'tisa-otp' ), function () use ( $c ) { $c->number( 'code_length', 4, 8, __( 'رقم', 'tisa-otp' ) ); } ); $c->row( __( 'اعتبار کد', 'tisa-otp' ), function () use ( $c ) { $c->number( 'code_ttl', 30, 3600, __( 'ثانیه', 'tisa-otp' ) ); } ); $c->row( __( 'حداکثر تلاش برای وارد کردن کد', 'tisa-otp' ), function () use ( $c ) { $c->number( 'verify_attempts', 2, 15, __( 'بار', 'tisa-otp' ) ); } ); $c->row( __( 'فاصله بین دو ارسال', 'tisa-otp' ), function () use ( $c ) { $c->number( 'resend_delay', 10, 1800, __( 'ثانیه', 'tisa-otp' ) ); } ); $c->row( __( 'محل نگهداری کد', 'tisa-otp' ), function () use ( $c ) { $c->cards( 'code_store', array( 'database' => array( 'label' => __( 'جدول اختصاصی', 'tisa-otp' ), 'desc' => __( 'پیش‌فرض؛ بدون نیاز به کش شیء', 'tisa-otp' ) ), 'cache' => array( 'label' => __( 'کش شیء', 'tisa-otp' ), 'desc' => __( 'سبک‌تر؛ فقط با Redis/Memcached پایدار', 'tisa-otp' ) ), ) ); } ); } ); $this->card( __( 'کانال‌های ارسال', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'کانال اصلی', 'tisa-otp' ), function () use ( $c ) { $c->select( 'channel', array( 'sms' => __( 'پیامک', 'tisa-otp' ), 'email' => __( 'ایمیل', 'tisa-otp' ), ) ); } ); $c->row( __( 'کانال‌های فعال', 'tisa-otp' ), function () use ( $c ) { $c->checkboxList( 'channels_enabled', array( 'sms' => __( 'پیامک', 'tisa-otp' ), 'email' => __( 'ایمیل', 'tisa-otp' ), ) ); }, __( 'اگر کانال اصلی ناموفق باشد، به کانال فعال بعدی می‌رویم.', 'tisa-otp' ) ); $c->row( __( 'جابه‌جایی خودکار', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'failover_enabled', __( 'در صورت خطای موقت، کانال/سامانه بعدی امتحان شود', 'tisa-otp' ) ); } ); $c->row( __( 'متن پیامک', 'tisa-otp' ), function () use ( $c ) { $c->textarea( 'sms_template', 2, 'کد ورود: {code}' ); }, __( 'نشانه‌ها: {code} {minutes} {site}', 'tisa-otp' ) ); } ); $this->card( __( 'کانال ایمیل', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'موضوع ایمیل', 'tisa-otp' ), function () use ( $c ) { $c->text( 'email_subject' ); } ); $c->row( __( 'متن ایمیل', 'tisa-otp' ), function () use ( $c ) { $c->textarea( 'email_body', 4 ); }, __( 'نشانه‌ها: {code} {minutes} {site}', 'tisa-otp' ) ); $c->row( __( 'فرستنده', 'tisa-otp' ), function () use ( $c ) { $c->text( 'email_from', get_option( 'admin_email' ), 'email' ); }, __( 'خالی بگذارید تا از آدرس پیش‌فرض وردپرس استفاده شود.', 'tisa-otp' ) ); } ); } private function gatewaySection(): void { $c = $this->controls; $labels = $this->gateways->labels(); $options = array(); foreach ( $labels as $id => $label ) { $options[ $id ] = $label; } $this->card( __( 'انتخاب سامانه', 'tisa-otp' ), function () use ( $c, $options ) { $c->row( __( 'سامانه اصلی', 'tisa-otp' ), function () use ( $c, $options ) { $c->select( 'sms_gateway', $options ); } ); $c->row( __( 'سامانه پشتیبان', 'tisa-otp' ), function () use ( $c, $options ) { $c->select( 'sms_backup_gateway', array( '' => __( 'بدون پشتیبان', 'tisa-otp' ) ) + $options ); }, __( 'فقط برای خطاهای موقت (تایم‌اوت، خطای ۵xx، اتمام اعتبار) استفاده می‌شود.', 'tisa-otp' ) ); } ); foreach ( $this->gateways->all() as $id => $driver ) { $report = $this->gateways->report(); $state = isset( $report[ $id ] ) ? $report[ $id ] : array(); $this->card( $driver->label(), function () use ( $c, $driver, $state ) { foreach ( $driver->fields() as $key => $field ) { $label = isset( $field['label'] ) ? (string) $field['label'] : $key; $hint = isset( $field['hint'] ) ? (string) $field['hint'] : ''; $type = isset( $field['type'] ) ? (string) $field['type'] : 'text'; $c->row( $label, function () use ( $c, $key, $type ) { if ( 'password' === $type ) { $c->secret( $key ); } else { $c->text( $key ); } }, $hint ); } if ( ! empty( $state['active'] ) ) { $c->notice( __( 'این سامانه در حال حاضر سامانه اصلی است.', 'tisa-otp' ), 'success' ); } elseif ( ! empty( $state['backup'] ) ) { $c->notice( __( 'این سامانه به‌عنوان پشتیبان انتخاب شده است.', 'tisa-otp' ) ); } elseif ( ! empty( $state['missing'] ) ) { $c->notice( __( 'اعتبارنامه این سامانه کامل نیست.', 'tisa-otp' ), 'warning' ); } if ( ! empty( $state['docs'] ) ) { $c->description( sprintf( '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>', esc_url( (string) $state['docs'] ), esc_html__( 'مستندات سامانه', 'tisa-otp' ) ) ); } } ); } $this->controls->description( __( 'می‌توانید اعتبارنامه‌ها را به‌جای دیتابیس در wp-config.php هم تعریف کنید؛ مثلاً <code>TISA_OTP_SMSIR_API_KEY</code>.', 'tisa-otp' ) ); } private function securitySection(): void { $c = $this->controls; $this->card( __( 'محدودیت ارسال', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'فعال بودن محدودیت‌ها', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'throttle_enabled', __( 'شمارنده‌های ارسال و تأیید اعمال شوند', 'tisa-otp' ) ); } ); $c->row( __( 'بازه شمارش', 'tisa-otp' ), function () use ( $c ) { $c->number( 'window_minutes', 1, 1440, __( 'دقیقه', 'tisa-otp' ) ); } ); $c->row( __( 'سقف هر شماره', 'tisa-otp' ), function () use ( $c ) { $c->number( 'limit_per_phone', 1, 100, __( 'ارسال در بازه', 'tisa-otp' ) ); } ); $c->row( __( 'سقف هر آدرس IP', 'tisa-otp' ), function () use ( $c ) { $c->number( 'limit_per_ip', 1, 500, __( 'ارسال در بازه', 'tisa-otp' ) ); } ); $c->row( __( 'سقف روزانه هر IP', 'tisa-otp' ), function () use ( $c ) { $c->number( 'limit_per_ip_daily', 1, 5000, __( 'ارسال در روز', 'tisa-otp' ) ); } ); $c->row( __( 'سقف تأیید کد هر IP', 'tisa-otp' ), function () use ( $c ) { $c->number( 'limit_verify_per_ip', 5, 1000, __( 'تلاش در بازه', 'tisa-otp' ) ); } ); }, __( 'شمارنده‌ها در جدول اختصاصی و به‌صورت اتمی ثبت می‌شوند.', 'tisa-otp' ) ); $this->card( __( 'پروکسی و IP واقعی', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'سرآشد معتبر', 'tisa-otp' ), function () use ( $c ) { $c->select( 'proxy_mode', array( 'none' => __( 'هیچ (فقط REMOTE_ADDR)', 'tisa-otp' ), 'cloudflare' => __( 'کلادفلر (CF-Connecting-IP)', 'tisa-otp' ), 'forwarded' => __( 'X-Forwarded-For', 'tisa-otp' ), 'real_ip' => __( 'X-Real-IP', 'tisa-otp' ), ) ); }, __( 'سرآشد تنها از پروکسی‌های مورد اعتماد پایین پذیرفته می‌شود.', 'tisa-otp' ) ); $c->row( __( 'پروکسی‌های مورد اعتماد', 'tisa-otp' ), function () use ( $c ) { $c->text( 'trusted_proxies', '173.245.48.0/20, 127.0.0.1' ); }, __( 'IP یا CIDR، با کاما جدا کنید.', 'tisa-otp' ) ); } ); $this->card( __( 'کپچا', 'tisa-otp' ), function () use ( $c ) { $captcha = $this->captcha; $c->row( __( 'سرویس', 'tisa-otp' ), function () use ( $c, $captcha ) { $c->select( 'captcha_provider', $captcha->labels() ); } ); $c->row( __( 'کلید سایت', 'tisa-otp' ), function () use ( $c ) { $c->text( 'captcha_site_key' ); } ); $c->row( __( 'کلید خصوصی', 'tisa-otp' ), function () use ( $c ) { $c->secret( 'captcha_secret_key' ); } ); $c->row( __( 'حداقل امتیاز (reCAPTCHA v3)', 'tisa-otp' ), function () use ( $c ) { $c->text( 'captcha_score', '0.5' ); } ); $c->row( __( 'زمان نمایش', 'tisa-otp' ), function () use ( $c ) { $c->cards( 'captcha_trigger', array( 'always' => array( 'label' => __( 'همیشه', 'tisa-otp' ), 'desc' => __( 'هر درخواست ارسال کد', 'tisa-otp' ) ), 'after_limit' => array( 'label' => __( 'پس از چند تلاش', 'tisa-otp' ), 'desc' => __( 'تجربه روان‌تر برای انسان‌ها', 'tisa-otp' ) ), ) ); } ); } ); $this->card( __( 'نقش‌های محافظت‌شده', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'مسدودسازی ورود پیامکی نقش‌های حساس', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'guard_roles', __( 'این نقش‌ها فقط با رمز عبور وارد شوند', 'tisa-otp' ) ); } ); $c->row( __( 'نقش‌ها', 'tisa-otp' ), function () use ( $c ) { $c->text( 'guarded_roles', 'administrator,editor,shop_manager' ); }, __( 'نام نقش‌ها با کاما. مدیران کل همیشه مسدود هستند.', 'tisa-otp' ) ); $c->row( __( 'نقش پیش‌فرض کاربران تازه', 'tisa-otp' ), function () use ( $c ) { $c->select( 'default_role', AccessPolicy::selectableRoles() ); } ); } ); } private function registrationSection(): void { $c = $this->controls; $this->card( __( 'عضویت', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'فعال بودن عضویت', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'registration_enabled', __( 'شماره‌های تازه بتوانند حساب بسازند', 'tisa-otp' ) ); } ); $c->row( __( 'عضویت خودکار', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'auto_register', __( 'پس از تأیید کد، حساب ساخته شود', 'tisa-otp' ) ); } ); $c->row( __( 'ترتیب مراحل', 'tisa-otp' ), function () use ( $c ) { $c->cards( 'registration_flow', array( 'fields_then_code' => array( 'label' => __( 'اول فرم، بعد کد', 'tisa-otp' ), 'desc' => __( 'کمترین پیامک هدررفته', 'tisa-otp' ) ), 'code_then_fields' => array( 'label' => __( 'اول کد، بعد فرم', 'tisa-otp' ), 'desc' => __( 'شماره پیش از دریافت اطلاعات تأیید می‌شود', 'tisa-otp' ) ), ) ); } ); $c->row( __( 'ایمیل', 'tisa-otp' ), function () use ( $c ) { $c->select( 'email_mode', array( 'off' => __( 'جمع‌آوری نشود', 'tisa-otp' ), 'optional' => __( 'اختیاری', 'tisa-otp' ), 'required' => __( 'الزامی', 'tisa-otp' ), ) ); } ); $c->row( __( 'نام کاربری', 'tisa-otp' ), function () use ( $c ) { $c->select( 'username_from', array( 'phone' => __( 'بر پایه شماره', 'tisa-otp' ), 'phone_prefixed' => __( 'شماره با پیشوند user', 'tisa-otp' ), 'email' => __( 'بر پایه ایمیل', 'tisa-otp' ), ) ); } ); $c->row( __( 'نام نمایشی', 'tisa-otp' ), function () use ( $c ) { $c->select( 'display_name_from', array( 'full_name' => __( 'نام و نام خانوادگی', 'tisa-otp' ), 'first_name' => __( 'فقط نام', 'tisa-otp' ), 'phone' => __( 'شماره ماسک‌شده', 'tisa-otp' ), ) ); } ); $c->row( __( 'ایمیل خوش‌آمد', 'tisa-otp' ), function () use ( $c ) { $c->toggle( 'send_welcome_email', __( 'پس از عضویت ایمیل خوش‌آمد ارسال شود', 'tisa-otp' ) ); } ); $c->row( __( 'عنوان فرم عضویت', 'tisa-otp' ), function () use ( $c ) { $c->text( 'register_heading' ); } ); $c->row( __( 'توضیح فرم عضویت', 'tisa-otp' ), function () use ( $c ) { $c->textarea( 'register_subheading', 2 ); } ); } ); $this->card( __( 'فیلدها', 'tisa-otp' ), function () use ( $c ) { $c->row( __( 'مجموعه آماده', 'tisa-otp' ), function () use ( $c ) { $c->select( 'field_preset', FieldCatalog::labels() ); }, __( 'گزینه «دلخواه» فیلدهای پایین را اعمال می‌کند.', 'tisa-otp' ) ); $this->fieldRepeater(); } ); $this->controls->description( sprintf( /* translators: %d: number of active fields
+#. translators: %d: number of active fields
+#: src/Admin/SettingsScreen.php:609
 msgid "اکنون %d فیلد در فرم عضویت فعال است."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:579
+#: src/Admin/SettingsScreen.php:620
 msgid "شناسه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:579
-#: src/Admin/SettingsScreen.php:611
+#: src/Admin/SettingsScreen.php:620
+#: src/Admin/SettingsScreen.php:652
 msgid "برچسب"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:579
+#: src/Admin/SettingsScreen.php:620
 msgid "نوع"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:579
+#: src/Admin/SettingsScreen.php:620
 msgid "کلید متا"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:590
+#: src/Admin/SettingsScreen.php:631
 msgid "افزودن فیلد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:622
+#: src/Admin/SettingsScreen.php:663
 msgid "متا"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:622
+#: src/Admin/SettingsScreen.php:663
 msgid "هسته وردپرس"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:622
-#: src/Admin/SettingsScreen.php:776
+#: src/Admin/SettingsScreen.php:663
+#: src/Admin/SettingsScreen.php:817
 msgid "ووکامرس"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:633
+#: src/Admin/SettingsScreen.php:674
 msgid "حذف"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:642
+#: src/Admin/SettingsScreen.php:683
 msgid "پوسته و رنگ"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:644
+#: src/Admin/SettingsScreen.php:685
 #: src/Elementor/FormWidget.php:76
 msgid "پوسته"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:648
+#: src/Admin/SettingsScreen.php:689
 #: src/Elementor/FormWidget.php:81
 msgid "خطی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:648
+#: src/Admin/SettingsScreen.php:689
 msgid "کمترین تزئین، سریع‌ترین بارگذاری"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:649
+#: src/Admin/SettingsScreen.php:690
 #: src/Elementor/FormWidget.php:82
 msgid "کارت"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:649
+#: src/Admin/SettingsScreen.php:690
 msgid "کارت سایه‌دار روی پس‌زمینه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:650
+#: src/Admin/SettingsScreen.php:691
 #: src/Elementor/FormWidget.php:83
 msgid "شیشه‌ای"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:650
+#: src/Admin/SettingsScreen.php:691
 msgid "لایه نیمه‌شفاف و محو"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:651
+#: src/Admin/SettingsScreen.php:692
 #: src/Elementor/FormWidget.php:84
 msgid "تیره"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:651
+#: src/Admin/SettingsScreen.php:692
 msgid "مناسب صفحات تیره"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:652
+#: src/Admin/SettingsScreen.php:693
 #: src/Elementor/FormWidget.php:85
 msgid "گرد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:652
+#: src/Admin/SettingsScreen.php:693
 msgid "گوشه‌های کاملاً گرد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:657
+#: src/Admin/SettingsScreen.php:698
 #: src/Elementor/FormWidget.php:90
 msgid "رنگ تأکیدی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:661
+#: src/Admin/SettingsScreen.php:702
 msgid "رنگ زمینه فرم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:665
+#: src/Admin/SettingsScreen.php:706
 #: src/Elementor/FormWidget.php:92
 msgid "گردی گوشه‌ها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:669
+#: src/Admin/SettingsScreen.php:710
 msgid "عرض فرم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:673
+#: src/Admin/SettingsScreen.php:714
 #: src/Elementor/FormWidget.php:97
 msgid "چینش"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:677
+#: src/Admin/SettingsScreen.php:718
 #: src/Elementor/FormWidget.php:102
 msgid "مرکز"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:678
+#: src/Admin/SettingsScreen.php:719
 #: src/Elementor/FormWidget.php:103
 msgid "ابتدا"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:679
+#: src/Admin/SettingsScreen.php:720
 #: src/Elementor/FormWidget.php:104
 msgid "انتها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:684
+#: src/Admin/SettingsScreen.php:725
 #: src/Elementor/FormWidget.php:112
 msgid "ورودی کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:688
+#: src/Admin/SettingsScreen.php:729
 msgid "خانه‌های جدا"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:688
+#: src/Admin/SettingsScreen.php:729
 msgid "هر رقم در یک کادر"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:689
+#: src/Admin/SettingsScreen.php:730
 #: src/Elementor/FormWidget.php:118
 msgid "یک کادر"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:689
+#: src/Admin/SettingsScreen.php:730
 msgid "ساده و فشرده"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:697
+#: src/Admin/SettingsScreen.php:738
 msgid "برند و متن‌ها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:699
+#: src/Admin/SettingsScreen.php:740
 #: src/Elementor/FormWidget.php:126
 msgid "نمایش لوگو"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:700
+#: src/Admin/SettingsScreen.php:741
 msgid "لوگو بالای فرم نمایش داده شود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:703
+#: src/Admin/SettingsScreen.php:744
 msgid "آدرس لوگو"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:705
+#: src/Admin/SettingsScreen.php:746
 msgid "انتخاب از کتابخانه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:708
+#: src/Admin/SettingsScreen.php:749
 msgid "عرض لوگو"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:712
+#: src/Admin/SettingsScreen.php:753
 msgid "عنوان فرم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:716
+#: src/Admin/SettingsScreen.php:757
 msgid "توضیح فرم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:720
+#: src/Admin/SettingsScreen.php:761
 msgid "دکمه دریافت کد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:724
+#: src/Admin/SettingsScreen.php:765
 msgid "دکمه ورود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:728
+#: src/Admin/SettingsScreen.php:769
 msgid "ارسال دوباره"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:732
-#: src/Front/Assets.php:142
+#: src/Admin/SettingsScreen.php:773
+#: src/Front/Assets.php:147
 #: src/Front/FormRenderer.php:118
 msgid "ویرایش شماره"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:736
+#: src/Admin/SettingsScreen.php:777
 msgid "متن قوانین"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:737
+#: src/Admin/SettingsScreen.php:778
 msgid "نمایش متن قوانین زیر فرم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:745
+#: src/Admin/SettingsScreen.php:786
 msgid "CSS و JS دلخواه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:747
+#: src/Admin/SettingsScreen.php:788
 msgid "محل اعمال"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:751
+#: src/Admin/SettingsScreen.php:792
 msgid "فقط صفحات دارای فرم"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:752
+#: src/Admin/SettingsScreen.php:793
 msgid "همه صفحات"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:757
+#: src/Admin/SettingsScreen.php:798
 msgid "CSS دلخواه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:761
+#: src/Admin/SettingsScreen.php:802
 msgid "JS دلخواه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:763
+#: src/Admin/SettingsScreen.php:804
 msgid "فقط برای مدیران دارای دسترسی unfiltered_html ذخیره می‌شود."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:772
+#: src/Admin/SettingsScreen.php:813
 msgid "ووکامرس فعال نیست؛ این تنظیمات فعلاً اثری ندارند."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:778
+#: src/Admin/SettingsScreen.php:819
 msgid "فرم حساب کاربری"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:779
+#: src/Admin/SettingsScreen.php:820
 msgid "فرم ورود «حساب کاربری» با فرم OTP جایگزین شود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:782
+#: src/Admin/SettingsScreen.php:823
 msgid "ورود اجباری پیش از تسویه حساب"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:783
+#: src/Admin/SettingsScreen.php:824
 msgid "کاربر مهمان به صفحه تسویه حساب نرسد"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:786
+#: src/Admin/SettingsScreen.php:827
 msgid "صفحه ورود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:788
+#: src/Admin/SettingsScreen.php:829
 msgid "خالی بگذارید تا از wp-login.php استفاده شود."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:790
+#: src/Admin/SettingsScreen.php:831
 msgid "پیام صفحه تسویه حساب"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:794
+#: src/Admin/SettingsScreen.php:835
 msgid "همگام‌سازی شماره صورتحساب"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:795
+#: src/Admin/SettingsScreen.php:836
 msgid "شماره تأییدشده در billing_phone هم ذخیره شود"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:798
+#: src/Admin/SettingsScreen.php:839
 msgid "اتصال سفارش‌های مهمان"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:799
+#: src/Admin/SettingsScreen.php:840
 msgid "پس از عضویت، سفارش‌های مهمان با همان شماره به حساب متصل شوند"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:805
+#: src/Admin/SettingsScreen.php:846
 msgid "المنتور"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:808
+#: src/Admin/SettingsScreen.php:849
 msgid "ویجت «فرم ورود پیامکی تیسا» در دستهٔ تیسا OTP در المنتور در دسترس است. تمام تنظیمات این صفحه به‌صورت پیش‌فرض ویجت به کار می‌روند و در هر ویجت قابل بازنویسی‌اند."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:820
+#: src/Admin/SettingsScreen.php:861
 msgid "ثبت رویدادها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:821
+#: src/Admin/SettingsScreen.php:862
 msgid "رویدادها در جدول اختصاصی ذخیره شوند"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:824
+#: src/Admin/SettingsScreen.php:865
 #: src/Admin/ToolsScreen.php:232
 msgid "نگهداری"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:825
+#: src/Admin/SettingsScreen.php:866
 msgid "روز"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:828
+#: src/Admin/SettingsScreen.php:869
 msgid "حالت اشکال‌زدایی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:829
+#: src/Admin/SettingsScreen.php:870
 msgid "رویدادها در error_log هم نوشته شوند"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:829
+#: src/Admin/SettingsScreen.php:870
 msgid "فقط وقتی WP_DEBUG فعال است."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:832
+#: src/Admin/SettingsScreen.php:873
 msgid "شماره موبایل هرگز به‌صورت خام ذخیره نمی‌شود؛ فقط اثر انگشت HMAC و نسخه ماسک‌شده."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:836
+#: src/Admin/SettingsScreen.php:877
 msgid "کلیدهای داده"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:838
+#: src/Admin/SettingsScreen.php:879
 msgid "کلید متای اصلی شماره"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:840
+#: src/Admin/SettingsScreen.php:881
 msgid "تغییر این کلید، داده‌های موجود را منتقل نمی‌کند."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:842
+#: src/Admin/SettingsScreen.php:883
 msgid "کلیدهای جست‌وجوی جانبی"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:844
+#: src/Admin/SettingsScreen.php:885
 msgid "برای پیدا کردن حساب‌های قدیمی؛ با کاما جدا کنید."
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:849
+#: src/Admin/SettingsScreen.php:890
 msgid "حذف داده‌ها"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:851
+#: src/Admin/SettingsScreen.php:892
 msgid "هنگام حذف افزونه"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:852
+#: src/Admin/SettingsScreen.php:893
 msgid "جدول‌ها و تنظیمات هم پاک شوند"
 msgstr ""
 
-#: src/Admin/SettingsScreen.php:852
+#: src/Admin/SettingsScreen.php:893
 msgid "متای شماره کاربران در هر صورت نگه داشته می‌شود."
 msgstr ""
 
@@ -1138,8 +1208,8 @@ msgstr ""
 msgid "جدول"
 msgstr ""
 
-#: src/Admin/ToolsScreen.php:127
 #. translators: 1: length, 2: ttl
+#: src/Admin/ToolsScreen.php:127
 msgid "%1$d رقم / %2$d ثانیه"
 msgstr ""
 
@@ -1167,8 +1237,8 @@ msgstr ""
 msgid "محدودیت‌های فعال"
 msgstr ""
 
+#. translators: %d: limit per phone
 #: src/Admin/ToolsScreen.php:145
-#. translators: 1: length, 2: ttl */ __( '%1$d رقم / %2$d ثانیه', 'tisa-otp' ), $this->settings->int( 'code_length', 5 ), $this->settings->int( 'code_ttl', 120 ) ), ), array( 'label' => __( 'کش شیء پایدار', 'tisa-otp' ), 'value' => wp_using_ext_object_cache() ? __( 'فعال', 'tisa-otp' ) : __( 'غیرفعال', 'tisa-otp' ), 'ok' => true, 'note' => wp_using_ext_object_cache() ? '' : __( 'برای ذخیره کد در کش، Redis یا Memcached لازم است.', 'tisa-otp' ), ), array( 'label' => __( 'زمان‌بند cron', 'tisa-otp' ), 'value' => wp_next_scheduled( Maintenance::HOOK ) ? __( 'ثبت شده', 'tisa-otp' ) : __( 'ثبت نشده', 'tisa-otp' ), 'ok' => (bool) wp_next_scheduled( Maintenance::HOOK ), 'note' => '', ), array( 'label' => __( 'محدودیت‌های فعال', 'tisa-otp' ), 'value' => (string) ( (int) $throttle['cooldown_rows'] + (int) $throttle['quota_rows'] ), 'ok' => true, 'note' => sprintf( /* translators: %d: limit per phone
 msgid "سقف هر شماره در بازه: %d"
 msgstr ""
 
@@ -1176,8 +1246,8 @@ msgstr ""
 msgid "رویدادهای ثبت‌شده"
 msgstr ""
 
+#. translators: %d: errors
 #: src/Admin/ToolsScreen.php:151
-#. translators: 1: length, 2: ttl */ __( '%1$d رقم / %2$d ثانیه', 'tisa-otp' ), $this->settings->int( 'code_length', 5 ), $this->settings->int( 'code_ttl', 120 ) ), ), array( 'label' => __( 'کش شیء پایدار', 'tisa-otp' ), 'value' => wp_using_ext_object_cache() ? __( 'فعال', 'tisa-otp' ) : __( 'غیرفعال', 'tisa-otp' ), 'ok' => true, 'note' => wp_using_ext_object_cache() ? '' : __( 'برای ذخیره کد در کش، Redis یا Memcached لازم است.', 'tisa-otp' ), ), array( 'label' => __( 'زمان‌بند cron', 'tisa-otp' ), 'value' => wp_next_scheduled( Maintenance::HOOK ) ? __( 'ثبت شده', 'tisa-otp' ) : __( 'ثبت نشده', 'tisa-otp' ), 'ok' => (bool) wp_next_scheduled( Maintenance::HOOK ), 'note' => '', ), array( 'label' => __( 'محدودیت‌های فعال', 'tisa-otp' ), 'value' => (string) ( (int) $throttle['cooldown_rows'] + (int) $throttle['quota_rows'] ), 'ok' => true, 'note' => sprintf( /* translators: %d: limit per phone */ __( 'سقف هر شماره در بازه: %d', 'tisa-otp' ), (int) $throttle['per_phone'] ), ), array( 'label' => __( 'رویدادهای ثبت‌شده', 'tisa-otp' ), 'value' => (string) $totals['total'], 'ok' => $this->settings->bool( 'logs_enabled', true ), 'note' => sprintf( /* translators: %d: errors
 msgid "%d خطا"
 msgstr ""
 
@@ -1229,8 +1299,8 @@ msgstr ""
 msgid "منبعی با داده پیدا نشد"
 msgstr ""
 
+#. translators: %d: user count
 #: src/Admin/ToolsScreen.php:206
-#. translators: 1: length, 2: ttl */ __( '%1$d رقم / %2$d ثانیه', 'tisa-otp' ), $this->settings->int( 'code_length', 5 ), $this->settings->int( 'code_ttl', 120 ) ), ), array( 'label' => __( 'کش شیء پایدار', 'tisa-otp' ), 'value' => wp_using_ext_object_cache() ? __( 'فعال', 'tisa-otp' ) : __( 'غیرفعال', 'tisa-otp' ), 'ok' => true, 'note' => wp_using_ext_object_cache() ? '' : __( 'برای ذخیره کد در کش، Redis یا Memcached لازم است.', 'tisa-otp' ), ), array( 'label' => __( 'زمان‌بند cron', 'tisa-otp' ), 'value' => wp_next_scheduled( Maintenance::HOOK ) ? __( 'ثبت شده', 'tisa-otp' ) : __( 'ثبت نشده', 'tisa-otp' ), 'ok' => (bool) wp_next_scheduled( Maintenance::HOOK ), 'note' => '', ), array( 'label' => __( 'محدودیت‌های فعال', 'tisa-otp' ), 'value' => (string) ( (int) $throttle['cooldown_rows'] + (int) $throttle['quota_rows'] ), 'ok' => true, 'note' => sprintf( /* translators: %d: limit per phone */ __( 'سقف هر شماره در بازه: %d', 'tisa-otp' ), (int) $throttle['per_phone'] ), ), array( 'label' => __( 'رویدادهای ثبت‌شده', 'tisa-otp' ), 'value' => (string) $totals['total'], 'ok' => $this->settings->bool( 'logs_enabled', true ), 'note' => sprintf( /* translators: %d: errors */ __( '%d خطا', 'tisa-otp' ), (int) $totals['errors'] ), ), array( 'label' => __( 'حساب‌های دارای شماره', 'tisa-otp' ), 'value' => (string) $this->accountCount(), 'ok' => true, 'note' => $this->settings->str( 'phone_meta_key', 'tisa_phone' ), ), array( 'label' => __( 'ارتباط خروجی', 'tisa-otp' ), 'value' => $blocked ? __( 'محدود شده', 'tisa-otp' ) : __( 'باز', 'tisa-otp' ), 'ok' => ! $blocked, 'note' => $blocked ? __( 'WP_HTTP_BLOCK_EXTERNAL فعال است؛ دامنه سامانه پیامکی را در WP_ACCESSIBLE_HOSTS اضافه کنید.', 'tisa-otp' ) : '', ), array( 'label' => __( 'پیشوند جدول‌ها', 'tisa-otp' ), 'value' => (string) $wpdb->prefix, 'ok' => true, 'note' => '', ), ); } private function testSendCard(): void { echo '<section class="tisa-panel tisa-card"><h2>' . esc_html__( 'ارسال آزمایشی', 'tisa-otp' ) . '</h2>'; echo '<p class="tisa-card__intro">' . esc_html__( 'یک کد واقعی به شماره زیر ارسال می‌شود تا تنظیمات سامانه را بسنجید.', 'tisa-otp' ) . '</p>'; echo '<div class="tisa-inline">'; echo '<input type="tel" class="regular-text" dir="ltr" data-tisa-test-phone placeholder="09xxxxxxxxx">'; echo '<select data-tisa-test-channel><option value="sms">' . esc_html__( 'پیامک', 'tisa-otp' ) . '</option><option value="email">' . esc_html__( 'ایمیل', 'tisa-otp' ) . '</option></select>'; echo '<button type="button" class="button button-primary" data-tisa-test-send>' . esc_html__( 'ارسال کد آزمایشی', 'tisa-otp' ) . '</button>'; echo '</div>'; echo '<p class="tisa-result" data-tisa-test-result hidden></p>'; echo '</section>'; } private function importCard(): void { $found = $this->importer->detect(); echo '<section class="tisa-panel tisa-card" data-tisa-import><h2>' . esc_html__( 'واردسازی شماره‌های قدیمی', 'tisa-otp' ) . '</h2>'; echo '<p class="tisa-card__intro">' . esc_html__( 'شماره‌های ذخیره‌شده توسط ووکامرس یا افزونه‌های مشابه را به کلید اصلی تیسا منتقل کنید. کار به‌صورت دسته‌ای اجرا و قابل بازگشت است.', 'tisa-otp' ) . '</p>'; echo '<div class="tisa-inline">'; echo '<select data-tisa-import-source>'; if ( array() === $found ) { echo '<option value="">' . esc_html__( 'منبعی با داده پیدا نشد', 'tisa-otp' ) . '</option>'; } foreach ( $found as $source ) { printf( '<option value="%1$s">%2$s (%3$s)</option>', esc_attr( (string) $source['id'] ), esc_html( (string) $source['label'] ), esc_html( sprintf( /* translators: %d: user count
 msgid "%d کاربر"
 msgstr ""
 
@@ -1365,9 +1435,9 @@ msgstr ""
 msgid "ظاهر"
 msgstr ""
 
+#: src/Elementor/FormWidget.php:80
 #: src/Elementor/FormWidget.php:101
 #: src/Elementor/FormWidget.php:116
-#: src/Elementor/FormWidget.php:80
 msgid "از تنظیمات افزونه"
 msgstr ""
 
@@ -1403,65 +1473,89 @@ msgstr ""
 msgid "این عملیات قابل بازگشت نیست. ادامه می‌دهید؟"
 msgstr ""
 
-#: src/Front/Assets.php:139
+#: src/Front/Assets.php:144
 #: src/Front/FormRenderer.php:115
 msgid "دریافت کد تأیید"
 msgstr ""
 
-#: src/Front/Assets.php:140
+#: src/Front/Assets.php:145
 #: src/Front/FormRenderer.php:116
 msgid "ورود به حساب"
 msgstr ""
 
-#: src/Front/Assets.php:141
+#: src/Front/Assets.php:146
 #: src/Front/FormRenderer.php:117
 msgid "ارسال دوباره کد"
 msgstr ""
 
-#: src/Front/Assets.php:145
+#: src/Front/Assets.php:150
 msgid "۰۹۱۲۳۴۵۶۷۸۹"
 msgstr ""
 
-#: src/Front/Assets.php:146
+#: src/Front/Assets.php:151
 msgid "کد ۵ رقمی"
 msgstr ""
 
-#: src/Front/Assets.php:147
+#: src/Front/Assets.php:152
 msgid "در حال ارسال کد…"
 msgstr ""
 
-#: src/Front/Assets.php:148
+#: src/Front/Assets.php:153
 msgid "در حال بررسی کد…"
 msgstr ""
 
-#: src/Front/Assets.php:149
+#: src/Front/Assets.php:154
 msgid "در حال ساخت حساب…"
 msgstr ""
 
-#: src/Front/Assets.php:150
+#: src/Front/Assets.php:155
 msgid "ارسال دوباره تا {s} ثانیه"
 msgstr ""
 
-#: src/Front/Assets.php:151
+#: src/Front/Assets.php:156
 msgid "خطای شبکه. لطفاً دوباره تلاش کنید."
 msgstr ""
 
-#: src/Front/Assets.php:152
+#: src/Front/Assets.php:157
 #: src/Http/AdminController.php:76
 #: src/User/AccountFactory.php:47
 msgid "شماره موبایل معتبر نیست."
 msgstr ""
 
-#: src/Front/Assets.php:153
+#: src/Front/Assets.php:158
 msgid "لطفاً فیلدهای ستاره‌دار را کامل کنید."
 msgstr ""
 
-#: src/Front/Assets.php:154
+#: src/Front/Assets.php:159
+msgid "این فیلد الزامی است."
+msgstr ""
+
+#: src/Front/Assets.php:160
+msgid "قالب ایمیل معتبر نیست."
+msgstr ""
+
+#: src/Front/Assets.php:161
 msgid "کد را کامل وارد کنید."
 msgstr ""
 
-#: src/Front/Assets.php:155
+#: src/Front/Assets.php:162
 msgid "در حال انتقال…"
+msgstr ""
+
+#: src/Front/Assets.php:163
+msgid "پاسخ سرور به‌موقع نرسید. لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: src/Front/Assets.php:164
+msgid "اتصال اینترنت برقرار نیست."
+msgstr ""
+
+#: src/Front/Assets.php:165
+msgid "کد از پیامک خوانده شد."
+msgstr ""
+
+#: src/Front/Assets.php:166
+msgid "اکنون می‌توانید کد را دوباره ارسال کنید."
 msgstr ""
 
 #: src/Front/FormRenderer.php:113
@@ -1479,9 +1573,41 @@ msgstr ""
 msgid "ادامه"
 msgstr ""
 
-#: src/Front/FormRenderer.php:251
 #. translators: %s: display name
+#: src/Front/FormRenderer.php:254
 msgid "وارد شده‌اید: %s"
+msgstr ""
+
+#: src/Gateway/FailoverChain.php:35
+msgid "هیچ سامانه پیامکی پیکربندی نشده است."
+msgstr ""
+
+#: src/Gateway/FailoverChain.php:41
+msgid "سامانه پیامکی انتخاب‌شده شناخته نشده است."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:67
+msgid "کد با موفقیت ارسال شد."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:70
+msgid "ارسال کد ناموفق بود."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:64
+msgid "اعتبارنامه این سامانه پیامکی کامل نیست."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:109
+msgid "پاسخ نامعتبر از سامانه پیامکی."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:115
+msgid "ارتباط با سامانه پیامکی به‌موقع برقرار نشد."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:118
+msgid "خطای شبکه در ارتباط با سامانه پیامکی."
 msgstr ""
 
 #: src/Gateway/Drivers/FarazSms.php:26
@@ -1575,38 +1701,6 @@ msgstr ""
 msgid "کلید API سامانه SMS.ir تنظیم نشده است."
 msgstr ""
 
-#: src/Gateway/FailoverChain.php:35
-msgid "هیچ سامانه پیامکی پیکربندی نشده است."
-msgstr ""
-
-#: src/Gateway/FailoverChain.php:41
-msgid "سامانه پیامکی انتخاب‌شده شناخته نشده است."
-msgstr ""
-
-#: src/Gateway/GatewayResult.php:67
-msgid "کد با موفقیت ارسال شد."
-msgstr ""
-
-#: src/Gateway/GatewayResult.php:70
-msgid "ارسال کد ناموفق بود."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:64
-msgid "اعتبارنامه این سامانه پیامکی کامل نیست."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:109
-msgid "پاسخ نامعتبر از سامانه پیامکی."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:115
-msgid "ارتباط با سامانه پیامکی به‌موقع برقرار نشد."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:118
-msgid "خطای شبکه در ارتباط با سامانه پیامکی."
-msgstr ""
-
 #: src/Guard/BotGuard.php:35
 msgid "درخواست شما به‌عنوان ربات شناسایی شد."
 msgstr ""
@@ -1623,8 +1717,8 @@ msgstr ""
 msgid "سرویس ورود پیامکی در حال حاضر غیرفعال است."
 msgstr ""
 
-#: src/Guard/ThrottleGuard.php:54
 #. translators: %d: seconds left
+#: src/Guard/ThrottleGuard.php:54
 msgid "برای دریافت کد جدید %d ثانیه صبر کنید."
 msgstr ""
 
@@ -1732,8 +1826,8 @@ msgstr ""
 msgid "در صورت معتبر بودن شماره، کد تأیید ارسال می‌شود."
 msgstr ""
 
-#: src/Import/CustomMetaSource.php:28
 #. translators: %s: meta key
+#: src/Import/CustomMetaSource.php:28
 msgid "متای دلخواه: %s"
 msgstr ""
 
@@ -1761,8 +1855,8 @@ msgstr ""
 msgid "قالب کد واردشده درست نیست."
 msgstr ""
 
-#: src/Otp/VerificationResult.php:71
 #. translators: %d: remaining attempts
+#: src/Otp/VerificationResult.php:71
 msgid "کد واردشده درست نیست. %d تلاش باقی مانده است."
 msgstr ""
 
@@ -1811,8 +1905,8 @@ msgstr ""
 msgid "کد پستی"
 msgstr ""
 
-#: src/Registration/FieldValidator.php:46
 #. translators: %s: field label
+#: src/Registration/FieldValidator.php:46
 msgid "وارد کردن «%s» الزامی است."
 msgstr ""
 
@@ -1901,22 +1995,22 @@ msgstr ""
 msgid "امکان ساخت نام کاربری یکتا وجود ندارد."
 msgstr ""
 
-#: src/User/AccountFactory.php:269
 #. translators: %s: site name
+#: src/User/AccountFactory.php:269
 msgid "به %s خوش آمدید"
 msgstr ""
 
+#. translators: 1: display name, 2: site name, 3: masked phone number, 4: site URL
 #: src/User/AccountFactory.php:275
-#. translators: %s: site name */ __( 'به %s خوش آمدید', 'tisa-otp' ), wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ) ); $body = sprintf( /* translators: 1: display name, 2: site name, 3: site url
-msgid "سلام %1\\$s\\n\\nحساب شما در %2\\$s با شماره %3\\$s ساخته شد.\\n%4\\$s"
+msgid "سلام %1$s\n\nحساب شما در %2$s با شماره %3$s ساخته شد.\n%4$s"
 msgstr ""
 
 #: src/User/ProfileField.php:67
 msgid "این شماره برای ورود با کد یکبارمصرف استفاده می‌شود و باید بین کاربران یکتا باشد."
 msgstr ""
 
-#: src/User/ProfileField.php:72
 #. translators: %s: meta key
+#: src/User/ProfileField.php:72
 msgid "شماره فعلی از کلید «%s» خوانده شده و پس از ذخیره به کلید اصلی منتقل می‌شود."
 msgstr ""
 
@@ -1932,21 +2026,17 @@ msgstr ""
 msgid "این شماره پیش‌تر به حساب کاربری دیگری متصل شده است."
 msgstr ""
 
-#: templates/partials/step-code.php:19
 #. translators: %s: masked phone number
+#: templates/partials/step-code.php:20
 msgid "کد ارسال‌شده به %s را وارد کنید."
 msgstr ""
 
-#: templates/partials/step-code.php:48
-#. translators: %s: masked phone number */ esc_html__( 'کد ارسال‌شده به %s را وارد کنید.', 'tisa-otp' ), '<span class="tisa-otp__masked" data-tisa-masked>—</span>' ); ?> </p> </header> <div class="tisa-code" data-tisa-code> <label class="tisa-screen-reader" for="<?php echo esc_attr( $codeFieldId ); ?>"><?php echo esc_html( $codeLabel ); ?></label> <input class="tisa-code__bulk" id="<?php echo esc_attr( $codeFieldId ); ?>" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="<?php echo esc_attr( (string) $codeLength ); ?>" data-tisa-code-bulk aria-describedby="<?php echo esc_attr( $instance ); ?>-boxes" > <div class="tisa-code__boxes" id="<?php echo esc_attr( $instance ); ?>-boxes" data-tisa-boxes> <?php for ( $digit = 0; $digit < (int) $codeLength; $digit++ ) : ?> <input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="<?php echo esc_attr( sprintf( /* translators: %d: digit position
+#. translators: %d: digit position
+#: templates/partials/step-code.php:57
 msgid "رقم %d"
 msgstr ""
 
-#: templates/partials/step-fields.php:53
+#: templates/partials/step-fields.php:66
 msgid "انتخاب کنید…"
 msgstr ""
 
-#: tisa-otp.php:39
-#. translators: %s: minimum PHP version
-msgid "تیسا OTP به PHP نسخه %s یا جدیدتر نیاز دارد و فعلاً غیرفعال است."
-msgstr ""

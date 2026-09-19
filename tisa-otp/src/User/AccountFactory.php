@@ -271,7 +271,7 @@ final class AccountFactory {
 		);
 
 		$body = sprintf(
-			/* translators: 1: display name, 2: site name, 3: site url */
+			/* translators: 1: display name, 2: site name, 3: masked phone number, 4: site URL */
 			__( "سلام %1\$s\n\nحساب شما در %2\$s با شماره %3\$s ساخته شد.\n%4\$s", 'tisa-otp' ),
 			$user->display_name,
 			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),

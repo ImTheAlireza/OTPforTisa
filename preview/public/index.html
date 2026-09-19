@@ -230,12 +230,28 @@
 			</div>
 		</fieldset>
 
+		<fieldset>
+			<legend>رفتار (نسخه ۱.۰.۱)</legend>
+			<div class="demo-chips" data-behaviors>
+				<button type="button" class="demo-chip is-active" data-behavior="auto-verify">بررسی خودکار کد</button>
+				<button type="button" class="demo-chip" data-behavior="stale-nonce">nonce کهنه (کش صفحه)</button>
+				<button type="button" class="demo-chip" data-behavior="short-timeout">مهلت ۲ ثانیه</button>
+				<button type="button" class="demo-chip" data-behavior="webotp">WebOTP</button>
+			</div>
+			<p class="note">
+				«nonce کهنه» نخستین درخواست را با ۴۰۳ رد می‌کند تا بازیابی خودکار را ببینید.
+				«مهلت ۲ ثانیه» را با شمارهٔ <code>09129999999</code> (سامانهٔ کند) امتحان کنید.
+				WebOTP فقط در کروم/اندروید روی پیامک واقعی کار می‌کند.
+			</p>
+		</fieldset>
+
 		<div class="demo-hints">
 			شماره‌های آزمایشی:<br>
 			<code>09121234567</code> کاربر موجود ← مستقیم کد<br>
 			<code>09351112233</code> کاربر تازه ← فرم عضویت<br>
 			<code>09000000000</code> خطای فاصله ارسال<br>
 			<code>09111111111</code> خطای کپچا<br>
+			<code>09129999999</code> سامانهٔ کُند ← مهلت درخواست<br>
 			کد تأیید: <code>12345</code>
 		</div>
 	</aside>
@@ -248,9 +264,12 @@
 			<div
 				class="tisa-otp tisa-skin-line tisa-align-center tisa-code-boxes"
 				id="tisa-form-1-demo"
+				dir="rtl"
 				style="--tisa-accent:#0f766e;--tisa-width:420px;--tisa-radius:14px"
 				data-tisa-form
 				data-endpoint="/mock/tisa-otp/v1/"
+				data-config-url="/mock/tisa-otp/v1/form-config"
+				data-cache-mode="auto"
 				data-nonce="demo-nonce"
 				data-cooldown="60"
 				data-code-length="5"
@@ -263,21 +282,22 @@
 					<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
 					<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="1758146400">
 
-					<div class="tisa-otp__status" role="status" aria-live="polite" hidden></div>
+					<div class="tisa-otp__status" id="tisa-form-1-demo-status" role="status" aria-live="polite" aria-atomic="true" data-tisa-status hidden></div>
 
 					<!-- step-phone.php -->
-					<section class="tisa-step is-current" data-tisa-step="phone">
+					<section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="tisa-form-1-demo-phone-title">
 						<header class="tisa-step__head">
-							<h2 class="tisa-step__title">ورود یا عضویت</h2>
-							<p class="tisa-step__hint">شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود.</p>
+							<h2 class="tisa-step__title" id="tisa-form-1-demo-phone-title" tabindex="-1">ورود یا عضویت</h2>
+							<p class="tisa-step__hint" id="tisa-form-1-demo-phone-hint">شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود.</p>
 						</header>
 
 						<div class="tisa-field">
 							<label class="tisa-field__label" for="tisa-form-1-demo-phone">شماره موبایل</label>
 							<div class="tisa-phone">
 								<span class="tisa-phone__dial" aria-hidden="true">۰۹</span>
-								<input class="tisa-field__input tisa-phone__input" id="tisa-form-1-demo-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09xxxxxxxxx" data-tisa-phone required>
+								<input class="tisa-field__input tisa-phone__input" id="tisa-form-1-demo-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09xxxxxxxxx" data-tisa-phone aria-describedby="tisa-form-1-demo-phone-hint tisa-form-1-demo-phone-error" aria-invalid="false" required>
 							</div>
+							<p class="tisa-field__error" id="tisa-form-1-demo-phone-error" data-tisa-error="phone" role="alert" hidden></p>
 						</div>
 
 						<div class="tisa-captcha" data-tisa-captcha hidden></div>
@@ -289,35 +309,35 @@
 					</section>
 
 					<!-- step-fields.php -->
-					<section class="tisa-step" data-tisa-step="fields">
+					<section class="tisa-step" data-tisa-step="fields" aria-labelledby="tisa-form-1-demo-fields-title">
 						<header class="tisa-step__head">
-							<h2 class="tisa-step__title">تکمیل اطلاعات</h2>
-							<p class="tisa-step__hint">برای ساخت حساب کاربری، اطلاعات زیر را کامل کنید.</p>
+							<h2 class="tisa-step__title" id="tisa-form-1-demo-fields-title" tabindex="-1">تکمیل اطلاعات</h2>
+							<p class="tisa-step__hint" id="tisa-form-1-demo-fields-hint">برای ساخت حساب کاربری، اطلاعات زیر را کامل کنید.</p>
 						</header>
 
 						<div class="tisa-fields">
 							<div class="tisa-field tisa-field--half" data-tisa-field="first_name">
 								<label class="tisa-field__label" for="tisa-form-1-demo-f-first_name">نام <span class="tisa-field__star" aria-hidden="true">*</span></label>
-								<input class="tisa-field__input" id="tisa-form-1-demo-f-first_name" type="text" data-tisa-input="first_name" required>
-								<p class="tisa-field__error" data-tisa-error="first_name" hidden></p>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-first_name" type="text" data-tisa-input="first_name" aria-describedby="tisa-form-1-demo-f-first_name-error" aria-invalid="false" required>
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-first_name-error" data-tisa-error="first_name" role="alert" hidden></p>
 							</div>
 
 							<div class="tisa-field tisa-field--half" data-tisa-field="last_name">
 								<label class="tisa-field__label" for="tisa-form-1-demo-f-last_name">نام خانوادگی <span class="tisa-field__star" aria-hidden="true">*</span></label>
-								<input class="tisa-field__input" id="tisa-form-1-demo-f-last_name" type="text" data-tisa-input="last_name" required>
-								<p class="tisa-field__error" data-tisa-error="last_name" hidden></p>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-last_name" type="text" data-tisa-input="last_name" aria-describedby="tisa-form-1-demo-f-last_name-error" aria-invalid="false" required>
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-last_name-error" data-tisa-error="last_name" role="alert" hidden></p>
 							</div>
 
 							<div class="tisa-field tisa-field--full" data-tisa-field="user_email">
 								<label class="tisa-field__label" for="tisa-form-1-demo-f-user_email">ایمیل</label>
-								<input class="tisa-field__input" id="tisa-form-1-demo-f-user_email" type="email" placeholder="example@mail.com" data-tisa-input="user_email">
-								<p class="tisa-field__error" data-tisa-error="user_email" hidden></p>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-user_email" type="email" placeholder="example@mail.com" data-tisa-input="user_email" aria-describedby="tisa-form-1-demo-f-user_email-error" aria-invalid="false">
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-user_email-error" data-tisa-error="user_email" role="alert" hidden></p>
 							</div>
 
 							<div class="tisa-field tisa-field--full" data-tisa-field="city">
 								<label class="tisa-field__label" for="tisa-form-1-demo-f-city">شهر</label>
-								<input class="tisa-field__input" id="tisa-form-1-demo-f-city" type="text" data-tisa-input="city">
-								<p class="tisa-field__error" data-tisa-error="city" hidden></p>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-city" type="text" data-tisa-input="city" aria-describedby="tisa-form-1-demo-f-city-error" aria-invalid="false">
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-city-error" data-tisa-error="city" role="alert" hidden></p>
 							</div>
 						</div>
 
@@ -332,21 +352,21 @@
 					</section>
 
 					<!-- step-code.php -->
-					<section class="tisa-step" data-tisa-step="code">
+					<section class="tisa-step" data-tisa-step="code" aria-labelledby="tisa-form-1-demo-code-title">
 						<header class="tisa-step__head">
-							<h2 class="tisa-step__title">کد تأیید</h2>
+							<h2 class="tisa-step__title" id="tisa-form-1-demo-code-title" tabindex="-1">کد تأیید</h2>
 							<p class="tisa-step__hint">کد ارسال‌شده به <span class="tisa-otp__masked" data-tisa-masked>—</span> را وارد کنید.</p>
 						</header>
 
 						<div class="tisa-code" data-tisa-code>
 							<label class="tisa-screen-reader" for="tisa-form-1-demo-code">کد تأیید</label>
-							<input class="tisa-code__bulk" id="tisa-form-1-demo-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="5" data-tisa-code-bulk>
-							<div class="tisa-code__boxes" id="tisa-form-1-demo-boxes" data-tisa-boxes>
-								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۱" data-tisa-box="0">
-								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۲" data-tisa-box="1">
-								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۳" data-tisa-box="2">
-								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۴" data-tisa-box="3">
-								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۵" data-tisa-box="4">
+							<input class="tisa-code__bulk" id="tisa-form-1-demo-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="5" data-tisa-code-bulk aria-describedby="tisa-form-1-demo-boxes" aria-invalid="false">
+							<div class="tisa-code__boxes" id="tisa-form-1-demo-boxes" role="group" aria-labelledby="tisa-form-1-demo-code-title" data-tisa-boxes>
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="رقم ۱" aria-invalid="false" data-tisa-box="0">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۲" aria-invalid="false" data-tisa-box="1">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۳" aria-invalid="false" data-tisa-box="2">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۴" aria-invalid="false" data-tisa-box="3">
+								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۵" aria-invalid="false" data-tisa-box="4">
 							</div>
 						</div>
 
@@ -361,6 +381,8 @@
 							</button>
 							<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
 						</div>
+
+						<p class="tisa-screen-reader" role="status" aria-live="polite" data-tisa-resend-live></p>
 					</section>
 
 				</form>
@@ -375,6 +397,11 @@
 	window.tisaOtp = {
 		restUrl: '/mock/tisa-otp/v1/',
 		nonce: 'demo-nonce',
+		configUrl: '/mock/tisa-otp/v1/form-config',
+		cacheMode: 'auto',
+		autoVerify: true,
+		webOtp: false,
+		timeoutMs: 15000,
 		enabled: true,
 		codeLength: 5,
 		codeInput: 'boxes',
@@ -399,7 +426,13 @@
 			invalidPhone: 'شماره موبایل معتبر نیست.',
 			fillFields: 'لطفاً فیلدهای ستاره‌دار را کامل کنید.',
 			incompleteCode: 'کد را کامل وارد کنید.',
-			redirecting: 'در حال انتقال…'
+			requiredField: 'این فیلد الزامی است.',
+			invalidEmail: 'قالب ایمیل معتبر نیست.',
+			redirecting: 'در حال انتقال…',
+			timeout: 'پاسخ سرور به‌موقع نرسید. لطفاً دوباره تلاش کنید.',
+			offline: 'اتصال اینترنت برقرار نیست.',
+			otpFilled: 'کد از پیامک خوانده شد.',
+			resendReady: 'اکنون می‌توانید کد را دوباره ارسال کنید.'
 		}
 	};
 </script>
@@ -494,6 +527,50 @@
 		});
 
 		bind('backdrops', 'backdrop', setBackdrop);
+
+		/* Runtime flags added in 1.0.1 — the plugin sets them from the settings page. */
+		function applyBehavior(name, on) {
+			var live = form.tisaForm;
+
+			function set(property, value) {
+				window.tisaOtp[property] = value;
+
+				if (live) {
+					live[property] = value;
+				}
+			}
+
+			if (name === 'stale-nonce') {
+				// What a cached page looks like: the nonce in the HTML is already dead.
+				var nonce = on ? 'stale-nonce-from-cache' : 'demo-nonce';
+
+				form.setAttribute('data-nonce', nonce);
+				set('nonce', nonce);
+			} else if (name === 'auto-verify') {
+				set('autoVerify', on);
+			} else if (name === 'short-timeout') {
+				set('timeoutMs', on ? 2000 : 15000);
+			} else if (name === 'webotp') {
+				set('webOtp', on);
+			}
+		}
+
+		var behaviors = document.querySelector('[data-behaviors]');
+
+		if (behaviors) {
+			behaviors.addEventListener('click', function (event) {
+				var chip = event.target.closest('[data-behavior]');
+
+				if (!chip) {
+					return;
+				}
+
+				var on = !chip.classList.contains('is-active');
+
+				chip.classList.toggle('is-active', on);
+				applyBehavior(chip.getAttribute('data-behavior'), on);
+			});
+		}
 
 		document.addEventListener('keydown', function (event) {
 			if (event.target.matches('input, textarea, select')) {

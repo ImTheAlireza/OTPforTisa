@@ -8,10 +8,11 @@
 defined( 'ABSPATH' ) || exit;
 
 $codeFieldId = $instance . '-code';
+$codeTitleId = $instance . '-code-title';
 ?>
-<section class="tisa-step" data-tisa-step="code">
+<section class="tisa-step" data-tisa-step="code" aria-labelledby="<?php echo esc_attr( $codeTitleId ); ?>">
 	<header class="tisa-step__head">
-		<h2 class="tisa-step__title"><?php echo esc_html( $codeLabel ); ?></h2>
+		<h2 class="tisa-step__title" id="<?php echo esc_attr( $codeTitleId ); ?>" tabindex="-1"><?php echo esc_html( $codeLabel ); ?></h2>
 		<p class="tisa-step__hint">
 			<?php
 			printf(
@@ -35,17 +36,26 @@ $codeFieldId = $instance . '-code';
 			maxlength="<?php echo esc_attr( (string) $codeLength ); ?>"
 			data-tisa-code-bulk
 			aria-describedby="<?php echo esc_attr( $instance ); ?>-boxes"
+			aria-invalid="false"
 		>
 
-		<div class="tisa-code__boxes" id="<?php echo esc_attr( $instance ); ?>-boxes" data-tisa-boxes>
+		<div
+			class="tisa-code__boxes"
+			id="<?php echo esc_attr( $instance ); ?>-boxes"
+			role="group"
+			aria-labelledby="<?php echo esc_attr( $codeTitleId ); ?>"
+			data-tisa-boxes
+		>
 			<?php for ( $digit = 0; $digit < (int) $codeLength; $digit++ ) : ?>
 				<input
 					class="tisa-code__box"
 					type="text"
 					inputmode="numeric"
 					maxlength="1"
-					autocomplete="off"
+					<?php // The first box carries the autofill hint; the rest stay opaque. ?>
+					autocomplete="<?php echo 0 === $digit ? 'one-time-code' : 'off'; ?>"
 					aria-label="<?php echo esc_attr( sprintf( /* translators: %d: digit position */ __( 'رقم %d', 'tisa-otp' ), $digit + 1 ) ); ?>"
+					aria-invalid="false"
 					data-tisa-box="<?php echo esc_attr( (string) $digit ); ?>"
 				>
 			<?php endfor; ?>
@@ -63,4 +73,7 @@ $codeFieldId = $instance . '-code';
 		</button>
 		<button type="button" class="tisa-link" data-tisa-action="edit-phone"><?php echo esc_html( $editLabel ); ?></button>
 	</div>
+
+	<?php // The visible countdown changes every second; this region speaks only at milestones. ?>
+	<p class="tisa-screen-reader" role="status" aria-live="polite" data-tisa-resend-live></p>
 </section>

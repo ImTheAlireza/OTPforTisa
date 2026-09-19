@@ -57,9 +57,14 @@ final class SmsChannel implements Channel {
 	}
 
 	public function deliver( DeliveryRequest $request ): GatewayResult {
-		$result = $this->chain->deliver( $request->with( array( 'channel' => $this->id() ) ) );
+		$request = $request->with(
+			array(
+				'channel' => $this->id(),
+				'webotp'  => $this->settings->bool( 'webotp_enabled', false ),
+			)
+		);
 
-		return $result;
+		return $this->chain->deliver( $request );
 	}
 
 	/**

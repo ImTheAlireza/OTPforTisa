@@ -240,9 +240,31 @@
 }
 
 .tisa-field__input.has-error,
-.tisa-field__select.has-error {
+.tisa-field__select.has-error,
+.tisa-field__input[aria-invalid="true"],
+.tisa-field__select[aria-invalid="true"],
+.tisa-phone__input[aria-invalid="true"],
+.tisa-code__bulk[aria-invalid="true"],
+.tisa-code__box[aria-invalid="true"] {
 	border-color: var(--tisa-danger);
 	background: #fffbfa;
+}
+
+.tisa-code__box[aria-invalid="true"]:focus,
+.tisa-code__bulk[aria-invalid="true"]:focus,
+.tisa-field__input[aria-invalid="true"]:focus {
+	box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.14);
+}
+
+/* A step title is focused programmatically when a new step opens. */
+.tisa-step__title:focus {
+	outline: none;
+}
+
+.tisa-step__title:focus-visible {
+	outline: 2px solid var(--tisa-accent);
+	outline-offset: 4px;
+	border-radius: 4px;
 }
 
 .tisa-field__hint {
@@ -630,6 +652,32 @@
 	.tisa-btn__spinner {
 		animation-duration: 1.6s;
 	}
+}
+
+@media (prefers-contrast: more) {
+	.tisa-otp {
+		--tisa-line: #4b5563;
+		--tisa-muted: #374151;
+	}
+
+	.tisa-btn--primary {
+		border: 2px solid currentColor;
+	}
+
+	.tisa-field__hint,
+	.tisa-step__hint {
+		font-weight: 600;
+	}
+}
+
+/* Left-to-right installs: the attribute wins over the RTL default. */
+.tisa-otp[dir="ltr"] {
+	direction: ltr;
+	text-align: left;
+}
+
+.tisa-otp[dir="ltr"] .tisa-code__boxes {
+	justify-content: flex-start;
 }
 
 @media (forced-colors: active) {

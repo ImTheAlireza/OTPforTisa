@@ -6,8 +6,8 @@
  *
  * Available variables: instance, classes, style, heading, hint, regHeading,
  * regHint, redirect, labels, codeLength, cooldown, showBrand, logo, logoWidth,
- * fields, flow, registration, captcha, terms, nonce, restUrl, honeypot,
- * timestampKey, renderedAt, view.
+ * fields, flow, registration, captcha, terms, dir, configUrl, cacheMode, nonce,
+ * restUrl, honeypot, timestampKey, renderedAt, view.
  *
  * @package TisaOtp
  */
@@ -17,9 +17,12 @@ defined( 'ABSPATH' ) || exit;
 <div
 	class="<?php echo esc_attr( $classes ); ?>"
 	id="<?php echo esc_attr( $instance ); ?>"
+	dir="<?php echo esc_attr( $dir ); ?>"
 	style="<?php echo esc_attr( $style ); ?>"
 	data-tisa-form
 	data-endpoint="<?php echo esc_url( $restUrl ); ?>"
+	data-config-url="<?php echo esc_url( $configUrl ); ?>"
+	data-cache-mode="<?php echo esc_attr( $cacheMode ); ?>"
 	data-nonce="<?php echo esc_attr( $nonce ); ?>"
 	data-cooldown="<?php echo esc_attr( (string) $cooldown ); ?>"
 	data-code-length="<?php echo esc_attr( (string) $codeLength ); ?>"
@@ -39,7 +42,15 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 		<?php endif; ?>
 
-		<div class="tisa-otp__status" role="status" aria-live="polite" hidden></div>
+		<div
+			class="tisa-otp__status"
+			id="<?php echo esc_attr( $instance ); ?>-status"
+			role="status"
+			aria-live="polite"
+			aria-atomic="true"
+			data-tisa-status
+			hidden
+		></div>
 
 		<?php
 		// Step 1 — phone number.

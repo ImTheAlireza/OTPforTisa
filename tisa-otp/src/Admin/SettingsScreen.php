@@ -205,6 +205,22 @@ final class SettingsScreen {
 				$c->row( __( 'پنهان‌سازی وجود حساب', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'prevent_enumeration', __( 'پیام‌ها یکسان باشند', 'tisa-otp' ), __( 'هیچ‌کس نمی‌فهمد شماره‌اش قبلاً ثبت شده یا نه.', 'tisa-otp' ) );
 				} );
+
+				$c->row( __( 'سازگاری با کش صفحه', 'tisa-otp' ), function () use ( $c ) {
+					$c->cards(
+						'cache_mode',
+						array(
+							'auto'   => array(
+								'label' => __( 'nonce تازه از سرور', 'tisa-otp' ),
+								'desc'  => __( 'هنگام باز شدن فرم یک nonce تازه گرفته می‌شود و در صورت رد شدن، یک بار دیگر تلاش می‌شود.', 'tisa-otp' ),
+							),
+							'inline' => array(
+								'label' => __( 'چاپ در صفحه', 'tisa-otp' ),
+								'desc'  => __( 'بدون درخواست اضافه؛ فقط وقتی کش صفحه و CDN خاموش است.', 'tisa-otp' ),
+							),
+						)
+					);
+				}, __( 'اگر کش صفحه، وارنیش یا Cloudflare دارید حالت «nonce تازه از سرور» را نگه دارید؛ وگرنه فرم خطای ۴۰۳ می‌گیرد.', 'tisa-otp' ) );
 			},
 			__( 'رفتار کلی فرم ورود را اینجا تعیین کنید.', 'tisa-otp' )
 		);
@@ -221,6 +237,15 @@ final class SettingsScreen {
 				} );
 			}
 		);
+	}
+
+	/**
+	 * Host name shown in the WebOTP hint, e.g. `example.com`.
+	 */
+	private function webOtpDomain(): string {
+		$host = wp_parse_url( home_url(), PHP_URL_HOST );
+
+		return is_string( $host ) && '' !== $host ? strtolower( $host ) : __( 'دامنه شما', 'tisa-otp' );
 	}
 
 	private function codeSection(): void {
@@ -244,6 +269,14 @@ final class SettingsScreen {
 				$c->row( __( 'فاصله بین دو ارسال', 'tisa-otp' ), function () use ( $c ) {
 					$c->number( 'resend_delay', 10, 1800, __( 'ثانیه', 'tisa-otp' ) );
 				} );
+
+				$c->row( __( 'بررسی خودکار کد', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'auto_verify', __( 'به‌محض کامل شدن کد، بدون زدن دکمه بررسی شود', 'tisa-otp' ) );
+				}, __( 'روی هر دو حالت ورودی (خانه‌خانه و یک‌کادر) و نیز هنگام چسباندن کد کار می‌کند.', 'tisa-otp' ) );
+
+				$c->row( __( 'مهلت پاسخ سرور', 'tisa-otp' ), function () use ( $c ) {
+					$c->number( 'request_timeout', 5, 60, __( 'ثانیه', 'tisa-otp' ) );
+				}, __( 'پس از این مدت درخواست لغو و پیام خطای شبکه نمایش داده می‌شود تا کاربر منتظر نماند.', 'tisa-otp' ) );
 
 				$c->row( __( 'محل نگهداری کد', 'tisa-otp' ), function () use ( $c ) {
 					$c->cards(
@@ -286,7 +319,15 @@ final class SettingsScreen {
 
 				$c->row( __( 'متن پیامک', 'tisa-otp' ), function () use ( $c ) {
 					$c->textarea( 'sms_template', 2, 'کد ورود: {code}' );
-				}, __( 'نشانه‌ها: {code} {minutes} {site}', 'tisa-otp' ) );
+				}, __( 'نشانه‌ها: {code} {phone} {minutes} {site} {domain} {webotp}', 'tisa-otp' ) );
+
+				$c->row( __( 'خواندن خودکار کد (WebOTP)', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'webotp_enabled', __( 'خط شناسایی به انتهای پیامک اضافه شود', 'tisa-otp' ) );
+				}, sprintf(
+					/* translators: %s: the WebOTP binding line, for example @example.com #12345 */
+					__( 'با فعال کردن، خط %s به انتهای پیامک‌های متنی اضافه می‌شود تا کروم و اندروید خودشان کد را پیشنهاد دهند. چند نویسه به پیامک اضافه می‌کند، پس اگر هزینه یا طول پیامک برایتان مهم است خاموش نگه دارید. برای سامانه‌های الگودار (Pattern) همین خط را داخل الگوی خود سامانه بگذارید یا از نشانه {webotp} در متن استفاده کنید.', 'tisa-otp' ),
+					'@' . $this->webOtpDomain() . ' #12345'
+				) );
 			}
 		);
 

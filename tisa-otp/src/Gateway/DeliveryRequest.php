@@ -73,11 +73,15 @@ final class DeliveryRequest {
 	 * Render a message template with the usual placeholders.
 	 */
 	public function render( string $template, int $ttlSeconds = 120 ): string {
+		$domain = $this->domain();
+
 		$replacements = array(
 			'{code}'     => $this->code,
 			'{phone}'    => $this->phone,
 			'{minutes}'  => (string) max( 1, (int) round( $ttlSeconds / 60 ) ),
 			'{site}'     => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+			'{domain}'   => $domain,
+			'{webotp}'   => '' !== $domain ? '@' . $domain . ' #' . $this->code : '',
 		);
 
 		/**
@@ -88,6 +92,36 @@ final class DeliveryRequest {
 		 */
 		$replacements = (array) apply_filters( 'tisa_otp_message_tokens', $replacements, $this );
 
-		return strtr( $template, $replacements );
+		return $this->appendWebOtp( strtr( $template, $replacements ), $domain );
+	}
+
+	/**
+	 * Host name used by the WebOTP binding line, without scheme, port or slashes.
+	 */
+	private function domain(): string {
+		$host = wp_parse_url( home_url(), PHP_URL_HOST );
+
+		return is_string( $host ) ? strtolower( $host ) : '';
+	}
+
+	/**
+	 * Append the `@example.com #12345` line browsers need to autofill the code.
+	 *
+	 * Only free-text bodies are touched. Pattern/lookup gateways build their own
+	 * message server-side, so a line appended here would never reach the handset;
+	 * those need the binding added inside the provider's pattern instead.
+	 */
+	private function appendWebOtp( string $message, string $domain ): string {
+		if ( '' === $domain || ! $this->context( 'webotp' ) ) {
+			return $message;
+		}
+
+		$binding = '@' . $domain;
+
+		if ( false !== strpos( $message, $binding ) ) {
+			return $message;
+		}
+
+		return trim( $message ) . "\n" . $binding . ' #' . $this->code;
 	}
 }

@@ -46,6 +46,7 @@ final class Sanitizer {
 			'login_redirect'       => array( 'type' => 'url' ),
 			'register_redirect'    => array( 'type' => 'url' ),
 			'replace_wp_login'     => array( 'type' => 'bool' ),
+			'cache_mode'           => array( 'type' => 'enum', 'choices' => array( 'auto', 'inline' ) ),
 			'prevent_enumeration'  => array( 'type' => 'bool' ),
 			'guard_roles'          => array( 'type' => 'bool' ),
 			'guarded_roles'        => array( 'type' => 'csv_keys' ),
@@ -55,6 +56,9 @@ final class Sanitizer {
 			'code_store'           => array( 'type' => 'enum', 'choices' => array( 'database', 'cache' ) ),
 			'verify_attempts'      => array( 'type' => 'int', 'min' => 2, 'max' => 15 ),
 			'resend_delay'         => array( 'type' => 'int', 'min' => 10, 'max' => 1800 ),
+			'auto_verify'          => array( 'type' => 'bool' ),
+			'webotp_enabled'       => array( 'type' => 'bool' ),
+			'request_timeout'      => array( 'type' => 'int', 'min' => 5, 'max' => 60 ),
 
 			'channel'              => array( 'type' => 'enum', 'choices' => array( 'sms', 'email' ) ),
 			'channels_enabled'     => array( 'type' => 'list', 'choices' => array( 'sms', 'email' ) ),

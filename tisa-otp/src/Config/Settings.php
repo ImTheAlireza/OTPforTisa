@@ -115,6 +115,7 @@ final class Settings {
 			'login_redirect'         => '',
 			'register_redirect'      => '',
 			'replace_wp_login'       => '0',
+			'cache_mode'             => 'auto',
 			'prevent_enumeration'    => '1',
 			'guard_roles'            => '1',
 			'guarded_roles'          => 'administrator,editor,shop_manager',
@@ -125,6 +126,9 @@ final class Settings {
 			'code_store'             => 'database',
 			'verify_attempts'        => '5',
 			'resend_delay'           => '60',
+			'auto_verify'            => '1',
+			'webotp_enabled'         => '0',
+			'request_timeout'        => '15',
 
 			// Channels.
 			'channel'                => 'sms',
