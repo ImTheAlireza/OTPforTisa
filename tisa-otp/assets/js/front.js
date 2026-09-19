@@ -42,6 +42,20 @@
 		return latinDigits(value).replace(/\D+/g, '');
 	}
 
+	/**
+	 * Persian digits for prose (countdown, attempts, step numbers).
+	 *
+	 * Never used for values sent to the server or written into an input — those
+	 * stay Latin so `inputmode="numeric"` keyboards and validation still work.
+	 */
+	function faDigits(value) {
+		var fa = '۰۱۲۳۴۵۶۷۸۹';
+
+		return String(value === null || value === undefined ? '' : value).replace(/[0-9]/g, function (char) {
+			return fa.charAt(Number(char));
+		});
+	}
+
 	function looksLikePhone(value) {
 		var digits = digitsOnly(value);
 
@@ -215,10 +229,13 @@
 		this.timeoutMs = parseInt(cfg.timeoutMs || 15000, 10);
 		this.autoVerify = flag(cfg.autoVerify, true);
 		this.webOtp = flag(cfg.webOtp, false);
+		this.rescueAfter = parseInt(cfg.rescueAfter || 30, 10);
 
 		this.nonceRequest = null;
 		this.otpAbort = null;
 		this.autoVerifyTimer = null;
+		this.rescueTimer = null;
+		this.lastAction = '';
 
 		this.phone = '';
 		this.channel = cfg.channel || 'sms';
@@ -244,12 +261,22 @@
 		this.honeypot = $(root, '.tisa-otp__honeypot');
 		this.timestamp = $(root, '.tisa-otp__rendered');
 
+		this.statusText = $(root, '[data-tisa-status-text]');
+		this.statusActions = $(root, '[data-tisa-status-actions]');
+		this.stepMarkers = $$(root, '[data-tisa-step-marker]');
+		this.stepsText = $(root, '[data-tisa-steps-text]');
+		this.boxWrap = $(root, '[data-tisa-boxes]');
+		this.rescue = $(root, '[data-tisa-rescue]');
+		this.attempts = $(root, '[data-tisa-attempts]');
+		this.cooldownBar = $(root, '[data-tisa-cooldown]');
+
 		if (this.bulk) {
 			this.bulk.maxLength = this.codeLength;
 			this.bulk.placeholder = text(i18n.codePlaceholder || '', {});
 		}
 
 		this.bind();
+		this.lockButtonWidths();
 		this.show(this.stepPhone);
 
 		// A cached page carries a stale nonce, so fetch a fresh one up front.
@@ -305,6 +332,48 @@
 			});
 		}
 
+		this.bindBoxes();
+
+		$$(this.root, '[data-tisa-input]').forEach(function (input) {
+			input.addEventListener('input', function () {
+				self.setValid(input);
+			});
+		});
+
+		/*
+		 * The skip link points at the phone field, but on later steps that field
+		 * is display:none and unfocusable — so send focus to whatever the current
+		 * step actually shows.
+		 */
+		var skip = $(this.root, '[data-tisa-skip]');
+
+		if (skip) {
+			skip.addEventListener('click', function (event) {
+				var target = $(self.root, '.tisa-step.is-current input, .tisa-step.is-current select');
+
+				if (target) {
+					event.preventDefault();
+					target.focus();
+				}
+			});
+		}
+
+		var form = $(this.root, 'form');
+
+		if (form) {
+			form.addEventListener('submit', function (event) {
+				event.preventDefault();
+			});
+		}
+	};
+
+	/**
+	 * Wire one digit box each. Split out of `bind()` so `renderBoxes()` can call
+	 * it again after replacing the inputs.
+	 */
+	Form.prototype.bindBoxes = function () {
+		var self = this;
+
 		this.boxes.forEach(function (box, index) {
 			box.addEventListener('input', function () {
 				box.value = digitsOnly(box.value).substr(0, 1);
@@ -353,20 +422,6 @@
 				}
 			});
 		});
-
-		$$(this.root, '[data-tisa-input]').forEach(function (input) {
-			input.addEventListener('input', function () {
-				self.setValid(input);
-			});
-		});
-
-		var form = $(this.root, 'form');
-
-		if (form) {
-			form.addEventListener('submit', function (event) {
-				event.preventDefault();
-			});
-		}
 	};
 
 	Form.prototype.act = function (action) {
@@ -374,7 +429,15 @@
 			return;
 		}
 
+		// Remembered so the "try again" button in an error can repeat it.
+		if ('retry' !== action) {
+			this.lastAction = action;
+		}
+
 		switch (action) {
+			case 'retry':
+				this.act(this.lastAction || 'start');
+				break;
 			case 'start':
 				this.start();
 				break;
@@ -594,6 +657,7 @@
 			collected.errors.forEach(function (problem) {
 				self.setInvalid($(self.root, '[data-tisa-input="' + problem.id + '"]'), problem.message);
 			});
+			this.focusFirstError();
 			return;
 		}
 
@@ -616,6 +680,7 @@
 		if (code.length < this.codeLength) {
 			this.say(i18n.incompleteCode || 'Code incomplete', 'error');
 			this.setCodeInvalid(true);
+			this.focusCode();
 			return;
 		}
 
@@ -707,13 +772,20 @@
 			case 'verify':
 				this.show(this.stepCode);
 				this.say(data.message || '', 'success');
-				this.startCooldown(data.cooldown || this.cooldown);
-				this.startExpiry(data.expires_in || cfg.ttl || 120);
+				this.root.classList.remove('is-expired');
+
+				// Length first: the boxes have to exist before anything focuses one.
 				if (data.code_length) {
 					this.codeLength = parseInt(data.code_length, 10);
+					this.renderBoxes(this.codeLength);
 				}
+
+				this.startCooldown(data.cooldown || this.cooldown);
+				this.startExpiry(data.expires_in || cfg.ttl || 120);
+				this.showAttempts(data.attempts_left);
 				this.focusCode();
 				this.startWebOtp();
+				this.startRescue();
 				break;
 
 			default:
@@ -740,9 +812,10 @@
 
 	Form.prototype.fail = function (error) {
 		var payload = error && error.data ? error.data : {};
+		var code = error ? error.code : '';
 
-		this.say((error && error.message) || i18n.network || 'Error', 'error');
-		this.emit('error', { code: error ? error.code : '', data: payload });
+		this.say((error && error.message) || i18n.network || 'Error', 'error', this.actionsFor(code, payload));
+		this.emit('error', { code: code, data: payload });
 
 		if (payload.captcha_required) {
 			this.captcha.showWidget();
@@ -752,15 +825,71 @@
 			this.startCooldown(parseInt(payload.retry_after, 10));
 		}
 
-		if (payload.attempts_left !== undefined && null !== payload.attempts_left) {
-			this.root.setAttribute('data-attempts-left', String(payload.attempts_left));
-		}
+		this.showAttempts(payload.attempts_left);
 
 		if (payload.errors && 'object' === typeof payload.errors) {
 			this.markServerErrors(payload.errors);
 		}
 
 		this.clearCode();
+
+		// Put the caret back where the fix has to happen. `clearCode` resets the
+		// invalid flag, so the error styling has to be re-applied after it.
+		if (this.isCurrent(this.stepCode)) {
+			this.setCodeInvalid(true);
+			this.focusCode();
+		} else if (payload.errors && 'object' === typeof payload.errors) {
+			this.focusFirstError();
+		}
+	};
+
+	/**
+	 * Show how many tries are left, when the server bothers to say.
+	 */
+	Form.prototype.showAttempts = function (left) {
+		var count = parseInt(left, 10);
+
+		if (undefined === left || null === left || isNaN(count)) {
+			return;
+		}
+
+		this.root.setAttribute('data-attempts-left', String(count));
+
+		if (!this.attempts) {
+			return;
+		}
+
+		if (count <= 0) {
+			this.attempts.hidden = true;
+			this.attempts.textContent = '';
+			return;
+		}
+
+		this.attempts.hidden = false;
+		this.attempts.textContent = text(i18n.attemptsLeft || '', { n: faDigits(count) });
+	};
+
+	Form.prototype.isCurrent = function (step) {
+		return !!step && step.classList.contains('is-current');
+	};
+
+	/**
+	 * Move focus to the first field the server or the validator rejected.
+	 */
+	Form.prototype.focusFirstError = function () {
+		var invalid = $(this.root, '.tisa-step.is-current [aria-invalid="true"]');
+
+		if (invalid && 'function' === typeof invalid.focus) {
+			invalid.focus();
+
+			if ('function' === typeof invalid.select) {
+				try {
+					invalid.select();
+				} catch (error) {
+					// Selects and checkboxes cannot be selected; focus is enough.
+				}
+			}
+		}
 	};
 
 	Form.prototype.markServerErrors = function (errors) {
@@ -890,6 +1019,7 @@
 	Form.prototype.show = function (step) {
 		if (step !== this.stepCode) {
 			this.stopWebOtp();
+			this.stopRescue();
 		}
 
 		[this.stepPhone, this.stepFields, this.stepCode].forEach(function (el) {
@@ -898,9 +1028,50 @@
 			}
 		});
 
-		this.root.setAttribute('data-step', step === this.stepCode ? 'code' : (step === this.stepFields ? 'fields' : 'phone'));
+		var name = step === this.stepCode ? 'code' : (step === this.stepFields ? 'fields' : 'phone');
+
+		this.root.setAttribute('data-step', name);
+		this.markSteps(name);
 		this.clearStatus();
 		this.emit('step', { step: step ? attr(step, 'tisa-step') : '' });
+	};
+
+	/**
+	 * Sync the step bar and the sentence a screen reader hears.
+	 *
+	 * The circles are `aria-hidden`; only the sentence is announced, so nobody
+	 * has to sit through "list, 3 items, 1 of 3" on every transition.
+	 */
+	Form.prototype.markSteps = function (current) {
+		var total = this.stepMarkers.length;
+		var index = -1;
+
+		if (!total) {
+			return;
+		}
+
+		this.stepMarkers.forEach(function (marker, position) {
+			if (marker.getAttribute('data-tisa-step-marker') === current) {
+				index = position;
+			}
+		});
+
+		if (index < 0) {
+			return;
+		}
+
+		this.stepMarkers.forEach(function (marker, position) {
+			marker.classList.toggle('is-done', position < index);
+			marker.classList.toggle('is-current', position === index);
+		});
+
+		if (this.stepsText) {
+			this.stepsText.textContent = text(i18n.stepOf || '', {
+				n: faDigits(index + 1),
+				total: faDigits(total),
+				name: this.stepMarkers[index].textContent || ''
+			});
+		}
 	};
 
 	Form.prototype.resetToPhone = function () {
@@ -908,6 +1079,16 @@
 		this.verifiedToken = '';
 		this.clearCode();
 		window.clearInterval(this.countdown);
+		window.clearInterval(this.expiry);
+		this.paintCooldown(0);
+		this.root.classList.remove('is-expired');
+		this.root.removeAttribute('data-attempts-left');
+
+		if (this.attempts) {
+			this.attempts.hidden = true;
+			this.attempts.textContent = '';
+		}
+
 		this.show(this.stepPhone);
 
 		if (this.phoneInput) {
@@ -946,8 +1127,60 @@
 		if (target) {
 			window.setTimeout(function () {
 				target.focus();
+
+				if ('function' === typeof target.select) {
+					try {
+						target.select();
+					} catch (error) {
+						// Not selectable; focus alone is fine.
+					}
+				}
 			}, 60);
 		}
+	};
+
+	/**
+	 * Rebuild the digit boxes when the server reports a different code length.
+	 *
+	 * A site can change `code_length` while a page sits in a CDN cache, so the
+	 * markup and the real length disagree until this runs.
+	 */
+	Form.prototype.renderBoxes = function (length) {
+		var count = parseInt(length, 10);
+
+		if (!this.boxWrap || isNaN(count) || count < 1 || count === this.boxes.length) {
+			return;
+		}
+
+		var template = this.boxes[0];
+
+		this.boxWrap.textContent = '';
+
+		for (var index = 0; index < count; index++) {
+			var box = template ? template.cloneNode(false) : document.createElement('input');
+
+			box.className = 'tisa-code__box';
+			box.type = 'text';
+			box.value = '';
+			box.setAttribute('inputmode', 'numeric');
+			box.setAttribute('maxlength', '1');
+			box.setAttribute('aria-invalid', 'false');
+			box.setAttribute('data-tisa-box', String(index));
+			// Only the first box advertises autofill, same as the PHP template.
+			box.setAttribute('autocomplete', 0 === index ? 'one-time-code' : 'off');
+			box.setAttribute('aria-label', text(i18n.digitLabel || '', { n: faDigits(index + 1) }) || String(index + 1));
+
+			this.boxWrap.appendChild(box);
+		}
+
+		this.boxes = $$(this.root, '[data-tisa-box]');
+
+		if (this.bulk) {
+			this.bulk.maxLength = count;
+		}
+
+		this.bindBoxes();
+		this.emit('code-length', { length: count });
 	};
 
 	/**
@@ -1091,6 +1324,7 @@
 
 		if (left <= 0) {
 			this.resendBtn.disabled = false;
+			this.paintCooldown(0);
 
 			if (this.resendLabel) {
 				this.resendLabel.textContent = (cfg.labels || {}).resend || 'Resend';
@@ -1102,16 +1336,20 @@
 		}
 
 		this.resendBtn.disabled = true;
+		this.paintCooldown(left);
 
 		var tick = function () {
+			// Persian digits in the sentence; the value itself stays a number.
+			var label = text(i18n.resendIn || '{s}s', { s: faDigits(left) });
+
 			if (self.resendLabel) {
-				self.resendLabel.textContent = text(i18n.resendIn || '{s}s', { s: left });
+				self.resendLabel.textContent = label;
 			}
 
 			// The visible label ticks every second; the live region only speaks at
 			// quarter-minute marks so screen readers are not talked over.
 			if (left > 0 && 0 === left % 15) {
-				self.announceResend(text(i18n.resendIn || '{s}s', { s: left }));
+				self.announceResend(label);
 			}
 
 			left -= 1;
@@ -1119,6 +1357,7 @@
 			if (left < 0) {
 				window.clearInterval(self.countdown);
 				self.resendBtn.disabled = false;
+				self.paintCooldown(0);
 
 				if (self.resendLabel) {
 					self.resendLabel.textContent = (cfg.labels || {}).resend || 'Resend';
@@ -1130,6 +1369,77 @@
 
 		tick();
 		this.countdown = window.setInterval(tick, 1000);
+	};
+
+	/**
+	 * Drive the thin cooldown bar with one CSS animation.
+	 *
+	 * Restarting it needs a reflow, otherwise the browser reuses the running
+	 * animation and the bar never jumps back to full.
+	 */
+	Form.prototype.paintCooldown = function (seconds) {
+		var fill = this.cooldownBar ? this.cooldownBar.firstElementChild : null;
+
+		if (!this.cooldownBar || !fill) {
+			return;
+		}
+
+		if (!seconds || seconds <= 0) {
+			this.cooldownBar.hidden = true;
+			fill.style.animation = 'none';
+			return;
+		}
+
+		this.cooldownBar.hidden = false;
+		this.cooldownBar.style.setProperty('--tisa-cooldown', seconds + 's');
+		fill.style.animation = 'none';
+		// Reading offsetWidth forces the restart.
+		void fill.offsetWidth;
+		fill.style.animation = '';
+	};
+
+	/**
+	 * Offer a way out once waiting for the SMS stops being reasonable.
+	 */
+	Form.prototype.startRescue = function () {
+		var self = this;
+
+		this.stopRescue();
+
+		if (!this.rescue || this.rescueAfter <= 0) {
+			return;
+		}
+
+		this.rescueTimer = window.setTimeout(function () {
+			if (self.isCurrent(self.stepCode)) {
+				self.rescue.hidden = false;
+			}
+		}, this.rescueAfter * 1000);
+	};
+
+	Form.prototype.stopRescue = function () {
+		window.clearTimeout(this.rescueTimer);
+		this.rescueTimer = null;
+
+		if (this.rescue) {
+			this.rescue.hidden = true;
+		}
+	};
+
+	/**
+	 * Freeze each button label at its resting width.
+	 *
+	 * Without this, swapping "Sign in" for "Checking the code..." resizes the
+	 * button mid-click and the pointer lands somewhere else.
+	 */
+	Form.prototype.lockButtonWidths = function () {
+		$$(this.root, '.tisa-btn__label').forEach(function (label) {
+			var width = label.offsetWidth;
+
+			if (width > 0) {
+				label.style.setProperty('--tisa-label-width', width + 'px');
+			}
+		});
 	};
 
 	/**
@@ -1161,11 +1471,16 @@
 				window.clearInterval(self.expiry);
 				self.root.classList.add('is-expired');
 				self.clearCode();
+
+				// Say so, and offer the one thing that helps.
+				if (self.isCurrent(self.stepCode)) {
+					self.say(i18n.expired || '', 'error', self.actionsFor('expired_code', {}));
+				}
 			}
 		}, 1000);
 	};
 
-	Form.prototype.say = function (message, type) {
+	Form.prototype.say = function (message, type, actions) {
 		if (!this.statusBox || !message) {
 			return;
 		}
@@ -1173,19 +1488,110 @@
 		var isError = 'error' === type;
 
 		this.statusBox.hidden = false;
-		this.statusBox.textContent = message;
 		this.statusBox.className = 'tisa-otp__status is-' + (type || 'info');
+
+		// Older markup (and themes overriding the template) has no inner nodes.
+		if (this.statusText) {
+			this.statusText.textContent = message;
+		} else {
+			this.statusBox.textContent = message;
+		}
+
+		this.renderStatusActions(actions);
 
 		// Errors interrupt; everything else waits for a pause in speech.
 		this.statusBox.setAttribute('role', isError ? 'alert' : 'status');
 		this.statusBox.setAttribute('aria-live', isError ? 'assertive' : 'polite');
 	};
 
+	/**
+	 * Render the buttons offered inside a status message.
+	 *
+	 * `actions` is a list of `{ action, label, disabled }`; the button simply
+	 * routes back into `act()`, so no new API surface is needed.
+	 */
+	Form.prototype.renderStatusActions = function (actions) {
+		var self = this;
+
+		if (!this.statusActions) {
+			return;
+		}
+
+		this.statusActions.textContent = '';
+
+		(actions || []).forEach(function (item) {
+			if (!item || !item.label) {
+				return;
+			}
+
+			var button = document.createElement('button');
+
+			button.type = 'button';
+			button.className = 'tisa-otp__status-action';
+			button.textContent = item.label;
+			button.disabled = !!item.disabled;
+
+			button.addEventListener('click', function () {
+				self.act(item.action);
+			});
+
+			self.statusActions.appendChild(button);
+		});
+	};
+
+	/**
+	 * Map a server error code to the one or two things worth offering next.
+	 *
+	 * Codes come from the REST layer as they are; nothing here needs the API to
+	 * change (UI plan 4.7).
+	 */
+	Form.prototype.actionsFor = function (code, payload) {
+		var labels = cfg.actions || {};
+		var retry = { action: 'retry', label: labels.retry || '' };
+		var newCode = { action: 'resend', label: labels.newCode || '', disabled: !!(payload && payload.retry_after) };
+		var editPhone = { action: 'edit-phone', label: labels.editPhone || '' };
+
+		switch (code) {
+			case 'network_error':
+			case 'request_timeout':
+			case 'server_error':
+				return [retry];
+
+			case 'invalid_code':
+				return [newCode];
+
+			case 'expired_code':
+			case 'no_pending_code':
+				return [newCode, editPhone];
+
+			case 'cooldown':
+				return [editPhone];
+
+			case 'throttled':
+			case 'blocked':
+				return [];
+
+			case 'invalid_phone':
+			case 'unknown_phone':
+				return [editPhone];
+
+			default:
+				return (payload && payload.captcha_required) ? [] : [retry];
+		}
+	};
+
 	Form.prototype.clearStatus = function () {
 		if (this.statusBox) {
 			this.statusBox.hidden = true;
-			this.statusBox.textContent = '';
+
+			if (this.statusText) {
+				this.statusText.textContent = '';
+			} else {
+				this.statusBox.textContent = '';
+			}
 		}
+
+		this.renderStatusActions([]);
 	};
 
 	Form.prototype.setBusy = function (busy, name, working) {

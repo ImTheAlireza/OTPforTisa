@@ -1,35 +1,84 @@
 /*!
  * Tisa OTP — front-end styles.
  *
- * Everything is scoped under `.tisa-otp` and driven by a handful of custom
- * properties, so themes can restyle the form without touching this file:
+ * Everything is scoped under `.tisa-otp` and driven by design tokens, so a
+ * theme can restyle the form without touching a single selector here. The
+ * five public ones are set from PHP (`Assets::cssVariables`) and from the
+ * shortcode/Elementor attributes:
  *
  *   --tisa-accent        main colour
  *   --tisa-accent-soft   tinted background for focus/hover
  *   --tisa-surface       card background
  *   --tisa-radius        corner radius
  *   --tisa-width         form width
+ *
+ * The rest are derived below. Contrast-critical values were measured, not
+ * guessed: --tisa-input-line is 4.05:1 and --tisa-placeholder 4.83:1 on white,
+ * replacing values that failed WCAG 1.4.11 (1.24:1) and 1.4.3 (2.58:1).
+ * See docs/UI-PLAN.fa.md §3 for the full token table.
  */
 
 .tisa-otp {
+	/* Colour ------------------------------------------------------------- */
 	--tisa-accent: #0f766e;
 	--tisa-accent-soft: rgba(15, 118, 110, 0.12);
+	--tisa-accent-strong: #0b5c56;
+	--tisa-accent-contrast: #ffffff;
 	--tisa-surface: #ffffff;
-	--tisa-radius: 14px;
-	--tisa-width: 420px;
+	--tisa-surface-sunken: #f9fafb;
 	--tisa-text: #101828;
 	--tisa-muted: #667085;
 	--tisa-line: #e4e7ec;
+	--tisa-input-line: #767f8d;
+	--tisa-placeholder: #6b7280;
+	--tisa-focus: var(--tisa-accent);
 	--tisa-danger: #b42318;
+	--tisa-danger-soft: rgba(180, 35, 24, 0.1);
+	--tisa-danger-line: rgba(180, 35, 24, 0.35);
 	--tisa-success: #067647;
-	--tisa-space: 14px;
+	--tisa-success-soft: #ecfdf3;
+	--tisa-success-line: rgba(6, 118, 71, 0.25);
+	--tisa-info: #175cd3;
+	--tisa-info-soft: rgba(23, 92, 211, 0.08);
+	--tisa-info-line: rgba(23, 92, 211, 0.22);
+	--tisa-overlay: rgba(255, 255, 255, 0.72);
 
+	/* Space (4px rhythm) -------------------------------------------------- */
+	--tisa-space-1: 4px;
+	--tisa-space-2: 8px;
+	--tisa-space-3: 12px;
+	--tisa-space: 14px;
+	--tisa-space-4: var(--tisa-space);
+	--tisa-space-6: 24px;
+	--tisa-space-8: 32px;
+
+	/* Radius and depth ---------------------------------------------------- */
+	--tisa-radius: 14px;
+	--tisa-radius-sm: calc(var(--tisa-radius) * 0.5);
+	--tisa-radius-control: calc(var(--tisa-radius) * 0.7);
+	--tisa-elev-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+	--tisa-elev-2: 0 18px 40px -24px rgba(16, 24, 40, 0.35);
+	--tisa-elev-3: 0 24px 56px -28px rgba(16, 24, 40, 0.45);
+
+	/* Motion -------------------------------------------------------------- */
+	--tisa-dur-fast: 120ms;
+	--tisa-dur-base: 180ms;
+	--tisa-dur-slow: 320ms;
+	--tisa-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--tisa-ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+	/* Type ---------------------------------------------------------------- */
+	--tisa-width: 420px;
+	--tisa-font: inherit;
+
+	position: relative;
 	box-sizing: border-box;
 	width: 100%;
 	max-width: var(--tisa-width);
 	margin-inline: auto;
 	padding: 0;
 	color: var(--tisa-text);
+	font-family: var(--tisa-font);
 	font-size: 15px;
 	line-height: 1.7;
 	direction: rtl;
@@ -52,6 +101,31 @@
 	clip: rect(0, 0, 0, 0);
 	white-space: nowrap;
 	border: 0;
+}
+
+/* Skip link — the first tab stop inside the form. Visible only on focus. */
+
+.tisa-otp__skip {
+	position: absolute;
+	top: 0;
+	inset-inline-start: 0;
+	z-index: 3;
+	padding: 8px 14px;
+	border-radius: var(--tisa-radius-sm);
+	background: var(--tisa-accent);
+	color: var(--tisa-accent-contrast);
+	font-size: 14px;
+	font-weight: 700;
+	text-decoration: none;
+	transform: translateY(-150%);
+	transition: transform var(--tisa-dur-fast) var(--tisa-ease-out);
+}
+
+.tisa-otp__skip:focus,
+.tisa-otp__skip:focus-visible {
+	outline: 2px solid var(--tisa-focus);
+	outline-offset: 2px;
+	transform: translateY(0);
 }
 
 /* Alignment ---------------------------------------------------------------- */
@@ -247,7 +321,7 @@
 .tisa-code__bulk[aria-invalid="true"],
 .tisa-code__box[aria-invalid="true"] {
 	border-color: var(--tisa-danger);
-	background: #fffbfa;
+	background: var(--tisa-danger-soft);
 }
 
 .tisa-code__box[aria-invalid="true"]:focus,
@@ -262,7 +336,7 @@
 }
 
 .tisa-step__title:focus-visible {
-	outline: 2px solid var(--tisa-accent);
+	outline: 2px solid var(--tisa-focus);
 	outline-offset: 4px;
 	border-radius: 4px;
 }
@@ -270,13 +344,14 @@
 .tisa-field__hint {
 	margin: 6px 0 0;
 	color: var(--tisa-muted);
-	font-size: 12.5px;
+	font-size: 13px;
 }
 
 .tisa-field__error {
 	margin: 6px 0 0;
 	color: var(--tisa-danger);
-	font-size: 12.5px;
+	font-size: 13.5px;
+	font-weight: 500;
 }
 
 .tisa-field__error[hidden] {
@@ -303,24 +378,29 @@
 .tisa-phone {
 	display: flex;
 	align-items: stretch;
-	border: 1px solid var(--tisa-line);
-	border-radius: calc(var(--tisa-radius) * 0.7);
+	border: 1px solid var(--tisa-input-line);
+	border-radius: var(--tisa-radius-control);
 	background: var(--tisa-surface);
 	overflow: hidden;
-	transition: border-color 140ms ease, box-shadow 140ms ease;
+	transition: border-color var(--tisa-dur-fast) var(--tisa-ease-out), box-shadow var(--tisa-dur-fast) var(--tisa-ease-out);
 }
 
 .tisa-phone:focus-within {
-	border-color: var(--tisa-accent);
+	border-color: var(--tisa-focus);
 	box-shadow: 0 0 0 4px var(--tisa-accent-soft);
+}
+
+.tisa-phone[aria-invalid="true"],
+.tisa-phone.has-error {
+	border-color: var(--tisa-danger);
 }
 
 .tisa-phone__dial {
 	display: flex;
 	align-items: center;
 	padding: 0 14px;
-	border-inline-end: 1px solid var(--tisa-line);
-	background: #f9fafb;
+	border-inline-end: 1px solid var(--tisa-input-line);
+	background: var(--tisa-surface-sunken);
 	color: var(--tisa-muted);
 	font-size: 15px;
 	direction: ltr;
@@ -344,7 +424,7 @@
 
 .tisa-code__boxes {
 	display: flex;
-	gap: 8px;
+	gap: var(--tisa-space-2);
 	justify-content: flex-start;
 	direction: ltr;
 }
@@ -355,15 +435,18 @@
 	max-width: 58px;
 	height: 56px;
 	padding: 0;
-	border: 1px solid var(--tisa-line);
-	border-radius: calc(var(--tisa-radius) * 0.7);
+	border: 1px solid var(--tisa-input-line);
+	border-radius: var(--tisa-radius-control);
 	background: var(--tisa-surface);
 	color: var(--tisa-text);
 	font-family: inherit;
-	font-size: 22px;
+	font-size: 24px;
 	font-weight: 700;
+	/* Tabular figures keep the boxes from twitching as digits land. */
+	font-feature-settings: "tnum" 1;
+	font-variant-numeric: tabular-nums;
 	text-align: center;
-	transition: border-color 140ms ease, box-shadow 140ms ease;
+	transition: border-color var(--tisa-dur-fast) var(--tisa-ease-out), box-shadow var(--tisa-dur-fast) var(--tisa-ease-out);
 }
 
 .tisa-code-single .tisa-code__boxes,
@@ -375,22 +458,99 @@
 	direction: ltr;
 	text-align: center;
 	letter-spacing: 0.5em;
-	font-size: 20px;
+	/* The trailing letter-spacing would otherwise push the text off-centre. */
+	text-indent: 0.5em;
+	font-size: 22px;
 	font-weight: 700;
+	font-feature-settings: "tnum" 1;
+	font-variant-numeric: tabular-nums;
 }
 
 .tisa-code__footer {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 12px;
+	gap: var(--tisa-space-3);
 	justify-content: space-between;
+	align-items: center;
 	margin-top: var(--tisa-space);
 	font-size: 13.5px;
 }
 
+.tisa-code__attempts {
+	display: block;
+	margin-top: var(--tisa-space-2);
+	color: var(--tisa-danger);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.tisa-code__attempts[hidden] {
+	display: none;
+}
+
+/* Cooldown bar: one CSS animation instead of a second timer (UI plan 4.5). */
+
+.tisa-code__cooldown {
+	height: 2px;
+	margin-top: var(--tisa-space-2);
+	border-radius: 2px;
+	background: var(--tisa-line);
+	overflow: hidden;
+}
+
+.tisa-code__cooldown[hidden] {
+	display: none;
+}
+
+.tisa-code__cooldown > i {
+	display: block;
+	height: 100%;
+	background: var(--tisa-accent);
+	transform-origin: inline-start;
+	animation: tisa-cooldown var(--tisa-cooldown, 60s) linear forwards;
+}
+
+@keyframes tisa-cooldown {
+	from {
+		transform: scaleX(1);
+	}
+
+	to {
+		transform: scaleX(0);
+	}
+}
+
+/* "No SMS?" helper — revealed after 30 seconds on the code step (U-A6). */
+
+.tisa-code__rescue {
+	margin-top: var(--tisa-space);
+	padding: var(--tisa-space-3);
+	border: 1px dashed var(--tisa-line);
+	border-radius: var(--tisa-radius-control);
+	background: var(--tisa-surface-sunken);
+	animation: tisa-step-in var(--tisa-dur-base) var(--tisa-ease-out);
+}
+
+.tisa-code__rescue[hidden] {
+	display: none;
+}
+
+.tisa-code__rescue-title {
+	margin: 0 0 var(--tisa-space-2);
+	color: var(--tisa-text);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.tisa-code__rescue-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tisa-space-3);
+}
+
 .tisa-otp.is-expired .tisa-code__box,
 .tisa-otp.is-expired .tisa-code__bulk {
-	border-color: rgba(180, 35, 24, 0.35);
+	border-color: var(--tisa-danger-line);
 }
 
 /* Buttons ------------------------------------------------------------------ */
@@ -401,26 +561,32 @@
 	justify-content: center;
 	gap: 10px;
 	width: 100%;
+	/* 44px is the WCAG 2.2 target-size floor; 48px is the comfortable one. */
 	min-height: 48px;
 	margin: 0;
 	padding: 12px 20px;
 	border: 1px solid transparent;
-	border-radius: calc(var(--tisa-radius) * 0.7);
+	border-radius: var(--tisa-radius-control);
 	font-family: inherit;
-	font-size: 15.5px;
+	font-size: 16px;
 	font-weight: 700;
 	line-height: 1.5;
 	cursor: pointer;
-	transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease, transform 90ms ease, opacity 140ms ease;
+	transition: background-color var(--tisa-dur-fast) var(--tisa-ease-out), color var(--tisa-dur-fast) var(--tisa-ease-out), border-color var(--tisa-dur-fast) var(--tisa-ease-out), transform 90ms var(--tisa-ease-out), opacity var(--tisa-dur-fast) var(--tisa-ease-out);
+}
+
+/* The label keeps its resting width so "..." does not resize the button. */
+.tisa-btn__label {
+	min-width: var(--tisa-label-width, auto);
 }
 
 .tisa-btn--primary {
 	background: var(--tisa-accent);
-	color: #fff;
+	color: var(--tisa-accent-contrast);
 }
 
 .tisa-btn--primary:hover:not(:disabled) {
-	filter: brightness(1.06);
+	background: var(--tisa-accent-strong);
 }
 
 .tisa-btn--primary:active:not(:disabled) {
@@ -430,8 +596,8 @@
 .tisa-btn--ghost {
 	margin-top: 10px;
 	background: transparent;
-	border-color: var(--tisa-line);
-	color: var(--tisa-muted);
+	border-color: var(--tisa-input-line);
+	color: var(--tisa-text);
 	font-weight: 600;
 }
 
@@ -448,7 +614,7 @@
 
 .tisa-btn:focus-visible,
 .tisa-link:focus-visible {
-	outline: 2px solid var(--tisa-accent);
+	outline: 2px solid var(--tisa-focus);
 	outline-offset: 2px;
 }
 
@@ -472,7 +638,24 @@
 	}
 }
 
+/* While a request is in flight the step dims, so the wait is visible even
+   when the pressed button has scrolled out of view. */
+
+.tisa-otp.is-busy .tisa-step.is-current {
+	opacity: 0.72;
+	transition: opacity var(--tisa-dur-fast) var(--tisa-ease-out);
+}
+
+.tisa-otp.is-busy .tisa-code__box,
+.tisa-otp.is-busy .tisa-field__input,
+.tisa-otp.is-busy .tisa-phone__input {
+	pointer-events: none;
+}
+
 .tisa-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
 	padding: 0;
 	border: 0;
 	background: none;
@@ -513,24 +696,106 @@
 	color: var(--tisa-accent);
 }
 
+/* Step bar ----------------------------------------------------------------- */
+
+/*
+ * Decorative for assistive tech: `aria-hidden` on the list, with a visually
+ * hidden "step N of M" sentence next to it doing the announcing.
+ */
+
+.tisa-otp__steps {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--tisa-space-1);
+	margin: 0 0 var(--tisa-space);
+	padding: 0;
+	list-style: none;
+	counter-reset: tisa-step;
+}
+
+.tisa-otp__steps[hidden] {
+	display: none;
+}
+
+.tisa-otp__steps li {
+	flex: 1 1 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	position: relative;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+	line-height: 1.5;
+	text-align: center;
+}
+
+.tisa-otp__steps li::before {
+	counter-increment: tisa-step;
+	content: counter(tisa-step);
+	display: grid;
+	place-items: center;
+	width: 26px;
+	height: 26px;
+	border: 1px solid var(--tisa-input-line);
+	border-radius: 50%;
+	background: var(--tisa-surface);
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+	font-weight: 700;
+	transition: background-color var(--tisa-dur-fast) var(--tisa-ease-out), border-color var(--tisa-dur-fast) var(--tisa-ease-out), color var(--tisa-dur-fast) var(--tisa-ease-out);
+}
+
+/* The connector sits between circles, never before the first one. */
+.tisa-otp__steps li + li::after {
+	content: "";
+	position: absolute;
+	top: 13px;
+	inset-inline-end: 50%;
+	width: 100%;
+	height: 1px;
+	background: var(--tisa-line);
+}
+
+.tisa-otp__steps li.is-current {
+	color: var(--tisa-text);
+	font-weight: 700;
+}
+
+.tisa-otp__steps li.is-current::before {
+	border-color: var(--tisa-accent);
+	background: var(--tisa-accent);
+	color: var(--tisa-accent-contrast);
+}
+
+.tisa-otp__steps li.is-done::before {
+	content: "\2713";
+	border-color: var(--tisa-accent);
+	color: var(--tisa-accent);
+}
+
+.tisa-otp__steps li.is-done {
+	color: var(--tisa-accent);
+}
+
 /* Skins -------------------------------------------------------------------- */
 
 .tisa-skin-card .tisa-otp__form {
-	padding: 26px 24px 24px;
+	padding: 26px var(--tisa-space-6) var(--tisa-space-6);
 	border: 1px solid var(--tisa-line);
 	border-radius: var(--tisa-radius);
 	background: var(--tisa-surface);
-	box-shadow: 0 18px 40px -24px rgba(16, 24, 40, 0.35);
+	box-shadow: var(--tisa-elev-2);
 }
 
 .tisa-skin-glass .tisa-otp__form {
-	padding: 26px 24px 24px;
+	padding: 26px var(--tisa-space-6) var(--tisa-space-6);
 	border: 1px solid rgba(255, 255, 255, 0.45);
 	border-radius: var(--tisa-radius);
 	background: rgba(255, 255, 255, 0.62);
 	backdrop-filter: blur(14px) saturate(140%);
 	-webkit-backdrop-filter: blur(14px) saturate(140%);
-	box-shadow: 0 20px 44px -28px rgba(16, 24, 40, 0.4);
+	box-shadow: var(--tisa-elev-3);
 }
 
 .tisa-skin-glass .tisa-field__input,
@@ -540,37 +805,40 @@
 	background: rgba(255, 255, 255, 0.75);
 }
 
+/*
+ * Slate is a pure token swap: no component-level colour overrides, so any new
+ * component inherits the dark palette for free (UI plan 6.2).
+ */
+
 .tisa-skin-slate {
 	--tisa-text: #f2f4f7;
 	--tisa-muted: #98a2b3;
 	--tisa-line: #344054;
+	/* 3.98:1 on --tisa-surface and 4.8:1 on the form background (WCAG 1.4.11). */
+	--tisa-input-line: #7a8697;
+	--tisa-placeholder: #98a2b3;
 	--tisa-surface: #1d2939;
+	--tisa-surface-sunken: #101828;
+	--tisa-accent-strong: #2dd4bf;
+	--tisa-focus: #7dd3fc;
+	--tisa-danger: #fda29b;
+	--tisa-danger-soft: rgba(253, 162, 155, 0.14);
+	--tisa-danger-line: #7a271a;
+	--tisa-success: #6ce9a6;
+	--tisa-success-soft: #12352a;
+	--tisa-success-line: #17533c;
+	--tisa-info: #b2ddff;
+	--tisa-info-soft: #1d2939;
+	--tisa-info-line: #344054;
+	--tisa-overlay: rgba(16, 24, 40, 0.72);
 	color: var(--tisa-text);
 }
 
 .tisa-skin-slate .tisa-otp__form {
-	padding: 26px 24px 24px;
-	border: 1px solid #344054;
+	padding: 26px var(--tisa-space-6) var(--tisa-space-6);
+	border: 1px solid var(--tisa-line);
 	border-radius: var(--tisa-radius);
-	background: #101828;
-}
-
-.tisa-skin-slate .tisa-otp__status {
-	background: #1d2939;
-	border-color: #344054;
-	color: #d0d5dd;
-}
-
-.tisa-skin-slate .tisa-otp__status.is-error {
-	background: #4a1d1a;
-	border-color: #7a271a;
-	color: #fda29b;
-}
-
-.tisa-skin-slate .tisa-otp__status.is-success {
-	background: #12352a;
-	border-color: #17533c;
-	color: #6ce9a6;
+	background: var(--tisa-surface-sunken);
 }
 
 .tisa-skin-slate .tisa-field__input,
@@ -578,36 +846,39 @@
 .tisa-skin-slate .tisa-phone,
 .tisa-skin-slate .tisa-code__box,
 .tisa-skin-slate .tisa-code__bulk {
-	background: #1d2939;
-	border-color: #344054;
-	color: var(--tisa-text);
+	background: var(--tisa-surface);
 }
 
-.tisa-skin-slate .tisa-phone__dial {
-	background: #101828;
-	border-color: #344054;
-	color: #98a2b3;
-}
-
-.tisa-skin-slate .tisa-btn--ghost {
-	color: #d0d5dd;
-	border-color: #344054;
+.tisa-skin-pill {
+	--tisa-radius-control: 999px;
+	--tisa-radius-sm: 999px;
 }
 
 .tisa-skin-pill .tisa-btn,
 .tisa-skin-pill .tisa-field__input,
 .tisa-skin-pill .tisa-phone,
 .tisa-skin-pill .tisa-code__box,
-.tisa-skin-pill .tisa-code__bulk {
-	border-radius: 999px;
-}
-
+.tisa-skin-pill .tisa-code__bulk,
 .tisa-skin-pill .tisa-otp__status {
 	border-radius: 999px;
 }
 
 /* Responsive --------------------------------------------------------------- */
 
+/* md — tablets and narrow desktop columns. */
+@media (max-width: 768px) {
+	.tisa-otp__steps li {
+		font-size: 12px;
+	}
+
+	.tisa-skin-card .tisa-otp__form,
+	.tisa-skin-glass .tisa-otp__form,
+	.tisa-skin-slate .tisa-otp__form {
+		padding: var(--tisa-space-6) 20px;
+	}
+}
+
+/* sm — phones. */
 @media (max-width: 480px) {
 	.tisa-otp {
 		font-size: 14.5px;
@@ -618,12 +889,17 @@
 	}
 
 	.tisa-code__box {
-		height: 50px;
-		font-size: 19px;
+		height: 52px;
+		/* Still 16px+ so iOS does not zoom when a box takes focus. */
+		font-size: 21px;
 	}
 
 	.tisa-code__boxes {
 		gap: 6px;
+	}
+
+	.tisa-code__footer {
+		gap: var(--tisa-space-2);
 	}
 
 	.tisa-skin-card .tisa-otp__form,
@@ -637,16 +913,67 @@
 	}
 }
 
+/* xs — 360px and below, where eight code boxes stop fitting. */
+@media (max-width: 380px) {
+	.tisa-code__box {
+		height: 48px;
+		font-size: 19px;
+	}
+
+	.tisa-code__boxes {
+		gap: var(--tisa-space-1);
+	}
+
+	.tisa-phone__dial {
+		padding: 0 10px;
+	}
+
+	/* Only the "step 2 of 3" sentence survives; the circles would wrap. */
+	.tisa-otp__steps {
+		display: none;
+	}
+
+	.tisa-otp__steps-text {
+		position: static !important;
+		width: auto;
+		height: auto;
+		margin: 0 0 var(--tisa-space-2);
+		padding: 0;
+		overflow: visible;
+		clip: auto;
+		color: var(--tisa-muted);
+		font-size: 13px;
+		white-space: normal;
+	}
+
+	.tisa-code__rescue-actions {
+		flex-direction: column;
+		gap: 0;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
-	.tisa-step.is-current {
+	.tisa-step.is-current,
+	.tisa-code__rescue {
 		animation: none;
 	}
 
 	.tisa-btn,
+	.tisa-btn__label,
+	.tisa-otp__skip,
+	.tisa-otp__steps li::before,
 	.tisa-field__input,
+	.tisa-field__select,
 	.tisa-phone,
-	.tisa-code__box {
+	.tisa-code__bulk,
+	.tisa-code__box,
+	.tisa-otp.is-busy .tisa-step.is-current {
 		transition: none;
+	}
+
+	/* The bar would be a 60-second moving object; the number stays instead. */
+	.tisa-code__cooldown {
+		display: none;
 	}
 
 	.tisa-btn__spinner {
@@ -657,6 +984,8 @@
 @media (prefers-contrast: more) {
 	.tisa-otp {
 		--tisa-line: #4b5563;
+		--tisa-input-line: #1f2937;
+		--tisa-placeholder: #4b5563;
 		--tisa-muted: #374151;
 	}
 
@@ -680,6 +1009,10 @@
 	justify-content: flex-start;
 }
 
+.tisa-otp[dir="ltr"] .tisa-code__cooldown > i {
+	transform-origin: inline-start;
+}
+
 @media (forced-colors: active) {
 	.tisa-btn--primary {
 		background: ButtonFace;
@@ -689,8 +1022,21 @@
 
 	.tisa-field__input,
 	.tisa-phone,
-	.tisa-code__box {
+	.tisa-code__box,
+	.tisa-otp__status,
+	.tisa-otp__status-action {
 		border-color: CanvasText;
+	}
+
+	.tisa-otp__steps li.is-current::before,
+	.tisa-otp__steps li.is-done::before {
+		border-color: CanvasText;
+		color: CanvasText;
+		background: Canvas;
+	}
+
+	.tisa-otp__status-icon {
+		color: CanvasText;
 	}
 }
 

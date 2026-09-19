@@ -166,7 +166,7 @@ function verifyPayload(phone, extra) {
 	return Object.assign({
 		step: 'verify',
 		scope: 'login',
-		message: 'کد تأیید ارسال شد. اگر پیامی دریافت نکردید، کمی بعد دوباره تلاش کنید.',
+		message: 'کد ۵ رقمی پیامک شد. تا ۲ دقیقه معتبر است.',
 		masked: mask(phone),
 		channel: 'sms',
 		via: 'smsir',
@@ -217,7 +217,7 @@ function handleRest(route, body, headers) {
 			}
 
 			if (phone === '09000000000') {
-				return fail('cooldown', 'برای دریافت کد جدید ۴۵ ثانیه صبر کنید.', { retry_after: 45 });
+				return fail('cooldown', 'تا ۴۵ ثانیهٔ دیگر می‌توانید کد تازه بگیرید.', { retry_after: 45 });
 			}
 			if (phone === '09111111111') {
 				return fail('captcha_failed', 'اعتبارسنجی کپچا ناموفق بود. لطفاً دوباره تلاش کنید.', { captcha_required: true });
@@ -237,9 +237,9 @@ function handleRest(route, body, headers) {
 
 		case 'code':
 			if (phone === '09000000000') {
-				return fail('cooldown', 'برای دریافت کد جدید ۴۵ ثانیه صبر کنید.', { retry_after: 45 });
+				return fail('cooldown', 'تا ۴۵ ثانیهٔ دیگر می‌توانید کد تازه بگیرید.', { retry_after: 45 });
 			}
-			return ok(verifyPayload(phone, { message: 'کد تأیید دوباره ارسال شد.' }));
+			return ok(verifyPayload(phone, { message: 'کد تازه پیامک شد.' }));
 
 		case 'verify': {
 			const code = String(body.code || '');
@@ -250,7 +250,7 @@ function handleRest(route, body, headers) {
 					user_id: 42,
 					redirect: '',
 					display_name: 'کاربر تیسا',
-					message: body.draft_token ? 'عضویت انجام شد. در حال انتقال…' : 'ورود موفق. در حال انتقال…',
+					message: body.draft_token ? 'حساب شما ساخته شد. در حال انتقال…' : 'خوش آمدید. در حال انتقال…',
 				});
 			}
 
@@ -258,10 +258,10 @@ function handleRest(route, body, headers) {
 			attempts.set(phone, Math.max(left, 0));
 
 			if (left <= 0) {
-				return fail('expired_code', 'کد تأیید نامعتبر یا منقضی شده است. کد جدید دریافت کنید.', { attempts_left: 0 });
+				return fail('expired_code', 'این کد دیگر معتبر نیست.', { attempts_left: 0 });
 			}
 
-			return fail('invalid_code', 'کد واردشده درست نیست.', { attempts_left: left });
+			return fail('invalid_code', 'کد درست نیست.', { attempts_left: left });
 		}
 
 		case 'register': {
@@ -275,7 +275,7 @@ function handleRest(route, body, headers) {
 			}
 
 			if (Object.keys(errors).length) {
-				return fail('invalid_fields', 'لطفاً خطاهای فرم را اصلاح کنید.', { errors });
+				return fail('invalid_fields', 'فیلدهای ستاره‌دار را کامل کنید.', { errors });
 			}
 
 			return ok(verifyPayload(phone, {

@@ -125,6 +125,7 @@ final class FormRenderer {
 			'fields'       => $this->schema->forClient(),
 			'flow'         => $this->schema->flow(),
 			'registration' => $this->schema->enabled(),
+			'steps'        => $this->steps(),
 			'captcha'      => $this->captcha->clientBundle(),
 			'terms'        => $this->terms(),
 			'dir'          => is_rtl() ? 'rtl' : 'ltr',
@@ -136,6 +137,45 @@ final class FormRenderer {
 			'timestampKey' => \TisaOtp\Guard\BotGuard::TIMESTAMP,
 			'renderedAt'   => time(),
 		);
+	}
+
+	/**
+	 * Steps shown in the progress bar, in the order the visitor meets them.
+	 *
+	 * Registration off means two steps, which is not worth a progress bar, so
+	 * the template hides it; the order follows the configured flow.
+	 *
+	 * @return array<int,array{id:string,label:string}>
+	 */
+	private function steps(): array {
+		$phone = array(
+			'id'    => 'phone',
+			'label' => __( 'شماره', 'tisa-otp' ),
+		);
+		$code  = array(
+			'id'    => 'code',
+			'label' => __( 'کد', 'tisa-otp' ),
+		);
+
+		if ( ! $this->schema->enabled() ) {
+			return array( $phone, $code );
+		}
+
+		$fields = array(
+			'id'    => 'fields',
+			'label' => __( 'اطلاعات', 'tisa-otp' ),
+		);
+
+		$steps = 'code_then_fields' === $this->schema->flow()
+			? array( $phone, $code, $fields )
+			: array( $phone, $fields, $code );
+
+		/**
+		 * Filter the steps shown in the progress bar.
+		 *
+		 * @param array $steps Ordered list of `id`/`label` pairs.
+		 */
+		return (array) apply_filters( 'tisa_otp_form_steps', $steps );
 	}
 
 	/**

@@ -1,6 +1,6 @@
 # راهنمای استفاده از افزونه «تیسا OTP»
 
-نسخه ۱.۰.۱ · وردپرس ۶.۱ یا جدیدتر · PHP ۷.۴ یا جدیدتر
+نسخه ۱.۱.۰ · وردپرس ۶.۱ یا جدیدتر · PHP ۷.۴ یا جدیدتر
 
 دانلود بسته نصب: <https://github.com/ImTheAlireza/OTPforTisa/raw/refs/heads/arena/01a0b0f7-otpfortisa/tisa-otp.zip>
 
@@ -142,6 +142,29 @@
 
 `logs_enabled` · `logs_keep_days` (۷) · `debug` · `phone_meta_key` (`tisa_phone`) · `lookup_meta_keys` (کلیدهایی که افزونه برای یافتن شماره‌های قدیمی می‌گردد: `billing_phone,digits_phone,digits_phone_no`) · `wipe_on_uninstall`.
 
+### آنچه در ۱.۱.۰ به رابط کاربری اضافه شد
+
+این موارد تنظیم تازه‌ای نمی‌خواهند و خودبه‌خود فعال‌اند:
+
+| ویژگی | رفتار |
+|---|---|
+| نوار گام‌ها | فقط وقتی فرم عضویت روشن است (جریان سه‌گامی) دیده می‌شود. ترتیب آن از `registration_flow` می‌آید و با فیلتر `tisa_otp_form_steps` قابل تغییر است. |
+| دکمهٔ اقدام در خطاها | بر پایهٔ کد خطای سرور ساخته می‌شود؛ متن دکمه‌ها قابل ترجمه است. در حالت «محدود شده» عمداً دکمه‌ای نشان داده نمی‌شود. |
+| «پیامک نرسید؟» | ۳۰ ثانیه پس از ورود به گام کد ظاهر می‌شود. |
+| تلاش باقی‌مانده | فقط وقتی سرور مقدار `attempts_left` بفرستد نمایش داده می‌شود. |
+| نوار شمارش معکوس | یک انیمیشن CSS است؛ با `prefers-reduced-motion: reduce` حذف می‌شود و فقط عدد می‌ماند. |
+| skip-link | نخستین توقف Tab داخل فرم؛ به گام جاری می‌برد. |
+
+برای سفارشی‌سازی ظاهر، به‌جای بازنویسی انتخابگرها **توکن‌ها را عوض کنید** — فهرست کامل در بالای `assets/css/front.css` و در بخش ۳ سند [`UI-PLAN.fa.md`](UI-PLAN.fa.md) آمده است:
+
+```css
+.tisa-otp {
+    --tisa-accent: #7c3aed;
+    --tisa-input-line: #6b7280; /* باید دست‌کم ۳:۱ با پس‌زمینه کنتراست داشته باشد */
+    --tisa-radius: 8px;
+}
+```
+
 > حریم خصوصی: شماره خام در رویدادها ذخیره نمی‌شود — فقط ماسک‌شده (مانند `0912***4567`) به‌همراه اثر انگشت HMAC؛ کد یکبارمصرف هم فقط هَش‌شده نگهداری می‌شود.
 
 ---
@@ -197,7 +220,7 @@
 
 ### فیلترها
 
-`tisa_otp_redirect` · `tisa_otp_registration_fields` · `tisa_otp_field_presets` · `tisa_otp_message_tokens` · `tisa_otp_gateway_credentials` · `tisa_otp_channels` · `tisa_otp_delivery_order` · `tisa_otp_guards` · `tisa_otp_guarded_roles` · `tisa_otp_allows_user` · `tisa_otp_default_role` · `tisa_otp_new_user_args` · `tisa_otp_code_length` · `tisa_otp_code_ttl` · `tisa_otp_client_ip` · `tisa_otp_http_timeout` · `tisa_otp_http_retry_delay` · `tisa_otp_lookup_meta_keys` · `tisa_otp_digits_meta_keys` · `tisa_otp_import_sources` · `tisa_otp_captcha_providers` · `tisa_otp_should_load_assets` · `tisa_otp_ambiguous_phone` · `tisa_otp_phone_valid` · `tisa_otp_selectable_roles` · `tisa_otp_faraz_pattern_key`
+`tisa_otp_redirect` · `tisa_otp_registration_fields` · `tisa_otp_field_presets` · `tisa_otp_form_steps` · `tisa_otp_message_tokens` · `tisa_otp_gateway_credentials` · `tisa_otp_channels` · `tisa_otp_delivery_order` · `tisa_otp_guards` · `tisa_otp_guarded_roles` · `tisa_otp_allows_user` · `tisa_otp_default_role` · `tisa_otp_new_user_args` · `tisa_otp_code_length` · `tisa_otp_code_ttl` · `tisa_otp_client_ip` · `tisa_otp_http_timeout` · `tisa_otp_http_retry_delay` · `tisa_otp_lookup_meta_keys` · `tisa_otp_digits_meta_keys` · `tisa_otp_import_sources` · `tisa_otp_captcha_providers` · `tisa_otp_should_load_assets` · `tisa_otp_ambiguous_phone` · `tisa_otp_phone_valid` · `tisa_otp_selectable_roles` · `tisa_otp_faraz_pattern_key`
 
 نمونه‌ها (امضاهای واقعی):
 

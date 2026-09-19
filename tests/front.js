@@ -1,0 +1,457 @@
+#!/usr/bin/env node
+/**
+ * Behavioural tests for the real `assets/js/front.js` (UI plan A10).
+ *
+ * There is no PHP here, so the suite mounts the plugin's actual script against
+ * the preview harness markup — the same HTML the PHP templates print — inside
+ * jsdom, and drives it the way a visitor would. The backend is stubbed at the
+ * `fetch` boundary with the exact envelope `src/Http/Api.php` returns, including
+ * the fact that rejections arrive over HTTP 200 as `{success: false, ...}`.
+ *
+ * Run:  node tests/front.js        (needs jsdom; see tests/README.md)
+ */
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+let JSDOM;
+try {
+	({ JSDOM } = require('jsdom'));
+} catch (error) {
+	console.error('jsdom is not installed. Run: npm install --no-save jsdom');
+	process.exit(2);
+}
+
+const REPO = path.join(__dirname, '..');
+const PAGE = path.join(REPO, 'preview', 'public', 'index.html');
+const SCRIPT = path.join(REPO, 'tisa-otp', 'assets', 'js', 'front.js');
+
+const scriptSource = fs.readFileSync(SCRIPT, 'utf8');
+const pageSource = fs.readFileSync(PAGE, 'utf8');
+
+let passed = 0;
+let failed = 0;
+
+function check(label, condition, detail) {
+	if (condition) {
+		passed++;
+		console.log('  PASS  ' + label);
+	} else {
+		failed++;
+		console.log('  FAIL  ' + label + (detail ? '  — ' + detail : ''));
+	}
+}
+
+function scenario(name) {
+	console.log('\n' + name);
+}
+
+const tick = () => new Promise((resolve) => setImmediate(resolve));
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Boot the harness page with the real script.
+ *
+ * `html` lets a test change markup (data-* attributes outrank the global config
+ * by design, so those scenarios must edit the HTML, not `window.tisaOtp`).
+ */
+function boot(options) {
+	const opts = options || {};
+	const html = (opts.html || ((s) => s))(pageSource)
+		// The harness ships its own <script src>; the suite injects the file itself.
+		.replace(/<script src="\/plugin-assets\/js\/front\.js"><\/script>/, '');
+
+	const dom = new JSDOM(html, { runScripts: 'outside-only', pretendToBeVisual: true });
+	const win = dom.window;
+
+	/*
+	 * Inline <script> tags do not run in this mode, so the harness' stand-in for
+	 * wp_localize_script has to be lifted out and evaluated by hand. Using the
+	 * page's own block keeps the test honest: it exercises the same i18n strings
+	 * and labels the plugin ships.
+	 */
+	const config = html.match(/window\.tisaOtp\s*=\s*\{[\s\S]*?\n\t\};/);
+	if (!config) throw new Error('could not find the tisaOtp config block in the harness page');
+	win.eval(config[0]);
+
+	// Merge the test's overrides over it, exactly as a site's settings would.
+	win.eval('window.__tisaOverride = ' + JSON.stringify(opts.config || {}) + ';');
+	win.eval('window.tisaOtp = Object.assign({}, window.tisaOtp, window.__tisaOverride);');
+
+	const calls = [];
+	win.fetch = function (url, init) {
+		const request = { url: String(url), init: init || {}, body: null };
+		try {
+			request.body = init && init.body ? JSON.parse(init.body) : null;
+		} catch (error) {
+			request.body = null;
+		}
+		calls.push(request);
+		return (opts.fetch || (() => Promise.reject(new Error('no stub'))))(request, win);
+	};
+
+	// jsdom has no AbortController wired into fetch, and no navigator.onLine toggle.
+	if (!win.AbortController) {
+		win.AbortController = class {
+			constructor() {
+				this.signal = { aborted: false, addEventListener() {}, removeEventListener() {} };
+			}
+			abort() {
+				this.signal.aborted = true;
+				if ('function' === typeof this.signal.onabort) this.signal.onabort();
+			}
+		};
+	}
+
+	if (opts.offline) {
+		Object.defineProperty(win.navigator, 'onLine', { value: false, configurable: true });
+	}
+
+	win.eval(scriptSource);
+
+	// jsdom is still parsing when the script runs, so front.js waits for the
+	// event a browser would fire here.
+	if ('loading' === win.document.readyState) {
+		win.document.dispatchEvent(new win.Event('DOMContentLoaded', { bubbles: true }));
+	}
+
+	const root = win.document.querySelector('[data-tisa-form]');
+
+	if (!root || !root.tisaForm) {
+		throw new Error('front.js did not mount the form');
+	}
+
+	return { win, doc: win.document, root, form: root.tisaForm, calls };
+}
+
+/** The `{success: true, data}` envelope Api.php wraps every success in. */
+function ok(data) {
+	return Promise.resolve({
+		ok: true,
+		status: 200,
+		json: () => Promise.resolve({ success: true, data }),
+	});
+}
+
+/** A rejection: HTTP 200, `success: false`, with the code the UI maps on. */
+function reject(code, message, data) {
+	return Promise.resolve({
+		ok: true,
+		status: 200,
+		json: () => Promise.resolve({ success: false, code, message, data: data || {} }),
+	});
+}
+
+const verifyStep = (extra) =>
+	Object.assign(
+		{
+			step: 'verify',
+			scope: 'login',
+			message: 'کد ۵ رقمی پیامک شد. تا ۲ دقیقه معتبر است.',
+			masked: '0912***567',
+			cooldown: 60,
+			expires_in: 120,
+			code_length: 5,
+		},
+		extra || {}
+	);
+
+const text = (el) => (el ? String(el.textContent || '').trim() : '');
+
+/* ------------------------------------------------------------------ tests */
+
+async function testStepBar() {
+	scenario('Step bar tracks the flow and announces "step N of M"');
+
+	const ctx = boot({
+		fetch: (req) =>
+			req.url.indexOf('form-config') >= 0
+				? ok({ nonce: 'fresh' })
+				: ok({ step: 'register_form', message: 'اطلاعات را کامل کنید.', masked: '0912***567' }),
+	});
+
+	const markers = Array.from(ctx.doc.querySelectorAll('[data-tisa-step-marker]'));
+	const announce = ctx.doc.querySelector('[data-tisa-steps-text]');
+
+	check('three markers rendered', 3 === markers.length, markers.length + ' found');
+	check('first marker starts current', markers[0].classList.contains('is-current'));
+	check('announcement starts at step 1', text(announce).indexOf('۱') >= 0, text(announce));
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	check('phone marker becomes done', markers[0].classList.contains('is-done'));
+	check('fields marker becomes current', markers[1].classList.contains('is-current'));
+	check(
+		'announcement moves to step 2 with the step name',
+		text(announce).indexOf('۲') >= 0 && text(announce).indexOf('اطلاعات') >= 0,
+		text(announce)
+	);
+	check('list itself stays hidden from screen readers', 'true' === ctx.doc.querySelector('[data-tisa-steps]').getAttribute('aria-hidden'));
+}
+
+async function testActionableErrors() {
+	scenario('Errors offer an action instead of a dead end');
+
+	const ctx = boot({
+		fetch: (req) => {
+			if (req.url.indexOf('form-config') >= 0) return ok({ nonce: 'fresh' });
+			if (req.url.indexOf('/start') >= 0) return ok(verifyStep());
+			return reject('invalid_code', 'کد درست نیست.', { attempts_left: 3 });
+		},
+	});
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	ctx.form.fillCode('99999');
+	ctx.form.act('verify');
+	await tick();
+	await tick();
+
+	const status = ctx.doc.querySelector('[data-tisa-status]');
+	const actions = Array.from(ctx.doc.querySelectorAll('.tisa-otp__status-action'));
+
+	check('status is an assertive alert', 'alert' === status.getAttribute('role') && 'assertive' === status.getAttribute('aria-live'));
+	check('invalid_code offers exactly one action', 1 === actions.length, actions.length + ' buttons');
+	check('that action is "new code"', text(actions[0]).indexOf('کد تازه') >= 0, text(actions[0]));
+	check('remaining attempts are shown', text(ctx.doc.querySelector('[data-tisa-attempts]')).indexOf('۳') >= 0, text(ctx.doc.querySelector('[data-tisa-attempts]')));
+	check('code boxes are marked invalid', 'true' === ctx.doc.querySelector('[data-tisa-box]').getAttribute('aria-invalid'));
+
+	// A network failure should offer a retry that repeats the last action.
+	const ctx2 = boot({
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : Promise.reject(new Error('down'))),
+	});
+	ctx2.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx2.form.act('start');
+	await tick();
+	await tick();
+
+	const retry = ctx2.doc.querySelector('.tisa-otp__status-action');
+	check('network error offers a retry button', !!retry && text(retry).indexOf('تلاش دوباره') >= 0, text(retry));
+
+	const before = ctx2.calls.length;
+	retry.click();
+	await tick();
+	await tick();
+	check('retry repeats the failed request', ctx2.calls.length > before, before + ' -> ' + ctx2.calls.length);
+}
+
+async function testThrottleHasNoFalseHope() {
+	scenario('A throttle offers no button that cannot work');
+
+	const ctx = boot({
+		fetch: (req) =>
+			req.url.indexOf('form-config') >= 0
+				? ok({ nonce: 'n' })
+				: reject('throttled', 'برای امنیت شما، ارسال کد موقتاً متوقف شده است.', { retry_after: 600 }),
+	});
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	check('no action buttons offered', 0 === ctx.doc.querySelectorAll('.tisa-otp__status-action').length);
+	check('message still reaches the user', text(ctx.doc.querySelector('[data-tisa-status-text]')).length > 0);
+}
+
+async function testCodeLengthRebuild() {
+	scenario('Boxes rebuild when the server reports a different code length');
+
+	const ctx = boot({
+		fetch: (req) =>
+			req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep({ code_length: 6 })),
+	});
+
+	check('starts with five boxes', 5 === ctx.doc.querySelectorAll('[data-tisa-box]').length);
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	const boxes = Array.from(ctx.doc.querySelectorAll('[data-tisa-box]'));
+	check('rebuilt to six boxes', 6 === boxes.length, boxes.length + ' boxes');
+	check('bulk input maxlength follows', 6 === ctx.doc.querySelector('[data-tisa-code-bulk]').maxLength);
+	check('only the first box advertises autofill', 'one-time-code' === boxes[0].getAttribute('autocomplete') && 'off' === boxes[1].getAttribute('autocomplete'));
+	check('every rebuilt box is labelled', boxes.every((box) => (box.getAttribute('aria-label') || '').length > 0));
+
+	// The rebuilt boxes must still be wired: typing has to advance the caret.
+	boxes[0].value = '1';
+	boxes[0].dispatchEvent(new ctx.win.Event('input', { bubbles: true }));
+	check('rebuilt boxes are re-bound (focus advances)', ctx.doc.activeElement === boxes[1]);
+}
+
+async function testRescuePanel() {
+	scenario('"No SMS?" appears only after the wait becomes unreasonable');
+
+	const ctx = boot({
+		// Seconds are whole numbers in the real setting, so the test waits one.
+		config: { rescueAfter: 1 },
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
+	});
+
+	const rescue = ctx.doc.querySelector('[data-tisa-rescue]');
+	check('hidden before the code step', rescue.hidden);
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	check('still hidden right after the code is sent', rescue.hidden);
+	await wait(1100);
+	check('revealed once the delay passes', !rescue.hidden);
+
+	// Going back to the phone step must take the panel with it.
+	ctx.form.act('edit-phone');
+	check('hidden again after editing the phone', rescue.hidden);
+}
+
+async function testCooldownAndPersianDigits() {
+	scenario('Cooldown counts down in Persian and drives the progress bar');
+
+	const ctx = boot({
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep({ cooldown: 45 }))),
+	});
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	const label = text(ctx.doc.querySelector('[data-tisa-resend-label]'));
+	const bar = ctx.doc.querySelector('[data-tisa-cooldown]');
+
+	check('countdown uses Persian digits', /[۰-۹]/.test(label) && !/[0-9]/.test(label), label);
+	check('resend is disabled while it runs', ctx.doc.querySelector('[data-tisa-action="resend"]').disabled);
+	check('progress bar is shown', !bar.hidden);
+	check('bar duration matches the cooldown', '45s' === bar.style.getPropertyValue('--tisa-cooldown'), bar.style.getPropertyValue('--tisa-cooldown'));
+	check('bar is decorative for screen readers', 'true' === bar.getAttribute('aria-hidden'));
+
+	// The phone value itself must stay Latin, or the server cannot parse it.
+	check('phone field keeps Latin digits', /^[0-9]+$/.test(ctx.doc.querySelector('[data-tisa-phone]').value));
+}
+
+async function testFocusMovesToTheProblem() {
+	scenario('Focus lands on the thing that needs fixing');
+
+	const ctx = boot({
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok({ step: 'register_form', fields: [] })),
+	});
+
+	// Client-side validation: empty required fields.
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	ctx.form.act('submit-fields');
+	await tick();
+
+	const active = ctx.doc.activeElement;
+	check('focus is on an invalid field', 'true' === (active.getAttribute && active.getAttribute('aria-invalid')), active.tagName + '/' + (active.getAttribute ? active.getAttribute('data-tisa-input') : ''));
+	check('the invalid field names its error', !!(active.getAttribute('aria-describedby') || '').length);
+}
+
+async function testSkipLink() {
+	scenario('Skip link focuses the current step, not a hidden field');
+
+	const ctx = boot({
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
+	});
+
+	const skip = ctx.doc.querySelector('[data-tisa-skip]');
+	check('skip link is the first focusable element in the form', !!skip);
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	skip.dispatchEvent(new ctx.win.MouseEvent('click', { bubbles: true, cancelable: true }));
+
+	const active = ctx.doc.activeElement;
+	const codeStep = ctx.doc.querySelector('[data-tisa-step="code"]');
+	check('focus stays inside the visible step', codeStep.contains(active), active.tagName);
+}
+
+async function testExpiry() {
+	scenario('An expired code says so and offers a fresh one');
+
+	const ctx = boot({
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep({ expires_in: 1 }))),
+	});
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	await wait(1200);
+
+	check('form is marked expired', ctx.root.classList.contains('is-expired'));
+	check('a message explains why', text(ctx.doc.querySelector('[data-tisa-status-text]')).indexOf('منقضی') >= 0, text(ctx.doc.querySelector('[data-tisa-status-text]')));
+	const labels = Array.from(ctx.doc.querySelectorAll('.tisa-otp__status-action')).map(text);
+	check('a way to get a new code is offered', labels.some((l) => l.indexOf('کد تازه') >= 0), labels.join(' | '));
+}
+
+async function testStaleNonceStillRecovers() {
+	scenario('The 1.0.1 cache/nonce recovery still works');
+
+	let served = 0;
+	const ctx = boot({
+		fetch: (req) => {
+			if (req.url.indexOf('form-config') >= 0) {
+				served++;
+				return ok({ nonce: 'fresh-nonce-' + served });
+			}
+			if (1 === served) {
+				return Promise.resolve({
+					ok: false,
+					status: 403,
+					json: () => Promise.resolve({ code: 'rest_cookie_invalid_nonce', message: 'nonce', data: { status: 403 } }),
+				});
+			}
+			return ok(verifyStep());
+		},
+	});
+
+	await tick();
+	check('a fresh nonce is fetched on mount', served >= 1);
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	for (let i = 0; i < 8; i++) await tick();
+
+	check('the rejected call is retried after refreshing', served >= 2, 'config fetched ' + served + 'x');
+	check('the visitor ends up on the code step', ctx.doc.querySelector('[data-tisa-step="code"]').classList.contains('is-current'));
+	check('no error is left on screen', ctx.doc.querySelector('[data-tisa-status]').className.indexOf('is-error') < 0);
+}
+
+async function main() {
+	await testStepBar();
+	await testActionableErrors();
+	await testThrottleHasNoFalseHope();
+	await testCodeLengthRebuild();
+	await testRescuePanel();
+	await testCooldownAndPersianDigits();
+	await testFocusMovesToTheProblem();
+	await testSkipLink();
+	await testExpiry();
+	await testStaleNonceStillRecovers();
+
+	console.log('\n' + (failed ? failed + ' FAILED, ' : '') + passed + ' checks passed');
+	process.exit(failed ? 1 : 0);
+}
+
+main().catch((error) => {
+	console.error(error);
+	process.exit(1);
+});

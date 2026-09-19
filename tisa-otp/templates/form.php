@@ -7,7 +7,7 @@
  * Available variables: instance, classes, style, heading, hint, regHeading,
  * regHint, redirect, labels, codeLength, cooldown, showBrand, logo, logoWidth,
  * fields, flow, registration, captcha, terms, dir, configUrl, cacheMode, nonce,
- * restUrl, honeypot, timestampKey, renderedAt, view.
+ * restUrl, honeypot, timestampKey, renderedAt, steps, view.
  *
  * @package TisaOtp
  */
@@ -32,6 +32,9 @@ defined( 'ABSPATH' ) || exit;
 >
 	<form class="tisa-otp__form" method="post" novalidate autocomplete="on">
 
+		<?php // First tab stop: jump straight to the field that matters. ?>
+		<a class="tisa-otp__skip" href="#<?php echo esc_attr( $instance ); ?>-phone" data-tisa-skip><?php esc_html_e( 'رفتن به فرم ورود', 'tisa-otp' ); ?></a>
+
 		<?php // Bots fill this; people never see it. ?>
 		<input type="text" name="<?php echo esc_attr( $honeypot ); ?>" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
 		<input type="hidden" name="<?php echo esc_attr( $timestampKey ); ?>" class="tisa-otp__rendered" value="<?php echo esc_attr( (string) $renderedAt ); ?>">
@@ -42,6 +45,37 @@ defined( 'ABSPATH' ) || exit;
 			</div>
 		<?php endif; ?>
 
+		<?php
+		/*
+		 * Step bar. The list is decorative (`aria-hidden`); the sentence beside
+		 * it is what a screen reader hears, and JS keeps both in sync. It is only
+		 * rendered when the flow really has three steps.
+		 */
+		if ( count( $steps ) > 2 ) :
+			?>
+			<ol class="tisa-otp__steps" data-tisa-steps aria-hidden="true">
+				<?php foreach ( $steps as $index => $step ) : ?>
+					<li
+						class="<?php echo 0 === $index ? 'is-current' : ''; ?>"
+						data-tisa-step-marker="<?php echo esc_attr( $step['id'] ); ?>"
+					><?php echo esc_html( $step['label'] ); ?></li>
+				<?php endforeach; ?>
+			</ol>
+			<p class="tisa-screen-reader tisa-otp__steps-text" data-tisa-steps-text>
+				<?php
+				printf(
+					/* translators: 1: current step number, 2: total steps, 3: step name */
+					esc_html__( 'گام %1$s از %2$s: %3$s', 'tisa-otp' ),
+					esc_html( number_format_i18n( 1 ) ),
+					esc_html( number_format_i18n( count( $steps ) ) ),
+					esc_html( $steps[0]['label'] )
+				);
+				?>
+			</p>
+			<?php
+		endif;
+		?>
+
 		<div
 			class="tisa-otp__status"
 			id="<?php echo esc_attr( $instance ); ?>-status"
@@ -50,7 +84,17 @@ defined( 'ABSPATH' ) || exit;
 			aria-atomic="true"
 			data-tisa-status
 			hidden
-		></div>
+		>
+			<svg class="tisa-otp__status-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false" data-tisa-status-icon>
+				<circle cx="10" cy="10" r="8"></circle>
+				<path d="M10 6.5v4.5" stroke-linecap="round"></path>
+				<path d="M10 13.6h.01" stroke-linecap="round"></path>
+			</svg>
+			<div class="tisa-otp__status-body">
+				<p class="tisa-otp__status-text" data-tisa-status-text></p>
+				<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
+			</div>
+		</div>
 
 		<?php
 		// Step 1 — phone number.

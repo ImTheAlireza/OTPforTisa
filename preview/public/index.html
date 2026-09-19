@@ -279,10 +279,29 @@
 			>
 				<form class="tisa-otp__form" method="post" novalidate autocomplete="on">
 
+					<a class="tisa-otp__skip" href="#tisa-form-1-demo-phone" data-tisa-skip>رفتن به فرم ورود</a>
+
 					<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
 					<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="1758146400">
 
-					<div class="tisa-otp__status" id="tisa-form-1-demo-status" role="status" aria-live="polite" aria-atomic="true" data-tisa-status hidden></div>
+					<ol class="tisa-otp__steps" data-tisa-steps aria-hidden="true">
+						<li class="is-current" data-tisa-step-marker="phone">شماره</li>
+						<li data-tisa-step-marker="fields">اطلاعات</li>
+						<li data-tisa-step-marker="code">کد</li>
+					</ol>
+					<p class="tisa-screen-reader tisa-otp__steps-text" data-tisa-steps-text>گام ۱ از ۳: شماره</p>
+
+					<div class="tisa-otp__status" id="tisa-form-1-demo-status" role="status" aria-live="polite" aria-atomic="true" data-tisa-status hidden>
+						<svg class="tisa-otp__status-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false" data-tisa-status-icon>
+							<circle cx="10" cy="10" r="8"></circle>
+							<path d="M10 6.5v4.5" stroke-linecap="round"></path>
+							<path d="M10 13.6h.01" stroke-linecap="round"></path>
+						</svg>
+						<div class="tisa-otp__status-body">
+							<p class="tisa-otp__status-text" data-tisa-status-text></p>
+							<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
+						</div>
+					</div>
 
 					<!-- step-phone.php -->
 					<section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="tisa-form-1-demo-phone-title">
@@ -375,11 +394,23 @@
 							<span class="tisa-btn__spinner" aria-hidden="true"></span>
 						</button>
 
+						<p class="tisa-code__attempts" data-tisa-attempts role="status" aria-live="polite" hidden></p>
+
 						<div class="tisa-code__footer">
 							<button type="button" class="tisa-link" data-tisa-action="resend" disabled>
-								<span data-tisa-resend-label>ارسال دوباره کد</span>
+								<span data-tisa-resend-label>ارسال دوبارهٔ کد</span>
 							</button>
 							<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+						</div>
+
+						<div class="tisa-code__cooldown" data-tisa-cooldown aria-hidden="true" hidden><i></i></div>
+
+						<div class="tisa-code__rescue" data-tisa-rescue hidden>
+							<p class="tisa-code__rescue-title">پیامک نرسید؟</p>
+							<div class="tisa-code__rescue-actions">
+								<button type="button" class="tisa-link" data-tisa-action="resend">ارسال دوبارهٔ کد</button>
+								<button type="button" class="tisa-link" data-tisa-action="edit-phone">شماره را اصلاح می‌کنم</button>
+							</div>
 						</div>
 
 						<p class="tisa-screen-reader" role="status" aria-live="polite" data-tisa-resend-live></p>
@@ -405,15 +436,16 @@
 		enabled: true,
 		codeLength: 5,
 		codeInput: 'boxes',
+		rescueAfter: 30,
 		cooldown: 60,
 		ttl: 120,
 		channel: 'sms',
 		skin: 'line',
 		captcha: { enabled: false, provider: 'none' },
 		labels: {
-			send: 'دریافت کد تأیید',
+			send: 'دریافت کد ورود',
 			verify: 'ورود به حساب',
-			resend: 'ارسال دوباره کد',
+			resend: 'ارسال دوبارهٔ کد',
 			editPhone: 'ویرایش شماره'
 		},
 		i18n: {
@@ -421,18 +453,28 @@
 			sending: 'در حال ارسال کد…',
 			checking: 'در حال بررسی کد…',
 			creating: 'در حال ساخت حساب…',
-			resendIn: 'ارسال دوباره تا {s} ثانیه',
-			network: 'خطای شبکه. لطفاً دوباره تلاش کنید.',
-			invalidPhone: 'شماره موبایل معتبر نیست.',
-			fillFields: 'لطفاً فیلدهای ستاره‌دار را کامل کنید.',
+			resendIn: 'تا {s} ثانیهٔ دیگر می‌توانید کد تازه بگیرید',
+			network: 'ارتباط با سرور برقرار نشد.',
+			invalidPhone: 'شمارهٔ موبایل معتبر نیست. با ۰۹ شروع شود و ۱۱ رقم باشد.',
+			fillFields: 'فیلدهای ستاره‌دار را کامل کنید.',
 			incompleteCode: 'کد را کامل وارد کنید.',
 			requiredField: 'این فیلد الزامی است.',
 			invalidEmail: 'قالب ایمیل معتبر نیست.',
-			redirecting: 'در حال انتقال…',
-			timeout: 'پاسخ سرور به‌موقع نرسید. لطفاً دوباره تلاش کنید.',
-			offline: 'اتصال اینترنت برقرار نیست.',
+			redirecting: 'خوش آمدید. در حال انتقال…',
+			timeout: 'ارتباط با سرور برقرار نشد.',
+			offline: 'به اینترنت وصل نیستید. اتصال را بررسی کنید.',
 			otpFilled: 'کد از پیامک خوانده شد.',
-			resendReady: 'اکنون می‌توانید کد را دوباره ارسال کنید.'
+			resendReady: 'اکنون می‌توانید کد را دوباره ارسال کنید.',
+			expired: 'این کد منقضی شده است.',
+			attemptsLeft: '{n} تلاش دیگر باقی مانده.',
+			stepOf: 'گام {n} از {total}: {name}',
+			digitLabel: 'رقم {n}'
+		},
+		actions: {
+			retry: 'تلاش دوباره',
+			newCode: 'دریافت کد تازه',
+			editPhone: 'ویرایش شماره',
+			solve: 'تأیید امنیتی را کامل کنید'
 		}
 	};
 </script>

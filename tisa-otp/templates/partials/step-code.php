@@ -67,11 +67,26 @@ $codeTitleId = $instance . '-code-title';
 		<span class="tisa-btn__spinner" aria-hidden="true"></span>
 	</button>
 
+	<?php // Server-reported remaining attempts; hidden until the server sends one. ?>
+	<p class="tisa-code__attempts" data-tisa-attempts role="status" aria-live="polite" hidden></p>
+
 	<div class="tisa-code__footer">
 		<button type="button" class="tisa-link" data-tisa-action="resend" disabled>
 			<span data-tisa-resend-label><?php echo esc_html( $resendLabel ); ?></span>
 		</button>
 		<button type="button" class="tisa-link" data-tisa-action="edit-phone"><?php echo esc_html( $editLabel ); ?></button>
+	</div>
+
+	<?php // One CSS animation, no second timer. Hidden while no cooldown runs. ?>
+	<div class="tisa-code__cooldown" data-tisa-cooldown aria-hidden="true" hidden><i></i></div>
+
+	<?php // Revealed 30 seconds in, when "it never arrived" becomes plausible. ?>
+	<div class="tisa-code__rescue" data-tisa-rescue hidden>
+		<p class="tisa-code__rescue-title"><?php esc_html_e( 'پیامک نرسید؟', 'tisa-otp' ); ?></p>
+		<div class="tisa-code__rescue-actions">
+			<button type="button" class="tisa-link" data-tisa-action="resend"><?php echo esc_html( $resendLabel ); ?></button>
+			<button type="button" class="tisa-link" data-tisa-action="edit-phone"><?php esc_html_e( 'شماره را اصلاح می‌کنم', 'tisa-otp' ); ?></button>
+		</div>
 	</div>
 
 	<?php // The visible countdown changes every second; this region speaks only at milestones. ?>

@@ -2,9 +2,9 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Tisa OTP 1.0.1\n"
+"Project-Id-Version: Tisa OTP 1.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tisa-otp\n"
-"POT-Creation-Date: 2026-09-18 00:00+0000\n"
+"POT-Creation-Date: 2026-09-19 07:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -13,19 +13,16 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Tisa OTP pot builder 1.1\n"
+"X-Generator: Tisa OTP pot builder 1.2\n"
 "X-Domain: tisa-otp\n"
 
-#. translators: %s: minimum PHP version
-#: tisa-otp.php:39
-msgid "تیسا OTP به PHP نسخه %s یا جدیدتر نیاز دارد و فعلاً غیرفعال است."
-msgstr ""
 
 #: src/Admin/Controls.php:75
 msgid "مقدار ذخیره شده است؛ برای تغییر، مقدار تازه را وارد کنید."
 msgstr ""
 
 #: src/Admin/LogsScreen.php:52
+#: src/Admin/Menu.php:59
 #: src/Admin/Menu.php:59
 #: src/Admin/SettingsScreen.php:859
 msgid "رویدادها"
@@ -48,6 +45,7 @@ msgid "کانال/سامانه"
 msgstr ""
 
 #: src/Admin/LogsScreen.php:59
+#: src/Front/FormRenderer.php:153
 msgid "شماره"
 msgstr ""
 
@@ -155,6 +153,7 @@ msgstr ""
 msgid "تیسا OTP"
 msgstr ""
 
+#: src/Admin/Menu.php:58
 #: src/Admin/Menu.php:58
 #: src/Admin/Menu.php:85
 msgid "تنظیمات"
@@ -1018,7 +1017,8 @@ msgid "ارسال دوباره"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:773
-#: src/Front/Assets.php:147
+#: src/Front/Assets.php:148
+#: src/Front/Assets.php:182
 #: src/Front/FormRenderer.php:118
 msgid "ویرایش شماره"
 msgstr ""
@@ -1473,89 +1473,110 @@ msgstr ""
 msgid "این عملیات قابل بازگشت نیست. ادامه می‌دهید؟"
 msgstr ""
 
-#: src/Front/Assets.php:144
-#: src/Front/FormRenderer.php:115
-msgid "دریافت کد تأیید"
+#: src/Front/Assets.php:145
+msgid "دریافت کد ورود"
 msgstr ""
 
-#: src/Front/Assets.php:145
+#: src/Front/Assets.php:146
 #: src/Front/FormRenderer.php:116
 msgid "ورود به حساب"
 msgstr ""
 
-#: src/Front/Assets.php:146
-#: src/Front/FormRenderer.php:117
-msgid "ارسال دوباره کد"
-msgstr ""
-
-#: src/Front/Assets.php:150
-msgid "۰۹۱۲۳۴۵۶۷۸۹"
-msgstr ""
-
-#: src/Front/Assets.php:151
-msgid "کد ۵ رقمی"
-msgstr ""
-
-#: src/Front/Assets.php:152
-msgid "در حال ارسال کد…"
-msgstr ""
-
-#: src/Front/Assets.php:153
-msgid "در حال بررسی کد…"
-msgstr ""
-
-#: src/Front/Assets.php:154
-msgid "در حال ساخت حساب…"
-msgstr ""
-
-#: src/Front/Assets.php:155
-msgid "ارسال دوباره تا {s} ثانیه"
+#: src/Front/Assets.php:147
+msgid "ارسال دوبارهٔ کد"
 msgstr ""
 
 #: src/Front/Assets.php:156
-msgid "خطای شبکه. لطفاً دوباره تلاش کنید."
+msgid "۰۹۱۲۳۴۵۶۷۸۹"
 msgstr ""
 
 #: src/Front/Assets.php:157
-#: src/Http/AdminController.php:76
-#: src/User/AccountFactory.php:47
-msgid "شماره موبایل معتبر نیست."
+msgid "کد ۵ رقمی"
 msgstr ""
 
 #: src/Front/Assets.php:158
-msgid "لطفاً فیلدهای ستاره‌دار را کامل کنید."
+msgid "در حال ارسال کد…"
 msgstr ""
 
 #: src/Front/Assets.php:159
-msgid "این فیلد الزامی است."
+msgid "در حال بررسی کد…"
 msgstr ""
 
 #: src/Front/Assets.php:160
-msgid "قالب ایمیل معتبر نیست."
+msgid "در حال ساخت حساب…"
 msgstr ""
 
 #: src/Front/Assets.php:161
-msgid "کد را کامل وارد کنید."
+msgid "تا {s} ثانیهٔ دیگر می‌توانید کد تازه بگیرید"
 msgstr ""
 
 #: src/Front/Assets.php:162
-msgid "در حال انتقال…"
+#: src/Front/Assets.php:169
+msgid "ارتباط با سرور برقرار نشد."
 msgstr ""
 
 #: src/Front/Assets.php:163
-msgid "پاسخ سرور به‌موقع نرسید. لطفاً دوباره تلاش کنید."
+msgid "شمارهٔ موبایل معتبر نیست. با ۰۹ شروع شود و ۱۱ رقم باشد."
 msgstr ""
 
 #: src/Front/Assets.php:164
-msgid "اتصال اینترنت برقرار نیست."
+msgid "فیلدهای ستاره‌دار را کامل کنید."
 msgstr ""
 
 #: src/Front/Assets.php:165
-msgid "کد از پیامک خوانده شد."
+msgid "این فیلد الزامی است."
 msgstr ""
 
 #: src/Front/Assets.php:166
+msgid "قالب ایمیل معتبر نیست."
+msgstr ""
+
+#: src/Front/Assets.php:167
+msgid "کد را کامل وارد کنید."
+msgstr ""
+
+#: src/Front/Assets.php:168
+msgid "خوش آمدید. در حال انتقال…"
+msgstr ""
+
+#: src/Front/Assets.php:170
+msgid "به اینترنت وصل نیستید. اتصال را بررسی کنید."
+msgstr ""
+
+#: src/Front/Assets.php:171
+msgid "کد از پیامک خوانده شد."
+msgstr ""
+
+#: src/Front/Assets.php:172
 msgid "اکنون می‌توانید کد را دوباره ارسال کنید."
+msgstr ""
+
+#: src/Front/Assets.php:173
+msgid "این کد منقضی شده است."
+msgstr ""
+
+#: src/Front/Assets.php:174
+msgid "{n} تلاش دیگر باقی مانده."
+msgstr ""
+
+#: src/Front/Assets.php:175
+msgid "گام {n} از {total}: {name}"
+msgstr ""
+
+#: src/Front/Assets.php:176
+msgid "رقم {n}"
+msgstr ""
+
+#: src/Front/Assets.php:180
+msgid "تلاش دوباره"
+msgstr ""
+
+#: src/Front/Assets.php:181
+msgid "دریافت کد تازه"
+msgstr ""
+
+#: src/Front/Assets.php:183
+msgid "تأیید امنیتی را کامل کنید"
 msgstr ""
 
 #: src/Front/FormRenderer.php:113
@@ -1569,45 +1590,29 @@ msgstr ""
 msgid "کد تأیید"
 msgstr ""
 
+#: src/Front/FormRenderer.php:115
+msgid "دریافت کد تأیید"
+msgstr ""
+
+#: src/Front/FormRenderer.php:117
+msgid "ارسال دوباره کد"
+msgstr ""
+
 #: src/Front/FormRenderer.php:119
 msgid "ادامه"
 msgstr ""
 
+#: src/Front/FormRenderer.php:157
+msgid "کد"
+msgstr ""
+
+#: src/Front/FormRenderer.php:166
+msgid "اطلاعات"
+msgstr ""
+
 #. translators: %s: display name
-#: src/Front/FormRenderer.php:254
+#: src/Front/FormRenderer.php:294
 msgid "وارد شده‌اید: %s"
-msgstr ""
-
-#: src/Gateway/FailoverChain.php:35
-msgid "هیچ سامانه پیامکی پیکربندی نشده است."
-msgstr ""
-
-#: src/Gateway/FailoverChain.php:41
-msgid "سامانه پیامکی انتخاب‌شده شناخته نشده است."
-msgstr ""
-
-#: src/Gateway/GatewayResult.php:67
-msgid "کد با موفقیت ارسال شد."
-msgstr ""
-
-#: src/Gateway/GatewayResult.php:70
-msgid "ارسال کد ناموفق بود."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:64
-msgid "اعتبارنامه این سامانه پیامکی کامل نیست."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:109
-msgid "پاسخ نامعتبر از سامانه پیامکی."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:115
-msgid "ارتباط با سامانه پیامکی به‌موقع برقرار نشد."
-msgstr ""
-
-#: src/Gateway/HttpGateway.php:118
-msgid "خطای شبکه در ارتباط با سامانه پیامکی."
 msgstr ""
 
 #: src/Gateway/Drivers/FarazSms.php:26
@@ -1701,6 +1706,38 @@ msgstr ""
 msgid "کلید API سامانه SMS.ir تنظیم نشده است."
 msgstr ""
 
+#: src/Gateway/FailoverChain.php:35
+msgid "هیچ سامانه پیامکی پیکربندی نشده است."
+msgstr ""
+
+#: src/Gateway/FailoverChain.php:41
+msgid "سامانه پیامکی انتخاب‌شده شناخته نشده است."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:67
+msgid "کد با موفقیت ارسال شد."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:70
+msgid "ارسال کد ناموفق بود."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:64
+msgid "اعتبارنامه این سامانه پیامکی کامل نیست."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:109
+msgid "پاسخ نامعتبر از سامانه پیامکی."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:115
+msgid "ارتباط با سامانه پیامکی به‌موقع برقرار نشد."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:118
+msgid "خطای شبکه در ارتباط با سامانه پیامکی."
+msgstr ""
+
 #: src/Guard/BotGuard.php:35
 msgid "درخواست شما به‌عنوان ربات شناسایی شد."
 msgstr ""
@@ -1724,6 +1761,11 @@ msgstr ""
 
 #: src/Guard/ThrottleGuard.php:64
 msgid "درخواست موازی دیگری برای این شماره در جریان است."
+msgstr ""
+
+#: src/Http/AdminController.php:76
+#: src/User/AccountFactory.php:47
+msgid "شماره موبایل معتبر نیست."
 msgstr ""
 
 #: src/Http/AdminController.php:117
@@ -2026,6 +2068,15 @@ msgstr ""
 msgid "این شماره پیش‌تر به حساب کاربری دیگری متصل شده است."
 msgstr ""
 
+#: templates/form.php:36
+msgid "رفتن به فرم ورود"
+msgstr ""
+
+#. translators: 1: current step number, 2: total steps, 3: step name
+#: templates/form.php:68
+msgid "گام %1$s از %2$s: %3$s"
+msgstr ""
+
 #. translators: %s: masked phone number
 #: templates/partials/step-code.php:20
 msgid "کد ارسال‌شده به %s را وارد کنید."
@@ -2036,7 +2087,19 @@ msgstr ""
 msgid "رقم %d"
 msgstr ""
 
+#: templates/partials/step-code.php:85
+msgid "پیامک نرسید؟"
+msgstr ""
+
+#: templates/partials/step-code.php:88
+msgid "شماره را اصلاح می‌کنم"
+msgstr ""
+
 #: templates/partials/step-fields.php:66
 msgid "انتخاب کنید…"
 msgstr ""
 
+#. translators: %s: minimum PHP version
+#: tisa-otp.php:39
+msgid "تیسا OTP به PHP نسخه %s یا جدیدتر نیاز دارد و فعلاً غیرفعال است."
+msgstr ""

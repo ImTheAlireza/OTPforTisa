@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  php:
+    name: PHP syntax
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Lint every PHP file
+        run: |
+          find tisa-otp -name '*.php' -print0 \
+            | xargs -0 -n1 -P4 php -l \
+            | (grep -v '^No syntax errors' || true)
+          # xargs returns non-zero if any php -l failed.
+          find tisa-otp -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+
+  front:
+    name: Front-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax
+        run: |
+          node --check tisa-otp/assets/js/front.js
+          node --check tisa-otp/assets/js/admin.js
+          node --check preview/server.js
+      - name: Design token contrast (WCAG 1.4.3 / 1.4.11)
+        run: node tests/contrast.js
+      - name: Behaviour and accessibility wiring
+        run: |
+          npm install --no-save jsdom
+          node tests/front.js
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: The committed zip must match the sources
+        run: |
+          python3 - <<'PY'
+          import hashlib, os, zipfile, sys
+
+          z = zipfile.ZipFile('tisa-otp.zip')
+          in_zip = {n for n in z.namelist() if not n.endswith('/')}
+          on_disk = set()
+          for root, dirs, files in os.walk('tisa-otp'):
+              for f in files:
+                  on_disk.add(os.path.join(root, f).replace(os.sep, '/'))
+
+          problems = []
+          if in_zip - on_disk:
+              problems.append('only in zip: %s' % sorted(in_zip - on_disk)[:10])
+          if on_disk - in_zip:
+              problems.append('missing from zip: %s' % sorted(on_disk - in_zip)[:10])
+          for name in sorted(in_zip & on_disk):
+              if hashlib.sha1(z.read(name)).hexdigest() != hashlib.sha1(open(name, 'rb').read()).hexdigest():
+                  problems.append('stale in zip: %s' % name)
+
+          if problems:
+              print('\n'.join(problems))
+              sys.exit('tisa-otp.zip is out of date — rebuild it before committing.')
+          print('zip matches the %d tracked plugin files' % len(in_zip))
+          PY
