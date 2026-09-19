@@ -2,9 +2,9 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Tisa OTP 1.1.0\n"
+"Project-Id-Version: Tisa OTP 1.1.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tisa-otp\n"
-"POT-Creation-Date: 2026-09-19 08:21+0000\n"
+"POT-Creation-Date: 2026-09-19 08:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
