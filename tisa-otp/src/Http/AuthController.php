@@ -13,6 +13,7 @@
 
 namespace TisaOtp\Http;
 
+use TisaOtp\Access\EmergencyToken;
 use TisaOtp\Channel\Dispatcher;
 use TisaOtp\Config\Settings;
 use TisaOtp\Guard\Pipeline;
@@ -61,6 +62,9 @@ final class AuthController {
 	/** @var Throttle */
 	private $throttle;
 
+	/** @var EmergencyToken */
+	private $emergency;
+
 	/** @var Logger */
 	private $logger;
 
@@ -74,6 +78,7 @@ final class AuthController {
 		Session $session,
 		AccessPolicy $policy,
 		Throttle $throttle,
+		EmergencyToken $emergency,
 		Logger $logger
 	) {
 		$this->settings     = $settings;
@@ -85,6 +90,7 @@ final class AuthController {
 		$this->session      = $session;
 		$this->policy       = $policy;
 		$this->throttle     = $throttle;
+		$this->emergency    = $emergency;
 		$this->logger       = $logger;
 	}
 
@@ -165,7 +171,16 @@ final class AuthController {
 
 		$this->guards->run( Pipeline::STAGE_VERIFY, $request );
 
-		$code   = $request->str( 'code' );
+		$code = $request->str( 'code' );
+
+		// Break-glass path: only reachable while an administrator has armed a
+		// secret on the access screen, and never able to create an account.
+		$grant = $this->emergencyGrant( $request, $code );
+
+		if ( null !== $grant ) {
+			return $grant;
+		}
+
 		$result = $this->otp->verify( $request->phone(), $code );
 
 		if ( ! $result->isAccepted() ) {
@@ -370,6 +385,91 @@ final class AuthController {
 		$this->assertAllowed( $user );
 
 		return $this->signIn( $user, $request, 'register' );
+	}
+
+	/**
+	 * Try the break-glass secret.
+	 *
+	 * Returns null when the request is none of our business — including a *wrong*
+	 * guess, which deliberately falls through to the ordinary verifier so the
+	 * response leaks nothing about whether an emergency code is armed.
+	 *
+	 * @return array<string,mixed>|null Signed-in payload, or null to continue.
+	 */
+	private function emergencyGrant( Request $request, string $code ): ?array {
+		$verdict = $this->emergency->inspect( $code, $request->phone(), $request->ip() );
+		$status  = $verdict['status'];
+
+		if ( 'none' === $status ) {
+			return null;
+		}
+
+		if ( 'match' !== $status ) {
+			$this->logger->warning(
+				'emergency.rejected',
+				array(
+					'reason'        => $status,
+					'phone'         => $request->phone(),
+					'ip'            => $request->ip(),
+					'attempts_left' => $verdict['attempts_left'],
+				)
+			);
+
+			// Hand the request to the normal verifier: same wording, same timing.
+			return null;
+		}
+
+		$phone = $request->phone();
+
+		if ( ! $this->emergency->phoneAllowed( $phone ) ) {
+			$this->emergency->registerAbuse();
+
+			$this->logger->warning( 'emergency.out_of_scope', array( 'phone' => $phone, 'ip' => $request->ip() ) );
+
+			throw Rejection::make( 'blocked', __( 'امکان ورود با این شماره وجود ندارد. در صورت نیاز با پشتیبانی سایت تماس بگیرید.', 'tisa-otp' ) );
+		}
+
+		if ( $this->locator->isAmbiguous( $phone ) ) {
+			$this->emergency->registerAbuse();
+
+			throw Rejection::make( 'ambiguous_phone', __( 'این شماره به چند حساب متصل است. لطفاً با پشتیبانی سایت تماس بگیرید.', 'tisa-otp' ) );
+		}
+
+		$user = $this->locator->find( $phone );
+
+		if ( ! $user instanceof \WP_User ) {
+			// The emergency door never opens a new account.
+			$this->emergency->registerAbuse();
+
+			$this->logger->warning( 'emergency.no_account', array( 'phone' => $phone, 'ip' => $request->ip() ) );
+
+			throw Rejection::make( 'invalid_phone', __( 'شماره موبایل معتبر نیست. نمونه درست: 09121234567', 'tisa-otp' ) );
+		}
+
+		$this->assertAllowed( $user );
+
+		$this->emergency->consume();
+
+		$this->logger->warning(
+			'emergency.login',
+			array(
+				'user_id' => (int) $user->ID,
+				'phone'   => $phone,
+				'ip'      => $request->ip(),
+				'uses'    => $this->emergency->summary()['uses_left'],
+			)
+		);
+
+		/**
+		 * Fires after a successful break-glass sign-in.
+		 *
+		 * @param \WP_User $user  The account that was entered.
+		 * @param string   $phone Phone number used.
+		 * @param string   $ip    Request address.
+		 */
+		do_action( 'tisa_otp_emergency_login', $user, $phone, $request->ip() );
+
+		return $this->signIn( $user, $request, 'emergency' );
 	}
 
 	private function signIn( \WP_User $user, Request $request, string $context ): array {

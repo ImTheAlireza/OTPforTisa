@@ -7,6 +7,7 @@
 
 namespace TisaOtp\Guard;
 
+use TisaOtp\Blocklist\Blocklist;
 use TisaOtp\Captcha\Manager;
 use TisaOtp\Config\Settings;
 use TisaOtp\Http\Request;
@@ -37,11 +38,15 @@ final class Pipeline {
 	/** @var Manager */
 	private $captcha;
 
-	public function __construct( Settings $settings, Throttle $throttle, Manager $captcha, Logger $logger ) {
-		$this->settings = $settings;
-		$this->throttle = $throttle;
-		$this->captcha  = $captcha;
-		$this->logger   = $logger;
+	/** @var Blocklist */
+	private $blocklist;
+
+	public function __construct( Settings $settings, Throttle $throttle, Manager $captcha, Logger $logger, Blocklist $blocklist ) {
+		$this->settings  = $settings;
+		$this->throttle  = $throttle;
+		$this->captcha   = $captcha;
+		$this->logger    = $logger;
+		$this->blocklist = $blocklist;
 	}
 
 	/**
@@ -52,7 +57,10 @@ final class Pipeline {
 			return $this->guards;
 		}
 
+		// The blocklist runs first: a banned number must not reserve a cooldown
+		// slot, spend a quota unit or reach a paid gateway.
 		$this->guards = array(
+			new BlocklistGuard( $this->blocklist ),
 			new BotGuard(),
 			new ThrottleGuard( $this->throttle ),
 			new CaptchaGuard( $this->captcha, $this->throttle ),

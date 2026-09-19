@@ -19,6 +19,10 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
+      - name: Logic tests (blocklist rules, emergency code)
+        run: |
+          php tests/php/blocklist-test.php
+          php tests/php/emergency-test.php
       - name: Lint every PHP file
         run: |
           php -v

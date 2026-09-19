@@ -519,6 +519,27 @@ final class SettingsScreen {
 				} );
 			}
 		);
+
+		$this->accessPointerCard();
+	}
+
+	/**
+	 * Pointer to the access screen: the two levers there are emergency tools,
+	 * not settings, so they are edited on their own page.
+	 */
+	private function accessPointerCard(): void {
+		$this->card(
+			__( 'دسترسی اضطراری و فهرست مسدود', 'tisa-otp' ),
+			function () {
+				echo '<p class="tisa-desc">' . esc_html__( 'کد اضطراری برای روزی است که سامانه پیامکی از کار می‌افتد، و فهرست مسدود شماره‌هایی را رد می‌کند که نباید حتی یک پیامک بگیرند. هر دو در صفحه‌ای جداگانه مدیریت می‌شوند.', 'tisa-otp' ) . '</p>';
+
+				printf(
+					'<p><a class="button" href="%1$s">%2$s</a></p>',
+					esc_url( admin_url( 'admin.php?page=' . AccessScreen::SLUG ) ),
+					esc_html__( 'باز کردن صفحه دسترسی و مسدودی', 'tisa-otp' )
+				);
+			}
+		);
 	}
 
 	private function registrationSection(): void {

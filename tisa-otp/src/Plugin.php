@@ -100,6 +100,7 @@ final class Plugin {
 			User\ProfileField::class,
 			Admin\LogsScreen::class,
 			Admin\ToolsScreen::class,
+			Admin\AccessScreen::class,
 			Admin\Menu::class,
 		);
 	}
@@ -249,12 +250,21 @@ final class Plugin {
 			);
 		} );
 
+		$c->bind( Blocklist\Blocklist::class, static function () {
+			return new Blocklist\Blocklist();
+		} );
+
+		$c->bind( Access\EmergencyToken::class, static function () {
+			return new Access\EmergencyToken();
+		} );
+
 		$c->bind( Guard\Pipeline::class, static function ( Container $c ) {
 			return new Guard\Pipeline(
 				$c->make( Config\Settings::class ),
 				$c->make( Throttle\Throttle::class ),
 				$c->make( Captcha\Manager::class ),
-				$c->make( Log\Logger::class )
+				$c->make( Log\Logger::class ),
+				$c->make( Blocklist\Blocklist::class )
 			);
 		} );
 
@@ -269,6 +279,7 @@ final class Plugin {
 				$c->make( User\Session::class ),
 				$c->make( User\AccessPolicy::class ),
 				$c->make( Throttle\Throttle::class ),
+				$c->make( Access\EmergencyToken::class ),
 				$c->make( Log\Logger::class )
 			);
 		} );
@@ -375,12 +386,22 @@ final class Plugin {
 			);
 		} );
 
+		$c->bind( Admin\AccessScreen::class, static function ( Container $c ) {
+			return new Admin\AccessScreen(
+				$c->make( Config\Settings::class ),
+				$c->make( Blocklist\Blocklist::class ),
+				$c->make( Access\EmergencyToken::class ),
+				$c->make( Log\Logger::class )
+			);
+		} );
+
 		$c->bind( Admin\Menu::class, static function ( Container $c ) {
 			return new Admin\Menu(
 				$c->make( Config\Settings::class ),
 				$c->make( Admin\SettingsScreen::class ),
 				$c->make( Admin\LogsScreen::class ),
-				$c->make( Admin\ToolsScreen::class )
+				$c->make( Admin\ToolsScreen::class ),
+				$c->make( Admin\AccessScreen::class )
 			);
 		} );
 	}

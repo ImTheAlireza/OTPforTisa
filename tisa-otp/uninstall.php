@@ -20,6 +20,12 @@ delete_option( 'tisa_otp_settings' );
 delete_option( 'tisa_otp_db_version' );
 delete_option( 'tisa_otp_pepper' );
 
+// The blocklist and any armed emergency code are security material: they never
+// survive the plugin, regardless of the wipe setting. The code is stored as a
+// hash, but a dead option row can only cause confusion later.
+delete_option( 'tisa_otp_blocklist' );
+delete_option( 'tisa_otp_emergency' );
+
 wp_clear_scheduled_hook( 'tisa_otp_maintenance' );
 
 $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared

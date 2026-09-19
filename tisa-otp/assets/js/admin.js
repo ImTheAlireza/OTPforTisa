@@ -2,8 +2,9 @@
  * Tisa OTP — admin screen behaviour.
  *
  * Handles the small amount of interactivity the settings and tools screens need:
- * toggles, card radios, the colour picker, the media picker, the field repeater
- * and the REST-driven tools (test send, throttle reset, importer).
+ * toggles, card radios, the colour picker, the media picker, the field repeater,
+ * the REST-driven tools (test send, throttle reset, importer) and the browser-side
+ * generator for the emergency code.
  */
 (function (window, document) {
 	'use strict';
@@ -368,6 +369,45 @@
 		}
 	}
 
+	/**
+	 * The emergency code is generated in the browser, never on the server, so
+	 * the plaintext exists only in the administrator's own tab.
+	 */
+	function initEmergency() {
+		var button = document.querySelector('[data-tisa-emergency-generate]');
+
+		if (!button) {
+			return;
+		}
+
+		button.addEventListener('click', function () {
+			var field = document.querySelector('[data-tisa-emergency-code]');
+
+			if (!field) {
+				return;
+			}
+
+			var length = 8;
+			var digits = '';
+
+			if (window.crypto && window.crypto.getRandomValues) {
+				var buffer = new Uint32Array(length);
+				window.crypto.getRandomValues(buffer);
+
+				for (var i = 0; i < length; i++) {
+					digits += String(buffer[i] % 10);
+				}
+			} else {
+				for (var j = 0; j < length; j++) {
+					digits += String(Math.floor(Math.random() * 10));
+				}
+			}
+
+			field.value = digits;
+			field.focus();
+		});
+	}
+
 	function ready(callback) {
 		if ('loading' === document.readyState) {
 			document.addEventListener('DOMContentLoaded', callback);
@@ -381,5 +421,6 @@
 		initMedia();
 		initRepeater();
 		initTools();
+		initEmergency();
 	});
 })(window, document);

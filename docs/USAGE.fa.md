@@ -169,6 +169,33 @@
 
 ---
 
+## ۵.۵) صفحه «دسترسی و مسدودی»
+
+دو اهرم اضطراری که در صفحه تنظیمات جا نمی‌شوند، اینجا هستند. از منوی «تیسا OTP ← دسترسی و مسدودی» یا از میان‌بر انتهای برگه «امنیت و محدودیت» بازش کنید.
+
+### کد اضطراری
+
+برای روزی که سامانه پیامکی قطع است و کد ورود به دست شما نمی‌رسد. کد را در مرورگر خودتان بسازید («تولید تصادفی») یا خودتان بنویسید (۶ تا ۱۲ رقم)، مدت اعتبار و تعداد استفاده را تعیین کنید و در صورت نیاز آن را به IP فعلی و چند شماره خاص قید کنید.
+
+* کد **فقط یک‌بار** و بلافاصله پس از ساخت نمایش داده می‌شود؛ در پایگاه داده تنها هَش آن می‌ماند.
+* با تمام‌شدن تعداد استفاده یا پایان مهلت، خودش باطل می‌شود. سه تلاش ناموفق هم آن را می‌سوزاند.
+* فقط برای حساب‌های **موجود** کار می‌کند و هرگز کاربر تازه نمی‌سازد.
+* نقش‌های محافظت‌شده (بخش «امنیت و محدودیت») از این مسیر هم مستثنا نیستند: اگر نقش مدیر کل در فهرست محافظت‌شده باشد، ورود اضطراری هم برای آن رد می‌شود.
+
+هر ورود اضطراری با سطح هشدار در صفحه «رویدادها» ثبت می‌شود؛ برای همین اگر کسی جز شما از آن استفاده کرد، می‌بینید.
+
+### فهرست مسدود
+
+شماره‌ها، پیش‌شماره‌ها یا الگوها را وارد کنید؛ هر خط یک مورد:
+
+```
+09121234567
+0912
+0935*4567
+```
+
+گارد «مسدودی» **پیش از** گاردهای ربات و محدودیت اجرا می‌شود، یعنی شماره مسدود نه کدی می‌گیرد، نه سهمیه مصرف می‌کند و نه پیامکی هزینه دارد. برای هر مورد می‌توانید یادداشت و مهلت (بر حسب روز) بگذارید؛ مهلت که سر برسد خودش کنار می‌رود.
+
 ## ۶) ابزارها و رویدادها
 
 **تیسا OTP ← ابزارها و وضعیت**
@@ -216,11 +243,11 @@
 
 ### اکشن‌ها
 
-`tisa_otp_booted` · `tisa_otp_activated` · `tisa_otp_deactivated` · `tisa_otp_code_sent` · `tisa_otp_signed_in` · `tisa_otp_user_created` · `tisa_otp_registration_failed` · `tisa_otp_phone_updated` · `tisa_otp_phone_changed` · `tisa_otp_phone_removed` · `tisa_otp_order_linked` · `tisa_otp_settings_saved` · `tisa_otp_log` · `tisa_otp_maintenance_done` · `tisa_otp_assets_enqueued`
+`tisa_otp_booted` · `tisa_otp_activated` · `tisa_otp_deactivated` · `tisa_otp_code_sent` · `tisa_otp_signed_in` · `tisa_otp_user_created` · `tisa_otp_registration_failed` · `tisa_otp_phone_updated` · `tisa_otp_phone_changed` · `tisa_otp_phone_removed` · `tisa_otp_order_linked` · `tisa_otp_settings_saved` · `tisa_otp_log` · `tisa_otp_maintenance_done` · `tisa_otp_assets_enqueued` · `tisa_otp_emergency_issued` · `tisa_otp_emergency_revoked` · `tisa_otp_emergency_login`
 
 ### فیلترها
 
-`tisa_otp_redirect` · `tisa_otp_registration_fields` · `tisa_otp_field_presets` · `tisa_otp_form_steps` · `tisa_otp_message_tokens` · `tisa_otp_gateway_credentials` · `tisa_otp_channels` · `tisa_otp_delivery_order` · `tisa_otp_guards` · `tisa_otp_guarded_roles` · `tisa_otp_allows_user` · `tisa_otp_default_role` · `tisa_otp_new_user_args` · `tisa_otp_code_length` · `tisa_otp_code_ttl` · `tisa_otp_client_ip` · `tisa_otp_http_timeout` · `tisa_otp_http_retry_delay` · `tisa_otp_lookup_meta_keys` · `tisa_otp_digits_meta_keys` · `tisa_otp_import_sources` · `tisa_otp_captcha_providers` · `tisa_otp_should_load_assets` · `tisa_otp_ambiguous_phone` · `tisa_otp_phone_valid` · `tisa_otp_selectable_roles` · `tisa_otp_faraz_pattern_key`
+`tisa_otp_redirect` · `tisa_otp_registration_fields` · `tisa_otp_field_presets` · `tisa_otp_form_steps` · `tisa_otp_message_tokens` · `tisa_otp_gateway_credentials` · `tisa_otp_channels` · `tisa_otp_delivery_order` · `tisa_otp_guards` · `tisa_otp_guarded_roles` · `tisa_otp_allows_user` · `tisa_otp_default_role` · `tisa_otp_new_user_args` · `tisa_otp_code_length` · `tisa_otp_code_ttl` · `tisa_otp_client_ip` · `tisa_otp_http_timeout` · `tisa_otp_http_retry_delay` · `tisa_otp_lookup_meta_keys` · `tisa_otp_digits_meta_keys` · `tisa_otp_import_sources` · `tisa_otp_captcha_providers` · `tisa_otp_should_load_assets` · `tisa_otp_ambiguous_phone` · `tisa_otp_phone_valid` · `tisa_otp_selectable_roles` · `tisa_otp_faraz_pattern_key` · `tisa_otp_blocked_message`
 
 نمونه‌ها (امضاهای واقعی):
 

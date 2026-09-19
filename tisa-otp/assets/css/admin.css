@@ -789,3 +789,98 @@ textarea.tisa-input {
 		margin-inline-end: 10px;
 	}
 }
+
+/* Access screen: emergency code & blocklist -------------------------------- */
+
+.tisa-access-form {
+	margin: 0 0 14px;
+}
+
+.tisa-access-form--danger {
+	padding-top: 12px;
+	margin-top: 14px;
+	border-top: 1px solid var(--tisa-line);
+}
+
+.tisa-wrap .button.tisa-danger {
+	color: var(--tisa-danger);
+	border-color: var(--tisa-danger);
+}
+
+.tisa-wrap .button.tisa-danger:hover,
+.tisa-wrap .button.tisa-danger:focus {
+	color: #fff;
+	background: var(--tisa-danger);
+	border-color: var(--tisa-danger);
+}
+
+.tisa-secret {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 16px;
+	padding: 14px 18px;
+	border: 1px dashed var(--tisa-accent);
+	border-radius: 12px;
+	background: var(--tisa-accent-soft);
+}
+
+.tisa-secret__label {
+	font-weight: 600;
+}
+
+.tisa-secret__value {
+	padding: 6px 14px;
+	border-radius: 8px;
+	background: #fff;
+	border: 1px solid var(--tisa-line);
+	font-size: 20px;
+	letter-spacing: 0.24em;
+	font-weight: 700;
+}
+
+.tisa-field {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin: 0 0 10px;
+}
+
+.tisa-field > span {
+	font-weight: 500;
+	color: var(--tisa-muted);
+}
+
+.tisa-field em {
+	font-style: normal;
+	color: var(--tisa-muted);
+	font-size: 12px;
+}
+
+.tisa-field--wide {
+	display: flex;
+	width: 100%;
+}
+
+.tisa-field--wide input,
+.tisa-field--wide textarea {
+	flex: 1 1 320px;
+}
+
+.tisa-rules {
+	margin: 6px 0 0;
+}
+
+.tisa-rules code {
+	letter-spacing: 0.06em;
+}
+
+.tisa-rules tr.is-muted {
+	opacity: 0.55;
+}
+
+.tisa-wrap .button-link.tisa-remove {
+	color: var(--tisa-danger);
+}
