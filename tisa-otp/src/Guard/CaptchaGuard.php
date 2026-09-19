@@ -50,7 +50,7 @@ final class CaptchaGuard implements Guard {
 
 		$result = $this->captcha->verify( $this->token( $request ), $request->ip() );
 
-		if ( $result->passed() ) {
+		if ( $result->isPassed() ) {
 			return;
 		}
 

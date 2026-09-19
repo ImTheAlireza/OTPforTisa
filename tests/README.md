@@ -14,5 +14,13 @@ node tests/contrast.js
 npm install --no-save jsdom && node tests/front.js
 ```
 
-PHP is syntax-checked in CI with `php -l`; locally without PHP you can use
-`php-parser` from npm over `tisa-otp/**/*.php`.
+PHP is syntax-checked in CI with `php -l` on 7.4 and 8.3. A tokenizer alone
+cannot see *compile* errors, so `tools/php-static-check.js` covers the gap —
+duplicate method/property/constant declarations, abstract methods with bodies,
+colliding `use` imports. It exists because a real
+`Cannot redeclare CaptchaResult::passed()` fatal slipped past a tokenizer-only
+lint and was only caught once CI ran `php -l`.
+
+```bash
+npm install --no-save php-parser && node tools/php-static-check.js tisa-otp
+```

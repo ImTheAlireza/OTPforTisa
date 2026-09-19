@@ -38,7 +38,12 @@ final class CaptchaResult {
 		return new self( false, $errorCode, $message, $score );
 	}
 
-	public function passed(): bool {
+	/**
+	 * Named `isPassed()` rather than `passed()` because the static factory
+	 * above already owns that name — same split as GatewayResult::sent() and
+	 * GatewayResult::isSent().
+	 */
+	public function isPassed(): bool {
 		return $this->passed;
 	}
 

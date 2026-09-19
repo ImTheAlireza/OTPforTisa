@@ -49,6 +49,10 @@ jobs:
           node --check tisa-otp/assets/js/front.js
           node --check tisa-otp/assets/js/admin.js
           node --check preview/server.js
+      - name: PHP compile-level checks (duplicate members, bad bodies)
+        run: |
+          npm install --no-save php-parser
+          node tools/php-static-check.js tisa-otp
       - name: Design token contrast (WCAG 1.4.3 / 1.4.11)
         run: node tests/contrast.js
       - name: Behaviour and accessibility wiring

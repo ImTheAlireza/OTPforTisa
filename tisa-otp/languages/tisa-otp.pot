@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tisa OTP 1.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tisa-otp\n"
-"POT-Creation-Date: 2026-09-19 07:13+0000\n"
+"POT-Creation-Date: 2026-09-19 08:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1358,7 +1358,7 @@ msgstr ""
 msgid "کپچا تأیید نشد. لطفاً دوباره حل کنید."
 msgstr ""
 
-#: src/Captcha/CaptchaResult.php:58
+#: src/Captcha/CaptchaResult.php:63
 msgid "اعتبارسنجی کپچا ناموفق بود. لطفاً دوباره تلاش کنید."
 msgstr ""
 
