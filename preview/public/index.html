@@ -237,9 +237,13 @@
 				<button type="button" class="demo-chip" data-behavior="stale-nonce">nonce کهنه (کش صفحه)</button>
 				<button type="button" class="demo-chip" data-behavior="short-timeout">مهلت ۲ ثانیه</button>
 				<button type="button" class="demo-chip" data-behavior="webotp">WebOTP</button>
+				<button type="button" class="demo-chip" data-behavior="captcha">کپچای مسدود</button>
+				<button type="button" class="demo-chip" data-behavior="stale-form">فرم کهنه (کش طولانی)</button>
 			</div>
 			<p class="note">
 				«nonce کهنه» نخستین درخواست را با ۴۰۳ رد می‌کند تا بازیابی خودکار را ببینید.
+				«فرم کهنه» همان بازیابی را با توکن امضاشدهٔ فرم نشان می‌دهد (کش ۲۴ساعته).
+				«کپچای مسدود» حالتی است که اسکریپت کپچا در مرورگر باز نمی‌شود.
 				«مهلت ۲ ثانیه» را با شمارهٔ <code>09129999999</code> (سامانهٔ کند) امتحان کنید.
 				WebOTP فقط در کروم/اندروید روی پیامک واقعی کار می‌کند.
 			</p>
@@ -271,6 +275,7 @@
 				data-config-url="/mock/tisa-otp/v1/form-config"
 				data-cache-mode="auto"
 				data-nonce="demo-nonce"
+				data-form-token="demo-form-token"
 				data-cooldown="60"
 				data-code-length="5"
 				data-flow="fields_then_code"
@@ -283,6 +288,22 @@
 
 					<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
 					<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="1758146400">
+					<input type="hidden" name="tisa_ft" value="demo-form-token">
+
+					<ul class="tisa-otp__trust">
+						<li class="tisa-otp__trust-item">
+							<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+							<span>بدون رمز عبور</span>
+						</li>
+						<li class="tisa-otp__trust-item">
+							<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+							<span>ورود در چند ثانیه</span>
+						</li>
+						<li class="tisa-otp__trust-item">
+							<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path></svg>
+							<span>شماره شما محفوظ می‌ماند</span>
+						</li>
+					</ul>
 
 					<ol class="tisa-otp__steps" data-tisa-steps aria-hidden="true">
 						<li class="is-current" data-tisa-step-marker="phone">شماره</li>
@@ -298,6 +319,7 @@
 							<path d="M10 13.6h.01" stroke-linecap="round"></path>
 						</svg>
 						<div class="tisa-otp__status-body">
+							<p class="tisa-otp__status-title" data-tisa-status-title hidden></p>
 							<p class="tisa-otp__status-text" data-tisa-status-text></p>
 							<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
 						</div>
@@ -377,6 +399,12 @@
 							<p class="tisa-step__hint">کد ارسال‌شده به <span class="tisa-otp__masked" data-tisa-masked>—</span> را وارد کنید.</p>
 						</header>
 
+						<div class="tisa-code__phone" data-tisa-phone-chip hidden>
+							<span class="tisa-code__phone-label">کد ارسال‌شده به</span>
+							<strong class="tisa-code__phone-value" data-tisa-phone-chip-value dir="ltr">—</strong>
+							<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+						</div>
+
 						<div class="tisa-code" data-tisa-code>
 							<label class="tisa-screen-reader" for="tisa-form-1-demo-code">کد تأیید</label>
 							<input class="tisa-code__bulk" id="tisa-form-1-demo-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="5" data-tisa-code-bulk aria-describedby="tisa-form-1-demo-boxes" aria-invalid="false">
@@ -388,6 +416,11 @@
 								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۵" aria-invalid="false" data-tisa-box="4">
 							</div>
 						</div>
+
+						<button type="button" class="tisa-link tisa-code__paste" data-tisa-paste>
+							<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="6.5" y="3.5" width="9" height="12" rx="2"></rect><path d="M4.5 6.5v8a2 2 0 0 0 2 2h6" stroke-linecap="round"></path></svg>
+							<span>چسباندن کد از پیامک</span>
+						</button>
 
 						<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="verify">
 							<span class="tisa-btn__label">ورود به حساب</span>
@@ -441,7 +474,8 @@
 		ttl: 120,
 		channel: 'sms',
 		skin: 'line',
-		captcha: { enabled: false, provider: 'none' },
+		formToken: 'demo-form-token',
+		captcha: { enabled: false, provider: 'none', config: {} },
 		labels: {
 			send: 'دریافت کد ورود',
 			verify: 'ورود به حساب',
@@ -594,6 +628,50 @@
 				set('timeoutMs', on ? 2000 : 15000);
 			} else if (name === 'webotp') {
 				set('webOtp', on);
+			} else if (name === 'captcha') {
+				// The bundle the plugin hands out when a provider is configured, but
+				// the vendor script never answers — the failure that used to leave an
+				// empty gap and a dead form.
+				var bundle = on
+					? {
+						enabled: true,
+						provider: 'hcaptcha',
+						siteKey: '10000000-ffff-ffff-ffff-000000000001',
+						kind: 'widget',
+						scripts: ['/mock/captcha-unreachable.js'],
+						failOpen: true,
+						loadTimeout: 3000,
+						config: {}
+					}
+					: { enabled: false, provider: 'none', config: {} };
+
+				set('captcha', bundle);
+
+				if (live && live.captcha) {
+					live.captcha.conf = bundle;
+					live.captcha.config = bundle.config || {};
+					live.captcha.pending = null;
+					live.captcha.unavailable = false;
+					live.captcha.container.textContent = '';
+
+					if (bundle.enabled) {
+						live.captcha.prepare();
+					}
+				}
+			} else if (name === 'stale-form') {
+				var token = on ? 'stale-form-token' : 'demo-form-token';
+				var hidden = form.querySelector('input[name="tisa_ft"]');
+
+				form.setAttribute('data-form-token', token);
+				set('formToken', token);
+
+				if (hidden) {
+					hidden.value = token;
+				}
+
+				if (live) {
+					live.formToken = token;
+				}
 			}
 		}
 

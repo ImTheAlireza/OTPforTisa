@@ -101,6 +101,10 @@ final class Sanitizer {
 			'captcha_secret_key'   => array( 'type' => 'secret' ),
 			'captcha_score'        => array( 'type' => 'float', 'min' => 0, 'max' => 1 ),
 			'captcha_trigger'      => array( 'type' => 'enum', 'choices' => array( 'always', 'after_limit' ) ),
+			'captcha_fail_open'    => array( 'type' => 'bool' ),
+			'captcha_timeout'      => array( 'type' => 'int', 'min' => 3000, 'max' => 20000 ),
+			'captcha_script_override' => array( 'type' => 'url' ),
+			'captcha_arcaptcha_v3' => array( 'type' => 'bool' ),
 
 			'registration_enabled' => array( 'type' => 'bool' ),
 			'registration_flow'    => array( 'type' => 'enum', 'choices' => array( 'fields_then_code', 'code_then_fields' ) ),

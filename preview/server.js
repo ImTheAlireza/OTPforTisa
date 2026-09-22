@@ -61,6 +61,7 @@ const attempts = new Map();
 let importCursor = 0;
 let importTotal = 240;
 let nonceSeq = 0;
+let tokenSeq = 0;
 
 /**
  * Every /form-config call hands out a different nonce, like wp_create_nonce()
@@ -70,6 +71,13 @@ function freshNonce() {
 	nonceSeq += 1;
 
 	return 'demo-nonce-' + nonceSeq;
+}
+
+/** Same idea for the signed form token minted by Support\FormToken. */
+function freshFormToken() {
+	tokenSeq += 1;
+
+	return 'demo-form-token-' + tokenSeq;
 }
 
 const demoLabels = {
@@ -103,6 +111,8 @@ function formConfig() {
 	return {
 		restUrl: '/mock/tisa-otp/v1/',
 		nonce: freshNonce(),
+		formToken: freshFormToken(),
+		renderedAt: Math.floor(Date.now() / 1000),
 		configUrl: '/mock/tisa-otp/v1/form-config',
 		cacheMode: 'auto',
 		autoVerify: true,
@@ -204,6 +214,13 @@ function handleRest(route, body, headers) {
 			status: 403,
 			body: { code: 'rest_cookie_invalid_nonce', message: 'nonce نامعتبر است.', data: { status: 403 } },
 		};
+	}
+
+	// A page cache with a long TTL also freezes the signed form token. The guard
+	// says `stale_form` with `recoverable`, the client pulls /form-config and
+	// sends once more — exactly what a 24-hour cache does on a real site.
+	if ('stale-form-token' === body.tisa_ft) {
+		return fail('stale_form', 'این فرم مدت‌ها پیش ساخته شده است. یک بار دیگر تلاش کنید.', { recoverable: true, reason: 'stale' });
 	}
 
 	switch (route) {

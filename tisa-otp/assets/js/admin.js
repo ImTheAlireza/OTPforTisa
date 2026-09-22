@@ -37,7 +37,13 @@
 		}).then(function (response) {
 			return response.json().then(function (body) {
 				if (!response.ok || !body || body.success === false) {
-					throw new Error((body && body.message) || 'Request failed');
+					var error = new Error((body && body.message) || 'Request failed');
+
+					// Keep the payload: the trace of a failed delivery lives here.
+					error.data = (body && body.data) || {};
+					error.code = (body && body.code) || '';
+
+					throw error;
 				}
 
 				return body.data === undefined ? body : body.data;
@@ -202,6 +208,8 @@
 	/* Tools ----------------------------------------------------------------- */
 
 	function initTools() {
+		initDoctor();
+
 		var testButton = document.querySelector('[data-tisa-test-send]');
 
 		if (testButton) {
@@ -218,9 +226,11 @@
 				}).then(function (data) {
 					busy(testButton, false);
 					say(result, (data.message || i18n.done || 'Done') + (data.via ? ' — ' + data.via : ''), 'success');
+					describeTrace(data);
 				}).catch(function (error) {
 					busy(testButton, false);
 					say(result, error.message, 'error');
+					describeTrace(error.data || {});
 				});
 			});
 		}
@@ -244,6 +254,191 @@
 		}
 
 		initImporter();
+	}
+
+	/**
+	 * Render every gateway that was tried, in order, with the upstream reason.
+	 * This is the difference between "the code was not sent" and "SMS.ir answered
+	 * 401: کلید API نامعتبر است".
+	 */
+	function describeTrace(payload) {
+		var box = document.querySelector('[data-tisa-doctor-result]');
+		var trace = payload && payload.trace ? payload.trace : [];
+
+		if (!box || !trace.length) {
+			return;
+		}
+
+		box.hidden = false;
+		box.textContent = '';
+		box.className = 'tisa-result is-info';
+
+		var title = document.createElement('p');
+		title.textContent = i18n.traceTitle || 'مسیر تلاش برای ارسال:';
+		box.appendChild(title);
+
+		var list = document.createElement('ul');
+		list.className = 'tisa-trace';
+
+		trace.forEach(function (step) {
+			var item = document.createElement('li');
+			item.className = step.sent ? 'is-good' : 'is-bad';
+			item.textContent = (step.gateway || step.configured) + ' — ' +
+				(step.sent
+					? (i18n.traceSent || 'ارسال شد')
+					: (step.error_code || 'failed') + (step.status ? ' (HTTP ' + step.status + ')' : '') + (step.message ? ' — ' + step.message : ''));
+			list.appendChild(item);
+		});
+
+		box.appendChild(list);
+	}
+
+	/* Doctor ---------------------------------------------------------------- */
+
+	function initDoctor() {
+		var card = document.querySelector('[data-tisa-doctor]');
+
+		if (!card) {
+			return;
+		}
+
+		var report = card.querySelector('[data-tisa-doctor-report]');
+		var result = card.querySelector('[data-tisa-doctor-result]');
+		var button = card.querySelector('[data-tisa-doctor-refresh]');
+
+		function load() {
+			busy(button, true);
+
+			api('admin/doctor').then(function (data) {
+				busy(button, false);
+				render(data);
+			}).catch(function (error) {
+				busy(button, false);
+				say(result, error.message, 'error');
+			});
+		}
+
+		function render(data) {
+			report.hidden = false;
+			report.textContent = '';
+
+			report.appendChild(row(
+				(cfg.i18n && cfg.i18n.captcha) || 'کپچا',
+				captchaSummary(data.captcha),
+				true
+			));
+
+			var gateways = data.gateways || {};
+
+			Object.keys(gateways).forEach(function (id) {
+				var gateway = gateways[id] || {};
+				var plan = gateway.plan || {};
+				var healthy = !!(gateway.health && gateway.health.ok);
+
+				var box = row(
+					(gateway.label || id) + (gateway.active ? ' • سامانه اصلی' : (gateway.backup ? ' • پشتیبان' : '')),
+					[].concat(
+							summaryLine(plan, healthy),
+						(gateway.issues || []).concat(plan.issues || []),
+						(gateway.notes || []).concat(plan.notes || []),
+						[gateway.health_text || '']
+					),
+					healthy && (gateway.issues || []).length === 0 && (plan.issues || []).length === 0
+				);
+
+				if (plan.endpoint) {
+					box.appendChild(probeButton(id, plan.endpoint, result));
+				}
+
+				report.appendChild(box);
+			});
+
+			if (data.channels && data.channels.email) {
+				report.appendChild(row(
+					data.channels.email.label || 'ایمیل',
+					[data.channels.email.available ? (cfg.i18n && cfg.i18n.ok) || 'فعال' : (data.channels.email.reason || '')],
+					!!data.channels.email.available
+				));
+			}
+		}
+
+		function summaryLine(plan, healthy) {
+			if ('pattern' === plan.mode) {
+				return 'مسیر ارسال: پترن' + (plan.template ? ' (' + plan.template + ')' : '') + (plan.sender ? ' • خط ' + plan.sender : '');
+			}
+
+			return 'مسیر ارسال: متن آزاد' + (plan.sender ? ' • خط ' + plan.sender : ' • بدون شماره خط');
+		}
+
+		function row(title, lines, ok) {
+			var box = document.createElement('div');
+			box.className = 'tisa-doctor__row' + (ok ? ' is-good' : ' is-bad');
+
+			var head = document.createElement('p');
+			head.className = 'tisa-doctor__title';
+			head.textContent = title;
+			box.appendChild(head);
+
+			(lines || []).forEach(function (line) {
+				if (!line) {
+					return;
+				}
+
+				var item = document.createElement('p');
+				item.className = 'tisa-doctor__line';
+				item.textContent = line;
+				box.appendChild(item);
+			});
+
+			return box;
+		}
+
+		function captchaSummary(captcha) {
+			captcha = captcha || {};
+
+			if (!captcha.enabled) {
+				return [captcha.halfConfigured
+					? 'سرویس انتخاب شده اما کلیدها کامل نیست؛ کپچا نمایش داده نمی‌شود.'
+					: 'کپچا غیرفعال است.'];
+			}
+
+			return [
+				'سرویس: ' + (captcha.label || captcha.provider) + ' • نوع: ' + (captcha.kind || '—'),
+				'حالت: ' + ('always' === captcha.trigger ? 'همیشه' : 'پس از چند تلاش') + ' • در قطعی سرویس: ' + (captcha.failOpen ? 'ورود باز می‌ماند' : 'ورود بسته می‌شود'),
+				(captcha.scripts || []).length + ' نشانی اسکریپت برای امتحان کردن'
+			].concat(
+				(captcha.scripts || []).length ? [probeTarget(captcha.scripts[0])] : []
+			);
+		}
+
+		function probeTarget(url) {
+			return 'اسکریپت: ' + url;
+		}
+
+		function probeButton(service, url, resultBox) {
+			var button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'button button-small';
+			button.textContent = 'بررسی دسترسی خروجی';
+
+			button.addEventListener('click', function () {
+				busy(button, true);
+
+				api('admin/probe', { service: service }).then(function (data) {
+					busy(button, false);
+					say(resultBox, data.message + ' — ' + data.url, data.ok ? 'success' : 'error');
+				}).catch(function (error) {
+					busy(button, false);
+					say(resultBox, error.message, 'error');
+				});
+			});
+
+			return button;
+		}
+
+		if (button) {
+			button.addEventListener('click', load);
+		}
 	}
 
 	function initImporter() {

@@ -1070,3 +1070,192 @@
 .login.tisa-otp-login #login .tisa-otp {
 	margin-top: 12px;
 }
+
+/* =========================================================================
+ * v1.3 layer — trust row, status headline, captcha failure states, paste,
+ * phone chip and a phone-sized sticky action.
+ *
+ * Everything here reuses the measured tokens above, so the contrast gate in
+ * tests/contrast.js keeps covering it. No new colour is introduced.
+ * ====================================================================== */
+
+/* Trust row: three claims, before the first keystroke. ---------------------- */
+
+.tisa-otp__trust {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tisa-space-2) var(--tisa-space-3);
+	margin: 0 0 var(--tisa-space-4);
+	padding: 0;
+	list-style: none;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+	line-height: 1.7;
+}
+
+.tisa-otp__trust-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.tisa-otp__trust-item svg {
+	width: 16px;
+	height: 16px;
+	flex: none;
+	color: var(--tisa-accent);
+}
+
+.tisa-skin-slate .tisa-otp__trust {
+	color: #cbd5e1;
+}
+
+/* Status card: a headline the eye can catch, then the sentence. ------------ */
+
+.tisa-otp__status-title {
+	margin: 0 0 2px;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.6;
+}
+
+.tisa-otp__status-title[hidden] {
+	display: none;
+}
+
+/* Captcha: never an empty box. -------------------------------------------- */
+
+.tisa-captcha {
+	min-height: 0;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--tisa-space-2);
+}
+
+.tisa-captcha:not([hidden]):empty::after {
+	content: '';
+	width: 28px;
+	height: 28px;
+	border: 2px solid var(--tisa-input-line);
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: tisa-spin 900ms linear infinite;
+}
+
+.tisa-captcha__error {
+	width: 100%;
+	padding: var(--tisa-space-3);
+	border: 1px solid var(--tisa-danger-line);
+	border-radius: var(--tisa-radius-control);
+	background: var(--tisa-danger-soft);
+	color: var(--tisa-text);
+	text-align: start;
+}
+
+.tisa-captcha__error-text {
+	margin: 0 0 var(--tisa-space-2);
+	font-size: 13px;
+	line-height: 1.8;
+}
+
+.tisa-captcha__error-hint {
+	margin: var(--tisa-space-2) 0 0;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+	line-height: 1.8;
+}
+
+.tisa-skin-slate .tisa-captcha__error {
+	border-color: rgba(253, 162, 155, 0.45);
+	background: rgba(180, 35, 24, 0.22);
+	color: #fee4e2;
+}
+
+/* Phone chip: which number the code went to, and the way back. ------------ */
+
+.tisa-code__phone {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--tisa-space-2);
+	justify-content: center;
+	margin-bottom: var(--tisa-space-3);
+	padding: 6px 12px;
+	border: 1px solid var(--tisa-line);
+	border-radius: 999px;
+	background: var(--tisa-surface-sunken);
+	color: var(--tisa-muted);
+	font-size: 13px;
+}
+
+.tisa-code__phone[hidden] {
+	display: none;
+}
+
+.tisa-code__phone-value {
+	color: var(--tisa-text);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+.tisa-skin-slate .tisa-code__phone {
+	background: rgba(255, 255, 255, 0.04);
+	border-color: #344054;
+	color: #98a2b3;
+}
+
+.tisa-skin-slate .tisa-code__phone-value {
+	color: #f2f4f7;
+}
+
+/* Paste from the SMS. ----------------------------------------------------- */
+
+.tisa-code__paste {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin: calc(var(--tisa-space) * -0.4) auto 0;
+	min-height: 40px;
+	font-weight: 600;
+}
+
+.tisa-code__paste svg {
+	width: 17px;
+	height: 17px;
+}
+
+/* Code boxes: a little calmer on focus, tabular digits so they stop dancing. */
+
+.tisa-code__box,
+.tisa-code__bulk {
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: 'tnum';
+}
+
+.tisa-code__box:focus-visible,
+.tisa-code__bulk:focus-visible {
+	outline: 3px solid var(--tisa-focus);
+	outline-offset: 2px;
+}
+
+/* Phone-sized sticky action: the button stays reachable with a thumb. ------ */
+
+@media (max-width: 480px) {
+	.tisa-step.is-current .tisa-btn--primary {
+		position: sticky;
+		bottom: 10px;
+		z-index: 3;
+		box-shadow: 0 10px 24px -12px rgba(16, 24, 40, 0.55);
+	}
+
+	.tisa-code__phone {
+		justify-content: flex-start;
+		border-radius: var(--tisa-radius-control);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tisa-captcha:not([hidden]):empty::after {
+		animation-duration: 2.4s;
+	}
+}

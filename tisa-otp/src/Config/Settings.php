@@ -175,6 +175,10 @@ final class Settings {
 			'captcha_secret_key'     => '',
 			'captcha_score'          => '0.5',
 			'captcha_trigger'        => 'always',
+			'captcha_fail_open'      => '1',
+			'captcha_timeout'        => '8000',
+			'captcha_script_override'=> '',
+			'captcha_arcaptcha_v3'   => '0',
 
 			// Registration.
 			'registration_enabled'   => '1',

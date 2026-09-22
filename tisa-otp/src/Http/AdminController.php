@@ -7,6 +7,7 @@
 
 namespace TisaOtp\Http;
 
+use TisaOtp\Captcha\Manager as CaptchaManager;
 use TisaOtp\Channel\Dispatcher;
 use TisaOtp\Config\Settings;
 use TisaOtp\Gateway\Registry;
@@ -46,6 +47,9 @@ final class AdminController {
 	/** @var Registry */
 	private $gateways;
 
+	/** @var CaptchaManager */
+	private $captcha;
+
 	public function __construct(
 		Settings $settings,
 		Dispatcher $dispatcher,
@@ -54,7 +58,8 @@ final class AdminController {
 		Logger $logger,
 		LogStore $logs,
 		Runner $importer,
-		Registry $gateways
+		Registry $gateways,
+		CaptchaManager $captcha
 	) {
 		$this->settings   = $settings;
 		$this->dispatcher = $dispatcher;
@@ -64,6 +69,7 @@ final class AdminController {
 		$this->logs       = $logs;
 		$this->importer   = $importer;
 		$this->gateways   = $gateways;
+		$this->captcha    = $captcha;
 	}
 
 	/**
@@ -106,7 +112,17 @@ final class AdminController {
 		if ( ! $result->isSent() ) {
 			$this->otp->revoke( $phone );
 
-			throw Rejection::make( 'delivery_failed', $result->message(), array( 'gateway' => $result->gateway() ) );
+			throw Rejection::make(
+				'delivery_failed',
+				$result->message(),
+				array(
+					'gateway'    => $result->gateway(),
+					'error_code' => $result->errorCode(),
+					'status'     => $result->httpStatus(),
+					'trace'      => $this->dispatcher->trace(),
+					'plan'       => $this->gateways->planFor( $result->gateway() ),
+				)
+			);
 		}
 
 		return array(
@@ -114,8 +130,152 @@ final class AdminController {
 			'via'     => $result->gateway(),
 			'channel' => $channel,
 			'masked'  => Phone::mask( $phone ),
-			'message' => __( 'کد آزمایشی ارسال شد. اگر نرسید، لاگ‌ها را ببینید.', 'tisa-otp' ),
+			'trace'   => $this->dispatcher->trace(),
+			'plan'    => $this->gateways->planFor( $result->gateway() ),
+			'message' => __( 'کد آزمایشی ارسال شد. اگر نرسید، رویدادها را ببینید.', 'tisa-otp' ),
 		);
+	}
+
+	/**
+	 * Everything the "system doctor" card shows: what would send, and what stops it.
+	 */
+	public function doctor( Request $request ): array {
+
+		$channels = array();
+
+		foreach ( $this->dispatcher->channels() as $id => $channel ) {
+			$channels[ $id ] = array(
+				'label'     => $channel->label(),
+				'available' => $channel->available(),
+				'reason'    => $channel->unavailableReason(),
+			);
+		}
+
+		$gateways = array();
+
+		foreach ( $this->gateways->report() as $id => $report ) {
+			$plan = array(
+				'mode'     => isset( $report['mode'] ) ? (string) $report['mode'] : 'text',
+				'sender'   => isset( $report['sender'] ) ? (string) $report['sender'] : '',
+				'template' => isset( $report['template'] ) ? (string) $report['template'] : '',
+				'endpoint' => '',
+				'issues'   => isset( $report['issues'] ) ? (array) $report['issues'] : array(),
+				'notes'    => isset( $report['notes'] ) ? (array) $report['notes'] : array(),
+			);
+
+			$gateways[ $id ] = array_merge(
+				$report,
+				array(
+					'plan'        => $this->gateways->planFor( $id ),
+					'health_text' => isset( $report['health_text'] ) ? (string) $report['health_text'] : '',
+					'mode'        => $plan['mode'],
+				)
+			);
+		}
+
+		$this->logger->notice( 'admin.doctor', array( 'user_id' => $request->userId() ) );
+
+		return array(
+			'gateways'    => $gateways,
+			'channels'    => $channels,
+			'captcha'     => $this->captcha->diagnostics(),
+			'cache_mode'  => $this->settings->str( 'cache_mode', 'auto' ),
+			'webotp'      => $this->settings->bool( 'webotp_enabled', false ),
+			'cron'        => (int) wp_next_scheduled( 'tisa_otp_maintenance' ),
+			'debug'       => $this->settings->bool( 'debug', false ),
+			'form_token'  => \TisaOtp\Support\FormToken::issue(),
+		);
+	}
+
+	/**
+	 * Outbound reachability probe for one service, run on demand.
+	 *
+	 * The most common cause of "the SMS does not arrive" on Iranian hosting is
+	 * WP_HTTP_BLOCK_EXTERNAL, a firewall, or a DNS resolver that cannot resolve
+	 * the panel. This answers exactly that question, with the HTTP status.
+	 */
+	public function probe( Request $request ): array {
+		$service = sanitize_key( $request->key( 'service', '' ) );
+		$url     = $this->probeUrl( $service );
+
+		if ( '' === $url ) {
+			throw Rejection::make( 'unknown_service', __( 'سرویسی با این شناسه برای بررسی وجود ندارد.', 'tisa-otp' ) );
+		}
+
+		$started  = microtime( true );
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout'             => 8,
+				'redirection'         => 0,
+				'limit_response_size' => 2048,
+				'headers'             => array( 'Accept' => '*/*' ),
+				'user-agent'          => 'TisaOTP/' . TISA_OTP_VERSION . '; ' . home_url( '/' ),
+			)
+		);
+
+		$elapsed = (int) round( ( microtime( true ) - $started ) * 1000 );
+		$blocked = defined( 'WP_HTTP_BLOCK_EXTERNAL' ) && WP_HTTP_BLOCK_EXTERNAL;
+
+		$this->logger->notice(
+			'admin.probe',
+			array(
+				'service' => $service,
+				'user_id' => $request->userId(),
+				'ok'      => ! is_wp_error( $response ),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'service' => $service,
+				'url'     => $url,
+				'ok'      => false,
+				'ms'      => $elapsed,
+				'status'  => 0,
+				'error'   => $response->get_error_code(),
+				'message' => $blocked
+					? __( 'ارتباط خروجی وردپرس بسته است (WP_HTTP_BLOCK_EXTERNAL). دامنه سرویس را در WP_ACCESSIBLE_HOSTS اضافه کنید.', 'tisa-otp' )
+					: sprintf( /* translators: %s: transport error code */ __( 'ارتباط برقرار نشد (%s). میزبان، فایروال یا DNS را بررسی کنید.', 'tisa-otp' ), $response->get_error_code() ),
+			);
+		}
+
+		$status = (int) wp_remote_retrieve_response_code( $response );
+
+		return array(
+			'service' => $service,
+			'url'     => $url,
+			'ok'      => $status > 0,
+			'ms'      => $elapsed,
+			'status'  => $status,
+			'error'   => '',
+			'message' => sprintf(
+				/* translators: 1: HTTP status code, 2: milliseconds */
+				__( 'پاسخ %1$d در %2$d میلی‌ثانیه — مسیر خروجی باز است.', 'tisa-otp' ),
+				$status,
+				$elapsed
+			),
+		);
+	}
+
+	/**
+	 * Resolve a probe target: a gateway endpoint, or the active captcha script.
+	 */
+	private function probeUrl( string $service ): string {
+		if ( 'captcha' === $service ) {
+			$bundle = $this->captcha->diagnostics();
+			$scripts = isset( $bundle['scripts'] ) ? (array) $bundle['scripts'] : array();
+
+			return isset( $scripts[0] ) ? (string) $scripts[0] : '';
+		}
+
+		if ( 'wordpress' === $service ) {
+			return 'https://api.wordpress.org/';
+		}
+
+		$plan = $this->gateways->planFor( $service );
+
+		return isset( $plan['endpoint'] ) ? (string) $plan['endpoint'] : '';
 	}
 
 	public function resetThrottle( Request $request ): array {

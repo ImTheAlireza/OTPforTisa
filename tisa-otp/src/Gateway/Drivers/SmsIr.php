@@ -54,6 +54,34 @@ final class SmsIr extends HttpGateway {
 		return '' === trim( $this->option( 'smsir_api_key' ) ) ? array( 'smsir_api_key' ) : array();
 	}
 
+	/**
+	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
+	 */
+	public function plan(): array {
+		$template = trim( $this->option( 'smsir_template_id' ) );
+		$sender   = trim( $this->option( 'smsir_sender' ) );
+		$issues   = array();
+
+		if ( '' === trim( $this->option( 'smsir_api_key' ) ) ) {
+			$issues[] = __( 'کلید API سرویس SMS.ir تنظیم نشده است.', 'tisa-otp' );
+		}
+
+		if ( '' === $template && '' === $sender ) {
+			$issues[] = __( 'نه شناسه الگو و نه شماره خط تنظیم شده است؛ سرویس SMS.ir هیچ‌کدام را بدون این‌ها نمی‌پذیرد.', 'tisa-otp' );
+		}
+
+		return array(
+			'mode'     => '' !== $template ? 'pattern' : 'text',
+			'sender'   => $sender,
+			'template' => $template,
+			'endpoint' => '' !== $template ? self::VERIFY_ENDPOINT : self::BULK_ENDPOINT,
+			'issues'   => $issues,
+			'notes'    => '' !== $template
+				? array()
+				: array( __( 'ارسال متنی وابسته به اعتبار حساب است؛ الگوی تأیید سریع‌تر و ارزان‌تر تحویل می‌شود.', 'tisa-otp' ) ),
+		);
+	}
+
 	public function deliver( DeliveryRequest $request ): GatewayResult {
 		$apiKey = $this->option( 'smsir_api_key' );
 

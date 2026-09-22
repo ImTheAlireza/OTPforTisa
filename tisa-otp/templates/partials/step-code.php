@@ -24,6 +24,13 @@ $codeTitleId = $instance . '-code-title';
 		</p>
 	</header>
 
+	<?php // Which number this code went to, with the way back to fix it. ?>
+	<div class="tisa-code__phone" data-tisa-phone-chip hidden>
+		<span class="tisa-code__phone-label"><?php esc_html_e( 'کد ارسال‌شده به', 'tisa-otp' ); ?></span>
+		<strong class="tisa-code__phone-value" data-tisa-phone-chip-value dir="ltr">—</strong>
+		<button type="button" class="tisa-link" data-tisa-action="edit-phone"><?php echo esc_html( $editLabel ); ?></button>
+	</div>
+
 	<div class="tisa-code" data-tisa-code>
 		<label class="tisa-screen-reader" for="<?php echo esc_attr( $codeFieldId ); ?>"><?php echo esc_html( $codeLabel ); ?></label>
 
@@ -61,6 +68,11 @@ $codeTitleId = $instance . '-code-title';
 			<?php endfor; ?>
 		</div>
 	</div>
+
+	<button type="button" class="tisa-link tisa-code__paste" data-tisa-paste>
+		<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="6.5" y="3.5" width="9" height="12" rx="2"></rect><path d="M4.5 6.5v8a2 2 0 0 0 2 2h6" stroke-linecap="round"></path></svg>
+		<span><?php esc_html_e( 'چسباندن کد از پیامک', 'tisa-otp' ); ?></span>
+	</button>
 
 	<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="verify">
 		<span class="tisa-btn__label"><?php echo esc_html( $verifyLabel ); ?></span>

@@ -85,6 +85,8 @@ final class Api implements Bootable {
 			'/admin/test'           => 'sendTest',
 			'/admin/throttle-reset' => 'resetThrottle',
 			'/admin/summary'        => 'summary',
+			'/admin/doctor'         => 'doctor',
+			'/admin/probe'          => 'probe',
 			'/admin/import/start'   => 'importStart',
 			'/admin/import/step'    => 'importStep',
 			'/admin/import/undo'    => 'importUndo',
@@ -95,7 +97,7 @@ final class Api implements Bootable {
 				self::ROUTE_NS,
 				$route,
 				array(
-					'methods'             => in_array( $method, array( 'summary' ), true ) ? 'GET' : 'POST',
+					'methods'             => in_array( $method, array( 'summary', 'doctor' ), true ) ? 'GET' : 'POST',
 					'callback'            => $this->handler( $this->admin, $method ),
 					'permission_callback' => array( $this, 'allowAdmin' ),
 				)

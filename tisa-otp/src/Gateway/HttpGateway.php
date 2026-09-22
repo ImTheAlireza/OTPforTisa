@@ -45,6 +45,36 @@ abstract class HttpGateway implements SmsGateway {
 	}
 
 	/**
+	 * Default delivery plan: a plain text message. Drivers that also support
+	 * pattern/verify templates override this.
+	 *
+	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
+	 */
+	public function plan(): array {
+		$issues = array();
+		$sender = trim( $this->option( 'sender' ) );
+
+		foreach ( $this->missing() as $key ) {
+			$field  = $this->fields();
+			$label  = isset( $field[ $key ]['label'] ) ? (string) $field[ $key ]['label'] : $key;
+			$issues[] = sprintf(
+				/* translators: %s: settings field label */
+				__( 'مقدار «%s» تنظیم نشده است.', 'tisa-otp' ),
+				$label
+			);
+		}
+
+		return array(
+			'mode'     => 'text',
+			'sender'   => $sender,
+			'template' => '',
+			'endpoint' => '',
+			'issues'   => $issues,
+			'notes'    => array(),
+		);
+	}
+
+	/**
 	 * Read an option, allowing wp-config.php constants to win.
 	 */
 	protected function option( string $key, string $default = '' ): string {

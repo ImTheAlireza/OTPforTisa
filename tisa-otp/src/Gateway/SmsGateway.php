@@ -38,5 +38,17 @@ interface SmsGateway {
 	 */
 	public function missing(): array;
 
+	/**
+	 * How this driver would send *right now*, and what would stop it.
+	 *
+	 * `missing()` only answers "is a password typed in". A panel also refuses a
+	 * message when the sender line is wrong or when free text is sent to a
+	 * pattern-only account — both looked identical to the visitor ("the code was
+	 * not sent"). This report is what the tools screen shows to explain it.
+	 *
+	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
+	 */
+	public function plan(): array;
+
 	public function deliver( DeliveryRequest $request ): GatewayResult;
 }

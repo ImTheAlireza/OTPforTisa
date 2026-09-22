@@ -63,7 +63,7 @@ final class Pipeline {
 			new BlocklistGuard( $this->blocklist ),
 			new BotGuard(),
 			new ThrottleGuard( $this->throttle ),
-			new CaptchaGuard( $this->captcha, $this->throttle ),
+			new CaptchaGuard( $this->captcha, $this->throttle, $this->logger ),
 		);
 
 		/**

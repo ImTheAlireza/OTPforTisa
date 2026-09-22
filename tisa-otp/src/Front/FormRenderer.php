@@ -135,6 +135,7 @@ final class FormRenderer {
 			'restUrl'      => esc_url_raw( rest_url( 'tisa-otp/v1/' ) ),
 			'honeypot'     => \TisaOtp\Guard\BotGuard::HONEYPOT,
 			'timestampKey' => \TisaOtp\Guard\BotGuard::TIMESTAMP,
+			'formToken'    => \TisaOtp\Support\FormToken::issue(),
 			'renderedAt'   => time(),
 		);
 	}

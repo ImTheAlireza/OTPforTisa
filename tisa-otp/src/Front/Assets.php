@@ -105,10 +105,14 @@ final class Assets implements Bootable {
 				'restUrl' => esc_url_raw( rest_url( 'tisa-otp/v1/' ) ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 				'i18n'    => array(
-					'working' => __( 'در حال انجام…', 'tisa-otp' ),
-					'done'    => __( 'انجام شد', 'tisa-otp' ),
-					'failed'  => __( 'ناموفق', 'tisa-otp' ),
-					'confirm' => __( 'این عملیات قابل بازگشت نیست. ادامه می‌دهید؟', 'tisa-otp' ),
+					'working'    => __( 'در حال انجام…', 'tisa-otp' ),
+					'done'       => __( 'انجام شد', 'tisa-otp' ),
+					'failed'     => __( 'ناموفق', 'tisa-otp' ),
+					'confirm'    => __( 'این عملیات قابل بازگشت نیست. ادامه می‌دهید؟', 'tisa-otp' ),
+					'captcha'    => __( 'کپچا', 'tisa-otp' ),
+					'traceTitle' => __( 'مسیر تلاش برای ارسال:', 'tisa-otp' ),
+					'traceSent'  => __( 'ارسال شد', 'tisa-otp' ),
+					'ok'         => __( 'فعال', 'tisa-otp' ),
 				),
 			)
 		);
@@ -129,6 +133,10 @@ final class Assets implements Bootable {
 			'nonce'      => wp_create_nonce( 'wp_rest' ),
 			'configUrl'  => esc_url_raw( rest_url( 'tisa-otp/v1/form-config' ) ),
 			'cacheMode'  => $this->settings->str( 'cache_mode', 'auto' ),
+			// Minted here and refreshed by `/form-config`, never cached: this is
+			// what keeps the bot-timing check honest behind a page cache.
+			'formToken'  => \TisaOtp\Support\FormToken::issue(),
+			'renderedAt' => time(),
 			'autoVerify' => $this->settings->bool( 'auto_verify', true ),
 			'webOtp'     => $this->settings->bool( 'webotp_enabled', false ),
 			'timeoutMs'  => max( 5, min( 60, $this->settings->int( 'request_timeout', 15 ) ) ) * 1000,
@@ -174,6 +182,21 @@ final class Assets implements Bootable {
 				'attemptsLeft'     => __( '{n} تلاش دیگر باقی مانده.', 'tisa-otp' ),
 				'stepOf'           => __( 'گام {n} از {total}: {name}', 'tisa-otp' ),
 				'digitLabel'       => __( 'رقم {n}', 'tisa-otp' ),
+				// Captcha loading is a real failure mode, so it has real sentences.
+				'captchaLoad'      => __( 'تأیید امنیتی بارگذاری نشد. اگر افزونهٔ مسدودکننده دارید، آن را برای این سایت غیرفعال کنید.', 'tisa-otp' ),
+				'captchaRetry'     => __( 'تلاش دوباره برای بارگذاری', 'tisa-otp' ),
+				'captchaContinue'  => __( 'می‌توانید بدون تأیید امنیتی ادامه دهید؛ سایت از روش‌های دیگر محافظت می‌کند.', 'tisa-otp' ),
+				'captchaBlocked'   => __( 'تأیید امنیتی در مرورگر شما بارگذاری نشد. صفحه را دوباره باز کنید یا افزونهٔ مسدودکننده را غیرفعال کنید.', 'tisa-otp' ),
+				'pasteLabel'       => __( 'چسباندن کد از پیامک', 'tisa-otp' ),
+				'pasteManual'      => __( 'کد پیامک را دستی در خانه‌ها وارد کنید.', 'tisa-otp' ),
+				'pasteEmpty'       => __( 'کدی در حافظه پیدا نشد. پیامک را باز کنید و کد را کپی کنید.', 'tisa-otp' ),
+				'pasteDone'        => __( 'کد از حافظه چسبانده شد.', 'tisa-otp' ),
+				'problemTitle'     => __( 'یک مشکل پیش آمد', 'tisa-otp' ),
+				'doneTitle'        => __( 'انجام شد', 'tisa-otp' ),
+				'noteTitle'        => __( 'توجه', 'tisa-otp' ),
+				'trustSecure'      => __( 'بدون رمز عبور', 'tisa-otp' ),
+				'trustInstant'     => __( 'ورود در چند ثانیه', 'tisa-otp' ),
+				'trustPrivate'     => __( 'شماره شما محفوظ می‌ماند', 'tisa-otp' ),
 			),
 			/* Buttons offered inside an error message, keyed by the server's code. */
 			'actions'    => array(

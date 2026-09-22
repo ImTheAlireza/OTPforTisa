@@ -111,19 +111,54 @@ final class Registry {
 	}
 
 	/**
+	 * How one gateway would send right now, without sending anything.
+	 *
+	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
+	 */
+	public function planFor( string $id ): array {
+		$driver = $this->find( $id );
+		$empty  = array(
+			'mode'     => 'text',
+			'sender'   => '',
+			'template' => '',
+			'endpoint' => '',
+			'issues'   => array(),
+			'notes'    => array(),
+		);
+
+		if ( null === $driver ) {
+			$empty['issues'][] = __( 'سامانه پیامکی انتخاب‌شده شناخته نشده است.', 'tisa-otp' );
+
+			return $empty;
+		}
+
+		return $driver->plan();
+	}
+
+	/**
 	 * Readiness report used by the admin screens.
 	 */
 	public function report(): array {
-		$report = array();
+		$report  = array();
+		$health  = new Health();
 
 		foreach ( $this->all() as $id => $driver ) {
+			$plan = $driver->plan();
+
 			$report[ $id ] = array(
-				'label'   => $driver->label(),
-				'ready'   => $driver->ready(),
-				'missing' => $driver->missing(),
-				'docs'    => $driver->docsUrl(),
-				'active'  => $this->settings->str( 'sms_gateway' ) === $id,
-				'backup'  => $this->settings->str( 'sms_backup_gateway' ) === $id,
+				'label'    => $driver->label(),
+				'ready'    => $driver->ready() && array() === $plan['issues'],
+				'missing'  => $driver->missing(),
+				'docs'     => $driver->docsUrl(),
+				'active'   => $this->settings->str( 'sms_gateway' ) === $id,
+				'backup'   => $this->settings->str( 'sms_backup_gateway' ) === $id,
+				'mode'     => $plan['mode'],
+				'sender'   => $plan['sender'],
+				'template' => $plan['template'],
+				'issues'   => $plan['issues'],
+				'notes'    => $plan['notes'],
+				'health'   => $health->get( $id ),
+				'health_text' => $health->describe( $id ),
 			);
 		}
 

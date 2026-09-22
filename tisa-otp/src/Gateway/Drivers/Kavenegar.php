@@ -51,6 +51,32 @@ final class Kavenegar extends HttpGateway {
 		return '' === trim( $this->option( 'kavenegar_api_key' ) ) ? array( 'kavenegar_api_key' ) : array();
 	}
 
+	/**
+	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
+	 */
+	public function plan(): array {
+		$template = trim( $this->option( 'kavenegar_template' ) );
+		$sender   = trim( $this->option( 'kavenegar_sender' ) );
+		$issues   = array();
+
+		if ( '' === trim( $this->option( 'kavenegar_api_key' ) ) ) {
+			$issues[] = __( 'کلید API کاوه‌نگار تنظیم نشده است.', 'tisa-otp' );
+		}
+
+		if ( '' === $template && '' === $sender ) {
+			$issues[] = __( 'برای ارسال متنی، شماره فرستنده لازم است؛ یا نام الگوی تأیید را وارد کنید.', 'tisa-otp' );
+		}
+
+		return array(
+			'mode'     => '' !== $template ? 'pattern' : 'text',
+			'sender'   => $sender,
+			'template' => $template,
+			'endpoint' => self::API_BASE . ( '' !== $template ? '…/verify/lookup.json' : '…/sms/send.json' ),
+			'issues'   => $issues,
+			'notes'    => array(),
+		);
+	}
+
 	public function deliver( DeliveryRequest $request ): GatewayResult {
 		$apiKey = $this->option( 'kavenegar_api_key' );
 

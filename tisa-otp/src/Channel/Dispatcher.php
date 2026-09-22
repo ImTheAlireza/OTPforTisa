@@ -88,6 +88,17 @@ final class Dispatcher {
 		return isset( $this->channels[ $id ] );
 	}
 
+	/**
+	 * Trace of the last delivery attempt for the SMS channel.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function trace(): array {
+		$sms = $this->channel( 'sms' );
+
+		return $sms instanceof SmsChannel ? $sms->trace() : array();
+	}
+
 	public function deliver( string $phone, string $code, array $context = array() ): GatewayResult {
 		$preferred = isset( $context['channel'] ) ? (string) $context['channel'] : '';
 		$order     = $this->order( $preferred );

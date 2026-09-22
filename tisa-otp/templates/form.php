@@ -24,6 +24,7 @@ defined( 'ABSPATH' ) || exit;
 	data-config-url="<?php echo esc_url( $configUrl ); ?>"
 	data-cache-mode="<?php echo esc_attr( $cacheMode ); ?>"
 	data-nonce="<?php echo esc_attr( $nonce ); ?>"
+	data-form-token="<?php echo esc_attr( $formToken ); ?>"
 	data-cooldown="<?php echo esc_attr( (string) $cooldown ); ?>"
 	data-code-length="<?php echo esc_attr( (string) $codeLength ); ?>"
 	data-flow="<?php echo esc_attr( $flow ); ?>"
@@ -44,6 +45,28 @@ defined( 'ABSPATH' ) || exit;
 				<img src="<?php echo esc_url( $logo ); ?>" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>" width="<?php echo esc_attr( (string) $logoWidth ); ?>" style="max-width:<?php echo esc_attr( (string) $logoWidth ); ?>px">
 			</div>
 		<?php endif; ?>
+
+		<?php
+		/*
+		 * Three claims, said once, before the first field. They answer the question
+		 * a visitor actually has ("why is this site asking for my number?") in the
+		 * place where the decision to type it happens.
+		 */
+		?>
+		<ul class="tisa-otp__trust">
+			<li class="tisa-otp__trust-item">
+				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+				<span><?php esc_html_e( 'بدون رمز عبور', 'tisa-otp' ); ?></span>
+			</li>
+			<li class="tisa-otp__trust-item">
+				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 3.2c1.9 0 3.6 1 4.4 2.6" stroke-linecap="round"></path><path d="M3.4 8.3A8 8 0 0 1 15.6 5" stroke-linecap="round"></path><path d="m2.5 2.5 15 15" stroke-linecap="round"></path><path d="M7.1 12.9a3 3 0 0 0 4.2 0" stroke-linecap="round"></path></svg>
+				<span><?php esc_html_e( 'شماره شما محفوظ می‌ماند', 'tisa-otp' ); ?></span>
+			</li>
+			<li class="tisa-otp__trust-item">
+				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+				<span><?php esc_html_e( 'ورود در چند ثانیه', 'tisa-otp' ); ?></span>
+			</li>
+		</ul>
 
 		<?php
 		/*
@@ -91,6 +114,7 @@ defined( 'ABSPATH' ) || exit;
 				<path d="M10 13.6h.01" stroke-linecap="round"></path>
 			</svg>
 			<div class="tisa-otp__status-body">
+				<p class="tisa-otp__status-title" data-tisa-status-title hidden></p>
 				<p class="tisa-otp__status-text" data-tisa-status-text></p>
 				<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
 			</div>

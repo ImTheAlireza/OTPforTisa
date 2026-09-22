@@ -435,6 +435,150 @@ async function testStaleNonceStillRecovers() {
 	check('no error is left on screen', ctx.doc.querySelector('[data-tisa-status]').className.indexOf('is-error') < 0);
 }
 
+async function testCaptchaFailureIsVisible() {
+	scenario('A captcha script that never loads says so, and is not a dead end');
+
+	const bundle = {
+		enabled: true,
+		provider: 'hcaptcha',
+		siteKey: '10000000-ffff-ffff-ffff-000000000001',
+		kind: 'widget',
+		scripts: ['/blocked/captcha.js'],
+		failOpen: true,
+		loadTimeout: 300,
+		config: {},
+	};
+
+	const ctx = boot({
+		config: { captcha: bundle },
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
+	});
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+
+	await wait(500);
+
+	const box = ctx.doc.querySelector('.tisa-captcha__error');
+	check('an error card fills the gap the widget left', !!box);
+	check('it says the challenge did not load', !!box && text(box).indexOf('بارگذاری نشد') >= 0, box ? text(box) : 'no card');
+	check('it offers a retry', !!ctx.doc.querySelector('[data-tisa-captcha-retry]'));
+	check('it says the visitor may continue', !!ctx.doc.querySelector('.tisa-captcha__error-hint'));
+
+	for (let i = 0; i < 8; i++) await tick();
+
+	check(
+		'fail-open still sends the code',
+		ctx.doc.querySelector('[data-tisa-step="code"]').classList.contains('is-current'),
+		'status: ' + text(ctx.doc.querySelector('[data-tisa-status-text]'))
+	);
+	check(
+		'the request went out without a captcha token',
+		ctx.calls.some((call) => call.url.indexOf('/start') >= 0 && !call.body.captcha_token),
+		ctx.calls.map((call) => call.url).join(' | ')
+	);
+
+	// With fail-open off, the visitor is stopped — and told why, in words.
+	const strict = boot({
+		config: { captcha: Object.assign({}, bundle, { failOpen: false }) },
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
+	});
+
+	strict.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	strict.form.act('start');
+	await wait(500);
+	for (let i = 0; i < 8; i++) await tick();
+
+	check('with fail-open off nothing is sent', !strict.calls.some((call) => call.url.indexOf('/start') >= 0));
+	check(
+		'and the visitor gets an explanation',
+		text(strict.doc.querySelector('[data-tisa-status-text]')).indexOf('بارگذاری نشد') >= 0,
+		text(strict.doc.querySelector('[data-tisa-status-text]'))
+	);
+}
+
+async function testStaleFormTokenRecovers() {
+	scenario('A form token frozen by a day-long page cache recovers in one retry');
+
+	let configs = 0;
+	const tokens = [];
+
+	const ctx = boot({
+		html: (source) => source.replace('data-form-token="demo-form-token"', 'data-form-token="stale-form-token"'),
+		fetch: (req) => {
+			if (req.url.indexOf('form-config') >= 0) {
+				configs++;
+
+				return ok({ nonce: 'fresh-nonce-' + configs, formToken: 'fresh-token-' + configs, renderedAt: 1800000000 });
+			}
+
+			if (req.url.indexOf('/start') >= 0) {
+				tokens.push(req.body.tisa_ft);
+
+				if ('stale-form-token' === req.body.tisa_ft) {
+					return reject('stale_form', 'این فرم مدت‌ها پیش ساخته شده است.', { recoverable: true });
+				}
+
+				return ok(verifyStep());
+			}
+
+			return ok({});
+		},
+	});
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+
+	for (let i = 0; i < 10; i++) await tick();
+
+	check('the first attempt carries the cached token', 'stale-form-token' === tokens[0], String(tokens[0]));
+	check('the client pulls a fresh configuration', configs >= 1, configs + ' fetch(es)');
+	check('the retry carries the fresh token', !!tokens[1] && 'stale-form-token' !== tokens[1], String(tokens[1]));
+	check('the hidden timestamp moves with it', '1800000000' === ctx.doc.querySelector('input[name="tisa_ts"]').value, ctx.doc.querySelector('input[name="tisa_ts"]').value);
+	check('the visitor ends up on the code step', ctx.doc.querySelector('[data-tisa-step="code"]').classList.contains('is-current'));
+	check('no error is left on screen', ctx.doc.querySelector('[data-tisa-status]').className.indexOf('is-error') < 0);
+
+	const chip = ctx.doc.querySelector('[data-tisa-phone-chip]');
+	check('the code step names the number the code went to', !!chip && !chip.hidden, 'hidden=' + (chip ? chip.hidden : 'missing'));
+	check('with the masked number in it', !!chip && text(ctx.doc.querySelector('[data-tisa-phone-chip-value]')).indexOf('***') >= 0, chip ? text(chip) : '');
+}
+
+async function testPasteFromSms() {
+	scenario('Pasting the code from the SMS fills the boxes');
+
+	const ctx = boot({
+		fetch: (req) => {
+			if (req.url.indexOf('form-config') >= 0) return ok({ nonce: 'fresh' });
+			if (req.url.indexOf('/verify') >= 0) return reject('invalid_code', 'کد درست نیست.', { attempts_left: 4 });
+
+			return ok(verifyStep());
+		},
+	});
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	await tick();
+	await tick();
+
+	Object.defineProperty(ctx.win.navigator, 'clipboard', {
+		value: { readText: () => Promise.resolve('کد شما: ۱۲۳۴۵') },
+		configurable: true,
+	});
+
+	const paste = ctx.doc.querySelector('[data-tisa-paste]');
+	check('the code step offers a paste button', !!paste);
+
+	paste.click();
+	await tick();
+	await tick();
+
+	const boxes = Array.from(ctx.doc.querySelectorAll('[data-tisa-box]')).map((box) => box.value);
+	check('Persian digits from the SMS are written as Latin digits', '12345' === boxes.join(''), boxes.join(''));
+
+	await wait(260);
+	check('and the code is verified without pressing anything', ctx.calls.some((call) => call.url.indexOf('/verify') >= 0), ctx.calls.map((call) => call.url).join(' | '));
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -446,6 +590,9 @@ async function main() {
 	await testSkipLink();
 	await testExpiry();
 	await testStaleNonceStillRecovers();
+	await testCaptchaFailureIsVisible();
+	await testStaleFormTokenRecovers();
+	await testPasteFromSms();
 
 	console.log('\n' + (failed ? failed + ' FAILED, ' : '') + passed + ' checks passed');
 	process.exit(failed ? 1 : 0);

@@ -56,6 +56,7 @@ final class ToolsScreen implements Bootable {
 		echo '<div class="wrap tisa-wrap" dir="rtl"><div class="tisa-header"><div class="tisa-header__title"><h1>' . esc_html__( 'ابزارها و وضعیت', 'tisa-otp' ) . '</h1></div></div>';
 
 		$this->statusCards();
+		$this->doctorCard();
 		$this->testSendCard();
 		$this->importCard();
 		$this->housekeepingCard();
@@ -169,6 +170,20 @@ final class ToolsScreen implements Bootable {
 				'note'  => '',
 			),
 		);
+	}
+
+	/**
+	 * "Why did my SMS not arrive?" — answered before asking the question.
+	 */
+	private function doctorCard(): void {
+		echo '<section class="tisa-panel tisa-card" data-tisa-doctor>';
+		echo '<h2>' . esc_html__( 'سلامت ارسال و کپچا', 'tisa-otp' ) . '</h2>';
+		echo '<p class="tisa-card__intro">' . esc_html__( 'هر سامانه پیامکی به‌صورت جداگانه بررسی می‌شود: مسیر ارسال (متن آزاد یا پترن)، شماره خط، آخرین خطای ثبت‌شده و دسترسی خروجی سرور.', 'tisa-otp' ) . '</p>';
+		echo '<p class="tisa-inline"><button type="button" class="button button-primary" data-tisa-doctor-refresh>' . esc_html__( 'بررسی سلامت', 'tisa-otp' ) . '</button>';
+		echo '<span class="tisa-note">' . esc_html__( 'هیچ پیامکی در این بخش ارسال نمی‌شود.', 'tisa-otp' ) . '</span></p>';
+		echo '<div class="tisa-doctor" data-tisa-doctor-report hidden></div>';
+		echo '<p class="tisa-result" data-tisa-doctor-result hidden></p>';
+		echo '</section>';
 	}
 
 	private function testSendCard(): void {

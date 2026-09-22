@@ -302,7 +302,8 @@ final class Plugin {
 				$c->make( Log\Logger::class ),
 				$c->make( Log\LogStore::class ),
 				$c->make( Import\Runner::class ),
-				$c->make( Gateway\Registry::class )
+				$c->make( Gateway\Registry::class ),
+				$c->make( Captcha\Manager::class )
 			);
 		} );
 

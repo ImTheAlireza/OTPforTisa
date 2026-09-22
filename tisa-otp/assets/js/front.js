@@ -101,115 +101,527 @@
 
 	/* ---------------------------------------------------------------- Captcha */
 
+	/*
+	 * Captcha loading is the part that breaks in the real world, so it is the
+	 * part written defensively here.
+	 *
+	 * What went wrong before:
+	 *   - the vendor script was assumed to be present the instant the form was
+	 *     mounted, so a slow or blocked bundle meant `render()` silently did
+	 *     nothing and the visitor stared at an empty space;
+	 *   - ARCaptcha was called through `arcaptcha.widget.*`, an object the
+	 *     library has never exposed, so the Iranian widget never rendered at all;
+	 *   - every failure resolved to an empty token, and the server answered
+	 *     "prove you are not a robot" while showing no robot test.
+	 *
+	 * Now: the script list is walked (mirrors included), the widget is rendered
+	 * after the library is really there, a failure is *visible* with a retry
+	 * button, and the last chance is a clear sentence instead of a dead end.
+	 */
+
+	var CAPTCHA_GLOBALS = {
+		recaptcha_v3: 'grecaptcha',
+		hcaptcha: 'hcaptcha',
+		arcaptcha: 'arcaptcha'
+	};
+
 	function Captcha(root, conf) {
 		this.conf = conf || {};
+		this.config = this.conf.config || {};
 		this.container = $(root, '[data-tisa-captcha]');
 		this.widgetId = null;
 		this.token = '';
+		this.pending = null;
+		this.unavailable = false;
+		this.solving = false;
+		this.onSolved = null;
 	}
 
+	/**
+	 * Adopt a fresher bundle from `/form-config` (new nonce, possibly new mirror
+	 * list) without losing the widget that is already on screen.
+	 */
+	Captcha.prototype.absorb = function (bundle) {
+		if (!bundle || !bundle.enabled) {
+			return;
+		}
+
+		var key;
+
+		for (key in bundle) {
+			if (Object.prototype.hasOwnProperty.call(bundle, key)) {
+				this.conf[key] = bundle[key];
+			}
+		}
+
+		this.config = this.conf.config || {};
+		this.pending = null;
+	};
+
 	Captcha.prototype.enabled = function () {
-		return !!(this.conf && this.conf.enabled && this.conf.config && this.conf.config.siteKey);
+		return !!(this.conf && this.conf.enabled && this.siteKey());
+	};
+
+	Captcha.prototype.siteKey = function () {
+		return String(this.config.siteKey || this.conf.siteKey || '');
+	};
+
+	Captcha.prototype.kind = function () {
+		return String(this.conf.kind || this.config.kind || 'widget');
 	};
 
 	Captcha.prototype.isScore = function () {
-		return this.enabled() && 'score' === this.conf.config.kind;
+		return this.enabled() && 'score' === this.kind();
 	};
 
-	Captcha.prototype.showWidget = function () {
-		if (!this.enabled() || this.isScore() || !this.container) {
+	Captcha.prototype.globalName = function () {
+		return CAPTCHA_GLOBALS[this.conf.provider] || '';
+	};
+
+	Captcha.prototype.library = function () {
+		var name = this.globalName();
+
+		return name ? window[name] || null : null;
+	};
+
+	/**
+	 * Walk every script URL until one defines the library.
+	 *
+	 * A bundle that loads but never defines the global (blocked by an extension,
+	 * a captive portal HTML page, a wrong mirror) is treated exactly like a
+	 * network failure: the next URL is tried.
+	 */
+	Captcha.prototype.load = function () {
+		var self = this;
+
+		if (this.pending) {
+			return this.pending;
+		}
+
+		if (!this.enabled()) {
+			return Promise.resolve(true);
+		}
+
+		var name = this.globalName();
+		var urls = (this.conf.scripts || []).slice();
+
+		if (!urls.length && this.conf.script) {
+			urls.push(this.conf.script);
+		}
+
+		if (!name || !urls.length) {
+			return Promise.resolve(!!this.library());
+		}
+
+		if (this.library()) {
+			this.pending = Promise.resolve(true);
+
+			return this.pending;
+		}
+
+		this.pending = new Promise(function (resolve) {
+			var index = 0;
+			var budget = parseInt(self.conf.loadTimeout || 8000, 10);
+
+			function waitForGlobal(deadline) {
+				if (window[name]) {
+					resolve(true);
+					return;
+				}
+
+				if (Date.now() > deadline) {
+					next();
+					return;
+				}
+
+				window.setTimeout(function () {
+					waitForGlobal(deadline);
+				}, 80);
+			}
+
+			function next() {
+				if (index >= urls.length) {
+					resolve(false);
+					return;
+				}
+
+				var url = urls[index++];
+				var script = document.createElement('script');
+				var settled = false;
+				var timer = window.setTimeout(function () {
+					settled = true;
+					cleanup();
+					next();
+				}, budget);
+
+				function cleanup() {
+					window.clearTimeout(timer);
+
+					if (script.parentNode) {
+						script.parentNode.removeChild(script);
+					}
+				}
+
+				script.async = true;
+				script.defer = true;
+				script.setAttribute('data-tisa-captcha-script', url);
+
+				script.onload = function () {
+					if (settled) {
+						return;
+					}
+
+					settled = true;
+					// Give the bundle a moment to define its global.
+					waitForGlobal(Date.now() + 2500);
+				};
+
+				script.onerror = function () {
+					if (settled) {
+						return;
+					}
+
+					settled = true;
+					cleanup();
+					next();
+				};
+
+				script.src = url;
+				document.head.appendChild(script);
+			}
+
+			next();
+		});
+
+		return this.pending;
+	};
+
+	/**
+	 * Make the challenge ready to answer: script loaded, widget rendered.
+	 */
+	Captcha.prototype.prepare = function () {
+		var self = this;
+
+		if (!this.enabled()) {
+			return Promise.resolve(true);
+		}
+
+		return this.load().then(function (ok) {
+			if (!ok || !self.library()) {
+				self.markUnavailable();
+				return false;
+			}
+
+			if (!self.isScore() && !self.isInvisible()) {
+				self.render();
+			}
+
+			return true;
+		});
+	};
+
+	Captcha.prototype.isInvisible = function () {
+		return 'invisible' === this.config.size || 'invisible' === this.conf.size;
+	};
+
+	/**
+	 * Render the widget once, into the container the templates print.
+	 */
+	Captcha.prototype.render = function () {
+		var self = this;
+		var siteKey = this.siteKey();
+		var lib = this.library();
+
+		if (null !== this.widgetId || !this.container || !lib || !lib.render) {
 			return;
+		}
+
+		this.show();
+
+		var onToken = function (value) {
+			self.token = value || self.token;
+
+			if (self.onSolved) {
+				var callback = self.onSolved;
+				self.onSolved = null;
+				callback();
+			}
+		};
+
+		var params = { sitekey: siteKey, site_key: siteKey, callback: onToken };
+
+		if ('hcaptcha' === this.conf.provider) {
+			params = {
+				sitekey: siteKey,
+				callback: onToken,
+				'expired-callback': function () {
+					self.token = '';
+				},
+				'error-callback': function () {
+					self.markUnavailable();
+				}
+			};
+
+			if (this.config.lang) {
+				params.hl = String(this.config.lang).replace('_', '-').split('-')[0];
+			}
+		} else if ('arcaptcha' === this.conf.provider) {
+			params = {
+				site_key: siteKey,
+				lang: this.config.lang || 'fa',
+				dir: this.config.dir || 'rtl',
+				theme: this.config.theme || 'light',
+				callback: onToken,
+				'error-callback': function () {
+					self.token = '';
+				},
+				'expired-callback': function () {
+					self.token = '';
+				}
+			};
+		}
+
+		try {
+			this.widgetId = lib.render(this.container, params);
+		} catch (error) {
+			this.widgetId = null;
+			this.token = '';
+		}
+	};
+
+	Captcha.prototype.show = function () {
+		if (!this.container) {
+			return;
+		}
+
+		// A previous failure left an error block behind; clear it.
+		if (this.container.querySelector('.tisa-captcha__error')) {
+			this.container.textContent = '';
 		}
 
 		this.container.hidden = false;
-		this.render();
 	};
 
-	Captcha.prototype.render = function () {
+	/**
+	 * The script could not be loaded. Say so, and offer the way out.
+	 */
+	Captcha.prototype.markUnavailable = function () {
 		var self = this;
-		var siteKey = this.conf.config.siteKey;
 
-		if (this.widgetId || !this.container) {
+		this.unavailable = true;
+
+		if (!this.container) {
 			return;
 		}
 
-		var onToken = function (value) {
-			self.token = value || '';
-		};
+		this.show();
+		this.container.textContent = '';
+
+		var box = document.createElement('div');
+		box.className = 'tisa-captcha__error';
+		box.setAttribute('role', 'alert');
+
+		var message = document.createElement('p');
+		message.className = 'tisa-captcha__error-text';
+		message.textContent = i18n.captchaLoad || 'تأیید امنیتی بارگذاری نشد.';
+
+		var retry = document.createElement('button');
+		retry.type = 'button';
+		retry.className = 'tisa-link';
+		retry.setAttribute('data-tisa-captcha-retry', '1');
+		retry.textContent = i18n.captchaRetry || 'تلاش دوباره';
+
+		retry.addEventListener('click', function () {
+			self.retryNow();
+		});
+
+		box.appendChild(message);
+		box.appendChild(retry);
+
+		if (this.conf.failOpen && this.conf.siteKey) {
+			var hint = document.createElement('p');
+			hint.className = 'tisa-captcha__error-hint';
+			hint.textContent = i18n.captchaContinue || 'می‌توانید بدون تأیید امنیتی ادامه دهید.';
+			box.appendChild(hint);
+		}
+
+		this.container.appendChild(box);
+		this.emitRetry();
+	};
+
+	Captcha.prototype.emitRetry = function () {
+		// Nothing to announce: the error block is already in a live region.
+	};
+
+	Captcha.prototype.retryNow = function () {
+		this.unavailable = false;
+		this.pending = null;
+		this.widgetId = null;
+		this.token = '';
+
+		if (this.container) {
+			this.container.textContent = '';
+		}
+
+		var self = this;
+
+		this.prepare().then(function (ok) {
+			if (!ok) {
+				return;
+			}
+
+			if (self.onSolved) {
+				var callback = self.onSolved;
+				self.onSolved = null;
+				callback();
+			}
+		});
+	};
+
+	/**
+	 * The token for this request. Never resolves to "nothing" silently when the
+	 * server is going to require a challenge: either we have a token, or the
+	 * caller is told exactly why we do not.
+	 */
+	Captcha.prototype.value = function () {
+		var self = this;
+
+		if (!this.enabled()) {
+			return Promise.resolve('');
+		}
+
+		if (this.unavailable) {
+			return this.conf.failOpen ? Promise.resolve('') : Promise.reject(this.error());
+		}
+
+		return this.prepare().then(function (ok) {
+			if (!ok) {
+				if (self.conf.failOpen) {
+					return '';
+				}
+
+				throw self.error();
+			}
+
+			if (self.isScore()) {
+				return self.executeScore();
+			}
+
+			return self.widgetToken();
+		});
+	};
+
+	Captcha.prototype.error = function () {
+		return httpError('captcha_unavailable', i18n.captchaLoad || 'تأیید امنیتی بارگذاری نشد.');
+	};
+
+	/**
+	 * Score based challenges mint a fresh token per request — they are single
+	 * use and expire in about two minutes, so caching one is a bug.
+	 */
+	Captcha.prototype.executeScore = function () {
+		var self = this;
+		var lib = this.library();
+
+		if (!lib || !lib.execute) {
+			return this.conf.failOpen ? '' : Promise.reject(this.error());
+		}
+
+		return new Promise(function (resolve) {
+			var call = function () {
+				var outcome;
+
+				try {
+					outcome = lib.execute(self.siteKey(), { action: self.config.action || 'tisa_otp_send' });
+				} catch (error) {
+					resolve('');
+					return;
+				}
+
+				if (outcome && 'function' === typeof outcome.then) {
+					outcome.then(function (token) {
+						resolve(token || '');
+					}).catch(function () {
+						resolve('');
+					});
+
+					return;
+				}
+
+				resolve(typeof outcome === 'string' ? outcome : '');
+			};
+
+			if ('function' === typeof lib.ready) {
+				lib.ready(call);
+				return;
+			}
+
+			call();
+		});
+	};
+
+	/**
+	 * Checkbox challenges answer through a getter, and the token is consumed by
+	 * the verification, so it is reset afterwards.
+	 */
+	Captcha.prototype.widgetToken = function () {
+		var value = '';
 
 		try {
-			if ('hcaptcha' === this.conf.provider && window.hcaptcha) {
-				this.widgetId = window.hcaptcha.render(this.container, {
-					sitekey: siteKey,
-					callback: onToken,
-					'expired-callback': function () {
-						self.token = '';
-					}
-				});
-			} else if (window.arcaptcha && window.arcaptcha.widget) {
-				this.widgetId = window.arcaptcha.widget.render(this.container, {
-					site_key: siteKey,
-					theme: 'light',
-					dir: 'rtl',
-					language: 'fa',
-					on_success_callback: onToken,
-					on_failure_callback: function () {
-						self.token = '';
-					}
-				});
-			} else if (window.grecaptcha && 'invisible' !== this.conf.provider) {
-				this.widgetId = window.grecaptcha.render(this.container, {
-					sitekey: siteKey,
-					callback: onToken
-				});
+			if ('hcaptcha' === this.conf.provider && window.hcaptcha && null !== this.widgetId) {
+				value = window.hcaptcha.getResponse(this.widgetId) || '';
+			} else if ('arcaptcha' === this.conf.provider && window.arcaptcha) {
+				value = (window.arcaptcha.getArcToken && null !== this.widgetId)
+					? window.arcaptcha.getArcToken(this.widgetId) || ''
+					: (this.token || '');
+			} else if (window.grecaptcha && null !== this.widgetId) {
+				value = window.grecaptcha.getResponse(this.widgetId) || '';
+			}
+		} catch (error) {
+			value = this.token || '';
+		}
+
+		if (!value && !this.token) {
+			this.solving = true;
+		}
+
+		this.token = value || this.token;
+
+		return Promise.resolve(this.token);
+	};
+
+	/**
+	 * Forget the solved state so the next attempt asks again. Call it right after
+	 * a request that carried a token.
+	 */
+	Captcha.prototype.consume = function () {
+		var widget = this.widgetId;
+
+		this.token = '';
+		this.solving = false;
+
+		if (null === widget) {
+			return;
+		}
+
+		try {
+			if ('hcaptcha' === this.conf.provider && window.hcaptcha && window.hcaptcha.reset) {
+				window.hcaptcha.reset(widget);
+			} else if ('arcaptcha' === this.conf.provider && window.arcaptcha && window.arcaptcha.reset) {
+				window.arcaptcha.reset(widget);
+			} else if (window.grecaptcha && window.grecaptcha.reset && !this.isScore()) {
+				window.grecaptcha.reset(widget);
 			}
 		} catch (error) {
 			this.widgetId = null;
 		}
 	};
 
-	Captcha.prototype.value = function () {
-		if (!this.enabled()) {
-			return Promise.resolve('');
-		}
-
-		if (this.isScore()) {
-			return new Promise(function (resolve) {
-				if (!window.grecaptcha || !window.grecaptcha.execute) {
-					resolve('');
-					return;
-				}
-
-				window.grecaptcha.ready(function () {
-					window.grecaptcha
-						.execute(cfg.captcha.config.siteKey, { action: cfg.captcha.config.action || 'tisa_otp_send' })
-						.then(function (token) {
-							resolve(token || '');
-						})
-						.catch(function () {
-							resolve('');
-						});
-				});
-			});
-		}
-
-		if (window.hcaptcha && this.widgetId !== null) {
-			try {
-				this.token = window.hcaptcha.getResponse(this.widgetId) || this.token;
-			} catch (error) {
-				this.token = this.token || '';
-			}
-		}
-
-		if (window.arcaptcha && window.arcaptcha.widget && window.arcaptcha.widget.getToken) {
-			try {
-				this.token = window.arcaptcha.widget.getToken() || this.token;
-			} catch (error) {
-				this.token = this.token || '';
-			}
-		}
-
-		return Promise.resolve(this.token || '');
+	/**
+	 * Is a challenge on screen that still needs an answer?
+	 */
+	Captcha.prototype.waiting = function () {
+		return this.enabled() && !this.isScore() && '' === this.token;
 	};
 
 	/* ------------------------------------------------------------------- Form */
@@ -226,6 +638,8 @@
 
 		this.configUrl = attr(root, 'config-url') || cfg.configUrl || '';
 		this.cacheMode = attr(root, 'cache-mode') || cfg.cacheMode || 'inline';
+		// Signed timestamp token; refreshed from /form-config, never cached.
+		this.formToken = attr(root, 'form-token') || cfg.formToken || '';
 		this.timeoutMs = parseInt(cfg.timeoutMs || 15000, 10);
 		this.autoVerify = flag(cfg.autoVerify, true);
 		this.webOtp = flag(cfg.webOtp, false);
@@ -258,6 +672,10 @@
 		this.resendBtn = $(root, '[data-tisa-action="resend"]');
 		this.resendLabel = $(root, '[data-tisa-resend-label]');
 		this.resendLive = $(root, '[data-tisa-resend-live]');
+		this.pasteBtn = $(root, '[data-tisa-paste]');
+		this.phoneChip = $(root, '[data-tisa-phone-chip]');
+		this.phoneChipValue = $(root, '[data-tisa-phone-chip-value]');
+		this.statusTitle = $(root, '[data-tisa-status-title]');
 		this.honeypot = $(root, '.tisa-otp__honeypot');
 		this.timestamp = $(root, '.tisa-otp__rendered');
 
@@ -285,12 +703,14 @@
 		}
 
 		if ('always' === (cfg.captcha || {}).trigger) {
-			this.captcha.showWidget();
+			this.captcha.prepare();
 		}
 	}
 
 	Form.prototype.bind = function () {
 		var self = this;
+
+		this.bindPaste();
 
 		$$(this.root, '[data-tisa-action]').forEach(function (button) {
 			button.addEventListener('click', function (event) {
@@ -461,6 +881,49 @@
 		}
 	};
 
+	/**
+	 * "Paste the code" — the poor cousin of WebOTP, and the only help available
+	 * when the message arrives in another app on iOS or in a desktop browser.
+	 */
+	Form.prototype.bindPaste = function () {
+		var self = this;
+
+		if (!this.pasteBtn) {
+			return;
+		}
+
+		this.pasteBtn.addEventListener('click', function () {
+			self.pasteCode();
+		});
+	};
+
+	Form.prototype.pasteCode = function () {
+		var self = this;
+
+		if (!window.navigator || !navigator.clipboard || !navigator.clipboard.readText) {
+			this.say(i18n.pasteManual || '', 'info');
+			this.focusCode();
+			return;
+		}
+
+		navigator.clipboard.readText().then(function (value) {
+			var digits = digitsOnly(value).slice(0, self.codeLength);
+
+			if (digits.length < self.codeLength) {
+				self.say(i18n.pasteEmpty || '', 'info');
+				self.focusCode();
+				return;
+			}
+
+			self.fillCode(digits);
+			self.say(i18n.pasteDone || '', 'success');
+			self.maybeAutoVerify();
+		}).catch(function () {
+			self.say(i18n.pasteManual || '', 'info');
+			self.focusCode();
+		});
+	};
+
 	Form.prototype.basePayload = function (route) {
 		return {
 			phone: this.phoneInput ? this.phoneInput.value.trim() : this.phone,
@@ -468,11 +931,12 @@
 			redirect: this.redirect,
 			tisa_hp: this.honeypot ? this.honeypot.value : '',
 			tisa_ts: this.timestamp ? this.timestamp.value : String(Math.floor(Date.now() / 1000)),
+			tisa_ft: this.formToken || '',
 			route: route
 		};
 	};
 
-	Form.prototype.request = function (route, payload) {
+	Form.prototype.request = function (route, payload, retried) {
 		var self = this;
 		var body = payload || {};
 
@@ -489,17 +953,59 @@
 
 			return self.send(route, body);
 		}).then(function (result) {
-			// A cached page ships somebody else's nonce: refresh and retry once.
-			if (self.isStaleNonce(result)) {
-				return self.refreshNonce().then(function () {
-					return self.send(route, body);
-				}).then(function (retry) {
-					return self.unwrap(retry);
+			/*
+			 * Two things a visitor can hit through no fault of their own:
+			 *  - a cached page shipped somebody else's nonce;
+			 *  - a cached page (or a slow human) carried a form token the guard
+			 *    considered stale, or a captcha the browser could not load.
+			 * Both are answered by pulling a fresh configuration and sending once
+			 * more. One retry, never a loop.
+			 */
+			if (self.isStaleNonce(result) || self.isRecoverable(result)) {
+				if (retried) {
+					return self.unwrap(result);
+				}
+
+				return self.refreshConfig().then(function () {
+					/*
+					 * The payload was assembled before the refresh, so the fields that
+					 * came from the cached page are still in it. Swap them for the
+					 * fresh ones, otherwise the retry repeats the same rejection.
+					 */
+					body.tisa_ft = self.formToken || '';
+
+					if (self.timestamp) {
+						body.tisa_ts = self.timestamp.value;
+					}
+
+					// A consumed token is worthless — let the captcha mint a new one.
+					delete body.captcha_token;
+
+					return self.request(route, payload, true);
 				});
 			}
 
+			self.captcha.consume();
+
 			return self.unwrap(result);
 		});
+	};
+
+	/**
+	 * Server said "your form token is stale" or "I cannot see a captcha token".
+	 */
+	Form.prototype.isRecoverable = function (result) {
+		var json = result ? result.json : null;
+
+		if (!json || json.success !== false || !json.data) {
+			return false;
+		}
+
+		if (json.data.recoverable) {
+			return true;
+		}
+
+		return 'captcha_missing' === json.code && this.captcha.unavailable;
 	};
 
 	/**
@@ -584,6 +1090,10 @@
 	 * rejection — keeps the form working behind any cache or CDN.
 	 */
 	Form.prototype.refreshNonce = function () {
+		return this.refreshConfig();
+	};
+
+	Form.prototype.refreshConfig = function () {
 		var self = this;
 
 		if (!this.configUrl || !window.fetch) {
@@ -610,6 +1120,18 @@
 
 			if (data && data.restUrl) {
 				self.endpoint = data.restUrl;
+			}
+
+			if (data && data.formToken) {
+				self.formToken = data.formToken;
+			}
+
+			if (data && data.renderedAt && self.timestamp) {
+				self.timestamp.value = String(data.renderedAt);
+			}
+
+			if (data && data.captcha) {
+				self.captcha.absorb(data.captcha);
 			}
 
 			self.nonceRequest = null;
@@ -745,6 +1267,14 @@
 			this.masked.textContent = data.masked;
 		}
 
+		if (data.masked && this.phoneChip) {
+			if (this.phoneChipValue) {
+				this.phoneChipValue.textContent = data.masked;
+			}
+
+			this.phoneChip.hidden = false;
+		}
+
 		if (data.draft_token) {
 			this.draftToken = data.draft_token;
 		}
@@ -813,12 +1343,36 @@
 	Form.prototype.fail = function (error) {
 		var payload = error && error.data ? error.data : {};
 		var code = error ? error.code : '';
+		var message = (error && error.message) || i18n.network || 'Error';
 
-		this.say((error && error.message) || i18n.network || 'Error', 'error', this.actionsFor(code, payload));
+		// The server wanted a challenge the browser could never display: say that,
+		// instead of asking the visitor to solve something that is not on screen.
+		if ('captcha_missing' === code && this.captcha.unavailable) {
+			message = i18n.captchaBlocked || message;
+		}
+
+		this.say(message, 'error', this.actionsFor(code, payload));
 		this.emit('error', { code: code, data: payload });
 
 		if (payload.captcha_required) {
-			this.captcha.showWidget();
+			var self = this;
+
+			if (payload.captcha_reset) {
+				this.captcha.consume();
+			}
+
+			/*
+			 * Finish what the visitor started as soon as the challenge is answered.
+			 * Pressing "send" twice because a checkbox appeared is the sort of
+			 * detail that decides whether a login form feels broken.
+			 */
+			this.captcha.onSolved = function () {
+				if (!self.busy) {
+					self.act(self.lastAction || 'start');
+				}
+			};
+
+			this.captcha.prepare();
 		}
 
 		if (payload.retry_after) {
@@ -1486,9 +2040,19 @@
 		}
 
 		var isError = 'error' === type;
+		var titles = {
+			error: i18n.problemTitle || '',
+			success: i18n.doneTitle || '',
+			info: i18n.noteTitle || ''
+		};
 
 		this.statusBox.hidden = false;
 		this.statusBox.className = 'tisa-otp__status is-' + (type || 'info');
+
+		if (this.statusTitle) {
+			this.statusTitle.textContent = titles[type] || '';
+			this.statusTitle.hidden = !titles[type];
+		}
 
 		// Older markup (and themes overriding the template) has no inner nodes.
 		if (this.statusText) {
@@ -1583,6 +2147,11 @@
 	Form.prototype.clearStatus = function () {
 		if (this.statusBox) {
 			this.statusBox.hidden = true;
+
+			if (this.statusTitle) {
+				this.statusTitle.textContent = '';
+				this.statusTitle.hidden = true;
+			}
 
 			if (this.statusText) {
 				this.statusText.textContent = '';
