@@ -284,4 +284,59 @@ foreach ( $wiring as $call ) {
 	tisa_same( $call['class'] . ' is wired in order', array(), $mismatch );
 }
 
+tisa_start( 'the exact failure of 1.3.2 is reproduced here, and it is caught' );
+
+/*
+ * On 2026-09-22 the container handed AdminController nine arguments while the
+ * constructor wanted ten. This builds the same nine — real objects of the
+ * declared types, made without running their constructors — and then does with
+ * the throw what Plugin::start() does with it: hands it to the guard.
+ */
+$nine = array(
+	TisaOtp\Config\Settings::class,
+	TisaOtp\Channel\Dispatcher::class,
+	TisaOtp\Otp\OtpService::class,
+	TisaOtp\Throttle\Throttle::class,
+	TisaOtp\Log\Logger::class,
+	TisaOtp\Log\LogStore::class,
+	TisaOtp\Import\Runner::class,
+	TisaOtp\Gateway\Registry::class,
+	TisaOtp\Captcha\Manager::class,
+);
+
+$objects = array();
+
+foreach ( $nine as $type ) {
+	$objects[] = ( new ReflectionClass( $type ) )->newInstanceWithoutConstructor();
+}
+
+$caught = null;
+
+try {
+	$constructor = ( new ReflectionClass( TisaOtp\Http\AdminController::class ) )->getConstructor();
+	( new ReflectionClass( TisaOtp\Http\AdminController::class ) )->newInstanceArgs( $objects );
+	unset( $constructor );
+} catch ( \Throwable $error ) {
+	$caught = $error;
+}
+
+tisa_check( 'nine arguments where ten are required throws', $caught instanceof ArgumentCountError );
+tisa_check( 'and the message is the one the site showed', null !== $caught && false !== strpos( $caught->getMessage(), 'Too few arguments' ) );
+
+if ( null !== $caught ) {
+	TisaOtp\Install\Guard::record( TisaOtp\Http\AdminController::class, $caught );
+}
+
+tisa_check( 'the guard takes it instead of the site dying', TisaOtp\Install\Guard::failed( TisaOtp\Http\AdminController::class ) );
+
+$notice = new ReflectionMethod( TisaOtp\Install\Guard::class, 'printFailures' );
+$notice->setAccessible( true );
+
+ob_start();
+$notice->invoke( new TisaOtp\Install\Guard() );
+$markup = (string) ob_get_clean();
+
+tisa_check( 'and the administrator sees which service did not start', false !== strpos( $markup, 'AdminController' ) );
+tisa_check( 'with the way out of it', false !== strpos( $markup, 'جایگزینی با نسخهٔ بارگذاری‌شده' ) );
+
 tisa_finish();
