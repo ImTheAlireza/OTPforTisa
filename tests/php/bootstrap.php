@@ -114,6 +114,31 @@ function wp_salt( $scheme = 'auth' ): string {
 	return hash( 'sha256', 'tisa-otp-test-' . $scheme );
 }
 
+/**
+ * Persian-friendly stand-in; only the shape of the return value matters here.
+ *
+ * @param int      $from
+ * @param int|null $to
+ * @return string
+ */
+function human_time_diff( $from, $to = null ) {
+	$diff = abs( ( null === $to ? time() : (int) $to ) - (int) $from );
+
+	if ( $diff < 60 ) {
+		return $diff . ' ثانیه';
+	}
+
+	if ( $diff < 3600 ) {
+		return floor( $diff / 60 ) . ' دقیقه';
+	}
+
+	if ( $diff < 86400 ) {
+		return floor( $diff / 3600 ) . ' ساعت';
+	}
+
+	return floor( $diff / 86400 ) . ' روز';
+}
+
 function wp_date( $format, $timestamp = null ) {
 	return gmdate( $format, null === $timestamp ? time() : (int) $timestamp );
 }

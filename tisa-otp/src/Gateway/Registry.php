@@ -159,6 +159,8 @@ final class Registry {
 				'notes'    => $plan['notes'],
 				'health'   => $health->get( $id ),
 				'health_text' => $health->describe( $id ),
+				'resting'  => $health->resting( $id ),
+				'blocked_until' => $health->blockedUntil( $id ),
 			);
 		}
 

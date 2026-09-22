@@ -23,6 +23,7 @@ jobs:
         run: |
           php tests/php/blocklist-test.php
           php tests/php/emergency-test.php
+          php tests/php/breaker-test.php
       - name: Lint every PHP file
         run: |
           php -v

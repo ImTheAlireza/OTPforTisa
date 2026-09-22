@@ -10,6 +10,7 @@ namespace TisaOtp\Http;
 use TisaOtp\Captcha\Manager as CaptchaManager;
 use TisaOtp\Channel\Dispatcher;
 use TisaOtp\Config\Settings;
+use TisaOtp\Gateway\Health;
 use TisaOtp\Gateway\Registry;
 use TisaOtp\Import\Runner;
 use TisaOtp\Log\Logger;
@@ -282,12 +283,17 @@ final class AdminController {
 		$cleared = $this->throttle->resetAll();
 		$codes   = $this->otp->purge();
 
+		// A gateway the administrator has just fixed should not have to wait out
+		// its rest window before the next test proves it works.
+		$health = new Health();
+		$health->forget();
+
 		$this->logger->notice( 'admin.throttle_reset', array( 'user_id' => $request->userId(), 'codes_purged' => $codes ) );
 
 		return array(
 			'cleared' => $cleared,
 			'codes'   => $codes,
-			'message' => __( 'شمارنده‌ها و کدهای منقضی پاک شدند.', 'tisa-otp' ),
+			'message' => __( 'شمارنده‌ها، کدهای منقضی و سابقهٔ سلامت سامانه‌ها پاک شدند.', 'tisa-otp' ),
 		);
 	}
 

@@ -63,7 +63,7 @@ final class FailoverChain {
 	}
 
 	public function deliver( DeliveryRequest $request ): GatewayResult {
-		$order   = $this->registry->deliveryOrder();
+		$order   = $this->choose( $this->registry->deliveryOrder() );
 		$attempt = 0;
 		$last    = GatewayResult::failed( 'none', 'no_gateway', __( 'هیچ سامانه پیامکی پیکربندی نشده است.', 'tisa-otp' ) );
 
@@ -120,6 +120,57 @@ final class FailoverChain {
 		}
 
 		return $last;
+	}
+
+	/**
+	 * Keep the gateways that are not resting, and log the ones that were held
+	 * back. The order of the rest is untouched, because it is the admin's.
+	 *
+	 * @param string[] $order Configured order.
+	 * @return string[]
+	 */
+	private function choose( array $order ): array {
+		$blocked = array();
+
+		foreach ( $order as $id ) {
+			$blocked[ (string) $id ] = $this->health->resting( (string) $id );
+		}
+
+		$usable = self::usable( $order, $blocked );
+
+		if ( count( $usable ) !== count( $order ) ) {
+			$this->logger->notice(
+				'gateway.breaker_skipped',
+				array(
+					'skipped' => array_values( array_diff( array_map( 'strval', $order ), $usable ) ),
+					'trying'  => $usable,
+				)
+			);
+		}
+
+		return $usable;
+	}
+
+	/**
+	 * A breaker must never be the reason nobody can log in: when every gateway
+	 * is resting, the chain runs in full — which is also the half-open probe.
+	 *
+	 * Pure function, so the rule is testable without WordPress or a network.
+	 *
+	 * @param string[]            $order   Configured order.
+	 * @param array<string,bool>  $blocked Gateway => resting.
+	 * @return string[]
+	 */
+	public static function usable( array $order, array $blocked ): array {
+		$usable = array();
+
+		foreach ( $order as $id ) {
+			if ( empty( $blocked[ (string) $id ] ) ) {
+				$usable[] = (string) $id;
+			}
+		}
+
+		return array() === $usable ? array_values( array_map( 'strval', $order ) ) : $usable;
 	}
 
 	/**

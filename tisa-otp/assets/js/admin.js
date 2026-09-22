@@ -339,11 +339,12 @@
 					(gateway.label || id) + (gateway.active ? ' • سامانه اصلی' : (gateway.backup ? ' • پشتیبان' : '')),
 					[].concat(
 							summaryLine(plan, healthy),
+						gateway.resting ? [restingLine(gateway.blocked_until)] : [],
 						(gateway.issues || []).concat(plan.issues || []),
 						(gateway.notes || []).concat(plan.notes || []),
 						[gateway.health_text || '']
 					),
-					healthy && (gateway.issues || []).length === 0 && (plan.issues || []).length === 0
+					healthy && !gateway.resting && (gateway.issues || []).length === 0 && (plan.issues || []).length === 0
 				);
 
 				if (plan.endpoint) {
@@ -360,6 +361,17 @@
 					!!data.channels.email.available
 				));
 			}
+		}
+
+		/**
+		 * A gateway that failed three times in a row is skipped for a while, so the
+		 * screen has to say that — otherwise "why is the backup sending?" becomes
+		 * the next support question.
+		 */
+		function restingLine(until) {
+			var left = Math.max(0, Math.ceil((until - Math.floor(Date.now() / 1000)) / 60));
+
+			return 'موقتاً کنار گذاشته شده است؛ ' + left + ' دقیقه دیگر دوباره امتحان می‌شود.';
 		}
 
 		function summaryLine(plan, healthy) {
