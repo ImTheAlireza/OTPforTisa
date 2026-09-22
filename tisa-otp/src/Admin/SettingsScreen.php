@@ -44,13 +44,17 @@ final class SettingsScreen {
 	/** @var LogStore */
 	private $logs;
 
-	public function __construct( Settings $settings, Controls $controls, Registry $gateways, FieldSchema $schema, Manager $captcha, LogStore $logs ) {
+	/** @var ReportScreen */
+	private $reports;
+
+	public function __construct( Settings $settings, Controls $controls, Registry $gateways, FieldSchema $schema, Manager $captcha, LogStore $logs, ReportScreen $reports ) {
 		$this->settings = $settings;
 		$this->controls = $controls;
 		$this->gateways = $gateways;
 		$this->schema   = $schema;
 		$this->captcha  = $captcha;
 		$this->logs     = $logs;
+		$this->reports  = $reports;
 	}
 
 	/**
@@ -75,10 +79,27 @@ final class SettingsScreen {
 
 		ScreenNav::render( Menu::ROOT );
 
-		$this->overview();
+		if ( 'reports' !== $tab ) {
+			$this->overview();
+		}
 
 		echo '<div class="tisa-layout">';
 		$this->tabs( $tab );
+
+		/*
+		 * The reports tab is a report, not a form: there is nothing to save, so it
+		 * skips the form and its submit button and draws the same body the reports
+		 * screen draws.
+		 */
+		if ( 'reports' === $tab ) {
+			echo '<div class="tisa-tabbody">';
+			$this->reports->body( $this->reports->range() );
+			echo '</div>';
+
+			echo '</div></div>';
+
+			return;
+		}
 
 		echo '<div class="tisa-panel">';
 		echo '<form method="post" action="' . esc_url( admin_url( 'options.php' ) ) . '" class="tisa-form">';
@@ -108,11 +129,21 @@ final class SettingsScreen {
 		echo '</div></div>';
 	}
 
+	/**
+	 * Address of one settings tab.
+	 *
+	 * Everything that points at a tab builds its URL here, so a link written in
+	 * one section cannot disagree with the tab row above it.
+	 */
+	public static function tabUrl( string $tab ): string {
+		return admin_url( 'admin.php?page=' . Menu::ROOT . '&tab=' . $tab );
+	}
+
 	private function tabs( string $current ): void {
 		echo '<nav class="tisa-tabs" aria-label="' . esc_attr__( 'بخش‌های تنظیمات', 'tisa-otp' ) . '"><ul>';
 
 		foreach ( $this->tabLabels() as $id => $label ) {
-			$url = admin_url( 'admin.php?page=tisa-otp&tab=' . $id );
+			$url = self::tabUrl( $id );
 
 			printf(
 				'<li><a href="%1$s" class="tisa-tab%2$s">%3$s</a></li>',
@@ -141,6 +172,7 @@ final class SettingsScreen {
 			'design'       => __( 'ظاهر فرم', 'tisa-otp' ),
 			'store'        => __( 'فروشگاه', 'tisa-otp' ),
 			'data'         => __( 'داده و رویدادها', 'tisa-otp' ),
+			'reports'      => __( 'گزارش‌ها و آمار', 'tisa-otp' ),
 		);
 	}
 
@@ -169,12 +201,77 @@ final class SettingsScreen {
 			case 'data':
 				$this->dataSection();
 				break;
+			case 'reports':
+				// Drawn by the reports screen itself; see render().
+				break;
 			case 'general':
 			default:
 				$this->generalSection();
 		}
 
 		echo '</div>';
+	}
+
+	/**
+	 * The card that answers "did my update actually land?".
+	 *
+	 * An administrator who re-uploads a package and sees the same screen cannot
+	 * tell whether the files changed. This card names the running version and
+	 * what it added, so its presence — and the number in it — is the answer.
+	 * It is rewritten on every release and lives on the first tab, which is the
+	 * one the settings screen opens on.
+	 */
+	private function whatsNew(): void {
+		$this->card(
+			sprintf( /* translators: %s: plugin version */ __( 'تازه در نسخهٔ %s', 'tisa-otp' ), TISA_OTP_VERSION ),
+			function () {
+				echo '<ul class="tisa-bullets">';
+				echo '<li>' . esc_html__( '«گزارش‌ها و آمار» به بخش‌های همین پنل اضافه شد: درخواست‌ها، موفق‌ها، ناموفق‌ها و دلیل شکست.', 'tisa-otp' ) . '</li>';
+				echo '<li>' . esc_html__( 'هر بخش یک کارت «آزمایش این بخش» دارد و نتیجه در یک پنجرهٔ مودال باز می‌شود؛ صفحه عوض نمی‌شود و آدرسی عوض نمی‌شود.', 'tisa-otp' ) . '</li>';
+				echo '<li>' . esc_html__( 'آزمایش نمایش کپچا در مرورگر خودتان، و ارسال پیامک آزمایشی با مسیر تلاش هر سامانه — از همان پنجره.', 'tisa-otp' ) . '</li>';
+				echo '</ul>';
+
+				echo '<p class="tisa-inline"><a class="button" href="' . esc_url( self::tabUrl( 'reports' ) ) . '">' . esc_html__( 'دیدن گزارش‌ها و آمار', 'tisa-otp' ) . '</a></p>';
+
+				echo '<p class="tisa-note">' . esc_html__( 'شمارهٔ نسخه در سرتیتر همین صفحه، همان نسخه‌ای است که روی سایت نصب است؛ اگر عدد دیگری انتظار دارید، فایل‌های افزونه به‌روز نشده‌اند.', 'tisa-otp' ) . '</p>';
+			}
+		);
+	}
+
+	/**
+	 * The "test this section" card.
+	 *
+	 * Every tab can prove itself without leaving it: the button opens a modal
+	 * that is filled from `/admin/check`. Nothing here needs a second screen, a
+	 * second URL or a save button.
+	 *
+	 * @param string        $kind   Which self-test to run.
+	 * @param string        $button Button label.
+	 * @param string        $intro  One line about what the test actually does.
+	 * @param callable|null $extra  Extra controls, such as the real send button.
+	 * @param string        $attrs  Extra attributes for the button.
+	 */
+	private function testCard( string $kind, string $button, string $intro, ?callable $extra = null, string $attrs = '' ): void {
+		$this->card(
+			__( 'آزمایش این بخش', 'tisa-otp' ),
+			function () use ( $kind, $button, $extra, $attrs ) {
+				echo '<p class="tisa-inline">';
+
+				printf(
+					'<button type="button" class="button" data-tisa-check="%1$s"%2$s>%3$s</button>',
+					esc_attr( $kind ),
+					$attrs, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static markup written in this file.
+					esc_html( $button )
+				);
+
+				if ( null !== $extra ) {
+					$extra();
+				}
+
+				echo '</p>';
+			},
+			$intro
+		);
 	}
 
 	private function card( string $title, callable $body, string $intro = '' ): void {
@@ -191,6 +288,8 @@ final class SettingsScreen {
 
 	private function generalSection(): void {
 		$c = $this->controls;
+
+		$this->whatsNew();
 
 		$this->card(
 			__( 'رفتار ورود', 'tisa-otp' ),
@@ -248,6 +347,12 @@ final class SettingsScreen {
 					$c->text( 'register_redirect', '', 'url' );
 				} );
 			}
+		);
+
+		$this->testCard(
+			'general',
+			__( 'آزمایش تنظیمات عمومی', 'tisa-otp' ),
+			__( 'نسخهٔ PHP و وردپرس، جدول‌های افزونه، زمان‌بند پاک‌سازی و وضعیت خود افزونه یک‌جا بررسی می‌شوند.', 'tisa-otp' )
 		);
 	}
 
@@ -359,6 +464,12 @@ final class SettingsScreen {
 				}, __( 'خالی بگذارید تا از آدرس پیش‌فرض وردپرس استفاده شود.', 'tisa-otp' ) );
 			}
 		);
+
+		$this->testCard(
+			'code',
+			__( 'آزمایش ساخت کد', 'tisa-otp' ),
+			__( 'یک کد واقعی با تنظیمات همین صفحه ساخته، ذخیره و باطل می‌شود؛ هیچ پیامکی ارسال نمی‌شود.', 'tisa-otp' )
+		);
 	}
 
 	private function gatewaySection(): void {
@@ -425,6 +536,19 @@ final class SettingsScreen {
 
 		$this->controls->description(
 			__( 'می‌توانید اعتبارنامه‌ها را به‌جای دیتابیس در wp-config.php هم تعریف کنید؛ مثلاً <code>TISA_OTP_SMSIR_API_KEY</code>.', 'tisa-otp' )
+		);
+
+		$this->testCard(
+			'gateways',
+			__( 'آزمایش سامانه‌های پیامکی', 'tisa-otp' ),
+			__( 'هر سامانه می‌گوید آماده است یا چه چیزی کم دارد، و ترتیب تلاش هنگام ارسال واقعی چه می‌شود.', 'tisa-otp' ),
+			function () {
+				printf(
+					'<button type="button" class="button button-primary" data-tisa-sms-test>%s</button>',
+					esc_html__( 'ارسال پیامک آزمایشی', 'tisa-otp' )
+				);
+			},
+			''
 		);
 	}
 
@@ -555,20 +679,6 @@ final class SettingsScreen {
 					$c->number( 'captcha_timeout', 3000, 20000, __( 'میلی‌ثانیه', 'tisa-otp' ) );
 				} );
 
-				$c->row(
-					__( 'آزمایش بارگذاری', 'tisa-otp' ),
-					function () use ( $c ) {
-						unset( $c );
-
-						printf(
-							'<button type="button" class="button" data-tisa-captcha-test>%s</button>',
-							esc_html__( 'آزمایش کپچا در مرورگر', 'tisa-otp' )
-						);
-						echo '<p class="tisa-result" data-tisa-captcha-result hidden></p>';
-					},
-					__( 'همان اسکریپتی که فرم ورود می‌گیرد، در همین مرورگر امتحان می‌شود؛ اگر افزونهٔ مسدودکننده یا فیلترینگ جلوی آن را بگیرد، همین‌جا معلوم می‌شود.', 'tisa-otp' )
-				);
-
 				$c->row( __( 'حالت آرکپچا', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'captcha_arcaptcha_v3', __( 'نسخه ۳ (امتیازی/نامرئی)', 'tisa-otp' ), __( 'اگر حساب آرکپچای شما v3 است روشن کنید', 'tisa-otp' ) );
 				} );
@@ -593,6 +703,14 @@ final class SettingsScreen {
 		);
 
 		$this->accessPointerCard();
+
+		$this->testCard(
+			'security',
+			__( 'آزمایش کپچا در این مرورگر', 'tisa-otp' ),
+			__( 'اول تنظیمات و کلیدها از سمت سرور بررسی می‌شوند، بعد همان اسکریپت‌هایی که فرم ورود می‌گیرد در همین مرورگر امتحان می‌شوند.', 'tisa-otp' ),
+			null,
+			' data-tisa-captcha-test'
+		);
 	}
 
 	/**
@@ -702,6 +820,12 @@ final class SettingsScreen {
 				esc_html__( 'اکنون %d فیلد در فرم عضویت فعال است.', 'tisa-otp' ),
 				count( $this->schema->active() )
 			)
+		);
+
+		$this->testCard(
+			'registration',
+			__( 'آزمایش فرم عضویت', 'tisa-otp' ),
+			__( 'ترتیب گام‌ها، فیلدهای فعال و اجباری، و اینکه هر مقدار کجا ذخیره می‌شود.', 'tisa-otp' )
 		);
 	}
 
@@ -897,6 +1021,12 @@ final class SettingsScreen {
 				}, __( 'فقط برای مدیران دارای دسترسی unfiltered_html ذخیره می‌شود.', 'tisa-otp' ) );
 			}
 		);
+
+		$this->testCard(
+			'design',
+			__( 'آزمایش رنگ‌ها و کنتراست', 'tisa-otp' ),
+			__( 'همان رنگ‌هایی که کاربر می‌بیند با نسبت کنتراست واقعی سنجیده می‌شوند؛ اگر متنی سخت خوانده شود، همین‌جا معلوم می‌شود.', 'tisa-otp' )
+		);
 	}
 
 	private function storeSection(): void {
@@ -943,6 +1073,12 @@ final class SettingsScreen {
 				);
 			}
 		);
+
+		$this->testCard(
+			'store',
+			__( 'آزمایش فروشگاه', 'tisa-otp' ),
+			__( 'وضعیت ووکامرس و اینکه هر تنظیم این صفحه روی چه چیزی اثر می‌گذارد.', 'tisa-otp' )
+		);
 	}
 
 	/**
@@ -954,7 +1090,7 @@ final class SettingsScreen {
 	 * to them opens the screen that explains them.
 	 */
 	private function overview(): void {
-		$reports = admin_url( 'admin.php?page=' . ReportScreen::SLUG );
+		$reports = self::tabUrl( 'reports' );
 
 		echo '<div class="tisa-overview">';
 
@@ -1040,7 +1176,7 @@ final class SettingsScreen {
 					function () {
 						printf(
 							'<a class="button" href="%1$s">%2$s</a> <a class="button" href="%3$s">%4$s</a>',
-							esc_url( admin_url( 'admin.php?page=' . ReportScreen::SLUG ) ),
+							esc_url( self::tabUrl( 'reports' ) ),
 							esc_html__( 'گزارش‌ها', 'tisa-otp' ),
 							esc_url( admin_url( 'admin.php?page=' . LogsScreen::SLUG ) ),
 							esc_html__( 'تک‌تک رویدادها', 'tisa-otp' )
@@ -1071,6 +1207,12 @@ final class SettingsScreen {
 					$c->toggle( 'wipe_on_uninstall', __( 'جدول‌ها و تنظیمات هم پاک شوند', 'tisa-otp' ), __( 'متای شماره کاربران در هر صورت نگه داشته می‌شود.', 'tisa-otp' ) );
 				} );
 			}
+		);
+
+		$this->testCard(
+			'data',
+			__( 'آزمایش ثبت رویداد', 'tisa-otp' ),
+			__( 'یک رویداد واقعی نوشته و بلافاصله خوانده می‌شود تا معلوم شود گزارش‌ها روی چه چیزی حساب می‌کنند.', 'tisa-otp' )
 		);
 	}
 }

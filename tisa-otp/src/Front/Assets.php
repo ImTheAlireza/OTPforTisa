@@ -118,7 +118,27 @@ final class Assets implements Bootable {
 					'captchaOk'  => __( 'کپچا درست بارگذاری شد.', 'tisa-otp' ),
 					'captchaNoScript' => __( 'نشانی اسکریپت خالی است. کلید سایت را در همین کارت وارد کنید.', 'tisa-otp' ),
 					'captchaBlocked'  => __( 'اسکریپت کپچا در مرورگر بارگذاری نشد. افزونهٔ مسدودکننده، DNS یا فیلترینگ را بررسی کنید؛ می‌توانید «نشانی جایگزین اسکریپت» را هم پر کنید.', 'tisa-otp' ),
+					'close'         => __( 'بستن', 'tisa-otp' ),
+					'rerun'         => __( 'اجرای دوباره', 'tisa-otp' ),
+					'statusOk'      => __( 'سالم', 'tisa-otp' ),
+					'statusWarn'    => __( 'هشدار', 'tisa-otp' ),
+					'statusFail'    => __( 'نیاز به رسیدگی', 'tisa-otp' ),
+					'statusInfo'    => __( 'اطلاع', 'tisa-otp' ),
+					'captchaRow'    => __( 'بارگذاری در مرورگر', 'tisa-otp' ),
+					'captchaTrying' => __( 'اسکریپت‌هایی که امتحان می‌شوند', 'tisa-otp' ),
+					'smsTitle'      => __( 'ارسال پیامک آزمایشی', 'tisa-otp' ),
+					'smsIntro'      => __( 'یک کد واقعی از مسیر واقعی ارسال می‌شود. شماره‌ای را وارد کنید که در دسترس خودتان است؛ هر سامانه‌ای که امتحان شود با پاسخش نشان داده می‌شود.', 'tisa-otp' ),
+					'smsPhone'      => __( 'شماره', 'tisa-otp' ),
+					'smsNeedPhone'  => __( 'بدون شماره، آزمایشی ارسال نمی‌شود.', 'tisa-otp' ),
+					'smsSend'       => __( 'ارسال', 'tisa-otp' ),
+					'smsSent'       => __( 'ارسال شد', 'tisa-otp' ),
+					'smsVia'        => __( 'از طریق', 'tisa-otp' ),
+					'smsChannel'    => __( 'پیامک', 'tisa-otp' ),
+					'emailChannel'  => __( 'ایمیل', 'tisa-otp' ),
+					'smsHint'       => __( 'اگر ارسال ناموفق بود، ردیف‌های پایین نشان می‌دهند کدام سامانه چه پاسخی داد.', 'tisa-otp' ),
+					'planIssues'    => __( 'ایرادهای پیکربندی این سامانه', 'tisa-otp' ),
 				),
+				'myPhone' => $this->ownPhone(),
 			)
 		);
 
@@ -127,6 +147,23 @@ final class Assets implements Bootable {
 		wp_enqueue_media();
 
 		unset( $hook );
+	}
+
+	/**
+	 * The administrator's own number, used to pre-fill the test-send modal.
+	 *
+	 * It is read from the profile key the plugin itself writes, so the field is
+	 * empty rather than wrong when nothing is stored.
+	 */
+	private function ownPhone(): string {
+		$key  = $this->settings->str( 'phone_meta_key', 'tisa_phone' );
+		$user = get_current_user_id();
+
+		if ( ! $user || '' === trim( $key ) ) {
+			return '';
+		}
+
+		return trim( (string) get_user_meta( $user, $key, true ) );
 	}
 
 	/**

@@ -51,6 +51,339 @@
 		});
 	}
 
+	/*
+	 * One modal, used by every self-test: reports and event lists are pages, but
+	 * "test this section" must not cost a page load. `<dialog>` brings the focus
+	 * trap, the ESC key and the top layer with it.
+	 */
+	function modal(title) {
+		var opener = document.activeElement;
+		var dialog = document.createElement('dialog');
+		dialog.className = 'tisa-modal';
+
+		var head = document.createElement('div');
+		head.className = 'tisa-modal__head';
+
+		var heading = document.createElement('h2');
+		heading.className = 'tisa-modal__title';
+		heading.textContent = title || '';
+
+		var state = document.createElement('span');
+		state.className = 'tisa-modal__state';
+		state.hidden = true;
+
+		var close = document.createElement('button');
+		close.type = 'button';
+		close.className = 'tisa-modal__close';
+		close.setAttribute('aria-label', i18n.close || 'بستن');
+		close.textContent = '×';
+
+		head.appendChild(heading);
+		head.appendChild(state);
+		head.appendChild(close);
+
+		var body = document.createElement('div');
+		body.className = 'tisa-modal__body';
+
+		var foot = document.createElement('div');
+		foot.className = 'tisa-modal__foot';
+
+		dialog.appendChild(head);
+		dialog.appendChild(body);
+		dialog.appendChild(foot);
+		document.body.appendChild(dialog);
+
+		close.addEventListener('click', function () {
+			dialog.close();
+		});
+
+		// A click on the backdrop lands on the dialog element itself.
+		dialog.addEventListener('click', function (event) {
+			if (event.target === dialog) {
+				dialog.close();
+			}
+		});
+
+		dialog.addEventListener('close', function () {
+			dialog.remove();
+
+			if (opener && opener.focus) {
+				opener.focus();
+			}
+		});
+
+		dialog.showModal();
+
+		return {
+			dialog: dialog,
+			title: heading,
+			state: state,
+			body: body,
+			foot: foot,
+			close: close,
+			button: function (label, primary, onClick) {
+				var button = document.createElement('button');
+
+				button.type = 'button';
+				button.className = 'button' + (primary ? ' button-primary' : '');
+				button.textContent = label;
+				button.addEventListener('click', onClick);
+				foot.appendChild(button);
+
+				return button;
+			}
+		};
+	}
+
+	function statusWord(status) {
+		var words = {
+			ok: i18n.statusOk || 'ok',
+			warn: i18n.statusWarn || 'warning',
+			fail: i18n.statusFail || 'problem',
+			info: i18n.statusInfo || 'info'
+		};
+
+		return words[status] || words.info;
+	}
+
+	/*
+	 * One result row. The colour dot is decoration; the word is the actual
+	 * information, and it is in the DOM for screen readers.
+	 */
+	function checkRow(row) {
+		var status = row.status || 'info';
+		var item = document.createElement('li');
+		item.className = 'tisa-test-row is-' + status;
+
+		var dot = document.createElement('span');
+		dot.className = 'tisa-test-row__dot';
+		dot.setAttribute('aria-hidden', 'true');
+
+		var text = document.createElement('div');
+		text.className = 'tisa-test-row__text';
+
+		var line = document.createElement('p');
+		line.className = 'tisa-test-row__line';
+
+		var label = document.createElement('span');
+		label.className = 'tisa-test-row__label';
+		label.textContent = row.label || '';
+
+		var value = document.createElement('span');
+		value.className = 'tisa-test-row__value';
+		value.textContent = row.value === undefined || row.value === null ? '' : String(row.value);
+
+		var hidden = document.createElement('span');
+		hidden.className = 'screen-reader-text';
+		hidden.textContent = statusWord(status);
+
+		line.appendChild(hidden);
+		line.appendChild(label);
+		line.appendChild(value);
+		text.appendChild(line);
+
+		if (row.note) {
+			var note = document.createElement('p');
+			note.className = 'tisa-test-row__note';
+			note.textContent = row.note;
+			text.appendChild(note);
+		}
+
+		item.appendChild(dot);
+		item.appendChild(text);
+
+		return item;
+	}
+
+	/**
+	 * Run one section's self-test and draw it in a modal.
+	 */
+	function runCheck(kind, button) {
+		var box = modal(i18n.testing || '');
+		var list = document.createElement('ul');
+		var waiting = document.createElement('p');
+
+		list.className = 'tisa-test-rows';
+		waiting.className = 'tisa-modal__note';
+		waiting.textContent = i18n.working || '…';
+
+		box.body.appendChild(list);
+		box.body.appendChild(waiting);
+		box.close.focus();
+
+		busy(button, true);
+
+		function done() {
+			busy(button, false);
+			waiting.remove();
+			box.button(i18n.close || 'بستن', false, function () {
+				box.dialog.close();
+			});
+			box.button(i18n.rerun || 'اجرای دوباره', true, function () {
+				box.dialog.close();
+				runCheck(kind, button);
+			});
+		}
+
+		api('admin/check', { kind: kind }).then(function (data) {
+			box.title.textContent = data.title || '';
+			box.state.hidden = false;
+			box.state.textContent = data.ok ? (i18n.statusOk || '') : (i18n.statusFail || '');
+			box.state.className = 'tisa-modal__state is-' + (data.ok ? 'ok' : 'fail');
+
+			if (data.summary) {
+				var summary = document.createElement('p');
+				summary.className = 'tisa-modal__summary';
+				summary.textContent = data.summary;
+				box.body.insertBefore(summary, list);
+			}
+
+			(data.rows || []).forEach(function (row) {
+				list.appendChild(checkRow(row));
+			});
+
+			done();
+
+			// The captcha test is the one check that cannot run on the server:
+			// it has to load the real script in the administrator's browser.
+			if ('security' === kind) {
+				testCaptcha(function (row) {
+					list.appendChild(checkRow(row));
+				});
+			}
+		}).catch(function (error) {
+			list.appendChild(checkRow({
+				label: i18n.failed || '',
+				value: error.message,
+				status: 'fail'
+			}));
+			done();
+		});
+	}
+
+	/**
+	 * The one test that is only useful if the administrator types a number they
+	 * actually hold: a real code, through the real gateway chain.
+	 */
+	function runSendTest(opener) {
+		var box = modal(i18n.smsTitle || '');
+		var list = document.createElement('ul');
+
+		list.className = 'tisa-test-rows';
+		box.body.appendChild(list);
+
+		var intro = document.createElement('p');
+		intro.className = 'tisa-modal__summary';
+		intro.textContent = i18n.smsIntro || '';
+		box.body.appendChild(intro);
+
+		var row = document.createElement('p');
+		row.className = 'tisa-modal__form';
+
+		var phone = document.createElement('input');
+		phone.type = 'tel';
+		phone.dir = 'ltr';
+		phone.className = 'regular-text';
+		phone.placeholder = '09xxxxxxxxx';
+		phone.value = cfg.myPhone || '';
+
+		var channel = document.createElement('select');
+		[['sms', i18n.smsChannel || ''], ['email', i18n.emailChannel || '']].forEach(function (option) {
+			var node = document.createElement('option');
+
+			node.value = option[0];
+			node.textContent = option[1];
+			channel.appendChild(node);
+		});
+
+		row.appendChild(phone);
+		row.appendChild(channel);
+		box.body.appendChild(row);
+
+		var send = box.button(i18n.smsSend || '', true, function () {
+			var number = phone.value.trim();
+
+			list.innerHTML = '';
+
+			if (!number) {
+				list.appendChild(checkRow({ label: i18n.smsPhone || '', value: '', status: 'fail', note: i18n.smsNeedPhone || '' }));
+				phone.focus();
+
+				return;
+			}
+
+			busy(send, true);
+
+			api('admin/test', { phone: number, channel: channel.value }).then(function (data) {
+				busy(send, false);
+				list.appendChild(checkRow({
+					label: i18n.smsSent || '',
+					value: data.masked || number,
+					status: 'ok',
+					note: (data.via ? (i18n.smsVia || '') + ' ' + data.via : '') + (data.message ? ' — ' + data.message : '')
+				}));
+
+				traceRows(list, data.trace, data.plan);
+			}).catch(function (error) {
+				busy(send, false);
+				list.appendChild(checkRow({
+					label: i18n.failed || '',
+					value: error.message,
+					status: 'fail',
+					note: i18n.smsHint || ''
+				}));
+
+				traceRows(list, (error.data || {}).trace, (error.data || {}).plan);
+			});
+		});
+
+		box.button(i18n.close || 'بستن', false, function () {
+			box.dialog.close();
+		});
+
+		phone.focus();
+
+		// The opener is only used for focus return; keep the parameter honest.
+		void opener;
+	}
+
+	/**
+	 * Every gateway that was tried, in order, with what it answered.
+	 */
+	function traceRows(list, trace, plan) {
+		(trace || []).forEach(function (step) {
+			list.appendChild(checkRow({
+				label: (step.gateway || '') + (step.sent ? ' (' + (i18n.traceSent || '') + ')' : ''),
+				value: step.error_code || step.status || '',
+				status: step.sent ? 'ok' : 'fail',
+				note: step.message || ''
+			}));
+		});
+
+		if (plan && plan.issues && plan.issues.length) {
+			list.appendChild(checkRow({
+				label: i18n.planIssues || '',
+				value: '',
+				status: 'warn',
+				note: plan.issues.join(' · ')
+			}));
+		}
+	}
+
+	function initSelfTests() {
+		$$('[data-tisa-check]').forEach(function (button) {
+			button.addEventListener('click', function () {
+				runCheck(button.getAttribute('data-tisa-check'), button);
+			});
+		});
+
+		$$('[data-tisa-sms-test]').forEach(function (button) {
+			button.addEventListener('click', function () {
+				runSendTest(button);
+			});
+		});
+	}
+
 	function busy(button, on, label) {
 		if (!button) {
 			return;
@@ -216,15 +549,26 @@
 	 * moved). So this walks the same URL list the front end walks and reports
 	 * the first one that actually answers.
 	 */
-	function testCaptcha(box, button) {
+	function testCaptcha(report) {
 		var captcha = cfg.captcha || {};
 		var urls = [captcha.script].concat(captcha.fallbacks || []).filter(Boolean);
 		var index = 0;
 
 		function finish(ok, message, url) {
-			busy(button, false);
-			say(box, message + (url ? ' — ' + url : ''), ok ? 'success' : 'error');
+			report({
+				label: i18n.captchaRow || '',
+				value: url || '',
+				status: ok ? 'ok' : 'fail',
+				note: message
+			});
 		}
+
+		report({
+			label: i18n.captchaTrying || '',
+			value: String(urls.length),
+			status: 'info',
+			note: urls.join(' · ')
+		});
 
 		if (!urls.length) {
 			finish(false, i18n.captchaNoScript || '');
@@ -255,6 +599,7 @@
 
 			script.onload = function () {
 				window.clearTimeout(timer);
+
 
 				if (settled) {
 					return;
@@ -287,20 +632,13 @@
 			document.head.appendChild(script);
 		}
 
-		busy(button, true, i18n.testing || '');
 		attempt();
 	}
 
 	function initTools() {
 		initDoctor();
 
-		var captchaButton = document.querySelector('[data-tisa-captcha-test]');
-
-		if (captchaButton) {
-			captchaButton.addEventListener('click', function () {
-				testCaptcha(document.querySelector('[data-tisa-captcha-result]'), captchaButton);
-			});
-		}
+		// The captcha button belongs to the security section's self-test (initSelfTests).
 
 		var testButton = document.querySelector('[data-tisa-test-send]');
 
@@ -717,6 +1055,7 @@
 
 	ready(function () {
 		initControls();
+		initSelfTests();
 		initMedia();
 		initRepeater();
 		initTools();

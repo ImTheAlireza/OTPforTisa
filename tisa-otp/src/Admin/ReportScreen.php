@@ -79,14 +79,26 @@ final class ReportScreen implements Bootable {
 			return;
 		}
 
-		$days = $this->range();
-		$data = $this->data( $days );
-
-		echo '<div class="wrap tisa-wrap" dir="rtl"><div class="tisa-header"><div class="tisa-header__title"><h1>' . esc_html__( 'گزارش‌ها', 'tisa-otp' ) . '</h1></div><div class="tisa-header__actions">';
-		$this->rangeBar( $days );
-		echo '</div></div>';
+		echo '<div class="wrap tisa-wrap" dir="rtl"><div class="tisa-header"><div class="tisa-header__title"><h1>' . esc_html__( 'گزارش‌ها', 'tisa-otp' ) . '</h1></div></div>';
 
 		ScreenNav::render( self::SLUG );
+
+		$this->body( $this->range() );
+
+		echo '</div>';
+	}
+
+	/**
+	 * Everything below the header: the range switch, the numbers, the chart, the
+	 * failure table and the CSV export.
+	 *
+	 * The settings screen draws this same body in its own reports tab, so there is
+	 * one report rendered in two places and no way for the two to drift apart.
+	 */
+	public function body( int $days ): void {
+		$data = $this->data( $days );
+
+		$this->rangeBar( $days );
 
 		$this->kpis( $data['kpis'], $days );
 		$this->chart( $data['series'], (int) $data['peak'], $days );
@@ -110,7 +122,7 @@ final class ReportScreen implements Bootable {
 			esc_html__( 'دانلود گزارش این بازه (CSV)', 'tisa-otp' )
 		);
 
-		echo '</div></div>';
+		echo '</div>';
 	}
 
 	private function rangeBar( int $days ): void {

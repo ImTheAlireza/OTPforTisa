@@ -83,6 +83,7 @@ final class Api implements Bootable {
 
 		$privileged = array(
 			'/admin/test'           => 'sendTest',
+			'/admin/check'          => 'check',
 			'/admin/throttle-reset' => 'resetThrottle',
 			'/admin/summary'        => 'summary',
 			'/admin/doctor'         => 'doctor',

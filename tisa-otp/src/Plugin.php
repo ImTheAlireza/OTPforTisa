@@ -376,7 +376,21 @@ final class Plugin {
 				$c->make( Gateway\Registry::class ),
 				$c->make( Registration\FieldSchema::class ),
 				$c->make( Captcha\Manager::class ),
-				$c->make( Log\LogStore::class )
+				$c->make( Log\LogStore::class ),
+				$c->make( Admin\ReportScreen::class )
+			);
+		} );
+
+		$c->bind( Diagnostics\SelfTest::class, static function ( Container $c ) {
+			return new Diagnostics\SelfTest(
+				$c->make( Config\Settings::class ),
+				$c->make( Install\Schema::class ),
+				$c->make( Otp\OtpService::class ),
+				$c->make( Otp\CodeStore::class ),
+				$c->make( Gateway\Registry::class ),
+				$c->make( Log\LogStore::class ),
+				$c->make( Captcha\Manager::class ),
+				$c->make( Registration\FieldSchema::class )
 			);
 		} );
 

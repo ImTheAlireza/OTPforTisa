@@ -835,7 +835,7 @@ function testEveryScreenIsReachable() {
 	// The settings screen counts the last week and names the page that explains it.
 	check('the settings screen shows a seven-day overview', /private function overview\(\)/.test(settings) && /const OVERVIEW_DAYS = 7/.test(settings));
 	check('with the four numbers the reports screen also shows', /tisa-kpis/.test(settings) && /'requests'/.test(settings) && /'rate'/.test(settings));
-	check('and a way into the reports screen', /ReportScreen::SLUG/.test(settings) && /گزارش\u200cها/.test(settings));
+	check('and a way into the reports tab', /self::tabUrl\( 'reports' \)/.test(settings) && /گزارش\u200cها/.test(settings));
 	check('it says so instead of showing zeros when logging is off', /logs_enabled/.test(settings) && /notice\(/.test(settings));
 
 	check('the css defines the switcher', /\.tisa-screens \{/.test(adminCss) && /\.tisa-screen\.is-current/.test(adminCss));
@@ -853,6 +853,108 @@ function testEveryScreenIsReachable() {
 	check('and the changelog has an entry for it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
 }
 
+/*
+ * "Where is the reports section?" had a real answer missing: the panel itself.
+ * Reports now live in the settings tab row, and every section can test itself
+ * from where the administrator already is — in a modal, without a second URL.
+ */
+function testThePanelKeepsItsOwnPromises() {
+	scenario('Reports and stats live in the panel, and every section can test itself');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const settings = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
+	const report = read('tisa-otp', 'src', 'Admin', 'ReportScreen.php');
+	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
+	const adminJs = read('tisa-otp', 'assets', 'js', 'admin.js');
+	const adminCss = read('tisa-otp', 'assets', 'css', 'admin.css');
+	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
+	const api = read('tisa-otp', 'src', 'Http', 'Api.php');
+	const controller = read('tisa-otp', 'src', 'Http', 'AdminController.php');
+	const nav = read('tisa-otp', 'src', 'Admin', 'ScreenNav.php');
+	const admin = read('preview', 'public', 'admin.html');
+	const server = read('preview', 'server.js');
+	const bootstrap = read('tisa-otp', 'tisa-otp.php');
+	const readme = read('tisa-otp', 'readme.txt');
+
+	// --- reports as a tab of the settings panel ------------------------------
+	check('the settings panel has a reports tab', /'reports'\s+=> __\(/.test(settings));
+	check('and it draws the reports screen body rather than a copy of it', /\$this->reports->body\( \$this->reports->range\(\) \)/.test(settings));
+	check('the reports screen exposes that body', /public function body\( int \$days \): void/.test(report));
+	check('both callers use it: the screen and the tab', (report.match(/\$this->body\(/g) || []).length === 1 && (settings.match(/->body\(/g) || []).length === 1);
+
+	// The tab is not a form: no save button, no settings fields.
+	const tabBranch = (settings.match(/if \( 'reports' === \$tab \) \{[\s\S]*?\n\t\t\}/) || [''])[0];
+	check('the tab skips the settings form entirely', /return;/.test(tabBranch) && tabBranch.indexOf('settings_fields') < 0);
+	check('the overview strip does not double the numbers on the reports tab', /'reports' !== \$tab/.test(settings));
+
+	// One address for reports inside the plugin.
+	check('tab urls are built in one place', /public static function tabUrl\(/.test(settings) && /self::tabUrl\( \$id \)/.test(settings));
+	check('the screens row points at the tab, not at a second page', /SettingsScreen::tabUrl\( 'reports' \)/.test(nav));
+	check('and the overview button does the same', /\$reports = self::tabUrl\( 'reports' \)/.test(settings));
+
+	check('reports sits at the end of the row, after the data section', settings.indexOf("'data'         =>") < settings.indexOf("'reports'      =>"));
+
+	// --- "did my update actually land?" --------------------------------------
+	// Twice now the answer to "where is it?" was "the installed package is older
+	// than the one you were told about". The panel has to be able to say which
+	// build is running, in a place an administrator already looks.
+	check('the first tab opens with what this build added', /private function generalSection\(\): void \{\s*\n\s*\$c = \$this->controls;\s*\n\s*\$this->whatsNew\(\);/.test(settings));
+	check('and the card names the running version', /private function whatsNew\(\)/.test(settings) && /تازه در نسخهٔ %s/.test(settings) && /TISA_OTP_VERSION/.test(settings));
+	check('it points at the reports tab, not at a second page', /self::tabUrl\( 'reports' \)/.test(settings.slice(settings.indexOf('private function whatsNew()'), settings.indexOf('private function whatsNew()') + 1400)));
+	check('and it tells the reader what to do when the number looks wrong', /فایل‌های افزونه به‌روز نشده‌اند/.test(settings));
+
+	const version = (bootstrap.match(/define\( 'TISA_OTP_VERSION', '([0-9.]+)' \)/) || [])[1];
+	check('the package declares one version, and the file header agrees', !!version && bootstrap.indexOf('Version:           ' + version) >= 0);
+	check('the readme ships that same version as its stable tag', !!version && readme.indexOf('Stable tag: ' + version) >= 0);
+	check('and the readme explains what changed in it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
+	check('the preview says which version it is showing', admin.indexOf(version) >= 0);
+	check('the preview shows the release card too', /تازه در نسخهٔ ۱\.۳\.۲/.test(admin) && /class="tisa-bullets"/.test(admin));
+	check('and a link from it into the reports section', /class="button" href="#reports"/.test(admin));
+
+	// --- one self-test per section ------------------------------------------
+	const kinds = (selfTest.match(/return array\( '([a-z]+)'(?:, '[a-z]+')* \);/) || [])[1];
+	check('the self-test knows which sections exist', !!kinds && ['general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data'].every((kind) => selfTest.indexOf("'" + kind + "'") >= 0));
+
+	for (const kind of ['general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data']) {
+		check('the ' + kind + ' section has a test button', settings.indexOf('data-tisa-check="' + kind + '"') >= 0 || new RegExp("'" + kind + "',").test(settings));
+		check('and the test really exists', new RegExp('private function ' + kind + '\\(\\)').test(selfTest));
+	}
+
+	check('the test card is what prints the buttons', /private function testCard\(/.test(settings) && (settings.match(/\$this->testCard\(/g) || []).length === 8);
+	check('the gateways section offers a real send too', /data-tisa-sms-test/.test(settings));
+	check('the captcha button kept its old hook', /data-tisa-captcha-test/.test(settings) && settings.indexOf('data-tisa-captcha-result') < 0);
+
+	// --- what the tests are allowed to do ------------------------------------
+	check('the tests never send a message of their own', selfTest.indexOf('deliver(') < 0 && selfTest.indexOf('dispatcher') < 0);
+	check('the code test cleans up after itself', /revoke\( self::SAMPLE_PHONE \)/.test(selfTest));
+	check('the data test writes and reads a real event', /admin\.self_test/.test(selfTest) && /\$this->logs->count\(/.test(selfTest));
+
+	// --- the route they run on ------------------------------------------------
+	check('the check route is registered', /'\/admin\/check'\s+=> 'check'/.test(api));
+	check('and the controller hands the kind straight to the service', /public function check\( Request \$request \): array \{[\s\S]{0,120}\$this->selfTest->run\( \$request->key\( 'kind' \) \)/.test(controller));
+
+	// --- the modal ------------------------------------------------------------
+	check('the modal is a real dialog', /document\.createElement\('dialog'\)/.test(adminJs) && /\.showModal\(\)/.test(adminJs));
+	check('and it gives focus back when it closes', /opener\.focus\(\)/.test(adminJs));
+	check('admin.js asks for the check route', /api\('admin\/check', \{ kind: kind \}\)/.test(adminJs));
+	check('a result row carries the status as text, not only as a colour', /screen-reader-text/.test(adminJs) && /statusWord\(/.test(adminJs));
+	check('the captcha test reports into the modal', /function testCaptcha\(report\)/.test(adminJs) && /testCaptcha\(function \(row\)/.test(adminJs));
+	check('the send test opens its own modal with the administrator number', /data-tisa-sms-test/.test(adminJs) && /cfg\.myPhone/.test(adminJs));
+	check('and the plugin localises that number', /'myPhone' => \$this->ownPhone\(\)/.test(assets) && /private function ownPhone\(\): string/.test(assets));
+
+	check('the css defines the modal', /\.tisa-modal \{/.test(adminCss) && /\.tisa-modal::backdrop \{/.test(adminCss));
+	check('and the result rows', /\.tisa-test-row \{/.test(adminCss) && /\.tisa-test-row\.is-fail \.tisa-test-row__dot \{/.test(adminCss));
+
+	// --- the demo can be clicked through -------------------------------------
+	check('the demo can run a section test', /data-tisa-check="(gateways|data|general)"/.test(admin));
+	check('the demo can show the captcha test', /data-tisa-check="security" data-tisa-captcha-test/.test(admin));
+	check('the demo can send a test message', admin.indexOf('data-tisa-sms-test') >= 0);
+	check('and the demo names all eight sections in one place', ['عمومی', 'کد و کانال\u200cها', 'سامانه‌های پیامکی', 'امنیت و محدودیت', 'فرم عضویت', 'ظاهر فرم', 'فروشگاه', 'داده و رویدادها'].every((label) => admin.indexOf(label) >= 0));
+	check('the demo shows the reports tab in the same pill row', /class="tisa-screen">گزارش\u200cها و آمار<\/a>/.test(admin) || /href="#reports" class="tisa-screen">گزارش\u200cها و آمار<\/a>/.test(admin));
+	check('the demo api answers the check route', /case 'admin\/check':/.test(server) && /function checkPayload\(/.test(server));
+	check('with a failing row in it, so the modal is seen doing its job', /status: 'warn'/.test(server) || /status: 'fail'/.test(server));
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -860,6 +962,7 @@ async function main() {
 	await testCodeLengthRebuild();
 	await testRescuePanel();
 	await testEveryScreenIsReachable();
+	await testThePanelKeepsItsOwnPromises();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

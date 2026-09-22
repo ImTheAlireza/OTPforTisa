@@ -19,6 +19,7 @@ use TisaOtp\Admin\LogsScreen;
 use TisaOtp\Admin\Menu;
 use TisaOtp\Admin\ReportScreen;
 use TisaOtp\Admin\ScreenNav;
+use TisaOtp\Admin\SettingsScreen;
 use TisaOtp\Admin\ToolsScreen;
 
 /**
@@ -60,16 +61,29 @@ $markup = tisa_nav( ReportScreen::SLUG );
 
 foreach ( $slugs as $slug ) {
 	tisa_check(
-		'a link to admin.php?page=' . $slug,
-		false !== strpos( $markup, 'href="https://example.test/wp-admin/admin.php?page=' . $slug . '"' )
+		'a link to ' . $slug,
+		false !== strpos( $markup, 'href="' . ScreenNav::url( $slug ) . '"' )
 	);
 }
+
+tisa_same(
+	'the reports row opens the settings tab, so the plugin keeps one home for it',
+	SettingsScreen::tabUrl( 'reports' ),
+	ScreenNav::url( ReportScreen::SLUG )
+);
+
+tisa_check(
+	'the other four screens are still their own pages',
+	false !== strpos( ScreenNav::url( LogsScreen::SLUG ), 'page=' . LogsScreen::SLUG )
+		&& false !== strpos( ScreenNav::url( ToolsScreen::SLUG ), 'page=' . ToolsScreen::SLUG )
+		&& false !== strpos( ScreenNav::url( AccessScreen::SLUG ), 'page=' . AccessScreen::SLUG )
+);
 
 tisa_same( 'one "you are here" marker', 1, substr_count( $markup, 'aria-current="page"' ) );
 tisa_same( 'and it is on the screen being rendered', 1, substr_count( $markup, 'class="tisa-screen is-current" aria-current="page"' ) );
 tisa_check(
 	'the marker sits on the reports link, not on some other one',
-	(bool) preg_match( '/href="[^"]*page=' . preg_quote( ReportScreen::SLUG, '/' ) . '"[^>]*aria-current="page"/', $markup )
+	false !== strpos( $markup, 'href="' . ScreenNav::url( ReportScreen::SLUG ) . '" class="tisa-screen is-current" aria-current="page"' )
 );
 
 tisa_start( 'every screen gets its own marker and only its own' );
@@ -80,7 +94,7 @@ foreach ( $slugs as $slug ) {
 	tisa_same( 'exactly one marker on ' . $slug, 1, substr_count( $html, 'aria-current="page"' ) );
 	tisa_check(
 		'the marker is on ' . $slug,
-		(bool) preg_match( '/href="[^"]*page=' . preg_quote( $slug, '/' ) . '"[^>]*aria-current="page"/', $html )
+		false !== strpos( $html, 'href="' . ScreenNav::url( $slug ) . '" class="tisa-screen is-current" aria-current="page"' )
 	);
 	tisa_same( 'the switcher always shows all five screens on ' . $slug, 5, substr_count( $html, '<li>' ) );
 }

@@ -17,6 +17,7 @@ use TisaOtp\Log\Logger;
 use TisaOtp\Log\LogStore;
 use TisaOtp\Otp\OtpService;
 use TisaOtp\Support\Phone;
+use TisaOtp\Diagnostics\SelfTest;
 use TisaOtp\Support\Rejection;
 use TisaOtp\Throttle\Throttle;
 
@@ -51,6 +52,9 @@ final class AdminController {
 	/** @var CaptchaManager */
 	private $captcha;
 
+	/** @var SelfTest */
+	private $selfTest;
+
 	public function __construct(
 		Settings $settings,
 		Dispatcher $dispatcher,
@@ -60,7 +64,8 @@ final class AdminController {
 		LogStore $logs,
 		Runner $importer,
 		Registry $gateways,
-		CaptchaManager $captcha
+		CaptchaManager $captcha,
+		SelfTest $selfTest
 	) {
 		$this->settings   = $settings;
 		$this->dispatcher = $dispatcher;
@@ -71,6 +76,17 @@ final class AdminController {
 		$this->importer   = $importer;
 		$this->gateways   = $gateways;
 		$this->captcha    = $captcha;
+		$this->selfTest   = $selfTest;
+	}
+
+	/**
+	 * Run one of the per-section self-tests and hand the rows back untouched.
+	 *
+	 * The screen draws whatever this returns, so a check that could not run says
+	 * so in its own row instead of disappearing.
+	 */
+	public function check( Request $request ): array {
+		return $this->selfTest->run( $request->key( 'kind' ) );
 	}
 
 	/**

@@ -238,6 +238,106 @@ function importState(status, note) {
 /* ------------------------------------------------------- admin screen mock */
 
 /** Mirrors AdminController::doctor(). */
+/*
+ * The self-tests the settings panel runs from each section. Same shape as
+ * `Diagnostics\SelfTest::run()`: a title, a summary, and one row per fact with
+ * `status` of ok, warn, fail or info.
+ */
+function checkPayload(kind) {
+	const rows = {
+		general: {
+			title: 'آزمایش تنظیمات عمومی',
+			summary: 'پایه‌هایی که همهٔ بخش‌های دیگر روی آن‌ها می‌ایستند: نسخه‌ها، جدول‌ها و زمان‌بند.',
+			rows: [
+				{ label: 'نسخه PHP', value: '8.2.18', status: 'ok' },
+				{ label: 'نسخه وردپرس', value: '6.9', status: 'ok' },
+				{ label: 'جدول‌های افزونه', value: 'سالم', status: 'ok' },
+				{ label: 'زمان‌بند پاک‌سازی', value: '2026-09-22 14:20', status: 'ok' },
+				{ label: 'وضعیت افزونه', value: 'فعال', status: 'ok' },
+			],
+		},
+		code: {
+			title: 'آزمایش کد یکبارمصرف',
+			summary: 'یک کد واقعی برای یک شمارهٔ ساختگی ساخته، ذخیره و باطل می‌شود. هیچ پیامکی ارسال نمی‌شود.',
+			rows: [
+				{ label: 'طول کد', value: '۵ رقم', status: 'ok' },
+				{ label: 'اعتبار کد', value: '۱۲۰ ثانیه', status: 'ok' },
+				{ label: 'انبار کد', value: 'جدول اختصاصی', status: 'info', note: 'database' },
+				{ label: 'ساخت کد', value: '۴۸۲۱۳', status: 'ok', note: 'همان تنظیمات همین صفحه.' },
+				{ label: 'ذخیره و بازخوانی', value: 'درست', status: 'ok', note: 'برای شمارهٔ آزمایشی ذخیره و بی‌درنگ باطل شد.' },
+			],
+		},
+		gateways: {
+			title: 'آزمایش سامانه‌های پیامکی',
+			summary: 'هر سامانه: آماده است یا چه چیزی کم دارد، و ترتیب تلاش در ارسال واقعی.',
+			rows: [
+				{ label: 'SMS.ir — اصلی', value: '3000505', status: 'ok', note: 'الگوی «کد ورود» انتخاب شده است.' },
+				{ label: 'کاوه‌نگار — پشتیبان', value: 'آماده نیست', status: 'warn', note: 'ناقص: کلید API' },
+				{ label: 'ترتیب تلاش', value: 'SMS.ir → کاوه‌نگار', status: 'ok', note: 'اگر سامانهٔ اول خطا بدهد، بعدی امتحان می‌شود.' },
+				{ label: 'ارسال واقعی', value: 'آزمایش جدا', status: 'info', note: 'این آزمایش چیزی ارسال نمی‌کند.' },
+			],
+		},
+		security: {
+			title: 'آزمایش امنیت و کپچا',
+			summary: 'تنظیمات کپچا از سمت سرور بررسی می‌شود و سپس در همین پنجره، در مرورگر شما امتحان می‌شود.',
+			rows: [
+				{ label: 'سرویس کپچا', value: 'اچ‌کپچا', status: 'ok' },
+				{ label: 'کلید سایت', value: '1000••••••0001', status: 'ok' },
+				{ label: 'کلید مخفی', value: 'ثبت شده', status: 'ok' },
+				{ label: 'فهرست اسکریپت‌ها', value: '۲ نشانی', status: 'ok', note: 'https://js.hcaptcha.com/1/api.js' },
+				{ label: 'نمایش در این مرورگر', value: 'در همین پنجره ادامه دارد…', status: 'info' },
+			],
+		},
+		registration: {
+			title: 'آزمایش فرم عضویت',
+			summary: 'گام‌ها، فیلدهای فعال و جایی که هر مقدار ذخیره می‌شود.',
+			rows: [
+				{ label: 'فرم عضویت', value: 'روشن', status: 'info' },
+				{ label: 'ترتیب گام‌ها', value: 'اول مشخصات، بعد کد', status: 'ok' },
+				{ label: 'فیلدهای فعال', value: 'ایمیل · کد پستی · آدرس', status: 'ok' },
+				{ label: 'فیلدهای اجباری', value: 'ایمیل', status: 'info' },
+				{ label: 'کلید متای شماره', value: 'tisa_phone', status: 'ok' },
+			],
+		},
+		design: {
+			title: 'آزمایش ظاهر فرم',
+			summary: 'همان رنگ‌هایی که کاربر می‌بیند، با نسبت کنتراست واقعی‌شان.',
+			rows: [
+				{ label: 'رنگ تأکید روی کارت سفید', value: '5.47:1', status: 'ok', note: 'بلندی، پیوندها و دکمه‌های متن‌دار.' },
+				{ label: 'متن سفید روی رنگ تأکید', value: '5.47:1', status: 'ok' },
+				{ label: 'متن روی پس‌زمینهٔ فرم', value: '17.75:1', status: 'ok' },
+				{ label: 'رنگ تأکید', value: '#0f766e', status: 'info' },
+			],
+		},
+		store: {
+			title: 'آزمایش فروشگاه',
+			summary: 'وضعیت ووکامرس و اینکه تنظیمات این صفحه روی چه چیزی اثر می‌گذارند.',
+			rows: [
+				{ label: 'ووکامرس', value: '9.4.1', status: 'ok' },
+				{ label: 'فرم حساب کاربری', value: 'جایگزین می‌شود', status: 'info' },
+				{ label: 'همگام‌سازی شماره صورتحساب', value: 'روشن', status: 'ok' },
+				{ label: 'شمارهٔ صورتحساب در سایت', value: 'پیدا شد', status: 'ok' },
+			],
+		},
+		data: {
+			title: 'آزمایش داده و رویدادها',
+			summary: 'یک رویداد واقعی نوشته و خوانده می‌شود تا معلوم شود گزارش‌ها روی چه چیزی حساب می‌کنند.',
+			rows: [
+				{ label: 'ثبت رویدادها', value: 'روشن', status: 'ok' },
+				{ label: 'جدول رویدادها', value: 'موجود', status: 'ok', note: 'wp_tisa_otp_logs' },
+				{ label: 'رویدادهای ثبت‌شده', value: '۱٬۲۸۴', status: 'info', note: '۱۷ موردش خطا بوده است.' },
+				{ label: 'نگهداری', value: '۷ روز', status: 'info' },
+				{ label: 'نوشتن و خواندن', value: 'درست', status: 'ok', note: 'یک رویداد admin.self_test نوشته و بلافاصله پیدا شد.' },
+			],
+		},
+	};
+
+	const payload = rows[kind] || rows.general;
+	const ok = payload.rows.every((row) => row.status !== 'fail');
+
+	return { kind: kind, ok: ok, title: payload.title, summary: payload.summary, rows: payload.rows };
+}
+
 function doctorPayload() {
 	return {
 		gateways: {
@@ -450,6 +550,9 @@ function handleRest(route, body, headers) {
 				message: 'کد تأیید برای شماره شما ارسال شد.',
 			}));
 		}
+
+		case 'admin/check':
+			return ok(checkPayload(String(body.kind || 'general')));
 
 		case 'admin/test':
 			if (!/^09\d{9}$/.test(phone)) {

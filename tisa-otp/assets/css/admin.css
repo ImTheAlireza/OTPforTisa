@@ -12,6 +12,7 @@
 	--tisa-line: #e4e7ec;
 	--tisa-bg: #f7f8fa;
 	--tisa-danger: #b42318;
+	--tisa-warning: #b54708;
 	--tisa-success: #067647;
 
 	max-width: 1180px;
@@ -100,6 +101,190 @@
 
 .tisa-overview__side p {
 	margin: 0;
+}
+
+/* Self-test modal ---------------------------------------------------------- */
+
+/*
+ * Every settings section can be tested without leaving it. The results arrive
+ * in a native <dialog>, so the focus trap, the ESC key and the top layer are
+ * the browser's job rather than ours.
+ */
+.tisa-modal {
+	width: min(620px, calc(100vw - 32px));
+	max-height: min(80vh, 720px);
+	padding: 0;
+	border: 1px solid var(--tisa-line);
+	border-radius: 16px;
+	background: #fff;
+	color: var(--tisa-ink);
+	direction: rtl;
+	box-shadow: 0 24px 60px rgba(16, 24, 40, 0.24);
+	font-size: 14px;
+	overflow: hidden;
+}
+
+.tisa-modal::backdrop {
+	background: rgba(16, 24, 40, 0.5);
+}
+
+.tisa-modal__head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--tisa-line);
+	background: linear-gradient(135deg, #ffffff 0%, #f4faf9 100%);
+}
+
+.tisa-modal__title {
+	flex: 1;
+	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+	line-height: 1.5;
+}
+
+.tisa-modal__state {
+	padding: 3px 11px;
+	border-radius: 999px;
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.tisa-modal__state.is-ok {
+	background: rgba(6, 118, 71, 0.12);
+	color: var(--tisa-success);
+}
+
+.tisa-modal__state.is-fail {
+	background: rgba(180, 35, 24, 0.12);
+	color: var(--tisa-danger);
+}
+
+.tisa-modal__close {
+	width: 32px;
+	height: 32px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--tisa-muted);
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.tisa-modal__close:hover {
+	background: var(--tisa-accent-soft);
+	color: var(--tisa-accent);
+}
+
+.tisa-modal__body {
+	max-height: 58vh;
+	padding: 16px 20px;
+	overflow-y: auto;
+}
+
+.tisa-modal__summary,
+.tisa-modal__note {
+	margin: 0 0 12px;
+	color: var(--tisa-muted);
+	font-size: 13px;
+	line-height: 1.9;
+}
+
+.tisa-modal__form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 12px 0 0;
+}
+
+.tisa-modal__foot {
+	display: flex;
+	justify-content: flex-start;
+	gap: 8px;
+	padding: 14px 20px;
+	border-top: 1px solid var(--tisa-line);
+	background: #fbfcfd;
+}
+
+.tisa-test-rows {
+	display: grid;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.tisa-test-row {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+	padding: 10px 12px;
+	border: 1px solid var(--tisa-line);
+	border-radius: 10px;
+	background: #fff;
+}
+
+.tisa-test-row__dot {
+	flex: none;
+	width: 10px;
+	height: 10px;
+	margin-top: 7px;
+	border-radius: 50%;
+	background: var(--tisa-muted);
+}
+
+.tisa-test-row.is-ok .tisa-test-row__dot {
+	background: var(--tisa-success);
+}
+
+.tisa-test-row.is-warn .tisa-test-row__dot {
+	background: var(--tisa-warning);
+}
+
+.tisa-test-row.is-fail .tisa-test-row__dot {
+	background: var(--tisa-danger);
+}
+
+.tisa-test-row.is-info .tisa-test-row__dot {
+	background: var(--tisa-accent);
+}
+
+.tisa-test-row__text {
+	min-width: 0;
+}
+
+.tisa-test-row__line {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: baseline;
+	margin: 0;
+}
+
+.tisa-test-row__label {
+	font-weight: 600;
+}
+
+.tisa-test-row__value {
+	color: var(--tisa-muted);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+	word-break: break-word;
+}
+
+.tisa-test-row__note {
+	margin: 3px 0 0;
+	color: var(--tisa-muted);
+	font-size: 13px;
+	line-height: 1.9;
+}
+
+/* The reports tab is a page, not a card: the panels inside it draw themselves. */
+.tisa-tabbody {
+	min-width: 0;
 }
 
 /* Header ------------------------------------------------------------------- */
@@ -234,6 +419,19 @@
 	font-size: 16px;
 	font-weight: 700;
 	line-height: 1.5;
+}
+
+.tisa-bullets {
+	margin: 0 0 14px;
+	padding-inline-start: 20px;
+	color: var(--tisa-ink);
+	font-size: 13px;
+	line-height: 1.9;
+}
+
+.tisa-bullets li {
+	margin: 0 0 4px;
+	list-style: disc;
 }
 
 .tisa-card__intro {

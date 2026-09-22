@@ -35,6 +35,21 @@ final class ScreenNav {
 	}
 
 	/**
+	 * Where one screen lives.
+	 *
+	 * Reports has two doors (its own page and the settings tab), and the pill
+	 * points at the tab: that is where an administrator already is, and it keeps
+	 * the plugin's own navigation inside the plugin.
+	 */
+	public static function url( string $slug ): string {
+		if ( ReportScreen::SLUG === $slug ) {
+			return SettingsScreen::tabUrl( 'reports' );
+		}
+
+		return admin_url( 'admin.php?page=' . $slug );
+	}
+
+	/**
 	 * Print the row, marking the screen the visitor is already on.
 	 *
 	 * @param string $current Slug of the screen being rendered.
@@ -47,7 +62,7 @@ final class ScreenNav {
 
 			printf(
 				'<li><a href="%1$s" class="tisa-screen%2$s"%3$s>%4$s</a></li>',
-				esc_url( admin_url( 'admin.php?page=' . $slug ) ),
+				esc_url( self::url( $slug ) ),
 				$is_current ? ' is-current' : '',
 				$is_current ? ' aria-current="page"' : '',
 				esc_html( $label )
