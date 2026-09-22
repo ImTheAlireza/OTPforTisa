@@ -26,6 +26,82 @@
 	box-sizing: border-box;
 }
 
+/* Screen switcher ---------------------------------------------------------- */
+
+/*
+ * Five screens, one row, always directly under the header. Before this the
+ * settings/reports/events/tools/access screens were only reachable from the
+ * WordPress sidebar, so "where is the reports page?" had no answer inside the
+ * plugin itself.
+ */
+.tisa-screens {
+	margin: -6px 0 18px;
+}
+
+.tisa-screens ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.tisa-screen {
+	display: inline-block;
+	padding: 7px 14px;
+	border: 1px solid var(--tisa-line);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--tisa-ink);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.6;
+	text-decoration: none;
+}
+
+.tisa-screen:hover {
+	border-color: var(--tisa-accent);
+	color: var(--tisa-accent);
+}
+
+/* The screen you are on: filled, not outlined, so scanning the row is instant. */
+.tisa-screen.is-current,
+.tisa-screen.is-current:hover {
+	border-color: transparent;
+	background: var(--tisa-accent);
+	color: #fff;
+}
+
+/* Overview strip ----------------------------------------------------------- */
+
+.tisa-overview {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 14px;
+	margin-bottom: 18px;
+}
+
+.tisa-overview .tisa-kpis {
+	flex: 1 1 480px;
+	margin: 0;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tisa-overview__side {
+	display: flex;
+	flex: 0 1 300px;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	padding-top: 2px;
+}
+
+.tisa-overview__side p {
+	margin: 0;
+}
+
 /* Header ------------------------------------------------------------------- */
 
 .tisa-header {
@@ -1217,10 +1293,19 @@ textarea.tisa-input {
 	.tisa-kpis {
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
+
+	.tisa-overview .tisa-kpis {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.tisa-overview__side {
+		flex: 1 1 100%;
+	}
 }
 
 @media (max-width: 600px) {
-	.tisa-kpis {
+	.tisa-kpis,
+	.tisa-overview .tisa-kpis {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 

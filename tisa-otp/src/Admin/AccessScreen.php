@@ -62,6 +62,8 @@ final class AccessScreen implements Bootable {
 		echo '<p>' . esc_html__( 'دو اهرم اضطراری: کدی برای روزی که پیامک قطع است، و فهرستی از شماره‌هایی که اجازه ورود ندارند.', 'tisa-otp' ) . '</p>';
 		echo '</div></div>';
 
+		ScreenNav::render( self::SLUG );
+
 		$this->notice();
 		$this->emergencyCard();
 		$this->blocklistCard();

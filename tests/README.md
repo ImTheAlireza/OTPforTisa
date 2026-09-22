@@ -11,6 +11,7 @@ either in CI (real PHP 7.4 and 8.3) or locally through the WebAssembly PHP build
 | `php/blocklist-test.php` | Rule parsing (exact/prefix/wildcard, international and Persian spellings) and matching, including expiry. | PHP 7.4+ |
 | `php/emergency-test.php` | The emergency code: hashing, holding a reveal, single use, revocation. | PHP 7.4+ |
 | `php/trusted-test.php` | The trusted-number list: exact numbers, prefixes and patterns match (including international and Persian spellings), a bare `*` is refused so nobody trusts the whole world by accident, the blocklist can never be skipped, and the list switched off trusts nobody. | PHP 7.4+ |
+| `php/screens-test.php` | The admin screen switcher: the row lists the five screens in the same order as the WordPress menu, every slug matches the class that owns it, each screen renders exactly one "you are here" marker and it is its own, and the row is a named `<nav>` list rather than a pile of links. | PHP 7.4+ |
 | `php/breaker-test.php` | The gateway circuit breaker: three consecutive failures rest a gateway for ten minutes, a success clears it, an administrator can reset it, and — the rule that matters most — when every gateway is resting the chain still tries all of them, so a local mistake can never stop a site sending SMS. | PHP 7.4+ |
 
 ```bash
@@ -20,14 +21,14 @@ npm install --no-save jsdom && node tests/front.js
 
 ## PHP without a PHP binary
 
-This sandbox has no `php`, so `tools/php-test.js` runs the same three test files
+This sandbox has no `php`, so `tools/php-test.js` runs the same test files
 in a real PHP build compiled to WebAssembly. Same classes, same bootstrap, same
 assertions — only the interpreter is different.
 
 ```bash
 npm install --no-save @php-wasm/node
 node tools/php-test.js breaker-test.php               # one test file
-node tools/php-test.js blocklist-test.php emergency-test.php trusted-test.php
+node tools/php-test.js blocklist-test.php emergency-test.php screens-test.php
 node tools/php-test.js --lint                         # compile every plugin file
 TISA_PHP_VERSION=8.3 node tools/php-test.js --lint    # the version CI also runs
 ```

@@ -375,7 +375,8 @@ final class Plugin {
 				$c->make( Admin\Controls::class ),
 				$c->make( Gateway\Registry::class ),
 				$c->make( Registration\FieldSchema::class ),
-				$c->make( Captcha\Manager::class )
+				$c->make( Captcha\Manager::class ),
+				$c->make( Log\LogStore::class )
 			);
 		} );
 

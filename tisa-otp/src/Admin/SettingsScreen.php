@@ -14,6 +14,8 @@ use TisaOtp\Captcha\Manager;
 use TisaOtp\Config\Sanitizer;
 use TisaOtp\Config\Settings;
 use TisaOtp\Gateway\Registry;
+use TisaOtp\Log\LogStore;
+use TisaOtp\Log\Report;
 use TisaOtp\Registration\FieldCatalog;
 use TisaOtp\Registration\FieldSchema;
 use TisaOtp\User\AccessPolicy;
@@ -21,6 +23,8 @@ use TisaOtp\User\AccessPolicy;
 defined( 'ABSPATH' ) || exit;
 
 final class SettingsScreen {
+
+	const OVERVIEW_DAYS = 7;
 
 	/** @var Settings */
 	private $settings;
@@ -37,12 +41,16 @@ final class SettingsScreen {
 	/** @var Manager */
 	private $captcha;
 
-	public function __construct( Settings $settings, Controls $controls, Registry $gateways, FieldSchema $schema, Manager $captcha ) {
+	/** @var LogStore */
+	private $logs;
+
+	public function __construct( Settings $settings, Controls $controls, Registry $gateways, FieldSchema $schema, Manager $captcha, LogStore $logs ) {
 		$this->settings = $settings;
 		$this->controls = $controls;
 		$this->gateways = $gateways;
 		$this->schema   = $schema;
 		$this->captcha  = $captcha;
+		$this->logs     = $logs;
 	}
 
 	/**
@@ -64,6 +72,10 @@ final class SettingsScreen {
 		echo '<div class="wrap tisa-wrap" dir="rtl">';
 
 		$this->header( $tab );
+
+		ScreenNav::render( Menu::ROOT );
+
+		$this->overview();
 
 		echo '<div class="tisa-layout">';
 		$this->tabs( $tab );
@@ -933,6 +945,72 @@ final class SettingsScreen {
 		);
 	}
 
+	/**
+	 * The last week, on every settings tab.
+	 *
+	 * The plugin has a full reports screen, but nothing on the screen people
+	 * actually open said so — and nothing anywhere said "is it working?". Four
+	 * numbers answer that before a single setting is read, and the button next
+	 * to them opens the screen that explains them.
+	 */
+	private function overview(): void {
+		$reports = admin_url( 'admin.php?page=' . ReportScreen::SLUG );
+
+		echo '<div class="tisa-overview">';
+
+		if ( ! $this->settings->bool( 'logs_enabled', true ) ) {
+			$this->controls->notice( __( 'ثبت رویدادها خاموش است، پس آماری برای نمایش نیست. با روشن کردن «ثبت رویدادها» در بخش داده و رویدادها، همین کادر از فردا پر می‌شود.', 'tisa-otp' ), 'warning' );
+		} else {
+			$counts = $this->logs->countByEvent(
+				array_merge( Report::requestEvents(), array( Report::CREATED ) ),
+				self::OVERVIEW_DAYS
+			);
+
+			$kpis = Report::kpis( $counts );
+
+			$cells = array(
+				array( __( 'درخواست‌ها', 'tisa-otp' ), number_format_i18n( (int) $kpis['requests'] ), '' ),
+				array( __( 'موفق', 'tisa-otp' ), number_format_i18n( (int) $kpis['sent'] ), 'is-good' ),
+				array( __( 'ناموفق', 'tisa-otp' ), number_format_i18n( (int) $kpis['failed'] ), (int) $kpis['failed'] > 0 ? 'is-bad' : '' ),
+				array( __( 'نرخ موفقیت', 'tisa-otp' ), number_format_i18n( (float) $kpis['rate'], 1 ) . '٪', 'is-rate' ),
+			);
+
+			echo '<div class="tisa-kpis">';
+
+			foreach ( $cells as $cell ) {
+				printf(
+					'<div class="tisa-kpi %1$s"><span class="tisa-kpi__value">%2$s</span><span class="tisa-kpi__label">%3$s</span></div>',
+					esc_attr( $cell[2] ),
+					esc_html( $cell[1] ),
+					esc_html( $cell[0] )
+				);
+			}
+
+			echo '</div>';
+		}
+
+		echo '<div class="tisa-overview__side">';
+
+		printf(
+			'<a class="button" href="%1$s">%2$s</a>',
+			esc_url( $reports ),
+			esc_html__( 'گزارش‌ها', 'tisa-otp' )
+		);
+
+		printf(
+			'<p class="tisa-muted">%s</p>',
+			esc_html(
+				sprintf(
+					/* translators: %d: number of days */
+					__( 'آمار %d روز گذشته. صفحهٔ گزارش‌ها بازهٔ ۷، ۱۴ و ۳۰ روز، نمودار روزانه، دلیل‌های شکست و خروجی CSV دارد.', 'tisa-otp' ),
+					self::OVERVIEW_DAYS
+				)
+			)
+		);
+
+		echo '</div></div>';
+	}
+
 	private function dataSection(): void {
 		$c = $this->controls;
 
@@ -952,6 +1030,25 @@ final class SettingsScreen {
 				} );
 			},
 			__( 'شماره موبایل هرگز به‌صورت خام ذخیره نمی‌شود؛ فقط اثر انگشت HMAC و نسخه ماسک‌شده.', 'tisa-otp' )
+		);
+
+		$this->card(
+			__( 'گزارش و رویدادها', 'tisa-otp' ),
+			function () use ( $c ) {
+				$c->row(
+					__( 'صفحه‌ها', 'tisa-otp' ),
+					function () {
+						printf(
+							'<a class="button" href="%1$s">%2$s</a> <a class="button" href="%3$s">%4$s</a>',
+							esc_url( admin_url( 'admin.php?page=' . ReportScreen::SLUG ) ),
+							esc_html__( 'گزارش‌ها', 'tisa-otp' ),
+							esc_url( admin_url( 'admin.php?page=' . LogsScreen::SLUG ) ),
+							esc_html__( 'تک‌تک رویدادها', 'tisa-otp' )
+						);
+					},
+					__( 'گزارش‌ها می‌شمارند (۷/۱۴/۳۰ روز و CSV)؛ فهرست رویدادها با فیلتر زمان، سطح، سامانه و شماره.', 'tisa-otp' )
+				);
+			}
 		);
 
 		$this->card(

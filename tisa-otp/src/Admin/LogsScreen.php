@@ -53,6 +53,8 @@ final class LogsScreen implements Bootable {
 
 		echo '<div class="wrap tisa-wrap" dir="rtl"><div class="tisa-header"><div class="tisa-header__title"><h1>' . esc_html__( 'رویدادها', 'tisa-otp' ) . '</h1></div></div>';
 
+		ScreenNav::render( self::SLUG );
+
 		$this->summaryBar();
 		$this->filterBar( $filters );
 

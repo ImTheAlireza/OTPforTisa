@@ -20,6 +20,8 @@ defined( 'ABSPATH' ) || exit;
 
 final class ToolsScreen implements Bootable {
 
+	const SLUG = 'tisa-otp-tools';
+
 	/** @var Settings */
 	private $settings;
 
@@ -54,6 +56,8 @@ final class ToolsScreen implements Bootable {
 		}
 
 		echo '<div class="wrap tisa-wrap" dir="rtl"><div class="tisa-header"><div class="tisa-header__title"><h1>' . esc_html__( 'ابزارها و وضعیت', 'tisa-otp' ) . '</h1></div></div>';
+
+		ScreenNav::render( self::SLUG );
 
 		$this->statusCards();
 		$this->doctorCard();

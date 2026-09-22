@@ -86,6 +86,8 @@ final class ReportScreen implements Bootable {
 		$this->rangeBar( $days );
 		echo '</div></div>';
 
+		ScreenNav::render( self::SLUG );
+
 		$this->kpis( $data['kpis'], $days );
 		$this->chart( $data['series'], (int) $data['peak'], $days );
 		$this->failureTable( $data['failures'] );

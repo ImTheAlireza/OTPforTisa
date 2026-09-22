@@ -147,6 +147,9 @@ const checks = [
 	['admin: danger on card (failed bar legend, numbers)', admin['--tisa-danger'], admin['--tisa-white'], 4.5, admin],
 	['admin: success on card (sent legend, numbers)', admin['--tisa-success'], admin['--tisa-white'], 4.5, admin],
 	['admin: card border on page', admin['--tisa-line'], admin['--tisa-bg'], 1],
+	// The screen switcher: the current pill is filled with the accent.
+	['admin: current screen pill (white on accent)', admin['--tisa-white'], admin['--tisa-accent'], 4.5, admin],
+	['admin: screen pill label on card', admin['--tisa-ink'], admin['--tisa-white'], 4.5, admin],
 ];
 
 let failed = 0;

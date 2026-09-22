@@ -95,6 +95,33 @@ function esc_html__( $text, $domain = null ) {
  * @param mixed $value
  * @return mixed
  */
+/**
+ * Escaping and admin URLs, so screens can be rendered in tests.
+ */
+function esc_html( $text ): string {
+	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+}
+
+function esc_attr( $text ): string {
+	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+}
+
+function esc_url( $url ): string {
+	return (string) $url;
+}
+
+function admin_url( $path = '', $scheme = 'admin' ): string {
+	unset( $scheme );
+
+	return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' );
+}
+
+function esc_attr__( $text, $domain = null ) {
+	unset( $domain );
+
+	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+}
+
 function apply_filters( $tag, $value ) {
 	return $value;
 }

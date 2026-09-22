@@ -801,12 +801,65 @@ function testTheThreeDemoPages() {
 	check('and admin.js implements it', /testCaptcha/.test(fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'js', 'admin.js'), 'utf8')));
 }
 
+/*
+ * The admin plugin registers five screens, but only the settings screen has its
+ * own tab row — so reports, events, tools and access used to be reachable only
+ * from the WordPress sidebar. These checks hold the switcher (and the version
+ * stamp people use to tell which build is installed) in place.
+ */
+function testEveryScreenIsReachable() {
+	scenario('Every screen is reachable from every screen');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const nav = read('tisa-otp', 'src', 'Admin', 'ScreenNav.php');
+	const settings = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
+	const menu = read('tisa-otp', 'src', 'Admin', 'Menu.php');
+	const admin = read('preview', 'public', 'admin.html');
+	const adminCss = read('tisa-otp', 'assets', 'css', 'admin.css');
+
+	check('the switcher knows all five screens', ['Menu::ROOT', 'ReportScreen::SLUG', 'LogsScreen::SLUG', 'ToolsScreen::SLUG', 'AccessScreen::SLUG'].every((slug) => nav.indexOf(slug) >= 0));
+
+	for (const [file, marker] of [
+		['SettingsScreen', 'ScreenNav::render( Menu::ROOT )'],
+		['ReportScreen', 'ScreenNav::render( self::SLUG )'],
+		['LogsScreen', 'ScreenNav::render( self::SLUG )'],
+		['ToolsScreen', 'ScreenNav::render( self::SLUG )'],
+		['AccessScreen', 'ScreenNav::render( self::SLUG )'],
+	]) {
+		check(file + ' prints the switcher', read('tisa-otp', 'src', 'Admin', file + '.php').indexOf(marker) >= 0);
+	}
+
+	check('the menu and the switcher share one slug per screen', /LogsScreen::SLUG/.test(menu) && /ToolsScreen::SLUG/.test(menu) && menu.indexOf("self::ROOT . '-logs'") < 0 && menu.indexOf("self::ROOT . '-tools'") < 0);
+	check('the tools screen owns its slug like the others', /const SLUG = 'tisa-otp-tools'/.test(read('tisa-otp', 'src', 'Admin', 'ToolsScreen.php')));
+
+	// The settings screen counts the last week and names the page that explains it.
+	check('the settings screen shows a seven-day overview', /private function overview\(\)/.test(settings) && /const OVERVIEW_DAYS = 7/.test(settings));
+	check('with the four numbers the reports screen also shows', /tisa-kpis/.test(settings) && /'requests'/.test(settings) && /'rate'/.test(settings));
+	check('and a way into the reports screen', /ReportScreen::SLUG/.test(settings) && /گزارش\u200cها/.test(settings));
+	check('it says so instead of showing zeros when logging is off', /logs_enabled/.test(settings) && /notice\(/.test(settings));
+
+	check('the css defines the switcher', /\.tisa-screens \{/.test(adminCss) && /\.tisa-screen\.is-current/.test(adminCss));
+	check('and the overview strip', /\.tisa-overview \.tisa-kpis \{/.test(adminCss));
+	check('the demo mirrors both', admin.indexOf('tisa-screens') >= 0 && admin.indexOf('tisa-overview') >= 0);
+
+	// "Which build is on my site?" must be answerable from the dashboard header.
+	const plugin = read('tisa-otp', 'tisa-otp.php');
+	const readme = read('tisa-otp', 'readme.txt');
+	const version = (plugin.match(/Version:\s*([0-9.]+)/) || [])[1];
+
+	check('the header version and the constant agree', !!version && plugin.indexOf("TISA_OTP_VERSION', '" + version + "'") >= 0, version);
+	check('the readme advertises the same version', !!version && readme.indexOf('Stable tag: ' + version) >= 0);
+	check('the demo shows the same version', !!version && admin.indexOf('نسخه ' + version) >= 0);
+	check('and the changelog has an entry for it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
 	await testThrottleHasNoFalseHope();
 	await testCodeLengthRebuild();
 	await testRescuePanel();
+	await testEveryScreenIsReachable();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();
