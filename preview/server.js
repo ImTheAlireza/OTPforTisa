@@ -203,6 +203,86 @@ function importState(status, note) {
 	};
 }
 
+/* ------------------------------------------------------- admin screen mock */
+
+/** Mirrors AdminController::doctor(). */
+function doctorPayload() {
+	return {
+		gateways: {
+			smsir: {
+				label: 'SMS.ir',
+				ready: true,
+				missing: [],
+				issues: [],
+				notes: ['الگوی «کد ورود» انتخاب شده است.'],
+				mode: 'pattern',
+				health_text: 'سالم — آخرین ارسال موفق',
+				plan: { mode: 'pattern', sender: '3000505', template: '123456', endpoint: '' },
+			},
+			kavenegar: {
+				label: 'کاوه‌نگار',
+				ready: false,
+				missing: ['کلید API'],
+				issues: ['کلید API خالی است؛ این سامانه در جابه‌جایی خودکار شرکت نمی‌کند.'],
+				notes: [],
+				mode: 'text',
+				health_text: 'بدون تاریخچه',
+				plan: { mode: 'text', sender: '', template: '', endpoint: '' },
+			},
+		},
+		channels: {
+			sms: { label: 'پیامک', available: true, reason: '' },
+			email: { label: 'ایمیل', available: false, reason: 'سامانهٔ ایمیل تنظیم نشده است.' },
+		},
+		captcha: {
+			provider: 'arcaptcha',
+			label: 'ARCaptcha',
+			enabled: true,
+			kind: 'widget',
+			trigger: 'always',
+			failOpen: true,
+			halfConfigured: false,
+			scripts: ['https://widget.arcaptcha.ir/1/api.js', 'https://arcaptcha.ir/1/api.js'],
+		},
+		cache_mode: 'auto',
+		webotp: false,
+		cron: Math.floor(Date.now() / 1000) + 900,
+		debug: false,
+		form_token: 'demo-doctor-token',
+	};
+}
+
+function probePayload(service) {
+	const urls = {
+		smsir: 'https://api.sms.ir/v1/send/bulk',
+		kavenegar: 'https://api.kavenegar.com/v1/lookup',
+		captcha: 'https://widget.arcaptcha.ir/1/api.js',
+		wordpress: 'https://api.wordpress.org/plugins/info/1.0/tisa-otp.json',
+	};
+
+	if (service === 'kavenegar') {
+		return {
+			service,
+			url: urls[service],
+			ok: false,
+			ms: 812,
+			status: 0,
+			error: 'http_request_failed',
+			message: 'دسترسی به بیرون برقرار نشد. اگر WP_HTTP_BLOCK_EXTERNAL روشن است، این دامنه را استثنا کنید.',
+		};
+	}
+
+	return {
+		service,
+		url: urls[service] || urls.wordpress,
+		ok: true,
+		ms: 143,
+		status: 200,
+		error: '',
+		message: 'دسترسی برقرار است.',
+	};
+}
+
 function handleRest(route, body, headers) {
 	const phone = normalizePhone(body.phone);
 
@@ -226,6 +306,42 @@ function handleRest(route, body, headers) {
 	switch (route) {
 		case 'form-config':
 			return ok(formConfig());
+
+		case 'admin/doctor':
+			return ok(doctorPayload());
+
+		case 'admin/probe':
+			return ok(probePayload(String(body.service || 'wordpress')));
+
+		case 'admin/summary':
+			return ok({ sent_today: 42, blocked: 3, failed: 1, channels: { sms: 40, email: 2 } });
+
+		case 'admin/throttle-reset':
+			return ok({ message: 'شمارنده‌های محدودیت پاک شد.', cooldowns: 4, locks: 1 });
+
+		case 'admin/test':
+			if ('09120000000' === phone) {
+				// A gateway that answers 401 — the trace is the whole point.
+				return fail('delivery_failed', 'پیامک ارسال نشد: کلید API نامعتبر است.', {
+					gateway: 'smsir',
+					error_code: 'unauthorized',
+					trace: [
+						{ gateway: 'smsir', sent: false, error_code: 'unauthorized', status: 401, message: 'کلید API نامعتبر است.' },
+						{ gateway: 'kavenegar', sent: false, error_code: 'missing_key', status: 0, message: 'کلید API تنظیم نشده است.' },
+					],
+					plan: { mode: 'pattern', sender: '3000505', template: '123456' },
+				});
+			}
+
+			return ok({
+				sent: true,
+				via: 'smsir',
+				channel: 'sms',
+				masked: mask(phone),
+				message: 'کد آزمایشی ارسال شد.',
+				plan: { mode: 'pattern', sender: '3000505', template: '123456' },
+				trace: [{ gateway: 'smsir', sent: true, error_code: '', status: 200, message: '' }],
+			});
 
 		case 'start':
 			if (phone === '09129999999') {
@@ -447,7 +563,6 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
 	console.log('Tisa OTP preview listening on http://' + HOST + ':' + PORT);
 	console.log('  /                     front-end form demo');
-	console.log('  /login                wp-login.php takeover demo');
 	console.log('  /admin                admin screens demo');
 	console.log('  /download/tisa-otp.zip  installable package (built on demand)');
 	console.log('  plugin assets served from ' + PLUGIN_ASSETS);

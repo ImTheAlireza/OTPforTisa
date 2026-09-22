@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۳.۰)</title>
+<!-- Same stylesheet the plugin loads in wp-admin. -->
+<link rel="stylesheet" href="/plugin-assets/css/admin.css">
+<style>
+	body {
+		margin: 0;
+		background: #f0f0f1;
+		color: #1d2327;
+		font-family: Tahoma, "Segoe UI", sans-serif;
+	}
+	.demo-bar {
+		padding: 10px 20px;
+		background: #1d2327;
+		color: #f0f0f1;
+		font-size: 13px;
+	}
+	.demo-bar a { color: #72aee6; }
+	.demo-bar strong { color: #fff; }
+	.tisa-wrap { margin-inline-start: 20px; }
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۳.۰)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
+	داده‌ها از سرور آزمایشی همین پیش‌نمایش می‌آیند.
+	<a href="/">نمونهٔ فرم ورود</a>
+</div>
+
+<div class="wrap tisa-wrap" dir="rtl">
+
+	<div class="tisa-header">
+		<div class="tisa-header__title">
+			<h1>ابزارها و وضعیت</h1>
+			<p class="tisa-note">نسخهٔ ۱.۳.۰ — کپچا، پیامک، و تشخیص دقیق خطا</p>
+		</div>
+	</div>
+
+	<!-- statusCards() ---------------------------------------------------- -->
+	<div class="tisa-statbar">
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">سالم</span><span class="tisa-stat__label">جدول‌های افزونه</span></div>
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">8.2</span><span class="tisa-stat__label">نسخه PHP</span></div>
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">6.9</span><span class="tisa-stat__label">نسخه وردپرس</span></div>
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">جدول</span><span class="tisa-stat__label">کد یکبارمصرف</span></div>
+		<div class="tisa-stat is-bad"><span class="tisa-stat__value">غیرفعال</span><span class="tisa-stat__label">کش شیء پایدار</span></div>
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">ثبت شده</span><span class="tisa-stat__label">زمان‌بند cron</span></div>
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">۱۲</span><span class="tisa-stat__label">محدودیت‌های فعال</span></div>
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">۴۰۲</span><span class="tisa-stat__label">رویدادهای ثبت‌شده</span></div>
+		<div class="tisa-stat is-good"><span class="tisa-stat__value">باز</span><span class="tisa-stat__label">ارتباط خروجی</span></div>
+	</div>
+
+	<div class="tisa-panel">
+		<table class="widefat striped tisa-diag"><tbody>
+			<tr><th>جدول‌های افزونه</th><td>سالم</td></tr>
+			<tr><th>کد یکبارمصرف</th><td>جدول <em>۵ رقم / ۱۲۰ ثانیه</em></td></tr>
+			<tr><th>زمان‌بند cron</th><td>ثبت شده</td></tr>
+			<tr><th>ارتباط خروجی</th><td>باز</td></tr>
+			<tr><th>پیشوند جدول‌ها</th><td>wp_</td></tr>
+		</tbody></table>
+	</div>
+
+	<!-- doctorCard() ------------------------------------------------------ -->
+	<section class="tisa-panel tisa-card" data-tisa-doctor>
+		<h2>سلامت ارسال و کپچا</h2>
+		<p class="tisa-card__intro">هر سامانه پیامکی به‌صورت جداگانه بررسی می‌شود: مسیر ارسال (متن آزاد یا پترن)، شماره خط، آخرین خطای ثبت‌شده و دسترسی خروجی سرور.</p>
+		<p class="tisa-inline">
+			<button type="button" class="button button-primary" data-tisa-doctor-refresh>بررسی سلامت</button>
+			<span class="tisa-note">هیچ پیامکی در این بخش ارسال نمی‌شود.</span>
+		</p>
+		<div class="tisa-doctor" data-tisa-doctor-report hidden></div>
+		<p class="tisa-result" data-tisa-doctor-result hidden></p>
+	</section>
+
+	<!-- testSendCard() ---------------------------------------------------- -->
+	<section class="tisa-panel tisa-card">
+		<h2>ارسال آزمایشی</h2>
+		<p class="tisa-card__intro">یک کد واقعی به شماره زیر ارسال می‌شود تا تنظیمات سامانه را بسنجید. برای دیدن «رد تلاش‌ها»، شمارهٔ <code dir="ltr">09120000000</code> را امتحان کنید.</p>
+		<div class="tisa-inline">
+			<input type="tel" class="regular-text" dir="ltr" data-tisa-test-phone placeholder="09xxxxxxxxx" value="09121234567">
+			<select data-tisa-test-channel>
+				<option value="sms">پیامک</option>
+				<option value="email">ایمیل</option>
+			</select>
+			<button type="button" class="button button-primary" data-tisa-test-send>ارسال کد آزمایشی</button>
+		</div>
+		<p class="tisa-result" data-tisa-test-result hidden></p>
+	</section>
+
+	<!-- housekeepingCard() ------------------------------------------------ -->
+	<section class="tisa-panel tisa-card">
+		<h2>خانه‌تکانی</h2>
+		<p class="tisa-card__intro">پاک‌کردن شمارنده‌های محدودیت تا کاربرانی که موقتاً قفل شده‌اند دوباره بتوانند کد بگیرند.</p>
+		<div class="tisa-inline">
+			<button type="button" class="button" data-tisa-reset-throttle>صفر کردن محدودیت‌ها</button>
+		</div>
+		<p class="tisa-result" data-tisa-house-result hidden></p>
+	</section>
+
+	<!-- captcha card (SettingsScreen, tab «امنیت») ------------------------ -->
+	<section class="tisa-panel tisa-card">
+		<h2>کپچا</h2>
+		<p class="tisa-card__intro">اگر سرویس کپچا در دسترس نباشد و «باز ماندن ورود» روشن باشد، کاربر پشت چالشی که نمایش داده نمی‌شود گیر نمی‌کند.</p>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">سرویس</div>
+			<div class="tisa-row__control">
+				<div class="tisa-cards">
+					<label class="tisa-card"><input type="radio" name="captcha_provider" checked><span class="tisa-card__title">ARCaptcha</span><span class="tisa-card__desc">ویجت داخلی، مناسب کاربران ایرانی</span></label>
+					<label class="tisa-card"><input type="radio" name="captcha_provider"><span class="tisa-card__title">hCaptcha</span><span class="tisa-card__desc">نسخهٔ بین‌المللی</span></label>
+					<label class="tisa-card is-selected"><input type="radio" name="captcha_provider"><span class="tisa-card__title">reCAPTCHA v3</span><span class="tisa-card__desc">بدون ویجت، امتیازی</span></label>
+				</div>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">حالت نمایش</div>
+			<div class="tisa-row__control">
+				<select><option>همیشه</option><option>پس از چند تلاش</option></select>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">باز ماندن ورود در قطعی سرویس</div>
+			<div class="tisa-row__control">
+				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>فعال</span></label>
+				<p class="tisa-row__hint">اگر سرویس کپچا پاسخ ندهد، کاربر رد نمی‌شود؛ رویداد در گزارش‌ها ثبت می‌شود.</p>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">مهلت بارگذاری (میلی‌ثانیه)</div>
+			<div class="tisa-row__control">
+				<input type="number" value="8000" min="3000" max="20000">
+				<p class="tisa-row__hint">بین ۳ تا ۲۰ ثانیه؛ پس از این مهلت، نشانی بعدی امتحان می‌شود.</p>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">اسکریپت جایگزین</div>
+			<div class="tisa-row__control">
+				<input type="url" dir="ltr" placeholder="https://cdn.example.com/api.js">
+				<p class="tisa-row__hint">برای سایت‌ها و کاربرانی که دامنهٔ اصلی سرویس برایشان بسته است.</p>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">ARCaptcha نسخهٔ ۳</div>
+			<div class="tisa-row__control">
+				<label class="tisa-toggle"><input type="checkbox"><span>امتیازی (بدون ویجت)</span></label>
+			</div>
+		</div>
+	</section>
+
+</div>
+
+<script>
+	/* Stands in for wp_localize_script( 'tisa-otp-admin', 'tisaOtpAdmin', ... ) */
+	window.tisaOtpAdmin = {
+		restUrl: '/mock/tisa-otp/v1/',
+		nonce: 'demo-nonce',
+		i18n: {
+			working: 'در حال بررسی…',
+			done: 'انجام شد',
+			traceTitle: 'مسیر تلاش برای ارسال:',
+			traceSent: 'ارسال شد',
+			ok: 'فعال'
+		}
+	};
+</script>
+<script src="/plugin-assets/js/admin.js"></script>
+</body>
+</html>
