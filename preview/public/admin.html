@@ -91,6 +91,37 @@
 		<p class="tisa-result" data-tisa-test-result hidden></p>
 	</section>
 
+	<!-- security tab: trusted numbers (1.3.0) ----------------------------- -->
+	<section class="tisa-panel tisa-card">
+		<h2>شماره‌های مورد اعتماد</h2>
+		<p class="tisa-card__intro">برای شماره خودتان و حساب‌های کارکنان: ورود همچنان با کد تأیید انجام می‌شود، فقط چالش ربات و سقف ارسال کنار می‌رود.</p>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">فعال بودن فهرست</div>
+			<div class="tisa-row__control">
+				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>شماره‌های این فهرست از کپچا و محدودیت‌ها معاف باشند</span></label>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">شماره‌ها</div>
+			<div class="tisa-row__control">
+				<textarea rows="4" dir="ltr">09121234567
+0912*
+0935*4567</textarea>
+				<p class="tisa-row__hint">هر خط یک شماره، پیش‌شماره (۰۹۱۲) یا الگو (۰۹۳۵*۴۵۶۷).</p>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">معافیت از</div>
+			<div class="tisa-row__control">
+				<input type="text" dir="ltr" value="captcha,throttle">
+				<p class="tisa-row__hint">نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود.</p>
+			</div>
+		</div>
+	</section>
+
 	<!-- housekeepingCard() ------------------------------------------------ -->
 	<section class="tisa-panel tisa-card">
 		<h2>خانه‌تکانی</h2>
