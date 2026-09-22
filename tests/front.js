@@ -608,8 +608,8 @@ async function testPasteWithoutAClipboard() {
 	check('pasting into the first box still fills them all', '12345' === boxes.join(''), boxes.join(''));
 }
 
-async function testPrefixChip() {
-	scenario('The 09 chip means something, and is not printed twice');
+async function testPhoneFieldHasOneTruth() {
+	scenario('The phone field asks for exactly what it accepts');
 
 	const ctx = boot({
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
@@ -617,20 +617,37 @@ async function testPrefixChip() {
 
 	const phone = ctx.doc.querySelector('[data-tisa-phone]');
 	const dial = ctx.doc.querySelector('.tisa-phone__dial');
+	const css = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'front.css'), 'utf8');
 
-	check('the field has a prefix chip', !!dial, 'missing');
-	check('the chip is the prefix alone', '۰۹' === text(dial), text(dial));
-	check('the placeholder shows only what is left to type', '912 345 6789' === phone.placeholder, phone.placeholder);
-	check('the placeholder does not repeat the prefix', phone.placeholder.indexOf('09') < 0, phone.placeholder);
-	check('the chip is decorative for screen readers', 'true' === dial.getAttribute('aria-hidden'));
+	/*
+	 * A fixed "09" chip while the error says "start with 09" is a field arguing
+	 * with itself. The chip is gone; the placeholder shows the whole number.
+	 */
+	check('no fixed prefix is printed inside the field', !dial, 'the chip is back');
+	check('and no rule paints one either', css.indexOf('.tisa-phone__dial') < 0);
+	check('the placeholder shows the whole number', '09121234567' === phone.placeholder, phone.placeholder);
+	// What the placeholder demonstrates and what the error asks for must be the
+	// same rule: eleven digits, beginning with 09.
+	const copy = fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'Assets.php'), 'utf8');
+	check('the error still states the 09 / 11-digit rule', /\u06f0\u06f9/.test(copy) && copy.indexOf('\u06f1\u06f1 \u0631\u0642\u0645') >= 0);
+	check('the example in the field obeys that same rule', /^09\d{9}$/.test(phone.placeholder));
+	check('a plain eleven-digit number needs no fixing', phone.value === '' || /^09\d{9}$/.test(phone.value));
 
-	// Type the ten digits the chip implies, and the full number must go out.
+	// Typing the whole number, chip or no chip, must send the whole number.
+	phone.value = '09123456789';
+	ctx.form.act('start');
+	for (let i = 0; i < 6; i++) await tick();
+
+	const first = ctx.calls.filter((call) => call.url.indexOf('/start') >= 0).pop();
+	check('eleven digits go out unchanged', !!first && '09123456789' === first.body.phone, first ? String(first.body.phone) : 'no call');
+
+	// The shorthand people still type out of habit keeps working.
 	phone.value = '9123456789';
 	ctx.form.act('start');
 	for (let i = 0; i < 6; i++) await tick();
 
 	const start = ctx.calls.filter((call) => call.url.indexOf('/start') >= 0).pop();
-	check('ten digits are sent as a full number', !!start && '09123456789' === start.body.phone, start ? String(start.body.phone) : 'no call');
+	check('ten digits are still completed to a full number', !!start && '09123456789' === start.body.phone, start ? String(start.body.phone) : 'no call');
 
 	// The other spellings users paste have to fold too.
 	const cases = [
@@ -665,7 +682,7 @@ async function testTheLookOfTheTwoReportedBugs() {
 
 	check('no connector line is drawn across the progress bar', !/tisa-otp__steps li \+ li::after/.test(css));
 	check('progress is three filled segments instead', /\.tisa-otp__steps li::before \{/.test(css));
-	check('the phone chip draws the only border around the field', /\.tisa-phone__input[\s\S]{0,240}border:\s*0 !important/.test(css));
+	check('the phone field has one border, from the shared input rule', /\.tisa-field__input,\n\.tisa-field__select,\n\.tisa-phone__input/.test(css));
 	const page = new JSDOM(pageSource, { runScripts: 'outside-only' });
 	const shown = page.window.document.querySelector('.tisa-otp').textContent;
 
@@ -682,15 +699,15 @@ function testPreviewMirrorsTheTemplate() {
 	const renderer = fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'FormRenderer.php'), 'utf8');
 	const step = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-tisa-step="phone"]');
 
-	for (const name of ['tisa-phone', 'tisa-phone__dial', 'tisa-phone__input', 'tisa-otp__trust']) {
+	for (const name of ['tisa-phone', 'tisa-phone__input', 'tisa-otp__trust']) {
 		check('the template renders .' + name, template.indexOf(name) >= 0);
 		check('the demo shows .' + name, !!step.querySelector('.' + name));
 	}
 
-	check('the chip text is a variable, not a hard-coded 09', /\$dial/.test(template) && step.querySelector('.tisa-phone__dial').textContent === '۰۹');
-	check('the chip flips to Latin digits for LTR', /'09'/.test(template));
-	check('the placeholder comes from the renderer', /\$phonePlaceholder/.test(template) && /'912 345 6789'/.test(renderer));
-	check('the demo placeholder matches the renderer', step.querySelector('[data-tisa-phone]').placeholder === '912 345 6789');
+	check('the template prints no prefix chip at all', template.indexOf('tisa-phone__dial') < 0);
+	check('the demo prints none either', !step.querySelector('.tisa-phone__dial'));
+	check('the placeholder comes from the renderer', /\$phonePlaceholder/.test(template) && /'09121234567'/.test(renderer));
+	check('the demo placeholder matches the renderer', step.querySelector('[data-tisa-phone]').placeholder === '09121234567');
 
 	const trustTemplate = template.slice(template.indexOf('tisa-otp__trust'));
 	check('the demo trust items are the ones the PHP filter ships', trustTemplate.indexOf("__(") < 0 && step.querySelectorAll('.tisa-otp__trust-item').length >= 3);
@@ -726,9 +743,19 @@ function testTheAccentIsTheOnlyColour() {
 	const template = fs.readFileSync(path.join(REPO, 'tisa-otp', 'templates', 'partials', 'step-code.php'), 'utf8');
 	const rescue = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-tisa-rescue]');
 
-	check('the rescue panel has an icon, a title and a sentence', !!rescue.querySelector('.tisa-code__rescue-icon svg') && !!rescue.querySelector('.tisa-code__rescue-title') && !!rescue.querySelector('.tisa-code__rescue-note'));
-	check('and its first choice is a real button now', !!rescue.querySelector('.tisa-btn--compact[data-tisa-action="resend"]'));
-	check('the template prints the same card', /tisa-code__rescue-icon/.test(template) && /tisa-code__rescue-note/.test(template) && /tisa-btn--compact/.test(template));
+	/*
+	 * Callout rules this panel is held to (see docs/UI-PLAN.fa.md §4.10):
+	 * one message, no duplicate actions, nothing centred, no second primary
+	 * button competing with the one that submits the code.
+	 */
+	check('the rescue panel is a callout with an icon and a title', !!rescue.querySelector('.tisa-code__rescue-icon svg') && !!rescue.querySelector('.tisa-code__rescue-title'));
+	check('it carries no button at all', !rescue.querySelector('button'));
+	check('and therefore no second primary button', !rescue.querySelector('.tisa-btn'));
+	check('it explains in at most two short lines', rescue.querySelectorAll('.tisa-code__rescue-list li').length === 2);
+	check('each line points at a control that already exists', /ارسال دوبارهٔ کد/.test(rescue.textContent) && /ویرایش شماره/.test(rescue.textContent));
+	check('the text is never centred', /\.tisa-code__rescue \{[\s\S]{0,600}text-align: start/.test(css));
+	check('and no rule centres the panel contents', !/\.tisa-code__rescue[\s-][^{]*\{[^}]*text-align: center/.test(css));
+	check('the template prints the same panel', /tisa-code__rescue-icon/.test(template) && /tisa-code__rescue-list/.test(template) && template.indexOf('tisa-code__rescue-note') < 0);
 }
 
 function testTheThreeDemoPages() {
@@ -789,7 +816,7 @@ async function main() {
 	await testStaleFormTokenRecovers();
 	await testPasteFromSms();
 	await testPasteWithoutAClipboard();
-	await testPrefixChip();
+	await testPhoneFieldHasOneTruth();
 	await testTheLookOfTheTwoReportedBugs();
 	await testPreviewMirrorsTheTemplate();
 	await testTheAccentIsTheOnlyColour();

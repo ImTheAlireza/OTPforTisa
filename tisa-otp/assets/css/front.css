@@ -542,71 +542,30 @@
 
 /* Phone ---------------------------------------------------------------------
  *
- * One control, one border, one prefix. The chip is the country prefix the
- * visitor does not have to type, and the placeholder only shows what is left —
- * `912 345 6789` rather than `09xxxxxxxxx`, which repeated the chip and made
- * the field look like it had two values.
- *
- * The `<input>` resets carry `!important` because a theme that styles
- * `input[type="tel"]` with a heavier selector would otherwise draw a second
- * rounded box inside the chip and break the whole control.
+ * One field, one number. There used to be a fixed `09` chip inside this
+ * control, which contradicted the error message right underneath it ("start
+ * with 09") — the field asked for something it had already printed. Now the
+ * placeholder shows the whole number the way it is written on a phone, and
+ * anything the visitor types is folded to `09xxxxxxxxx` before it is sent
+ * (see `canonicalPhone()` in `front.js`).
  */
 
 .tisa-phone {
-	display: flex;
-	align-items: stretch;
-	min-height: 54px;
-	border: 1px solid var(--tisa-input-line);
-	border-radius: var(--tisa-radius-control);
-	background: var(--tisa-surface);
-	overflow: hidden;
-	/* A prefix and a number are both written left to right, so this control is
-	   one too: chip first, digits right after it. Locking the direction here is
-	   what keeps the two ends of the field from drifting apart. */
+	/* The number is written left to right, so the field is too. There is no
+	   prefix chip any more: the placeholder shows the whole number, and what
+	   the user types is what gets sent. */
 	direction: ltr;
-	transition: border-color var(--tisa-dur-fast) var(--tisa-ease-out), box-shadow var(--tisa-dur-fast) var(--tisa-ease-out);
-}
-
-.tisa-phone:focus-within {
-	border-color: var(--tisa-focus);
-	box-shadow: var(--tisa-ring);
-}
-
-.tisa-phone[aria-invalid="true"],
-.tisa-phone.has-error {
-	border-color: var(--tisa-danger);
-	background: var(--tisa-danger-soft);
-}
-
-.tisa-phone__dial {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex: none;
-	padding: 0 15px;
-	border-inline-end: 1px solid var(--tisa-line);
-	background: var(--tisa-surface-sunken);
-	color: var(--tisa-text);
-	font-size: 17px;
-	font-weight: 700;
-	font-feature-settings: "tnum" 1;
-	letter-spacing: 0.04em;
-	user-select: none;
 }
 
 .tisa-phone__input,
 .tisa-phone__input:focus {
-	flex: 1 1 auto;
-	min-width: 0;
-	border: 0 !important;
-	border-radius: 0 !important;
-	background: transparent !important;
-	box-shadow: none !important;
-	/* Left, because the chip is on the left: the placeholder has to start
-	   where the prefix ends, otherwise the field reads as two halves. */
+	/* Inherited from `.tisa-field__input`: one border, one radius, one focus
+	   ring. All this adds is the direction and the tracking the eye needs to
+	   read eleven digits as one number. */
 	text-align: left;
 	direction: ltr;
 	letter-spacing: 0.06em;
+	font-variant-numeric: tabular-nums;
 }
 
 .tisa-phone__input::placeholder {
@@ -764,14 +723,14 @@
 /* "No SMS?" helper — an offer, not a warning, so it reads like a card. */
 
 .tisa-code__rescue {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--tisa-space-3);
-	margin-top: var(--tisa-space-5);
-	padding: var(--tisa-space-4);
+	margin-top: var(--tisa-space-4);
+	padding: var(--tisa-space-3) var(--tisa-space-4);
 	border: 1px solid var(--tisa-info-line);
-	border-radius: var(--tisa-radius-card);
+	border-radius: var(--tisa-radius-control);
 	background: var(--tisa-info-soft);
+	/* The panel explains a situation; it never centres itself and it never
+	   raises its voice above the code boxes it sits under. */
+	text-align: start;
 	animation: tisa-step-in var(--tisa-dur-base) var(--tisa-ease-out);
 }
 
@@ -779,49 +738,57 @@
 	display: none;
 }
 
-/* A quiet round badge: the panel is an offer of help, not an alarm. */
+.tisa-code__rescue-title {
+	display: flex;
+	align-items: center;
+	gap: var(--tisa-space-2);
+	margin: 0;
+	color: var(--tisa-text);
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.7;
+}
+
 .tisa-code__rescue-icon {
 	display: grid;
 	place-items: center;
 	flex: none;
-	width: 34px;
-	height: 34px;
+	width: 22px;
+	height: 22px;
 	border-radius: 50%;
 	background: var(--tisa-surface);
 	color: var(--tisa-info);
-	box-shadow: var(--tisa-elev-1);
 }
 
 .tisa-code__rescue-icon svg {
-	width: 18px;
-	height: 18px;
+	width: 14px;
+	height: 14px;
 }
 
-.tisa-code__rescue-body {
-	flex: 1 1 auto;
-	min-width: 0;
-}
-
-.tisa-code__rescue-title {
-	margin: 0;
-	color: var(--tisa-text);
-	font-size: 15px;
-	font-weight: 700;
-	line-height: 1.6;
-}
-
-.tisa-code__rescue-note {
-	margin: 2px 0 0;
+.tisa-code__rescue-list {
+	margin: var(--tisa-space-2) 0 0;
+	padding: 0;
+	list-style: none;
 	color: var(--tisa-muted);
-	font-size: 13.5px;
+	font-size: 13px;
+	line-height: 1.95;
 }
 
-.tisa-code__rescue-actions {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: var(--tisa-space-3);
-	margin-top: var(--tisa-space-3);
+.tisa-code__rescue-list li {
+	position: relative;
+	padding-inline-start: var(--tisa-space-4);
+}
+
+.tisa-code__rescue-list li::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: 3px;
+	top: 0.72em;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--tisa-info);
+	opacity: 0.5;
 }
 
 .tisa-otp.is-expired .tisa-code__box,
@@ -875,12 +842,6 @@
 .tisa-btn--primary:active:not(:disabled) {
 	transform: translateY(1px);
 	box-shadow: 0 6px 14px -10px var(--tisa-accent-strong);
-}
-
-.tisa-btn--compact {
-	min-height: 44px;
-	padding: 10px 16px;
-	font-size: 14px;
 }
 
 .tisa-btn--ghost {
@@ -1102,7 +1063,6 @@
 }
 
 .tisa-skin-glass .tisa-field__input,
-.tisa-skin-glass .tisa-phone,
 .tisa-skin-glass .tisa-code__box,
 .tisa-skin-glass .tisa-code__bulk {
 	background: rgba(255, 255, 255, 0.78);
@@ -1144,7 +1104,6 @@
 
 .tisa-skin-slate .tisa-field__input,
 .tisa-skin-slate .tisa-field__select,
-.tisa-skin-slate .tisa-phone,
 .tisa-skin-slate .tisa-code__box,
 .tisa-skin-slate .tisa-code__bulk,
 .tisa-skin-slate .tisa-code__phone {
@@ -1162,7 +1121,6 @@
 
 .tisa-skin-pill .tisa-btn,
 .tisa-skin-pill .tisa-field__input,
-.tisa-skin-pill .tisa-phone,
 .tisa-skin-pill .tisa-code__box,
 .tisa-skin-pill .tisa-code__bulk,
 .tisa-skin-pill .tisa-otp__status {
@@ -1242,10 +1200,6 @@
 		gap: var(--tisa-space-1);
 	}
 
-	.tisa-phone__dial {
-		padding: 0 11px;
-	}
-
 	/* Only the "step 2 of 3" sentence survives; the labels would wrap. */
 	.tisa-otp__steps {
 		display: none;
@@ -1264,13 +1218,6 @@
 		white-space: normal;
 	}
 
-	/* Stacked, but the link keeps its tap target: gap 0 made the two choices
-	   look like one block of text. */
-	.tisa-code__rescue-actions {
-		flex-direction: column;
-		align-items: stretch;
-		gap: var(--tisa-space-2);
-	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1286,7 +1233,6 @@
 	.tisa-otp__steps li::before,
 	.tisa-field__input,
 	.tisa-field__select,
-	.tisa-phone,
 	.tisa-code__bulk,
 	.tisa-code__box,
 	.tisa-otp.is-busy .tisa-step.is-current {
@@ -1353,7 +1299,6 @@
 	}
 
 	.tisa-field__input,
-	.tisa-phone,
 	.tisa-code__box,
 	.tisa-otp__status,
 	.tisa-otp__status-action,

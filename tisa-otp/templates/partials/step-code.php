@@ -92,19 +92,27 @@ $codeTitleId = $instance . '-code-title';
 	<?php // One CSS animation, no second timer. Hidden while no cooldown runs. ?>
 	<div class="tisa-code__cooldown" data-tisa-cooldown aria-hidden="true" hidden><i></i></div>
 
-	<?php // Revealed 30 seconds in, when "it never arrived" becomes plausible. ?>
+	<?php
+	/*
+	 * Revealed 30 seconds in, when "it never arrived" becomes plausible.
+	 *
+	 * This is a callout, not a toolbar: it explains and points at the two
+	 * controls that already exist above it ("resend" beside the countdown, and
+	 * the edit link on the number chip). A third copy of those buttons would
+	 * only raise the question "are these the same button?".
+	 */
+	?>
 	<div class="tisa-code__rescue" data-tisa-rescue hidden>
-		<span class="tisa-code__rescue-icon" aria-hidden="true">
-			<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" focusable="false"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-3.6 2.6A.6.6 0 0 1 4.5 16v-2A2.5 2.5 0 0 1 3 11.5v-6Z" stroke-linejoin="round"></path><path d="M7 8.2h6M7 10.6h3.5" stroke-linecap="round"></path></svg>
-		</span>
-		<div class="tisa-code__rescue-body">
-			<p class="tisa-code__rescue-title"><?php esc_html_e( 'پیامک نرسید؟', 'tisa-otp' ); ?></p>
-			<p class="tisa-code__rescue-note"><?php esc_html_e( 'دو راه سریع پیش رو دارید.', 'tisa-otp' ); ?></p>
-			<div class="tisa-code__rescue-actions">
-				<button type="button" class="tisa-btn tisa-btn--primary tisa-btn--compact" data-tisa-action="resend"><?php echo esc_html( $resendLabel ); ?></button>
-				<button type="button" class="tisa-link" data-tisa-action="edit-phone"><?php esc_html_e( 'شماره را اصلاح می‌کنم', 'tisa-otp' ); ?></button>
-			</div>
-		</div>
+		<p class="tisa-code__rescue-title">
+			<span class="tisa-code__rescue-icon" aria-hidden="true">
+				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false"><circle cx="10" cy="10" r="7"></circle><path d="M10 6.2V10l2.6 1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+			</span>
+			<?php esc_html_e( 'پیامک نرسید؟', 'tisa-otp' ); ?>
+		</p>
+		<ul class="tisa-code__rescue-list">
+			<li><?php esc_html_e( 'معمولاً تا یک دقیقه می‌رسد؛ اگر نرسید، «ارسال دوبارهٔ کد» را بزنید.', 'tisa-otp' ); ?></li>
+			<li><?php esc_html_e( 'اگر شماره را اشتباه وارد کرده‌اید، «ویرایش شماره» را بزنید.', 'tisa-otp' ); ?></li>
+		</ul>
 	</div>
 
 	<?php // The visible countdown changes every second; this region speaks only at milestones. ?>

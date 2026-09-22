@@ -112,7 +112,7 @@ final class FormRenderer {
 			'redirect'     => $this->resolveRedirect( $args ),
 			'phoneLabel'   => __( 'شماره موبایل', 'tisa-otp' ),
 			// The chip already shows 09; the placeholder shows what is left to type.
-			'phonePlaceholder' => __( '912 345 6789', 'tisa-otp' ),
+			'phonePlaceholder' => __( '09121234567', 'tisa-otp' ),
 			'trust'        => $this->trust(),
 			'codeLabel'    => __( 'کد تأیید', 'tisa-otp' ),
 			'sendLabel'    => $this->settings->str( 'label_send', __( 'دریافت کد تأیید', 'tisa-otp' ) ),

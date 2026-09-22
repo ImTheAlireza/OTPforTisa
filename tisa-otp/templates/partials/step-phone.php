@@ -17,12 +17,14 @@ $hasPhoneHint = '' !== trim( (string) $hint );
 $phoneDescribedBy = trim( ( $hasPhoneHint ? $phoneHintId . ' ' : '' ) . $phoneErrorId );
 
 /*
- * The chip is the part nobody should have to type. The placeholder then shows
- * only the rest of the number, so the field stops looking like it already
- * contains a value (and stops printing "09" twice).
+ * One field, one number, no decoration.
+ *
+ * A fixed "09" chip used to sit inside this control while the error text asked
+ * people to "start with 09" — the field contradicted its own rule. The field
+ * now takes the number exactly as it is written on a phone, and the placeholder
+ * shows the whole shape of it.
  */
-$dial             = 'ltr' === $dir ? '09' : '۰۹';
-$phonePlaceholder = isset( $phonePlaceholder ) && '' !== $phonePlaceholder ? (string) $phonePlaceholder : '912 345 6789';
+$phonePlaceholder = isset( $phonePlaceholder ) && '' !== $phonePlaceholder ? (string) $phonePlaceholder : '09121234567';
 ?>
 <section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="<?php echo esc_attr( $phoneTitleId ); ?>">
 	<header class="tisa-step__head">
@@ -38,7 +40,6 @@ $phonePlaceholder = isset( $phonePlaceholder ) && '' !== $phonePlaceholder ? (st
 		</label>
 
 		<div class="tisa-phone">
-			<span class="tisa-phone__dial" aria-hidden="true"><?php echo esc_html( $dial ); ?></span>
 			<input
 				class="tisa-field__input tisa-phone__input"
 				id="<?php echo esc_attr( $phoneFieldId ); ?>"
