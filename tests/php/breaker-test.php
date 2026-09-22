@@ -10,6 +10,9 @@
  * `FailoverChain::usable()` is a pure function, so both run here without
  * WordPress or MySQL.
  *
+ * Note that `tisa_start()` wipes the option store, so each scenario seeds its
+ * own gateway state; a health record must not leak between sections.
+ *
  * @package TisaOtp\Tests
  */
 
@@ -52,7 +55,7 @@ $health->success( 'kavenegar', 'ref-1', 200 );
 tisa_check( 'one successful send clears the rest', ! $health->resting( 'kavenegar' ) );
 
 $health->failure( 'kavenegar', 'credit', '', 402 );
-tisa_check( 'and the counter starts again from one', 1 === (int) $health->get( 'kavenegar' )['count'] );
+tisa_same( 'and the counter starts again from one', 1, (int) $health->get( 'kavenegar' )['count'] );
 
 tisa_start( 'failures of different gateways do not mix' );
 
@@ -67,9 +70,15 @@ tisa_check( 'a single failure elsewhere does not', ! $health->resting( 'meli' ) 
 
 tisa_start( 'an administrator can clear the history' );
 
+$health = new Health();
+$health->failure( 'smsir', 'a', '', 0 );
+$health->failure( 'smsir', 'a', '', 0 );
+$health->failure( 'smsir', 'a', '', 0 );
+$health->failure( 'meli', 'b', '', 0 );
+
 $health->reset( 'smsir' );
 tisa_check( 'the reset gateway is used again', ! $health->resting( 'smsir' ) );
-tisa_check( 'the other gateway keeps its history', 1 === (int) $health->get( 'meli' )['count'] );
+tisa_same( 'the other gateway keeps its history', 1, (int) $health->get( 'meli' )['count'] );
 
 $health->forget();
 tisa_same( 'forget() clears everything', array(), $health->all() );

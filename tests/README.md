@@ -1,18 +1,41 @@
 # Tests
 
-No PHP runtime exists in this environment, so these cover the parts that can be
-executed here: the front-end behaviour and the design tokens. Both are fast and
-have no service dependencies.
+The front-end and the design tokens run anywhere with node. The PHP logic runs
+either in CI (real PHP 7.4 and 8.3) or locally through the WebAssembly PHP build
+— see the last section.
 
 | File | What it proves | Needs |
 |---|---|---|
 | `contrast.js` | Every colour pair the UI actually renders meets WCAG 1.4.3 (4.5:1 for text) and 1.4.11 (3:1 for control borders), in both the light palette and the `slate` skin. Values are read out of `front.css`, so the test fails if a token drifts. | node |
-| `front.js` | The real `assets/js/front.js`, mounted on the real preview markup in jsdom and driven like a visitor: step bar, actionable errors, attempts left, code-length rebuild, "no SMS?" panel, cooldown, focus management, skip link, expiry, and the cache/nonce recovery. The backend is stubbed at the `fetch` boundary with the exact envelope `src/Http/Api.php` returns. | node + jsdom |
+| `front.js` | The real `assets/js/front.js`, mounted on the real preview markup in jsdom and driven like a visitor: step bar, actionable errors, attempts left, code-length rebuild, "no SMS?" panel, cooldown, focus management, skip link, expiry, cache/nonce recovery, a captcha script that never loads, a form token frozen by a page cache, and pasting the code out of the SMS. The backend is stubbed at the `fetch` boundary with the exact envelope `src/Http/Api.php` returns. | node + jsdom |
+| `php/blocklist-test.php` | Rule parsing (exact/prefix/wildcard, international and Persian spellings) and matching, including expiry. | PHP 7.4+ |
+| `php/emergency-test.php` | The emergency code: hashing, holding a reveal, single use, revocation. | PHP 7.4+ |
+| `php/breaker-test.php` | The gateway circuit breaker: three consecutive failures rest a gateway for ten minutes, a success clears it, an administrator can reset it, and — the rule that matters most — when every gateway is resting the chain still tries all of them, so a local mistake can never stop a site sending SMS. | PHP 7.4+ |
 
 ```bash
 node tests/contrast.js
 npm install --no-save jsdom && node tests/front.js
 ```
+
+## PHP without a PHP binary
+
+This sandbox has no `php`, so `tools/php-test.js` runs the same three test files
+in a real PHP build compiled to WebAssembly. Same classes, same bootstrap, same
+assertions — only the interpreter is different.
+
+```bash
+npm install --no-save @php-wasm/node
+node tools/php-test.js breaker-test.php               # one test file
+node tools/php-test.js blocklist-test.php emergency-test.php
+node tools/php-test.js --lint                         # compile every plugin file
+TISA_PHP_VERSION=8.3 node tools/php-test.js --lint    # the version CI also runs
+```
+
+`--lint` compiles each file with `token_get_all( $source, TOKEN_PARSE )`, which
+is `php -l` without executing anything, so templates that need WordPress are
+still checked.
+
+## Static checks
 
 PHP is syntax-checked in CI with `php -l` on 7.4 and 8.3. A tokenizer alone
 cannot see *compile* errors, so `tools/php-static-check.js` covers the gap —
