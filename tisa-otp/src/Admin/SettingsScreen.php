@@ -450,6 +450,24 @@ final class SettingsScreen {
 		);
 
 		$this->card(
+			__( 'شماره‌های مورد اعتماد', 'tisa-otp' ),
+			function () use ( $c ) {
+				$c->row( __( 'فعال بودن فهرست', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'trusted_enabled', __( 'شماره‌های این فهرست از کپچا و محدودیت‌ها معاف باشند', 'tisa-otp' ) );
+				} );
+
+				$c->row( __( 'شماره‌ها', 'tisa-otp' ), function () use ( $c ) {
+					$c->textarea( 'trusted_numbers', 4, "09121234567\n0912*\n0935*4567" );
+				}, __( 'هر خط یک شماره، پیش‌شماره (۰۹۱۲) یا الگو (۰۹۳۵*۴۵۶۷).', 'tisa-otp' ) );
+
+				$c->row( __( 'معافیت از', 'tisa-otp' ), function () use ( $c ) {
+					$c->text( 'trusted_skip', 'captcha,throttle' );
+				}, __( 'نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود.', 'tisa-otp' ) );
+			},
+			__( 'برای شماره خودتان و حساب‌های کارکنان: ورود همچنان با کد تأیید انجام می‌شود، فقط چالش ربات و سقف ارسال کنار می‌رود.', 'tisa-otp' )
+		);
+
+		$this->card(
 			__( 'پروکسی و IP واقعی', 'tisa-otp' ),
 			function () use ( $c ) {
 				$c->row( __( 'سرآشد معتبر', 'tisa-otp' ), function () use ( $c ) {

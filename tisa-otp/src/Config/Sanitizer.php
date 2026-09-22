@@ -95,6 +95,9 @@ final class Sanitizer {
 			'limit_verify_per_ip'  => array( 'type' => 'int', 'min' => 5, 'max' => 1000 ),
 			'proxy_mode'           => array( 'type' => 'enum', 'choices' => array( 'none', 'cloudflare', 'forwarded', 'real_ip' ) ),
 			'trusted_proxies'      => array( 'type' => 'text' ),
+			'trusted_enabled'      => array( 'type' => 'bool' ),
+			'trusted_numbers'      => array( 'type' => 'textarea' ),
+			'trusted_skip'         => array( 'type' => 'text' ),
 
 			'captcha_provider'     => array( 'type' => 'enum', 'choices' => array( 'none', 'recaptcha_v3', 'hcaptcha', 'arcaptcha' ) ),
 			'captcha_site_key'     => array( 'type' => 'text' ),

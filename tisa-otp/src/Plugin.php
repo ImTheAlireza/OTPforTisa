@@ -254,6 +254,10 @@ final class Plugin {
 			return new Blocklist\Blocklist();
 		} );
 
+		$c->bind( Blocklist\Trusted::class, static function ( Container $c ) {
+			return new Blocklist\Trusted( $c->make( Config\Settings::class ) );
+		} );
+
 		$c->bind( Access\EmergencyToken::class, static function () {
 			return new Access\EmergencyToken();
 		} );
@@ -264,7 +268,8 @@ final class Plugin {
 				$c->make( Throttle\Throttle::class ),
 				$c->make( Captcha\Manager::class ),
 				$c->make( Log\Logger::class ),
-				$c->make( Blocklist\Blocklist::class )
+				$c->make( Blocklist\Blocklist::class ),
+				$c->make( Blocklist\Trusted::class )
 			);
 		} );
 

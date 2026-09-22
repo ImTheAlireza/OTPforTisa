@@ -24,6 +24,7 @@ jobs:
           php tests/php/blocklist-test.php
           php tests/php/emergency-test.php
           php tests/php/breaker-test.php
+          php tests/php/trusted-test.php
       - name: Lint every PHP file
         run: |
           php -v

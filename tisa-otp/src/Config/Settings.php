@@ -168,6 +168,11 @@ final class Settings {
 			'limit_verify_per_ip'    => '25',
 			'proxy_mode'             => 'none',
 			'trusted_proxies'        => '',
+			// Numbers that should not be stopped by the traffic guards. Off by
+			// default: an allowlist that nobody turned on is a hole, not a feature.
+			'trusted_enabled'        => '0',
+			'trusted_numbers'        => '',
+			'trusted_skip'           => 'captcha,throttle',
 
 			// Captcha.
 			'captcha_provider'       => 'none',

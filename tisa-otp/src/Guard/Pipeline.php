@@ -8,6 +8,7 @@
 namespace TisaOtp\Guard;
 
 use TisaOtp\Blocklist\Blocklist;
+use TisaOtp\Blocklist\Trusted;
 use TisaOtp\Captcha\Manager;
 use TisaOtp\Config\Settings;
 use TisaOtp\Http\Request;
@@ -41,12 +42,16 @@ final class Pipeline {
 	/** @var Blocklist */
 	private $blocklist;
 
-	public function __construct( Settings $settings, Throttle $throttle, Manager $captcha, Logger $logger, Blocklist $blocklist ) {
+	/** @var Trusted */
+	private $trusted;
+
+	public function __construct( Settings $settings, Throttle $throttle, Manager $captcha, Logger $logger, Blocklist $blocklist, ?Trusted $trusted = null ) {
 		$this->settings  = $settings;
 		$this->throttle  = $throttle;
 		$this->captcha   = $captcha;
 		$this->logger    = $logger;
 		$this->blocklist = $blocklist;
+		$this->trusted   = null === $trusted ? new Trusted( $settings ) : $trusted;
 	}
 
 	/**
@@ -89,8 +94,26 @@ final class Pipeline {
 			throw Rejection::make( 'disabled', __( 'سرویس ورود پیامکی در حال حاضر غیرفعال است.', 'tisa-otp' ) );
 		}
 
+		// A number on the trusted list skips only the guards that exist to slow
+		// strangers down. It still has to prove it owns the phone with a code,
+		// and the blocklist is never skipped.
+		$trusted = $this->trusted->matches( $request->phone() );
+
 		foreach ( $this->guards() as $guard ) {
 			if ( ! in_array( $stage, $guard->stages(), true ) ) {
+				continue;
+			}
+
+			if ( $trusted && $this->trusted->skipsGuard( $guard->name() ) ) {
+				$this->logger->notice(
+					'guard.trusted_skip',
+					array(
+						'guard' => $guard->name(),
+						'stage' => $stage,
+						'phone' => $request->phone(),
+					)
+				);
+
 				continue;
 			}
 
