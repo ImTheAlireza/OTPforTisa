@@ -543,6 +543,20 @@ final class SettingsScreen {
 					$c->number( 'captcha_timeout', 3000, 20000, __( 'میلی‌ثانیه', 'tisa-otp' ) );
 				} );
 
+				$c->row(
+					__( 'آزمایش بارگذاری', 'tisa-otp' ),
+					function () use ( $c ) {
+						unset( $c );
+
+						printf(
+							'<button type="button" class="button" data-tisa-captcha-test>%s</button>',
+							esc_html__( 'آزمایش کپچا در مرورگر', 'tisa-otp' )
+						);
+						echo '<p class="tisa-result" data-tisa-captcha-result hidden></p>';
+					},
+					__( 'همان اسکریپتی که فرم ورود می‌گیرد، در همین مرورگر امتحان می‌شود؛ اگر افزونهٔ مسدودکننده یا فیلترینگ جلوی آن را بگیرد، همین‌جا معلوم می‌شود.', 'tisa-otp' )
+				);
+
 				$c->row( __( 'حالت آرکپچا', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'captcha_arcaptcha_v3', __( 'نسخه ۳ (امتیازی/نامرئی)', 'tisa-otp' ), __( 'اگر حساب آرکپچای شما v3 است روشن کنید', 'tisa-otp' ) );
 				} );

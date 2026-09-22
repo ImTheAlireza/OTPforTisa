@@ -23,6 +23,7 @@ $GLOBALS['tisa_transients'] = array();
 $GLOBALS['tisa_checks']     = 0;
 $GLOBALS['tisa_failures']   = 0;
 $GLOBALS['tisa_actions']    = array();
+$GLOBALS['tisa_user_meta']  = array();
 
 /* -------------------------------------------------------------------------
  * WordPress stand-ins
@@ -157,6 +158,65 @@ function sanitize_key( $key ) {
  */
 function sanitize_text_field( $text ) {
 	return trim( preg_replace( '/[\r\n\t]+/', ' ', strip_tags( (string) $text ) ) );
+}
+
+/**
+ * @param string $text
+ * @return string
+ */
+function sanitize_textarea_field( $text ) {
+	return trim( strip_tags( (string) $text ) );
+}
+
+/**
+ * @param string $email
+ * @return string
+ */
+function sanitize_email( $email ) {
+	$email = trim( (string) $email );
+
+	return preg_match( '/^[^@\s]+@[^@\s]+\.[^@\s]+$/', $email ) ? $email : '';
+}
+
+/**
+ * @param string $email
+ * @return bool
+ */
+function is_email( $email ) {
+	return '' !== sanitize_email( $email );
+}
+
+/**
+ * User meta, kept in one array so a test can read what a method wrote.
+ *
+ * @param int    $userId
+ * @param string $key
+ * @param mixed  $default
+ * @return mixed
+ */
+function get_user_meta( $userId, $key, $single = false ) {
+	$bag = isset( $GLOBALS['tisa_user_meta'][ (int) $userId ] ) ? $GLOBALS['tisa_user_meta'][ (int) $userId ] : array();
+
+	return array_key_exists( $key, $bag ) ? $bag[ $key ] : '';
+}
+
+/**
+ * @param int    $userId
+ * @param string $key
+ * @param mixed  $value
+ */
+function update_user_meta( $userId, $key, $value ) {
+	$GLOBALS['tisa_user_meta'][ (int) $userId ][ $key ] = $value;
+
+	return true;
+}
+
+/**
+ * @param mixed $value
+ * @return mixed
+ */
+function wp_unslash( $value ) {
+	return $value;
 }
 
 /* -------------------------------------------------------------------------

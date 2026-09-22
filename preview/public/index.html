@@ -359,6 +359,7 @@
 
 	<nav>
 		<a class="is-active" href="/">فرم ورود</a>
+		<a href="/account">پنل کاربری</a>
 		<a href="/admin">پیشخوان</a>
 		<a class="dl" href="/download/tisa-otp.zip" download>
 			<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 3.5v9m0 0 3.2-3.2M10 12.5 6.8 9.3" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 15.5h12" stroke-linecap="round"></path></svg>
@@ -592,10 +593,23 @@
 								<p class="tisa-field__error" id="tisa-form-1-demo-f-user_email-error" data-tisa-error="user_email" role="alert" hidden></p>
 							</div>
 
-							<div class="tisa-field tisa-field--full" data-tisa-field="city">
+							<div class="tisa-field tisa-field--half" data-tisa-field="city">
 								<label class="tisa-field__label" for="tisa-form-1-demo-f-city">شهر</label>
 								<input class="tisa-field__input" id="tisa-form-1-demo-f-city" type="text" data-tisa-input="city" aria-describedby="tisa-form-1-demo-f-city-error" aria-invalid="false">
 								<p class="tisa-field__error" id="tisa-form-1-demo-f-city-error" data-tisa-error="city" role="alert" hidden></p>
+							</div>
+
+							<div class="tisa-field tisa-field--half" data-tisa-field="postcode">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-postcode">کد پستی</label>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-postcode" type="text" inputmode="numeric" dir="ltr" maxlength="10" autocomplete="postal-code" placeholder="1234567890" data-tisa-input="postcode" aria-describedby="tisa-form-1-demo-f-postcode-error" aria-invalid="false">
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-postcode-error" data-tisa-error="postcode" role="alert" hidden></p>
+							</div>
+
+							<div class="tisa-field tisa-field--full" data-tisa-field="address">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-address">آدرس</label>
+								<textarea class="tisa-field__input" id="tisa-form-1-demo-f-address" rows="3" data-tisa-input="address" aria-describedby="tisa-form-1-demo-f-address-hint tisa-form-1-demo-f-address-error" aria-invalid="false"></textarea>
+								<p class="tisa-field__hint" id="tisa-form-1-demo-f-address-hint">خیابان، کوچه، پلاک و واحد را کامل بنویسید.</p>
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-address-error" data-tisa-error="address" role="alert" hidden></p>
 							</div>
 						</div>
 
@@ -656,10 +670,16 @@
 						<div class="tisa-code__cooldown" data-tisa-cooldown aria-hidden="true" hidden><i></i></div>
 
 						<div class="tisa-code__rescue" data-tisa-rescue hidden>
-							<p class="tisa-code__rescue-title">پیامک نرسید؟</p>
-							<div class="tisa-code__rescue-actions">
-								<button type="button" class="tisa-link" data-tisa-action="resend">ارسال دوبارهٔ کد</button>
-								<button type="button" class="tisa-link" data-tisa-action="edit-phone">شماره را اصلاح می‌کنم</button>
+							<span class="tisa-code__rescue-icon" aria-hidden="true">
+								<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" focusable="false"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-3.6 2.6A.6.6 0 0 1 4.5 16v-2A2.5 2.5 0 0 1 3 11.5v-6Z" stroke-linejoin="round"></path><path d="M7 8.2h6M7 10.6h3.5" stroke-linecap="round"></path></svg>
+							</span>
+							<div class="tisa-code__rescue-body">
+								<p class="tisa-code__rescue-title">پیامک نرسید؟</p>
+								<p class="tisa-code__rescue-note">دو راه سریع پیش رو دارید.</p>
+								<div class="tisa-code__rescue-actions">
+									<button type="button" class="tisa-btn tisa-btn--primary tisa-btn--compact" data-tisa-action="resend">ارسال دوبارهٔ کد</button>
+									<button type="button" class="tisa-link" data-tisa-action="edit-phone">شماره را اصلاح می‌کنم</button>
+								</div>
 							</div>
 						</div>
 
@@ -763,6 +783,20 @@
 			return 'rgba(' + parseInt(value.substr(0, 2), 16) + ', ' + parseInt(value.substr(2, 2), 16) + ', ' + parseInt(value.substr(4, 2), 16) + ', ' + alpha + ')';
 		}
 
+		/* Same rule as Assets::mix() in PHP: the plugin derives the darker
+		   shade from the accent, so the preview has to as well. */
+		function shade(hex, ratio) {
+			var value = hex.replace('#', '');
+			var out = '';
+
+			for (var i = 0; i < 3; i++) {
+				var part = Math.round(parseInt(value.substr(i * 2, 2), 16) * (1 - ratio));
+				out += ('0' + part.toString(16)).slice(-2);
+			}
+
+			return '#' + out;
+		}
+
 		function setBackdrop(mode) {
 			page.classList.remove('demo-page--pattern', 'demo-page--dark');
 
@@ -813,6 +847,7 @@
 		bind('accents', 'accent', function (accent) {
 			form.style.setProperty('--tisa-accent', accent);
 			form.style.setProperty('--tisa-accent-soft', hexToRgba(accent, 0.14));
+			form.style.setProperty('--tisa-accent-strong', shade(accent, 0.22));
 		});
 
 		bind('code-inputs', 'code-input', function (mode) {

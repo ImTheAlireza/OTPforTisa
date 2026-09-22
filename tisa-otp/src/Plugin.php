@@ -98,6 +98,7 @@ final class Plugin {
 			Elementor\Module::class,
 			Cron\Maintenance::class,
 			User\ProfileField::class,
+			Admin\ReportScreen::class,
 			Admin\LogsScreen::class,
 			Admin\ToolsScreen::class,
 			Admin\AccessScreen::class,
@@ -382,6 +383,10 @@ final class Plugin {
 			return new Admin\LogsScreen( $c->make( Log\LogStore::class ), $c->make( Config\Settings::class ) );
 		} );
 
+		$c->bind( Admin\ReportScreen::class, static function ( Container $c ) {
+			return new Admin\ReportScreen( $c->make( Log\LogStore::class ), $c->make( Config\Settings::class ) );
+		} );
+
 		$c->bind( Admin\ToolsScreen::class, static function ( Container $c ) {
 			return new Admin\ToolsScreen(
 				$c->make( Config\Settings::class ),
@@ -405,6 +410,7 @@ final class Plugin {
 			return new Admin\Menu(
 				$c->make( Config\Settings::class ),
 				$c->make( Admin\SettingsScreen::class ),
+				$c->make( Admin\ReportScreen::class ),
 				$c->make( Admin\LogsScreen::class ),
 				$c->make( Admin\ToolsScreen::class ),
 				$c->make( Admin\AccessScreen::class )

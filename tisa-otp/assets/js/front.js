@@ -63,6 +63,16 @@
 	 * accept `9123456789` (which the old validator did) and then post those ten
 	 * digits, which the server — correctly — rejected as an invalid number.
 	 */
+	/**
+	 * Can this browser hand us the clipboard at all?
+	 *
+	 * `readText` only exists in a secure context, so a plain-http site gets no
+	 * promise to reject — the function is simply absent.
+	 */
+	function supportsClipboardRead() {
+		return !!(window.navigator && navigator.clipboard && navigator.clipboard.readText);
+	}
+
 	function canonicalPhone(value) {
 		var digits = digitsOnly(value);
 
@@ -913,6 +923,19 @@
 			return;
 		}
 
+		/*
+		 * Reading the clipboard needs a secure context (https or localhost) and
+		 * a browser that implements readText(). Without both, the button cannot
+		 * do anything — so it is not shown, and the user pastes into the first
+		 * box as they would anywhere else. An honest missing button beats a
+		 * button that answers "no" every time.
+		 */
+		if (!supportsClipboardRead()) {
+			this.pasteBtn.hidden = true;
+
+			return;
+		}
+
 		this.pasteBtn.addEventListener('click', function () {
 			self.pasteCode();
 		});
@@ -921,9 +944,10 @@
 	Form.prototype.pasteCode = function () {
 		var self = this;
 
-		if (!window.navigator || !navigator.clipboard || !navigator.clipboard.readText) {
+		if (!supportsClipboardRead()) {
 			this.say(i18n.pasteManual || '', 'info');
 			this.focusCode();
+
 			return;
 		}
 
@@ -933,6 +957,7 @@
 			if (digits.length < self.codeLength) {
 				self.say(i18n.pasteEmpty || '', 'info');
 				self.focusCode();
+
 				return;
 			}
 
@@ -940,7 +965,8 @@
 			self.say(i18n.pasteDone || '', 'success');
 			self.maybeAutoVerify();
 		}).catch(function () {
-			self.say(i18n.pasteManual || '', 'info');
+			// Refused, not broken: the first box is focused so Ctrl+V works.
+			self.say(i18n.pasteDenied || i18n.pasteManual || '', 'info');
 			self.focusCode();
 		});
 	};
@@ -2134,8 +2160,13 @@
 		var labels = cfg.actions || {};
 		var retry = { action: 'retry', label: labels.retry || '' };
 		var newCode = { action: 'resend', label: labels.newCode || '', disabled: !!(payload && payload.retry_after) };
-		var editPhone = { action: 'edit-phone', label: labels.editPhone || '' };
 
+		/*
+		 * No "edit phone" button here on purpose. The number is edited on the
+		 * spot — the field itself in step 1, the chip above the boxes in step 3
+		 * — so a third control that only goes back to a screen the user can
+		 * already see is noise, not a next step.
+		 */
 		switch (code) {
 			case 'network_error':
 			case 'request_timeout':
@@ -2147,18 +2178,14 @@
 
 			case 'expired_code':
 			case 'no_pending_code':
-				return [newCode, editPhone];
+				return [newCode];
 
 			case 'cooldown':
-				return [editPhone];
-
 			case 'throttled':
 			case 'blocked':
-				return [];
-
 			case 'invalid_phone':
 			case 'unknown_phone':
-				return [editPhone];
+				return [];
 
 			default:
 				return (payload && payload.captcha_required) ? [] : [retry];

@@ -94,10 +94,16 @@ $codeTitleId = $instance . '-code-title';
 
 	<?php // Revealed 30 seconds in, when "it never arrived" becomes plausible. ?>
 	<div class="tisa-code__rescue" data-tisa-rescue hidden>
-		<p class="tisa-code__rescue-title"><?php esc_html_e( 'پیامک نرسید؟', 'tisa-otp' ); ?></p>
-		<div class="tisa-code__rescue-actions">
-			<button type="button" class="tisa-link" data-tisa-action="resend"><?php echo esc_html( $resendLabel ); ?></button>
-			<button type="button" class="tisa-link" data-tisa-action="edit-phone"><?php esc_html_e( 'شماره را اصلاح می‌کنم', 'tisa-otp' ); ?></button>
+		<span class="tisa-code__rescue-icon" aria-hidden="true">
+			<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" focusable="false"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v6a2.5 2.5 0 0 1-2.5 2.5H9l-3.6 2.6A.6.6 0 0 1 4.5 16v-2A2.5 2.5 0 0 1 3 11.5v-6Z" stroke-linejoin="round"></path><path d="M7 8.2h6M7 10.6h3.5" stroke-linecap="round"></path></svg>
+		</span>
+		<div class="tisa-code__rescue-body">
+			<p class="tisa-code__rescue-title"><?php esc_html_e( 'پیامک نرسید؟', 'tisa-otp' ); ?></p>
+			<p class="tisa-code__rescue-note"><?php esc_html_e( 'دو راه سریع پیش رو دارید.', 'tisa-otp' ); ?></p>
+			<div class="tisa-code__rescue-actions">
+				<button type="button" class="tisa-btn tisa-btn--primary tisa-btn--compact" data-tisa-action="resend"><?php echo esc_html( $resendLabel ); ?></button>
+				<button type="button" class="tisa-link" data-tisa-action="edit-phone"><?php esc_html_e( 'شماره را اصلاح می‌کنم', 'tisa-otp' ); ?></button>
+			</div>
 		</div>
 	</div>
 

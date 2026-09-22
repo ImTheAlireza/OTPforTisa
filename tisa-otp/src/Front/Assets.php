@@ -104,6 +104,7 @@ final class Assets implements Bootable {
 			array(
 				'restUrl' => esc_url_raw( rest_url( 'tisa-otp/v1/' ) ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
+				'captcha' => $this->captchaTest(),
 				'i18n'    => array(
 					'working'    => __( 'در حال انجام…', 'tisa-otp' ),
 					'done'       => __( 'انجام شد', 'tisa-otp' ),
@@ -113,6 +114,10 @@ final class Assets implements Bootable {
 					'traceTitle' => __( 'مسیر تلاش برای ارسال:', 'tisa-otp' ),
 					'traceSent'  => __( 'ارسال شد', 'tisa-otp' ),
 					'ok'         => __( 'فعال', 'tisa-otp' ),
+					'testing'    => __( 'در حال آزمایش…', 'tisa-otp' ),
+					'captchaOk'  => __( 'کپچا درست بارگذاری شد.', 'tisa-otp' ),
+					'captchaNoScript' => __( 'نشانی اسکریپت خالی است. کلید سایت را در همین کارت وارد کنید.', 'tisa-otp' ),
+					'captchaBlocked'  => __( 'اسکریپت کپچا در مرورگر بارگذاری نشد. افزونهٔ مسدودکننده، DNS یا فیلترینگ را بررسی کنید؛ می‌توانید «نشانی جایگزین اسکریپت» را هم پر کنید.', 'tisa-otp' ),
 				),
 			)
 		);
@@ -122,6 +127,42 @@ final class Assets implements Bootable {
 		wp_enqueue_media();
 
 		unset( $hook );
+	}
+
+	/**
+	 * What the admin screen needs to test the captcha the way a visitor meets it.
+	 *
+	 * The point is to answer "why is there no captcha on my login page?" from
+	 * inside the dashboard: the same script URLs the front end tries, in the
+	 * same order, in a real browser.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function captchaTest(): array {
+		$provider = $this->captcha->active();
+
+		if ( null === $provider ) {
+			return array( 'on' => false );
+		}
+
+		$globals = array(
+			'arcaptcha'    => 'arcaptcha',
+			'hcaptcha'     => 'hcaptcha',
+			'recaptcha_v3' => 'grecaptcha',
+		);
+
+		$config = (array) $provider->clientConfig();
+
+		return array(
+			'on'        => true,
+			'id'        => $provider->id(),
+			'label'     => $provider->label(),
+			'script'    => $provider->scriptUrl(),
+			'fallbacks' => method_exists( $provider, 'fallbackScriptUrls' ) ? array_values( (array) $provider->fallbackScriptUrls() ) : array(),
+			'global'    => isset( $globals[ $provider->id() ] ) ? $globals[ $provider->id() ] : '',
+			'siteKey'   => isset( $config['siteKey'] ) ? (string) $config['siteKey'] : '',
+			'kind'      => isset( $config['kind'] ) ? (string) $config['kind'] : 'widget',
+		);
 	}
 
 	/**
@@ -191,6 +232,7 @@ final class Assets implements Bootable {
 				'pasteManual'      => __( 'کد پیامک را دستی در خانه‌ها وارد کنید.', 'tisa-otp' ),
 				'pasteEmpty'       => __( 'کدی در حافظه پیدا نشد. پیامک را باز کنید و کد را کپی کنید.', 'tisa-otp' ),
 				'pasteDone'        => __( 'کد از حافظه چسبانده شد.', 'tisa-otp' ),
+				'pasteDenied'      => __( 'مرورگر اجازهٔ خواندن حافظه را نداد. کد را در کادر اول بچسبانید (Ctrl+V).', 'tisa-otp' ),
 				'problemTitle'     => __( 'یک مشکل پیش آمد', 'tisa-otp' ),
 				'doneTitle'        => __( 'انجام شد', 'tisa-otp' ),
 				'noteTitle'        => __( 'توجه', 'tisa-otp' ),
@@ -249,10 +291,17 @@ final class Assets implements Bootable {
 		$radius  = max( 0, min( 40, $this->settings->int( 'radius', 14 ) ) );
 		$width   = max( 280, min( 900, $this->settings->int( 'width', 420 ) ) );
 
+		/*
+		 * Every colour the accent implies is derived here, next to the accent
+		 * itself. `--tisa-accent-strong` is what the button hover, its shadow
+		 * and the cooldown bar darken to; when it was a fixed teal, a crimson
+		 * form hovered green.
+		 */
 		return sprintf(
-			':root{--tisa-accent:%1$s;--tisa-accent-soft:%2$s;--tisa-surface:%3$s;--tisa-radius:%4$dpx;--tisa-width:%5$dpx;}',
+			':root{--tisa-accent:%1$s;--tisa-accent-strong:%2$s;--tisa-accent-soft:%3$s;--tisa-surface:%4$s;--tisa-radius:%5$dpx;--tisa-width:%6$dpx;}',
 			esc_attr( $accent ),
-			esc_attr( $this->mix( $accent, '#ffffff', 0.12 ) ),
+			esc_attr( $this->mix( $accent, '#000000', 0.22 ) ),
+			esc_attr( $this->rgba( $accent, 0.14 ) ),
 			esc_attr( $surface ),
 			$radius,
 			$width
@@ -270,6 +319,22 @@ final class Assets implements Bootable {
 		if ( '' !== trim( $js ) ) {
 			wp_add_inline_script( self::SCRIPT, $js, 'after' );
 		}
+	}
+
+	/**
+	 * The accent as a translucent wash.
+	 *
+	 * Alpha, not a lightened solid: the same ring has to sit on a white card
+	 * and on the dark skin without turning into an opaque band.
+	 */
+	private function rgba( string $hex, float $alpha ): string {
+		$rgb = $this->toRgb( $hex );
+
+		if ( null === $rgb ) {
+			return $hex;
+		}
+
+		return sprintf( 'rgba(%d, %d, %d, %s)', $rgb[0], $rgb[1], $rgb[2], rtrim( rtrim( number_format( $alpha, 3, '.', '' ), '0' ), '.' ) );
 	}
 
 	/**

@@ -551,6 +551,11 @@ const server = http.createServer(async (req, res) => {
 		return;
 	}
 
+	if (pathname === '/account' || pathname === '/account.html') {
+		serveStatic(res, path.join(PUBLIC_DIR, 'account.html'));
+		return;
+	}
+
 	const target = path.join(PUBLIC_DIR, pathname);
 	if (target.startsWith(PUBLIC_DIR) && fs.existsSync(target) && fs.statSync(target).isFile()) {
 		serveStatic(res, target);
@@ -564,6 +569,7 @@ server.listen(PORT, HOST, () => {
 	console.log('Tisa OTP preview listening on http://' + HOST + ':' + PORT);
 	console.log('  /                     front-end form demo');
 	console.log('  /admin                admin screens demo');
+	console.log('  /account              signed-in account panel demo');
 	console.log('  /download/tisa-otp.zip  installable package (built on demand)');
 	console.log('  plugin assets served from ' + PLUGIN_ASSETS);
 });

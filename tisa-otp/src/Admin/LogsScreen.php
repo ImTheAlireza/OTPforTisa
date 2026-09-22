@@ -15,6 +15,8 @@ defined( 'ABSPATH' ) || exit;
 
 final class LogsScreen implements Bootable {
 
+	const SLUG = 'tisa-otp-logs';
+
 	const PER_PAGE = 40;
 
 	/** @var LogStore */

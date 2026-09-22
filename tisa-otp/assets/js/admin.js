@@ -207,8 +207,100 @@
 
 	/* Tools ----------------------------------------------------------------- */
 
+	/**
+	 * Try to load the captcha the way the login page does.
+	 *
+	 * The dashboard can reach the captcha API over HTTP and still have every
+	 * visitor blocked — the script is loaded by the *browser*, and that is the
+	 * step that fails most often (an ad blocker, a DNS filter, a mirror that
+	 * moved). So this walks the same URL list the front end walks and reports
+	 * the first one that actually answers.
+	 */
+	function testCaptcha(box, button) {
+		var captcha = cfg.captcha || {};
+		var urls = [captcha.script].concat(captcha.fallbacks || []).filter(Boolean);
+		var index = 0;
+
+		function finish(ok, message, url) {
+			busy(button, false);
+			say(box, message + (url ? ' — ' + url : ''), ok ? 'success' : 'error');
+		}
+
+		if (!urls.length) {
+			finish(false, i18n.captchaNoScript || '');
+
+			return;
+		}
+
+		function attempt() {
+			if (index >= urls.length) {
+				finish(false, i18n.captchaBlocked || '');
+
+				return;
+			}
+
+			var url = urls[index++];
+			var script = document.createElement('script');
+			var settled = false;
+			var timer = window.setTimeout(function () {
+				if (!settled) {
+					settled = true;
+					script.remove();
+					attempt();
+				}
+			}, 8000);
+
+			script.src = url;
+			script.async = true;
+
+			script.onload = function () {
+				window.clearTimeout(timer);
+
+				if (settled) {
+					return;
+				}
+
+				settled = true;
+
+				// The file can load and still not register its API: that is the
+				// failure the plugin's own changelog was written about.
+				var name = captcha.global;
+
+				if (name && !window[name]) {
+					attempt();
+
+					return;
+				}
+
+				finish(true, i18n.captchaOk || '', url);
+			};
+
+			script.onerror = function () {
+				window.clearTimeout(timer);
+
+				if (!settled) {
+					settled = true;
+					attempt();
+				}
+			};
+
+			document.head.appendChild(script);
+		}
+
+		busy(button, true, i18n.testing || '');
+		attempt();
+	}
+
 	function initTools() {
 		initDoctor();
+
+		var captchaButton = document.querySelector('[data-tisa-captcha-test]');
+
+		if (captchaButton) {
+			captchaButton.addEventListener('click', function () {
+				testCaptcha(document.querySelector('[data-tisa-captcha-result]'), captchaButton);
+			});
+		}
 
 		var testButton = document.querySelector('[data-tisa-test-send]');
 

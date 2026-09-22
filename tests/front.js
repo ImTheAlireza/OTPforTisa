@@ -108,6 +108,15 @@ function boot(options) {
 		Object.defineProperty(win.navigator, 'onLine', { value: false, configurable: true });
 	}
 
+	/*
+	 * front.js decides whether to show the paste button while it binds, so a
+	 * clipboard stub has to be in place before the script runs — a plain jsdom
+	 * window has none, exactly like a page served over http.
+	 */
+	if (opts.clipboard) {
+		Object.defineProperty(win.navigator, 'clipboard', { value: opts.clipboard, configurable: true });
+	}
+
 	win.eval(scriptSource);
 
 	// jsdom is still parsing when the script runs, so front.js waits for the
@@ -547,6 +556,7 @@ async function testPasteFromSms() {
 	scenario('Pasting the code from the SMS fills the boxes');
 
 	const ctx = boot({
+		clipboard: { readText: () => Promise.resolve('کد شما: ۱۲۳۴۵') },
 		fetch: (req) => {
 			if (req.url.indexOf('form-config') >= 0) return ok({ nonce: 'fresh' });
 			if (req.url.indexOf('/verify') >= 0) return reject('invalid_code', 'کد درست نیست.', { attempts_left: 4 });
@@ -560,13 +570,8 @@ async function testPasteFromSms() {
 	await tick();
 	await tick();
 
-	Object.defineProperty(ctx.win.navigator, 'clipboard', {
-		value: { readText: () => Promise.resolve('کد شما: ۱۲۳۴۵') },
-		configurable: true,
-	});
-
 	const paste = ctx.doc.querySelector('[data-tisa-paste]');
-	check('the code step offers a paste button', !!paste);
+	check('the code step offers a paste button', !!paste && !paste.hidden);
 
 	paste.click();
 	await tick();
@@ -577,6 +582,30 @@ async function testPasteFromSms() {
 
 	await wait(260);
 	check('and the code is verified without pressing anything', ctx.calls.some((call) => call.url.indexOf('/verify') >= 0), ctx.calls.map((call) => call.url).join(' | '));
+}
+
+async function testPasteWithoutAClipboard() {
+	scenario('With no readable clipboard the button is not offered');
+
+	const ctx = boot({
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
+	});
+
+	const paste = ctx.doc.querySelector('[data-tisa-paste]');
+	check('the clipboard button is hidden when readText() does not exist', !!paste && paste.hidden, paste ? 'hidden=' + paste.hidden : 'missing');
+
+	// The box still accepts a normal paste, which is the path the help text sends people to.
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	for (let i = 0; i < 4; i++) await tick();
+
+	const event = new ctx.win.Event('paste', { bubbles: true, cancelable: true });
+	event.clipboardData = { getData: () => '۱۲۳۴۵' };
+	ctx.doc.querySelector('[data-tisa-box]').dispatchEvent(event);
+	await tick();
+
+	const boxes = Array.from(ctx.doc.querySelectorAll('[data-tisa-box]')).map((box) => box.value);
+	check('pasting into the first box still fills them all', '12345' === boxes.join(''), boxes.join(''));
 }
 
 async function testPrefixChip() {
@@ -667,6 +696,84 @@ function testPreviewMirrorsTheTemplate() {
 	check('the demo trust items are the ones the PHP filter ships', trustTemplate.indexOf("__(") < 0 && step.querySelectorAll('.tisa-otp__trust-item').length >= 3);
 }
 
+function testTheAccentIsTheOnlyColour() {
+	scenario('The button belongs to the accent, and so does its hover');
+
+	const css = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'front.css'), 'utf8');
+	const script = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'js', 'front.js'), 'utf8');
+	const php = fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'Assets.php'), 'utf8');
+
+	const primary = css.slice(css.indexOf('.tisa-btn--primary {'), css.indexOf('.tisa-btn--ghost {'));
+	const resting = primary.slice(0, primary.indexOf('.tisa-btn--primary:hover'));
+
+	check('the button is painted with the accent', /background-color:\s*var\(--tisa-accent\)/.test(resting));
+	check('its depth is a translucent sheen, not a second colour', /linear-gradient\(180deg, rgba\(255, 255, 255/.test(resting));
+	check('no fixed teal is left in the resting rule', resting.indexOf('11, 92, 86') < 0, resting.split('\n').find((line) => line.indexOf('11, 92, 86') >= 0) || '');
+	check('hover darkens the very same accent', /\.tisa-btn--primary:hover[\s\S]{0,220}rgba\(0, 0, 0/.test(primary));
+	check('the button shadow follows the accent', /--tisa-elev-button:\s*0 12px 26px -16px var\(--tisa-accent-strong\)/.test(css));
+	check('PHP derives the darker shade from the accent', /mix\( \$accent, '#000000', 0\.22 \)/.test(php));
+	check('the accent wash is translucent, so the dark skin keeps it', /--tisa-accent-soft:%3\$s/.test(php) && /rgba\( *%d, %d, %d, %s *\)/.test(php));
+	check('the demo derives the same shade when a swatch is clicked', /shade\(accent, 0\.22\)/.test(pageSource));
+
+	// Two complaints from the same screenshot batch.
+	check('the code boxes are centred', /\.tisa-code__boxes \{[\s\S]{0,240}justify-content: center/.test(css));
+	check('the phone control is one left-to-right island', /\.tisa-phone \{[\s\S]{0,600}direction: ltr/.test(css));
+	check('so the placeholder starts where the chip ends', /\.tisa-phone__input,\n\.tisa-phone__input:focus \{[\s\S]{0,320}text-align: left/.test(css));
+
+	const actions = script.slice(script.indexOf('Form.prototype.actionsFor'), script.indexOf('Form.prototype.clearStatus'));
+	check('errors no longer offer a second way to edit the number', actions.indexOf("'edit-phone'") < 0, (actions.match(/'edit-phone'/) || [''])[0]);
+
+	const template = fs.readFileSync(path.join(REPO, 'tisa-otp', 'templates', 'partials', 'step-code.php'), 'utf8');
+	const rescue = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-tisa-rescue]');
+
+	check('the rescue panel has an icon, a title and a sentence', !!rescue.querySelector('.tisa-code__rescue-icon svg') && !!rescue.querySelector('.tisa-code__rescue-title') && !!rescue.querySelector('.tisa-code__rescue-note'));
+	check('and its first choice is a real button now', !!rescue.querySelector('.tisa-btn--compact[data-tisa-action="resend"]'));
+	check('the template prints the same card', /tisa-code__rescue-icon/.test(template) && /tisa-code__rescue-note/.test(template) && /tisa-btn--compact/.test(template));
+}
+
+function testTheThreeDemoPages() {
+	scenario('The demo pages keep up with the plugin');
+
+	const account = fs.readFileSync(path.join(REPO, 'preview', 'public', 'account.html'), 'utf8');
+	const admin = fs.readFileSync(path.join(REPO, 'preview', 'public', 'admin.html'), 'utf8');
+	const adminCss = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'admin.css'), 'utf8');
+	const server = fs.readFileSync(path.join(REPO, 'preview', 'server.js'), 'utf8');
+	const demo = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document;
+
+	// The account page mounts the real form with the real stylesheet and script.
+	check('the account demo is routed', /'\/account'/.test(server));
+	check('it loads the plugin stylesheet', /\/plugin-assets\/css\/front\.css/.test(account));
+	check('and the plugin script, so the form is live there too', /\/plugin-assets\/js\/front\.js/.test(account));
+	check('with a form for changing the number', /data-tisa-form/.test(account) && /data-tisa-action="start"/.test(account));
+	check('the saved address and postcode are shown as profile data', /کد پستی/.test(account) && /آدرس/.test(account));
+
+	// The signup step mirrors the identity preset the PHP now ships.
+	const fields = demo.querySelector('[data-tisa-step="fields"]');
+
+	for (const id of ['postcode', 'address']) {
+		const field = fields.querySelector('[data-tisa-field="' + id + '"]');
+		check('the demo signup asks for ' + id, !!field, 'missing');
+	}
+
+	const postcode = fields.querySelector('[data-tisa-input="postcode"]');
+	check('the postal code box is numeric and LTR like the template', postcode && 'numeric' === postcode.getAttribute('inputmode') && 'ltr' === postcode.getAttribute('dir') && '10' === postcode.getAttribute('maxlength'));
+	check('and it has the same placeholder as the preset', '1234567890' === postcode.placeholder, postcode.placeholder);
+	check('the address is a textarea with its hint', 'textarea' === fields.querySelector('[data-tisa-input="address"]').tagName.toLowerCase() && /\.$/.test(text(fields.querySelector('.tisa-field__hint'))));
+
+	const template = fs.readFileSync(path.join(REPO, 'tisa-otp', 'templates', 'partials', 'step-fields.php'), 'utf8');
+	check('the template handles the postcode type the way the demo shows', /'postcode' === \$field\['type'\]/.test(template) && /postal-code/.test(template));
+
+	// The admin demo shows the report screen the plugin renders.
+	for (const name of ['tisa-kpi', 'tisa-chart__col', 'tisa-report-table', 'tisa-range__item']) {
+		check('the admin demo has .' + name, admin.indexOf(name) >= 0);
+		check('and the real admin stylesheet defines .' + name, adminCss.indexOf('.' + name) >= 0);
+	}
+
+	check('the report screen is a real admin page', /class ReportScreen/.test(fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Admin', 'ReportScreen.php'), 'utf8')));
+	check('the captcha test is wired in the demo, with the keys the plugin localizes', /data-tisa-captcha-test/.test(admin) && /captcha: \{/.test(admin) && /'global'/.test(fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'Assets.php'), 'utf8')));
+	check('and admin.js implements it', /testCaptcha/.test(fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'js', 'admin.js'), 'utf8')));
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -681,9 +788,12 @@ async function main() {
 	await testCaptchaFailureIsVisible();
 	await testStaleFormTokenRecovers();
 	await testPasteFromSms();
+	await testPasteWithoutAClipboard();
 	await testPrefixChip();
 	await testTheLookOfTheTwoReportedBugs();
 	await testPreviewMirrorsTheTemplate();
+	await testTheAccentIsTheOnlyColour();
+	await testTheThreeDemoPages();
 
 	console.log('\n' + (failed ? failed + ' FAILED, ' : '') + passed + ' checks passed');
 	process.exit(failed ? 1 : 0);

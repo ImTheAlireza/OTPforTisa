@@ -69,7 +69,7 @@
 	--tisa-elev-1: 0 1px 2px rgba(16, 24, 40, 0.06);
 	--tisa-elev-2: 0 18px 40px -24px rgba(16, 24, 40, 0.35);
 	--tisa-elev-3: 0 24px 56px -28px rgba(16, 24, 40, 0.45);
-	--tisa-elev-button: 0 12px 26px -16px rgba(11, 92, 86, 0.9);
+	--tisa-elev-button: 0 12px 26px -16px var(--tisa-accent-strong);
 
 	/* Motion -------------------------------------------------------------- */
 	--tisa-dur-fast: 120ms;
@@ -560,6 +560,10 @@
 	border-radius: var(--tisa-radius-control);
 	background: var(--tisa-surface);
 	overflow: hidden;
+	/* A prefix and a number are both written left to right, so this control is
+	   one too: chip first, digits right after it. Locking the direction here is
+	   what keeps the two ends of the field from drifting apart. */
+	direction: ltr;
 	transition: border-color var(--tisa-dur-fast) var(--tisa-ease-out), box-shadow var(--tisa-dur-fast) var(--tisa-ease-out);
 }
 
@@ -598,9 +602,9 @@
 	border-radius: 0 !important;
 	background: transparent !important;
 	box-shadow: none !important;
-	/* `right` keeps the digits against the chip: in an LTR box the number is
-	   written left to right, but it belongs next to the prefix it follows. */
-	text-align: right;
+	/* Left, because the chip is on the left: the placeholder has to start
+	   where the prefix ends, otherwise the field reads as two halves. */
+	text-align: left;
 	direction: ltr;
 	letter-spacing: 0.06em;
 }
@@ -644,7 +648,9 @@
 .tisa-code__boxes {
 	display: flex;
 	gap: var(--tisa-space-2);
-	justify-content: flex-start;
+	/* Centred, always: five boxes hugging one edge left a hole on the other
+	   side of the card and made the step look half-finished. */
+	justify-content: center;
 	direction: ltr;
 }
 
@@ -761,10 +767,10 @@
 	display: flex;
 	align-items: flex-start;
 	gap: var(--tisa-space-3);
-	margin-top: var(--tisa-space-4);
-	padding: var(--tisa-space-3) var(--tisa-space-4);
+	margin-top: var(--tisa-space-5);
+	padding: var(--tisa-space-4);
 	border: 1px solid var(--tisa-info-line);
-	border-radius: var(--tisa-radius-control);
+	border-radius: var(--tisa-radius-card);
 	background: var(--tisa-info-soft);
 	animation: tisa-step-in var(--tisa-dur-base) var(--tisa-ease-out);
 }
@@ -773,17 +779,49 @@
 	display: none;
 }
 
+/* A quiet round badge: the panel is an offer of help, not an alarm. */
+.tisa-code__rescue-icon {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: var(--tisa-surface);
+	color: var(--tisa-info);
+	box-shadow: var(--tisa-elev-1);
+}
+
+.tisa-code__rescue-icon svg {
+	width: 18px;
+	height: 18px;
+}
+
+.tisa-code__rescue-body {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
 .tisa-code__rescue-title {
-	margin: 0 0 2px;
+	margin: 0;
 	color: var(--tisa-text);
-	font-size: 14px;
+	font-size: 15px;
 	font-weight: 700;
+	line-height: 1.6;
+}
+
+.tisa-code__rescue-note {
+	margin: 2px 0 0;
+	color: var(--tisa-muted);
+	font-size: 13.5px;
 }
 
 .tisa-code__rescue-actions {
 	display: flex;
+	align-items: center;
 	flex-wrap: wrap;
-	gap: var(--tisa-space-4);
+	gap: var(--tisa-space-3);
+	margin-top: var(--tisa-space-3);
 }
 
 .tisa-otp.is-expired .tisa-code__box,
@@ -819,23 +857,30 @@
 }
 
 .tisa-btn--primary {
-	/* A 6% gradient is the whole "premium" difference: the button catches
-	   light at the top instead of reading as a flat rectangle. */
-	background-image: linear-gradient(180deg, var(--tisa-accent) 0%, var(--tisa-accent-strong) 100%);
+	/* The depth is a translucent sheen *over* the accent, never a second
+	   colour. A fixed "darker teal" stop used to sit under the gradient, so a
+	   crimson button faded into green and every hover turned teal — the token
+	   could not follow a setting it knew nothing about. */
 	background-color: var(--tisa-accent);
+	background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(0, 0, 0, 0.18) 100%);
 	color: var(--tisa-accent-contrast);
 	box-shadow: var(--tisa-elev-button);
 }
 
 .tisa-btn--primary:hover:not(:disabled) {
-	background-image: none;
-	background-color: var(--tisa-accent-strong);
-	box-shadow: 0 16px 30px -16px rgba(11, 92, 86, 0.95);
+	background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.3) 100%);
+	box-shadow: 0 16px 30px -16px var(--tisa-accent-strong);
 }
 
 .tisa-btn--primary:active:not(:disabled) {
 	transform: translateY(1px);
-	box-shadow: 0 6px 14px -10px rgba(11, 92, 86, 0.9);
+	box-shadow: 0 6px 14px -10px var(--tisa-accent-strong);
+}
+
+.tisa-btn--compact {
+	min-height: 44px;
+	padding: 10px 16px;
+	font-size: 14px;
 }
 
 .tisa-btn--ghost {
@@ -1219,9 +1264,12 @@
 		white-space: normal;
 	}
 
+	/* Stacked, but the link keeps its tap target: gap 0 made the two choices
+	   look like one block of text. */
 	.tisa-code__rescue-actions {
 		flex-direction: column;
-		gap: 0;
+		align-items: stretch;
+		gap: var(--tisa-space-2);
 	}
 }
 
@@ -1280,12 +1328,6 @@
 	text-align: left;
 }
 
-/* The chip is on the left here, so the digits start from the left as well. */
-.tisa-otp[dir="ltr"] .tisa-phone__input,
-.tisa-otp[dir="ltr"] .tisa-phone__input:focus {
-	text-align: left;
-}
-
 /* The skip link centres itself with a transform, which is physical, so the
    LTR form needs the mirrored value. */
 .tisa-otp[dir="ltr"] .tisa-otp__skip {
@@ -1295,10 +1337,6 @@
 .tisa-otp[dir="ltr"] .tisa-otp__skip:focus,
 .tisa-otp[dir="ltr"] .tisa-otp__skip:focus-visible {
 	transform: translateX(-50%) translateY(0);
-}
-
-.tisa-otp[dir="ltr"] .tisa-code__boxes {
-	justify-content: flex-start;
 }
 
 .tisa-otp[dir="ltr"] .tisa-code__cooldown > i {

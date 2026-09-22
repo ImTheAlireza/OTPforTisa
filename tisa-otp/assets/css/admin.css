@@ -802,6 +802,20 @@ textarea.tisa-input {
 	border-top: 1px solid var(--tisa-line);
 }
 
+/* One visible focus ring for everything the dashboard can reach.
+   WordPress styles `:focus` on some controls and not others, so the screens
+   that only contain links (reports, events) had no visible focus at all. */
+.tisa-wrap a:focus-visible,
+.tisa-wrap button:focus-visible,
+.tisa-wrap .button:focus-visible,
+.tisa-wrap input:focus-visible,
+.tisa-wrap select:focus-visible,
+.tisa-wrap textarea:focus-visible,
+.tisa-wrap [tabindex]:focus-visible {
+	outline: 2px solid var(--tisa-accent);
+	outline-offset: 2px;
+}
+
 .tisa-wrap .button.tisa-danger {
 	color: var(--tisa-danger);
 	border-color: var(--tisa-danger);
@@ -959,4 +973,262 @@ textarea.tisa-input {
 
 .tisa-trace li.is-bad::before {
 	background: var(--tisa-danger);
+}
+
+/* Reports ------------------------------------------------------------------
+ * The dashboard reads left to right as: how many, how well, where it broke.
+ * Bars are plain divs, sized as a percentage of the busiest day.
+ * ---------------------------------------------------------------------- */
+
+.tisa-range {
+	display: inline-flex;
+	gap: 4px;
+	padding: 3px;
+	border: 1px solid var(--tisa-line);
+	border-radius: 999px;
+	background: var(--tisa-bg);
+}
+
+.tisa-range__item {
+	padding: 5px 14px;
+	border-radius: 999px;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.tisa-range__item:hover,
+.tisa-range__item:focus-visible {
+	color: var(--tisa-accent);
+}
+
+.tisa-range__item:focus-visible {
+	outline: 2px solid var(--tisa-accent);
+	outline-offset: 2px;
+}
+
+.tisa-range__item.is-active {
+	background: #fff;
+	color: var(--tisa-ink);
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+
+.tisa-kpis {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 12px;
+	margin: 16px 0 10px;
+}
+
+.tisa-kpi {
+	padding: 16px 18px;
+	border: 1px solid var(--tisa-line);
+	border-radius: 14px;
+	background: #fff;
+}
+
+.tisa-kpi__value {
+	display: block;
+	color: var(--tisa-ink);
+	font-size: 26px;
+	font-weight: 700;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+}
+
+.tisa-kpi__label {
+	display: block;
+	margin-top: 4px;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.tisa-kpi__hint {
+	display: block;
+	margin-top: 2px;
+	color: var(--tisa-muted);
+	font-size: 12px;
+	line-height: 1.7;
+}
+
+.tisa-kpi.is-good .tisa-kpi__value {
+	color: var(--tisa-success);
+}
+
+.tisa-kpi.is-bad .tisa-kpi__value {
+	color: var(--tisa-danger);
+}
+
+.tisa-kpi.is-rate {
+	border-color: var(--tisa-accent);
+	box-shadow: 0 0 0 3px var(--tisa-accent-soft);
+}
+
+.tisa-kpi.is-rate .tisa-kpi__value {
+	color: var(--tisa-accent);
+}
+
+.tisa-panel__title {
+	margin: 0 0 14px;
+	padding: 0;
+	font-size: 15px;
+	font-weight: 700;
+}
+
+.tisa-panel--foot {
+	padding: 16px 4px 0;
+}
+
+.tisa-muted {
+	margin: 0;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+}
+
+.tisa-chart {
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+	height: 190px;
+	padding: 0 2px;
+	border-bottom: 1px solid var(--tisa-line);
+}
+
+.tisa-chart__col {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+	height: 100%;
+}
+
+.tisa-chart__count {
+	color: var(--tisa-muted);
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+}
+
+.tisa-chart__stack {
+	display: flex;
+	flex-direction: column-reverse;
+	justify-content: flex-start;
+	width: 100%;
+	max-width: 34px;
+	height: 100%;
+	border-radius: 6px 6px 0 0;
+	overflow: hidden;
+	background: var(--tisa-bg);
+}
+
+.tisa-chart__bar {
+	display: block;
+	width: 100%;
+	background: var(--tisa-accent);
+}
+
+.tisa-chart__bar.is-failed {
+	background: var(--tisa-danger);
+}
+
+.tisa-chart__day {
+	color: var(--tisa-muted);
+	font-size: 11px;
+}
+
+.tisa-legend {
+	display: flex;
+	gap: 18px;
+	margin: 12px 0 0;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+}
+
+.tisa-legend__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.tisa-dot {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background: var(--tisa-accent);
+}
+
+.tisa-dot.is-failed {
+	background: var(--tisa-danger);
+}
+
+.tisa-report-table {
+	width: 100%;
+	border: 1px solid var(--tisa-line);
+	border-collapse: collapse;
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.tisa-report-table th,
+.tisa-report-table td {
+	padding: 11px 14px;
+	border-bottom: 1px solid var(--tisa-line);
+	text-align: start;
+	font-size: 13px;
+}
+
+.tisa-report-table th {
+	background: var(--tisa-bg);
+	font-weight: 600;
+}
+
+.tisa-report-table tr:last-child td {
+	border-bottom: 0;
+}
+
+.tisa-report-table code {
+	padding: 2px 6px;
+	border-radius: 6px;
+	background: var(--tisa-accent-soft);
+	color: var(--tisa-accent);
+	font-size: 12px;
+}
+
+.tisa-meter {
+	display: block;
+	width: 140px;
+	height: 8px;
+	border-radius: 999px;
+	background: var(--tisa-bg);
+	overflow: hidden;
+}
+
+.tisa-meter__fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--tisa-danger);
+}
+
+@media (max-width: 1100px) {
+	.tisa-kpis {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 600px) {
+	.tisa-kpis {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.tisa-chart {
+		height: 150px;
+	}
+
+	.tisa-chart__day {
+		font-size: 9px;
+	}
 }

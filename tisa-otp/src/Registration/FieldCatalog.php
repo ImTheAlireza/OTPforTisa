@@ -33,7 +33,7 @@ final class FieldCatalog {
 	public static function labels(): array {
 		return array(
 			'minimal'     => __( 'کوچک (نام و نام خانوادگی)', 'tisa-otp' ),
-			'identity'    => __( 'هویت (نام، ایمیل، شهر)', 'tisa-otp' ),
+			'identity'    => __( 'هویت (نام، ایمیل، شهر، آدرس، کد پستی)', 'tisa-otp' ),
 			'woocommerce' => __( 'فروشگاهی (فیلدهای صورتحساب)', 'tisa-otp' ),
 			'custom'      => __( 'دلخواه (فیلدهای تعریف‌شده در پایین)', 'tisa-otp' ),
 		);
@@ -57,7 +57,14 @@ final class FieldCatalog {
 			self::field( 'first_name', __( 'نام', 'tisa-otp' ), 'text', 'core', 'first_name', true, 10, 'half' ),
 			self::field( 'last_name', __( 'نام خانوادگی', 'tisa-otp' ), 'text', 'core', 'last_name', true, 20, 'half' ),
 			self::field( 'user_email', __( 'ایمیل', 'tisa-otp' ), 'email', 'core', 'user_email', false, 30, 'full', '', __( 'example@mail.com', 'tisa-otp' ) ),
-			self::field( 'city', __( 'شهر', 'tisa-otp' ), 'text', 'meta', 'tisa_city', false, 40, 'full' ),
+			self::field( 'city', __( 'شهر', 'tisa-otp' ), 'text', 'meta', 'tisa_city', false, 40, 'half' ),
+			/*
+			 * These two land in the user's own profile record. When WooCommerce
+			 * is installed the same values are mirrored into the billing fields,
+			 * but only where nothing is stored yet — see AccountFactory.
+			 */
+			self::field( 'postcode', __( 'کد پستی', 'tisa-otp' ), 'postcode', 'meta', 'tisa_postcode', false, 50, 'half', '', '1234567890' ),
+			self::field( 'address', __( 'آدرس', 'tisa-otp' ), 'textarea', 'meta', 'tisa_address', false, 60, 'full', __( 'خیابان، کوچه، پلاک و واحد را کامل بنویسید.', 'tisa-otp' ) ),
 		);
 	}
 
@@ -117,6 +124,6 @@ final class FieldCatalog {
 	 * @return string[]
 	 */
 	public static function types(): array {
-		return array( 'text', 'textarea', 'email', 'tel', 'number', 'select', 'checkbox', 'date' );
+		return array( 'text', 'textarea', 'email', 'tel', 'number', 'postcode', 'select', 'checkbox', 'date' );
 	}
 }

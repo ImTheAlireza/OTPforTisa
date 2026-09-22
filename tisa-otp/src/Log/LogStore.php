@@ -149,6 +149,96 @@ final class LogStore {
 		return $tally;
 	}
 
+	/**
+	 * One tally per event, for the report cards.
+	 *
+	 * @param string[] $events
+	 * @return array<string,int> event => total.
+	 */
+	public function countByEvent( array $events, int $days = 14 ): array {
+		global $wpdb;
+
+		$events = array_values( array_filter( array_map( 'strval', $events ) ) );
+
+		if ( array() === $events ) {
+			return array();
+		}
+
+		$since        = gmdate( 'Y-m-d H:i:s', time() - ( max( 1, $days ) * DAY_IN_SECONDS ) );
+		$placeholders = implode( ', ', array_fill( 0, count( $events ), '%s' ) );
+
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare(
+				'SELECT event, COUNT(*) AS total FROM ' . $this->table() . ' WHERE event IN (' . $placeholders . ') AND created_at >= %s GROUP BY event', // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				array_merge( $events, array( $since ) )
+			)
+		);
+
+		$counts = array();
+
+		foreach ( (array) $rows as $row ) {
+			$counts[ (string) $row->event ] = (int) $row->total;
+		}
+
+		return $counts;
+	}
+
+	/**
+	 * Per-day tallies for several events, so the chart needs three queries
+	 * instead of thirty.
+	 *
+	 * @param string[] $events
+	 * @return array<string,array<string,int>> event => (day => total).
+	 */
+	public function series( array $events, int $days = 14 ): array {
+		$out = array();
+
+		foreach ( $events as $event ) {
+			$out[ (string) $event ] = $this->tally( (string) $event, $days );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Why things failed, grouped by event and error code.
+	 *
+	 * @param string[] $events
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function reasons( array $events, int $days = 14, int $limit = 20 ): array {
+		global $wpdb;
+
+		$events = array_values( array_filter( array_map( 'strval', $events ) ) );
+
+		if ( array() === $events ) {
+			return array();
+		}
+
+		$since        = gmdate( 'Y-m-d H:i:s', time() - ( max( 1, $days ) * DAY_IN_SECONDS ) );
+		$placeholders = implode( ', ', array_fill( 0, count( $events ), '%s' ) );
+
+		$sql = 'SELECT event, error_code, COUNT(*) AS total FROM ' . $this->table()
+			. ' WHERE event IN (' . $placeholders . ') AND created_at >= %s'
+			. ' GROUP BY event, error_code ORDER BY total DESC LIMIT %d';
+
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare( $sql, array_merge( $events, array( $since, max( 1, $limit ) ) ) ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		);
+
+		$out = array();
+
+		foreach ( (array) $rows as $row ) {
+			$out[] = array(
+				'event'      => (string) $row->event,
+				'error_code' => (string) $row->error_code,
+				'total'      => (int) $row->total,
+			);
+		}
+
+		return $out;
+	}
+
 	public function totals(): array {
 		global $wpdb;
 
