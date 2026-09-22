@@ -142,6 +142,27 @@
 	overflow: hidden;
 }
 
+/*
+ * Where `<dialog>` cannot be a real modal (older engines), the same markup is
+ * shown as an overlay and closed by hand. The scrim is drawn by the dialog, so
+ * the fallback needs no second element.
+ */
+.tisa-modal--fallback {
+	position: fixed;
+	inset-inline: 0;
+	top: 8vh;
+	z-index: 100000;
+	margin-inline: auto;
+}
+
+.tisa-modal--fallback::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	background: rgba(16, 24, 40, 0.5);
+	z-index: -1;
+}
+
 .tisa-modal::backdrop {
 	background: rgba(16, 24, 40, 0.5);
 }

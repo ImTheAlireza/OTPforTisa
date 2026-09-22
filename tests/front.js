@@ -959,6 +959,8 @@ function testThePanelKeepsItsOwnPromises() {
 	check('and the plugin localises that number', /'myPhone' => \$this->ownPhone\(\)/.test(assets) && /private function ownPhone\(\): string/.test(assets));
 
 	check('the css defines the modal', /\.tisa-modal \{/.test(adminCss) && /\.tisa-modal::backdrop \{/.test(adminCss));
+	check('an engine without <dialog> still gets an overlay, not a thrown error', /typeof dialog\.showModal/.test(adminJs) && /\.tisa-modal--fallback/.test(adminCss));
+	check('and closing the overlay by hand still returns the focus', /function finish\(\)/.test(adminJs) && /opener\.focus\(\)/.test(adminJs));
 	check('and the result rows', /\.tisa-test-row \{/.test(adminCss) && /\.tisa-test-row\.is-fail \.tisa-test-row__dot \{/.test(adminCss));
 
 	// --- the demo can be clicked through -------------------------------------

@@ -93,26 +93,53 @@
 		dialog.appendChild(foot);
 		document.body.appendChild(dialog);
 
-		close.addEventListener('click', function () {
-			dialog.close();
-		});
-
-		// A click on the backdrop lands on the dialog element itself.
-		dialog.addEventListener('click', function (event) {
-			if (event.target === dialog) {
-				dialog.close();
-			}
-		});
-
-		dialog.addEventListener('close', function () {
+		function finish() {
 			dialog.remove();
 
 			if (opener && opener.focus) {
 				opener.focus();
 			}
+		}
+
+		/*
+		 * `close()` fires the event that puts the focus back. Where the element
+		 * cannot be a real modal, the same markup is shown as a plain overlay and
+		 * torn down by hand, so a test can still be read on an old browser
+		 * instead of throwing.
+		 */
+		function dismiss() {
+			if ('function' === typeof dialog.close) {
+				dialog.close();
+
+				return;
+			}
+
+			finish();
+		}
+
+		close.addEventListener('click', dismiss);
+
+		// A click on the backdrop lands on the dialog element itself.
+		dialog.addEventListener('click', function (event) {
+			if (event.target === dialog) {
+				dismiss();
+			}
 		});
 
-		dialog.showModal();
+		dialog.addEventListener('close', finish);
+
+		if ('function' === typeof dialog.showModal) {
+			dialog.showModal();
+		} else {
+			dialog.classList.add('tisa-modal--fallback');
+			dialog.setAttribute('open', '');
+
+			document.addEventListener('keydown', function (event) {
+				if ('Escape' === event.key && dialog.parentNode) {
+					finish();
+				}
+			});
+		}
 
 		return {
 			dialog: dialog,
