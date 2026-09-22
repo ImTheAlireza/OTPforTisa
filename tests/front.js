@@ -874,6 +874,7 @@ function testThePanelKeepsItsOwnPromises() {
 	const admin = read('preview', 'public', 'admin.html');
 	const server = read('preview', 'server.js');
 	const appMode = read('tisa-otp', 'src', 'Admin', 'AppMode.php');
+	const pluginSource = read('tisa-otp', 'src', 'Plugin.php');
 	const bootstrap = read('tisa-otp', 'tisa-otp.php');
 	const readme = read('tisa-otp', 'readme.txt');
 
@@ -901,16 +902,42 @@ function testThePanelKeepsItsOwnPromises() {
 	// build is running, in a place an administrator already looks.
 	check('the first tab opens with what this build added', /private function generalSection\(\): void \{\s*\n\s*\$c = \$this->controls;\s*\n\s*\$this->whatsNew\(\);/.test(settings));
 	check('and the card names the running version', /private function whatsNew\(\)/.test(settings) && /تازه در نسخهٔ %s/.test(settings) && /TISA_OTP_VERSION/.test(settings));
-	check('it points at the reports tab, not at a second page', /self::tabUrl\( 'reports' \)/.test(settings.slice(settings.indexOf('private function whatsNew()'), settings.indexOf('private function whatsNew()') + 1400)));
+	const releaseCard = settings.slice(settings.indexOf('private function whatsNew()'), settings.indexOf('private function testCard('));
+	check('it points at the reports tab, not at a second page', /self::tabUrl\( 'reports' \)/.test(releaseCard));
 	check('and it tells the reader what to do when the number looks wrong', /فایل‌های افزونه به‌روز نشده‌اند/.test(settings));
 
 	const version = (bootstrap.match(/define\( 'TISA_OTP_VERSION', '([0-9.]+)' \)/) || [])[1];
+	// Persian digits, for the places a release is named to a person.
+	const faVersion = !!version && version.replace(/[0-9]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[digit]);
 	check('the package declares one version, and the file header agrees', !!version && bootstrap.indexOf('Version:           ' + version) >= 0);
 	check('the readme ships that same version as its stable tag', !!version && readme.indexOf('Stable tag: ' + version) >= 0);
 	check('and the readme explains what changed in it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
 	check('the preview says which version it is showing', admin.indexOf(version) >= 0);
-	check('the preview shows the release card too', /تازه در نسخهٔ ۱\.۳\.۲/.test(admin) && /class="tisa-bullets"/.test(admin));
+	check('the preview shows the release card too', admin.indexOf('تازه در نسخهٔ ' + faVersion) >= 0 && /class="tisa-bullets"/.test(admin));
 	check('and a link from it into the reports section', /class="button" href="#reports"/.test(admin));
+
+	// --- a broken install must not take the site down -----------------------
+	// 1.3.2 shipped a constructor that had grown a tenth argument while the
+	// binding still passed nine. Every gate was green and the site died on every
+	// request. Three things now stand in the way of that happening again.
+	const guard = read('tisa-otp', 'src', 'Install', 'Guard.php');
+	const packageFile = read('tisa-otp', 'src', 'Install', 'Package.php');
+	const manifest = JSON.parse(read('tisa-otp', 'build.json'));
+	const builder = read('tools', 'build_package.py');
+	const wiring = read('tests', 'php', 'wiring-test.php');
+
+	check('every service is built through the guard, so one failure is not a fatal', /Install\\\\Guard::record\( \$id, \$error \)/.test(pluginSource) || /Guard::record\( \$id/.test(pluginSource));
+	check('the wiring itself is a test, not a hope', /AdminController is given every argument it requires/.test(wiring) || /getNumberOfRequiredParameters/.test(wiring));
+	check('and the test reads the bindings out of the plugin, not a copy', wiring.indexOf('src/Plugin.php') >= 0 && wiring.indexOf('::class') >= 0);
+	check('the package describes itself', manifest.version === version && Object.keys(manifest.files).length > 100);
+	check('build.json carries a hash for every file', Object.values(manifest.files).every((sha) => /^[0-9a-f]{64}$/.test(sha)));
+	check('one tool builds it and can verify it', /def check\(/.test(builder) && /--check/.test(builder) && /def manifest\(/.test(builder));
+	check('the plugin verifies that manifest at runtime', /hash_equals\( \(string\) \$sha, \$actual \)/.test(packageFile) && /hash_file\( 'sha256'/.test(packageFile));
+	check('a mismatch names the files rather than the version number', /public static function offenders\(/.test(packageFile) && /files_differ/.test(packageFile));
+	check('the guard reports failures and mismatches to the administrator', /printFailures\(\)/.test(guard) && /printMismatch\(/.test(guard) && /نسخهٔ بارگذاری‌شده/.test(guard));
+	check('and stays quiet when nothing is wrong', /if \( ! empty\( self::\$failures \) \)/.test(guard) && /if \( empty\( \$state\['ok'\] \) \)/.test(guard));
+	check('the general self-test shows package health too', /یکپارچگی بستهٔ نصب‌شده/.test(selfTest));
+	check('the demo shows that row', /یکپارچگی بستهٔ نصب‌شده/.test(server));
 
 	// --- app mode: the panel can take the whole window ----------------------
 	// The panel sits inside somebody else's page. This is the opt-in that hides

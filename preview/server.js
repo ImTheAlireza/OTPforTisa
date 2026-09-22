@@ -254,6 +254,7 @@ function checkPayload(kind) {
 				{ label: 'جدول‌های افزونه', value: 'سالم', status: 'ok' },
 				{ label: 'زمان‌بند پاک‌سازی', value: '2026-09-22 14:20', status: 'ok' },
 				{ label: 'وضعیت افزونه', value: 'فعال', status: 'ok' },
+				{ label: 'یکپارچگی بستهٔ نصب‌شده', value: 'درست — ۱۴۸ فایل بررسی شد', status: 'ok', note: 'همهٔ فایل‌ها هش خودشان را در build.json دارند.' },
 			],
 		},
 		code: {

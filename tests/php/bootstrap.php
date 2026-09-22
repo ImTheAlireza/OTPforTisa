@@ -14,6 +14,17 @@
 
 define( 'ABSPATH', __DIR__ );
 define( 'TISA_OTP_PATH', dirname( __DIR__, 2 ) . '/tisa-otp/' );
+define( 'TISA_OTP_FILE', TISA_OTP_PATH . 'tisa-otp.php' );
+
+/*
+ * The plugin's own version, read the way WordPress reads it. Tests compare it
+ * with the package manifest, so a release that forgets one of the two fails
+ * here rather than on somebody's site.
+ */
+$GLOBALS['tisa_plugin_source'] = is_readable( TISA_OTP_FILE ) ? (string) file_get_contents( TISA_OTP_FILE ) : '';
+$GLOBALS['tisa_version_match'] = array();
+preg_match( "/define\(\s*'TISA_OTP_VERSION',\s*'([^']+)'\s*\)/", $GLOBALS['tisa_plugin_source'], $GLOBALS['tisa_version_match'] );
+define( 'TISA_OTP_VERSION', isset( $GLOBALS['tisa_version_match'][1] ) ? $GLOBALS['tisa_version_match'][1] : '0.0.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
 define( 'DAY_IN_SECONDS', 86400 );
@@ -303,6 +314,22 @@ function wp_safe_redirect( $location = '', $status = 302 ) {
  */
 function wp_get_referer() {
 	return isset( $GLOBALS['tisa_referer'] ) ? $GLOBALS['tisa_referer'] : '';
+}
+
+/**
+ * @param string $value
+ * @return string
+ */
+function trailingslashit( $value ): string {
+	return rtrim( (string) $value, '/\\' ) . '/';
+}
+
+/**
+ * @param string $value
+ * @return string
+ */
+function untrailingslashit( $value ): string {
+	return rtrim( (string) $value, '/\\' );
 }
 
 /**

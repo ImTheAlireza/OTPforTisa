@@ -23,6 +23,8 @@ use TisaOtp\Captcha\Manager as CaptchaManager;
 use TisaOtp\Config\Settings;
 use TisaOtp\Cron\Maintenance;
 use TisaOtp\Gateway\Registry;
+use TisaOtp\Install\Guard;
+use TisaOtp\Install\Package;
 use TisaOtp\Install\Schema;
 use TisaOtp\Log\LogStore;
 use TisaOtp\Otp\CodeStore;
@@ -185,6 +187,41 @@ final class SelfTest {
 			$wp_ok ? 'ok' : 'warn',
 			$wp_ok ? '' : __( 'روی ۶.۱ یا بالاتر آزمایش شده است.', 'tisa-otp' )
 		);
+
+		/*
+		 * Whether the files on disk are one package. This is the row that would
+		 * have answered "why has nothing changed?" in one click, and the one
+		 * that tells a half-replaced install apart from a working one.
+		 */
+		$package = Package::verify();
+		$offence = Package::offenders( $package );
+		$broke   = Guard::failures();
+
+		$rows[] = $this->row(
+			__( 'یکپارچگی بستهٔ نصب‌شده', 'tisa-otp' ),
+			$package['ok']
+				? sprintf( /* translators: %d: number of files checked */ __( 'درست — %s فایل بررسی شد', 'tisa-otp' ), number_format_i18n( $package['checked'] ) )
+				: __( 'ناقص', 'tisa-otp' ),
+			$package['ok'] ? 'ok' : 'fail',
+			! $package['ok']
+				? implode( '، ', array_slice( $offence, 0, 5 ) ) . ' — ' . __( 'بستهٔ کامل همین نسخه را از نو نصب کنید (جایگزینی، نه حذف).', 'tisa-otp' )
+				: ''
+		);
+
+		if ( ! empty( $broke ) ) {
+			$ids = array();
+
+			foreach ( $broke as $failure ) {
+				$ids[] = $failure['id'];
+			}
+
+			$rows[] = $this->row(
+				__( 'سرویس‌هایی که بالا نیامدند', 'tisa-otp' ),
+				number_format_i18n( count( $ids ) ),
+				'fail',
+				implode( '، ', $ids ) . ' — ' . __( 'تا وقتی این پیام هست، بخشی از افزونه کار نمی‌کند. بستهٔ کامل را از نو نصب کنید.', 'tisa-otp' )
+			);
+		}
 
 		$missing = $this->schema->missingTables();
 

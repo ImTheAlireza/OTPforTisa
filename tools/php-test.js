@@ -108,7 +108,13 @@ async function main() {
 
 	const files = [
 		...collect(path.join(ROOT, 'tests', 'php'), '/tests/php'),
-		...collect(path.join(ROOT, 'tisa-otp'), '/tisa-otp', (file) => file.endsWith('.php')),
+		/*
+		 * Everything in the plugin, not only the PHP: one test hashes the whole
+		 * installed tree against build.json, which is how it proves this checkout
+		 * is one release. Mounting only .php files made that test report every
+		 * stylesheet as missing.
+		 */
+		...collect(path.join(ROOT, 'tisa-otp'), '/tisa-otp'),
 	];
 
 	await put(php, files);
