@@ -873,6 +873,7 @@ function testThePanelKeepsItsOwnPromises() {
 	const nav = read('tisa-otp', 'src', 'Admin', 'ScreenNav.php');
 	const admin = read('preview', 'public', 'admin.html');
 	const server = read('preview', 'server.js');
+	const appMode = read('tisa-otp', 'src', 'Admin', 'AppMode.php');
 	const bootstrap = read('tisa-otp', 'tisa-otp.php');
 	const readme = read('tisa-otp', 'readme.txt');
 
@@ -910,6 +911,21 @@ function testThePanelKeepsItsOwnPromises() {
 	check('the preview says which version it is showing', admin.indexOf(version) >= 0);
 	check('the preview shows the release card too', /تازه در نسخهٔ ۱\.۳\.۲/.test(admin) && /class="tisa-bullets"/.test(admin));
 	check('and a link from it into the reports section', /class="button" href="#reports"/.test(admin));
+
+	// --- app mode: the panel can take the whole window ----------------------
+	// The panel sits inside somebody else's page. This is the opt-in that hides
+	// the frame, and the rules are: only the person who asked for it, always one
+	// click from leaving it, and never hide feedback while hiding furniture.
+	check('app mode is a user preference, not a site setting', /const META\s+= 'tisa_otp_app_mode'/.test(appMode) && /get_user_meta\( \$user_id, self::META/.test(appMode));
+	check('the body is marked before it is painted', /add_filter\( 'admin_body_class'/.test(appMode) && /' tisa-app'/.test(appMode));
+	check('the switch is a form post with a nonce and a capability check', /admin_post_/.test(appMode) && /check_admin_referer\( self::ACTION \)/.test(appMode) && /current_user_can\( Menu::CAPABILITY \)/.test(appMode));
+	check('and it lands back on the page it was pressed from', /wp_safe_redirect\( \$back/.test(appMode));
+	check('the switch rides in the screen row, so all five screens have it', /private static function appToggle\(\)/.test(nav) && /self::appToggle\(\);/.test(nav));
+	check('the button names where it goes, not what it is', /'نمای پیشخوان'/.test(nav) && /'حالت اپ'/.test(nav));
+	check('the stylesheet takes the chrome away', /body\.tisa-app #adminmenumain/.test(adminCss) && /body\.tisa-app #wpadminbar/.test(adminCss) && /body\.tisa-app #wpfooter/.test(adminCss));
+	check('and keeps the notices, because a save message is feedback', adminCss.indexOf('body.tisa-app .notice') < 0);
+	check('the toolbar room is given back on html as well', /html:has\(body\.tisa-app\)/.test(adminCss) && /initAppMode\(\)/.test(adminJs));
+	check('the demo shows the switch and what it does', /data-tisa-app-demo/.test(admin) && /body\.tisa-app \.demo-bar \{ display: none; \}/.test(admin));
 
 	// --- one self-test per section ------------------------------------------
 	const kinds = (selfTest.match(/return array\( '([a-z]+)'(?:, '[a-z]+')* \);/) || [])[1];

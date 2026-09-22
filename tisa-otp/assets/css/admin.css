@@ -36,7 +36,25 @@
  * plugin itself.
  */
 .tisa-screens {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 14px;
 	margin: -6px 0 18px;
+}
+
+/* The same row carries the switch that leaves the WordPress frame behind. */
+.tisa-appmode {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+}
+
+.tisa-appmode__hint {
+	color: var(--tisa-muted);
+	font-size: 12px;
 }
 
 .tisa-screens ul {
@@ -1514,4 +1532,52 @@ textarea.tisa-input {
 	.tisa-chart__day {
 		font-size: 9px;
 	}
+}
+
+/* App mode ----------------------------------------------------------------- */
+
+/*
+ * Everything outside `.tisa-wrap` belongs to WordPress. In app mode the
+ * administrator asked for the plugin and not for the frame around it, so the
+ * bar, the sideways menu, the footer and the screen-options row step aside and
+ * the panel gets the whole window. Notices stay: a saved-settings message is
+ * feedback, not furniture. The switch that turns this on sits in the screen row
+ * on all five screens, so leaving the mode is always one click away.
+ */
+html:has(body.tisa-app),
+html.tisa-app {
+	padding-top: 0 !important;
+}
+
+body.tisa-app #wpadminbar,
+body.tisa-app #adminmenumain,
+body.tisa-app #wpfooter,
+body.tisa-app #screen-meta-links {
+	display: none !important;
+}
+
+body.tisa-app #wpcontent {
+	margin-inline-start: 0 !important;
+	padding-inline-start: 0 !important;
+}
+
+body.tisa-app .tisa-wrap {
+	max-width: 1320px;
+	margin-block: 18px 40px;
+	margin-inline: auto;
+	padding-inline: clamp(16px, 4vw, 40px);
+}
+
+body.tisa-app .tisa-screens {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+	margin-inline: calc(-1 * clamp(16px, 4vw, 40px));
+	padding: 8px 12px;
+	background: #fff;
+	border-block: 1px solid var(--tisa-line);
+}
+
+body.tisa-app .tisa-card {
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
 }

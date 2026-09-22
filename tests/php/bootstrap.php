@@ -247,6 +247,83 @@ function wp_unslash( $value ) {
 }
 
 /* -------------------------------------------------------------------------
+ * The part of WordPress the admin screens touch.
+ *
+ * The screens are drawn, not run, in these tests: they ask who is logged in,
+ * whether that person may manage the site, and for a nonce field. Stubs that
+ * throw make it possible to test the handlers too — the request ends by
+ * redirecting or by dying, and both are visible here.
+ * ---------------------------------------------------------------------- */
+
+function get_current_user_id(): int {
+	return isset( $GLOBALS['tisa_current_user'] ) ? (int) $GLOBALS['tisa_current_user'] : 0;
+}
+
+function current_user_can( $capability ): bool {
+	return ! empty( $GLOBALS['tisa_may_manage'] );
+}
+
+function add_filter( $tag, $callback, $priority = 10, $accepted = 1 ) {
+	$GLOBALS['tisa_hooks'][ $tag ][] = $callback;
+
+	return true;
+}
+
+function add_action( $tag, $callback, $priority = 10, $accepted = 1 ) {
+	return add_filter( $tag, $callback, $priority, $accepted );
+}
+
+/**
+ * @param string $action
+ */
+function check_admin_referer( $action = -1, $query_arg = '_wpnonce' ) {
+	if ( empty( $GLOBALS['tisa_nonce_ok'] ) ) {
+		throw new RuntimeException( 'nonce' );
+	}
+
+	return 1;
+}
+
+/**
+ * @param string $message
+ */
+function wp_die( $message = '', $title = '', $args = array() ) {
+	throw new RuntimeException( 'died' );
+}
+
+/**
+ * @param string $location
+ */
+function wp_safe_redirect( $location = '', $status = 302 ) {
+	throw new RuntimeException( $location );
+}
+
+/**
+ * @return string
+ */
+function wp_get_referer() {
+	return isset( $GLOBALS['tisa_referer'] ) ? $GLOBALS['tisa_referer'] : '';
+}
+
+/**
+ * @param string $action
+ * @return string
+ */
+function wp_nonce_field( $action = -1, $name = '_wpnonce', $referer = true, $display = true ) {
+	$html = '<input type="hidden" name="' . esc_attr( $name ) . '" value="' . esc_attr( 'nonce-' . $action ) . '">';
+
+	if ( $referer ) {
+		$html .= '<input type="hidden" name="_wp_http_referer" value="">';
+	}
+
+	if ( $display ) {
+		echo $html;
+	}
+
+	return $html;
+}
+
+/* -------------------------------------------------------------------------
  * Minimal autoloader, mirroring src/Autoloader.php
  * ---------------------------------------------------------------------- */
 

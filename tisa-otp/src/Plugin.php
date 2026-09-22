@@ -102,6 +102,7 @@ final class Plugin {
 			Admin\LogsScreen::class,
 			Admin\ToolsScreen::class,
 			Admin\AccessScreen::class,
+			Admin\AppMode::class,
 			Admin\Menu::class,
 		);
 	}
@@ -367,6 +368,10 @@ final class Plugin {
 
 		$c->bind( Admin\Controls::class, static function ( Container $c ) {
 			return new Admin\Controls( $c->make( Config\Settings::class ) );
+		} );
+
+		$c->bind( Admin\AppMode::class, static function () {
+			return new Admin\AppMode();
 		} );
 
 		$c->bind( Admin\SettingsScreen::class, static function ( Container $c ) {

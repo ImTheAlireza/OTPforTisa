@@ -15,6 +15,7 @@
 require __DIR__ . '/bootstrap.php';
 
 use TisaOtp\Admin\AccessScreen;
+use TisaOtp\Admin\AppMode;
 use TisaOtp\Admin\LogsScreen;
 use TisaOtp\Admin\Menu;
 use TisaOtp\Admin\ReportScreen;
@@ -98,6 +99,24 @@ foreach ( $slugs as $slug ) {
 	);
 	tisa_same( 'the switcher always shows all five screens on ' . $slug, 5, substr_count( $html, '<li>' ) );
 }
+
+tisa_start( 'the same row carries the full-screen switch' );
+
+$html = tisa_nav( Menu::ROOT );
+
+tisa_check( 'the switch is a post, so a link cannot flip it', false !== strpos( $html, 'method="post"' ) && false !== strpos( $html, 'value="' . AppMode::ACTION . '"' ) );
+tisa_check( 'it carries a nonce', false !== strpos( $html, 'value="nonce-' . AppMode::ACTION . '"' ) );
+tisa_check( 'and it offers the state it is not in', false !== strpos( $html, 'حالت اپ' ) );
+
+$GLOBALS['tisa_current_user'] = 7;
+$GLOBALS['tisa_user_meta']    = array( 7 => array( AppMode::META => '1' ) );
+
+$html = tisa_nav( Menu::ROOT );
+
+tisa_check( 'once it is on, the same button says how to get back', false !== strpos( $html, 'نمای پیشخوان' ) && false === strpos( $html, '>حالت اپ<' ) );
+tisa_check( 'and the body is marked for the stylesheet', false !== strpos( ( new AppMode() )->bodyClass( 'wp-admin' ), 'tisa-app' ) );
+
+$GLOBALS['tisa_user_meta'] = array();
 
 tisa_start( 'the row is accessible, not just clickable' );
 

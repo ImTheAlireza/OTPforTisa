@@ -29,6 +29,7 @@ jobs:
           php tests/php/report-test.php
           php tests/php/screens-test.php
           php tests/php/colour-test.php
+          php tests/php/app-mode-test.php
       - name: Lint every PHP file
         run: |
           php -v

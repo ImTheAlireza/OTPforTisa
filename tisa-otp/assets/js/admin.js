@@ -1053,7 +1053,19 @@
 		}
 	}
 
+	/*
+	 * `admin_body_class` can only reach the body, but the WordPress toolbar
+	 * reserves its room on <html>. Modern browsers get this from `:has()` in the
+	 * stylesheet; this line is for the ones that do not.
+	 */
+	function initAppMode() {
+		if (document.body && document.body.classList.contains('tisa-app')) {
+			document.documentElement.classList.add('tisa-app');
+		}
+	}
+
 	ready(function () {
+		initAppMode();
 		initControls();
 		initSelfTests();
 		initMedia();

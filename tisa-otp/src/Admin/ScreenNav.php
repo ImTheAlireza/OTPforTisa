@@ -10,6 +10,10 @@
  * This row prints the five screens in menu order on every one of them, so
  * "where is the reports page?" has an answer on the page you are standing on.
  *
+ * The row also carries the app-mode switch, because it is the one element that
+ * exists on all five screens: the control that leaves the mode has to be where
+ * the control that entered it was.
+ *
  * @package TisaOtp
  */
 
@@ -69,6 +73,31 @@ final class ScreenNav {
 			);
 		}
 
-		echo '</ul></nav>';
+		echo '</ul>';
+
+		self::appToggle();
+
+		echo '</nav>';
+	}
+
+	/**
+	 * The full-screen switch, drawn with the state it would go to.
+	 *
+	 * Nothing here needs JavaScript: a form post flips the administrator's own
+	 * preference and sends them straight back to this page.
+	 */
+	private static function appToggle(): void {
+		$on = AppMode::isOn();
+
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="tisa-appmode" aria-label="' . esc_attr__( 'حالت نمایش', 'tisa-otp' ) . '">';
+		echo '<input type="hidden" name="action" value="' . esc_attr( AppMode::ACTION ) . '">';
+		wp_nonce_field( AppMode::ACTION );
+		echo '<button type="submit" class="button tisa-appmode__button">'
+			. esc_html( $on ? __( 'نمای پیشخوان', 'tisa-otp' ) : __( 'حالت اپ', 'tisa-otp' ) )
+			. '</button>';
+		echo '<span class="tisa-appmode__hint">'
+			. esc_html( $on ? __( 'بازگشت به چیدمان وردپرس.', 'tisa-otp' ) : __( 'تمام‌صفحه، بدون منو و نوار مدیریت.', 'tisa-otp' ) )
+			. '</span>';
+		echo '</form>';
 	}
 }
