@@ -14,6 +14,7 @@
 
 const http = require('http');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
@@ -23,7 +24,13 @@ const REPO = path.join(__dirname, '..');
 const PLUGIN = path.join(REPO, 'tisa-otp');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PLUGIN_ASSETS = path.join(PLUGIN, 'assets');
-const ZIP_PATH = path.join(REPO, 'tisa-otp.zip');
+/*
+ * The download is built next to the sources, not on top of them: rebuilding
+ * `tisa-otp.zip` in the repo would leave the working tree dirty every time
+ * somebody clicked the link (and the committed archive is what CI compares
+ * against, byte for byte).
+ */
+const ZIP_PATH = path.join(os.tmpdir(), 'tisa-otp-preview.zip');
 
 const MIME = {
 	'.html': 'text/html; charset=utf-8',
@@ -46,9 +53,34 @@ function buildZip() {
 		// Not there yet — fine.
 	}
 
+	/*
+	 * Same shape as the committed archive: the plugin folder as the root, one
+	 * entry per file, sorted, with a fixed timestamp so two builds of the same
+	 * source are the same bytes.
+	 */
 	execFileSync(
 		'python3',
-		['-c', "import shutil; shutil.make_archive('tisa-otp', 'zip', '.', 'tisa-otp')"],
+		[
+			'-c',
+			[
+				'import os, zipfile',
+				'root, out = "tisa-otp", ' + JSON.stringify(ZIP_PATH),
+				'stamp = (2026, 9, 22, 5, 36, 0)',
+				'entries = []',
+				'for dirpath, dirnames, filenames in os.walk(root):',
+				'    dirnames.sort(); filenames.sort()',
+				'    arc = dirpath.replace(os.sep, "/") + "/"',
+				'    entries.append((None, arc))',
+				'    for name in filenames:',
+				'        entries.append((os.path.join(dirpath, name), arc + name))',
+				'with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:',
+				'    for path, arc in entries:',
+				'        info = zipfile.ZipInfo(arc, date_time=stamp)',
+				'        info.compress_type = zipfile.ZIP_STORED if path is None else zipfile.ZIP_DEFLATED',
+				'        info.external_attr = (0o40755 if path is None else 0o100644) << 16',
+				'        z.writestr(info, b"" if path is None else open(path, "rb").read())',
+			].join('\n'),
+		],
 		{ cwd: REPO }
 	);
 
