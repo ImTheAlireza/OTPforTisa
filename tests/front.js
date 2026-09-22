@@ -579,6 +579,94 @@ async function testPasteFromSms() {
 	check('and the code is verified without pressing anything', ctx.calls.some((call) => call.url.indexOf('/verify') >= 0), ctx.calls.map((call) => call.url).join(' | '));
 }
 
+async function testPrefixChip() {
+	scenario('The 09 chip means something, and is not printed twice');
+
+	const ctx = boot({
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
+	});
+
+	const phone = ctx.doc.querySelector('[data-tisa-phone]');
+	const dial = ctx.doc.querySelector('.tisa-phone__dial');
+
+	check('the field has a prefix chip', !!dial, 'missing');
+	check('the chip is the prefix alone', '۰۹' === text(dial), text(dial));
+	check('the placeholder shows only what is left to type', '912 345 6789' === phone.placeholder, phone.placeholder);
+	check('the placeholder does not repeat the prefix', phone.placeholder.indexOf('09') < 0, phone.placeholder);
+	check('the chip is decorative for screen readers', 'true' === dial.getAttribute('aria-hidden'));
+
+	// Type the ten digits the chip implies, and the full number must go out.
+	phone.value = '9123456789';
+	ctx.form.act('start');
+	for (let i = 0; i < 6; i++) await tick();
+
+	const start = ctx.calls.filter((call) => call.url.indexOf('/start') >= 0).pop();
+	check('ten digits are sent as a full number', !!start && '09123456789' === start.body.phone, start ? String(start.body.phone) : 'no call');
+
+	// The other spellings users paste have to fold too.
+	const cases = [
+		['+98 912 123 4567', '09121234567'],
+		['00989121234567', '09121234567'],
+		['۰۹۱۲۱۲۳۴۵۶۷', '09121234567'],
+		['09121234567', '09121234567'],
+	];
+
+	for (const [typed, expected] of cases) {
+		const one = boot({
+			fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
+		});
+
+		one.doc.querySelector('[data-tisa-phone]').value = typed;
+		one.form.act('start');
+		for (let i = 0; i < 6; i++) await tick();
+
+		const call = one.calls.filter((c) => c.url.indexOf('/start') >= 0).pop();
+		check('«' + typed + '» is sent as ' + expected, !!call && expected === call.body.phone, call ? String(call.body.phone) : 'no call');
+	}
+}
+
+async function testTheLookOfTheTwoReportedBugs() {
+	scenario('The progress bar and the skip link stay fixed');
+
+	const css = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'front.css'), 'utf8');
+	const skip = css.slice(css.indexOf('.tisa-otp__skip {'), css.indexOf('.tisa-otp__skip:focus'));
+
+	check('the skip link is invisible until it is focused', /opacity:\s*0/.test(skip) && /pointer-events:\s*none/.test(skip), skip.split('\n')[1] || '');
+	check('and it is still the first tab stop', /^\.tisa-otp__skip:focus/m.test(css) || /\.tisa-otp__skip:focus,/.test(css));
+
+	check('no connector line is drawn across the progress bar', !/tisa-otp__steps li \+ li::after/.test(css));
+	check('progress is three filled segments instead', /\.tisa-otp__steps li::before \{/.test(css));
+	check('the phone chip draws the only border around the field', /\.tisa-phone__input[\s\S]{0,240}border:\s*0 !important/.test(css));
+	const page = new JSDOM(pageSource, { runScripts: 'outside-only' });
+	const shown = page.window.document.querySelector('.tisa-otp').textContent;
+
+	check('nothing on screen prints a fake «09xxxxxxxxx» hint', !/09x{3,}/i.test(shown), (shown.match(/09x{3,}/i) || [''])[0]);
+
+	const trust = page.window.document.querySelector('[data-tisa-step="phone"] .tisa-otp__trust');
+	check('the reassurance row sits under the send button', !!trust, 'not inside step 1');
+}
+
+function testPreviewMirrorsTheTemplate() {
+	scenario('The demo page still mirrors the template it claims to show');
+
+	const template = fs.readFileSync(path.join(REPO, 'tisa-otp', 'templates', 'partials', 'step-phone.php'), 'utf8');
+	const renderer = fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'FormRenderer.php'), 'utf8');
+	const step = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-tisa-step="phone"]');
+
+	for (const name of ['tisa-phone', 'tisa-phone__dial', 'tisa-phone__input', 'tisa-otp__trust']) {
+		check('the template renders .' + name, template.indexOf(name) >= 0);
+		check('the demo shows .' + name, !!step.querySelector('.' + name));
+	}
+
+	check('the chip text is a variable, not a hard-coded 09', /\$dial/.test(template) && step.querySelector('.tisa-phone__dial').textContent === '۰۹');
+	check('the chip flips to Latin digits for LTR', /'09'/.test(template));
+	check('the placeholder comes from the renderer', /\$phonePlaceholder/.test(template) && /'912 345 6789'/.test(renderer));
+	check('the demo placeholder matches the renderer', step.querySelector('[data-tisa-phone]').placeholder === '912 345 6789');
+
+	const trustTemplate = template.slice(template.indexOf('tisa-otp__trust'));
+	check('the demo trust items are the ones the PHP filter ships', trustTemplate.indexOf("__(") < 0 && step.querySelectorAll('.tisa-otp__trust-item').length >= 3);
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -593,6 +681,9 @@ async function main() {
 	await testCaptchaFailureIsVisible();
 	await testStaleFormTokenRecovers();
 	await testPasteFromSms();
+	await testPrefixChip();
+	await testTheLookOfTheTwoReportedBugs();
+	await testPreviewMirrorsTheTemplate();
 
 	console.log('\n' + (failed ? failed + ' FAILED, ' : '') + passed + ' checks passed');
 	process.exit(failed ? 1 : 0);

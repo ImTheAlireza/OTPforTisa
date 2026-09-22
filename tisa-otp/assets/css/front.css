@@ -1,21 +1,28 @@
 /*!
  * Tisa OTP — front-end styles.
  *
- * Everything is scoped under `.tisa-otp` and driven by design tokens, so a
- * theme can restyle the form without touching a single selector here. The
- * five public ones are set from PHP (`Assets::cssVariables`) and from the
- * shortcode/Elementor attributes:
+ * Two rules shape everything below:
  *
- *   --tisa-accent        main colour
- *   --tisa-accent-soft   tinted background for focus/hover
- *   --tisa-surface       card background
- *   --tisa-radius        corner radius
- *   --tisa-width         form width
+ *   1. Every colour, radius, space and shadow is a token. A theme can restyle
+ *      the whole form by overriding five variables set from PHP
+ *      (`Assets::cssVariables`) or from the shortcode/Elementor attributes:
  *
- * The rest are derived below. Contrast-critical values were measured, not
- * guessed: --tisa-input-line is 4.05:1 and --tisa-placeholder 4.83:1 on white,
- * replacing values that failed WCAG 1.4.11 (1.24:1) and 1.4.3 (2.58:1).
- * See docs/UI-PLAN.fa.md §3 for the full token table.
+ *        --tisa-accent        main colour
+ *        --tisa-accent-soft   tinted wash for focus and hover
+ *        --tisa-surface       card background
+ *        --tisa-radius        corner radius
+ *        --tisa-width         form width
+ *
+ *   2. Nothing may depend on two elements staying in step with each other.
+ *      The previous step bar drew its connector line as a pseudo-element that
+ *      painted *over* the numbered circles, and the phone field printed "09"
+ *      twice. Both looked broken for a reason that was structural, not
+ *      cosmetic, so both are rebuilt rather than repainted: the progress bar is
+ *      three filled segments, and the country prefix is a real chip that the
+ *      placeholder no longer repeats.
+ *
+ * Contrast-critical values were measured, not guessed: see
+ * `node tests/contrast.js` and docs/UI-PLAN.fa.md §3.
  */
 
 .tisa-otp {
@@ -43,22 +50,26 @@
 	--tisa-info-line: rgba(23, 92, 211, 0.22);
 	--tisa-overlay: rgba(255, 255, 255, 0.72);
 
-	/* Space (4px rhythm) -------------------------------------------------- */
+	/* Space — a 4px rhythm, so vertical distances stay related ----------- */
 	--tisa-space-1: 4px;
 	--tisa-space-2: 8px;
 	--tisa-space-3: 12px;
 	--tisa-space: 14px;
 	--tisa-space-4: var(--tisa-space);
+	--tisa-space-5: 18px;
 	--tisa-space-6: 24px;
 	--tisa-space-8: 32px;
 
 	/* Radius and depth ---------------------------------------------------- */
 	--tisa-radius: 14px;
+	--tisa-radius-card: 18px;
 	--tisa-radius-sm: calc(var(--tisa-radius) * 0.5);
 	--tisa-radius-control: calc(var(--tisa-radius) * 0.7);
+	--tisa-ring: 0 0 0 4px var(--tisa-accent-soft);
 	--tisa-elev-1: 0 1px 2px rgba(16, 24, 40, 0.06);
 	--tisa-elev-2: 0 18px 40px -24px rgba(16, 24, 40, 0.35);
 	--tisa-elev-3: 0 24px 56px -28px rgba(16, 24, 40, 0.45);
+	--tisa-elev-button: 0 12px 26px -16px rgba(11, 92, 86, 0.9);
 
 	/* Motion -------------------------------------------------------------- */
 	--tisa-dur-fast: 120ms;
@@ -80,7 +91,7 @@
 	color: var(--tisa-text);
 	font-family: var(--tisa-font);
 	font-size: 15px;
-	line-height: 1.7;
+	line-height: 1.75;
 	direction: rtl;
 	text-align: right;
 }
@@ -91,6 +102,8 @@
 	box-sizing: inherit;
 }
 
+/* Text for screen readers only. Used for the step announcement, the code
+   labels and the resend status. */
 .tisa-otp .tisa-screen-reader {
 	position: absolute !important;
 	width: 1px;
@@ -103,32 +116,44 @@
 	border: 0;
 }
 
-/* Skip link — the first tab stop inside the form. Visible only on focus. */
+/* Skip link -----------------------------------------------------------------
+ *
+ * The first tab stop jumps past the (invisible) honeypot and straight to the
+ * phone field. It has to be *gone* until it is focused: the previous version
+ * only nudged itself up with `translateY(-150%)`, which left it sitting on the
+ * card in plain sight — the button users kept asking about.
+ */
 
 .tisa-otp__skip {
 	position: absolute;
-	top: 0;
-	inset-inline-start: 0;
+	top: 8px;
+	inset-inline-start: 50%;
 	z-index: 3;
-	padding: 8px 14px;
-	border-radius: var(--tisa-radius-sm);
+	padding: 8px 16px;
+	border-radius: 999px;
 	background: var(--tisa-accent);
 	color: var(--tisa-accent-contrast);
-	font-size: 14px;
+	font-size: 13.5px;
 	font-weight: 700;
 	text-decoration: none;
-	transform: translateY(-150%);
-	transition: transform var(--tisa-dur-fast) var(--tisa-ease-out);
+	white-space: nowrap;
+	box-shadow: var(--tisa-elev-1);
+	transform: translateX(50%) translateY(-12px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--tisa-dur-fast) var(--tisa-ease-out), transform var(--tisa-dur-fast) var(--tisa-ease-out);
 }
 
 .tisa-otp__skip:focus,
 .tisa-otp__skip:focus-visible {
 	outline: 2px solid var(--tisa-focus);
 	outline-offset: 2px;
-	transform: translateY(0);
+	opacity: 1;
+	pointer-events: auto;
+	transform: translateX(50%) translateY(0);
 }
 
-/* Alignment ---------------------------------------------------------------- */
+/* Alignment ----------------------------------------------------------------- */
 
 .tisa-align-start {
 	margin-inline-start: 0;
@@ -140,10 +165,10 @@
 	margin-inline-end: 0;
 }
 
-/* Brand + status ----------------------------------------------------------- */
+/* Brand --------------------------------------------------------------------- */
 
 .tisa-otp__brand {
-	margin-bottom: var(--tisa-space);
+	margin-bottom: var(--tisa-space-5);
 	text-align: center;
 }
 
@@ -152,33 +177,7 @@
 	max-width: 100%;
 }
 
-.tisa-otp__status {
-	margin-bottom: var(--tisa-space);
-	padding: 10px 14px;
-	border-radius: calc(var(--tisa-radius) * 0.7);
-	border: 1px solid var(--tisa-line);
-	background: #f9fafb;
-	color: var(--tisa-muted);
-	font-size: 14px;
-}
-
-.tisa-otp__status[hidden] {
-	display: none;
-}
-
-.tisa-otp__status.is-error {
-	border-color: rgba(180, 35, 24, 0.25);
-	background: #fef3f2;
-	color: var(--tisa-danger);
-}
-
-.tisa-otp__status.is-success {
-	border-color: rgba(6, 118, 71, 0.25);
-	background: #ecfdf3;
-	color: var(--tisa-success);
-}
-
-/* Form + steps ------------------------------------------------------------- */
+/* Form shell ---------------------------------------------------------------- */
 
 .tisa-otp__form {
 	display: block;
@@ -195,13 +194,174 @@
 	pointer-events: none;
 }
 
+/* Status card --------------------------------------------------------------- */
+
+.tisa-otp__status {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--tisa-space-3);
+	margin-bottom: var(--tisa-space-5);
+	padding: var(--tisa-space-3) var(--tisa-space-4);
+	border: 1px solid var(--tisa-info-line);
+	border-radius: var(--tisa-radius-control);
+	background: var(--tisa-info-soft);
+	color: var(--tisa-text);
+	font-size: 13.5px;
+	animation: tisa-step-in var(--tisa-dur-base) var(--tisa-ease-out);
+}
+
+.tisa-otp__status[hidden] {
+	display: none;
+}
+
+.tisa-otp__status-icon {
+	flex: none;
+	width: 20px;
+	height: 20px;
+	margin-top: 2px;
+	color: var(--tisa-info);
+}
+
+.tisa-otp__status-body {
+	min-width: 0;
+}
+
+.tisa-otp__status-title {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.6;
+}
+
+.tisa-otp__status-title[hidden] {
+	display: none;
+}
+
+.tisa-otp__status-text {
+	margin: 0;
+	line-height: 1.8;
+}
+
+.tisa-otp__status-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--tisa-space-3);
+	margin-top: var(--tisa-space-2);
+}
+
+.tisa-otp__status-action {
+	min-height: 40px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: currentColor;
+	font-family: inherit;
+	font-size: 13.5px;
+	font-weight: 700;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	cursor: pointer;
+}
+
+.tisa-otp__status.is-info {
+	border-color: var(--tisa-info-line);
+	background: var(--tisa-info-soft);
+}
+
+.tisa-otp__status.is-info .tisa-otp__status-icon {
+	color: var(--tisa-info);
+}
+
+.tisa-otp__status.is-success {
+	border-color: var(--tisa-success-line);
+	background: var(--tisa-success-soft);
+	color: var(--tisa-success);
+}
+
+.tisa-otp__status.is-success .tisa-otp__status-icon {
+	color: var(--tisa-success);
+}
+
+.tisa-otp__status.is-error {
+	border-color: var(--tisa-danger-line);
+	background: var(--tisa-danger-soft);
+	color: var(--tisa-danger);
+}
+
+.tisa-otp__status.is-error .tisa-otp__status-icon {
+	color: var(--tisa-danger);
+}
+
+/* Progress ------------------------------------------------------------------
+ *
+ * Three segments instead of numbered circles joined by a line. A segment can
+ * never land on top of another one, it survives any font size, and it reads the
+ * same in RTL and LTR — which is exactly what the old connector failed at.
+ *
+ * Decorative for assistive tech: `aria-hidden` on the list, with the visually
+ * hidden "step N of M" sentence beside it doing the announcing.
+ */
+
+.tisa-otp__steps {
+	display: flex;
+	gap: var(--tisa-space-2);
+	margin: 0 0 var(--tisa-space-6);
+	padding: 0;
+	list-style: none;
+	counter-reset: tisa-step;
+}
+
+.tisa-otp__steps[hidden] {
+	display: none;
+}
+
+.tisa-otp__steps li {
+	flex: 1 1 0;
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	min-width: 0;
+	color: var(--tisa-muted);
+	font-size: 12px;
+	line-height: 1.6;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.tisa-otp__steps li::before {
+	content: "";
+	display: block;
+	height: 4px;
+	border-radius: 999px;
+	background: var(--tisa-line);
+	transition: background-color var(--tisa-dur-slow) var(--tisa-ease-out);
+}
+
+.tisa-otp__steps li.is-done::before,
+.tisa-otp__steps li.is-current::before {
+	background: var(--tisa-accent);
+}
+
+.tisa-otp__steps li.is-done {
+	color: var(--tisa-accent);
+}
+
+.tisa-otp__steps li.is-current {
+	color: var(--tisa-text);
+	font-weight: 700;
+}
+
+/* Steps --------------------------------------------------------------------- */
+
 .tisa-step {
 	display: none;
 }
 
 .tisa-step.is-current {
 	display: block;
-	animation: tisa-step-in 220ms ease-out;
+	animation: tisa-step-in var(--tisa-dur-slow) var(--tisa-ease-out);
 }
 
 @keyframes tisa-step-in {
@@ -217,15 +377,16 @@
 }
 
 .tisa-step__head {
-	margin-bottom: calc(var(--tisa-space) * 1.25);
+	margin-bottom: var(--tisa-space-5);
 }
 
 .tisa-step__title {
-	margin: 0 0 4px;
+	margin: 0 0 6px;
 	color: inherit;
-	font-size: 20px;
+	font-size: 21px;
 	font-weight: 700;
 	line-height: 1.5;
+	letter-spacing: -0.01em;
 }
 
 .tisa-step__hint {
@@ -234,25 +395,37 @@
 	font-size: 13.5px;
 }
 
+/* The step title is focused programmatically when a step opens. */
+.tisa-step__title:focus {
+	outline: none;
+}
+
+.tisa-step__title:focus-visible {
+	outline: 2px solid var(--tisa-focus);
+	outline-offset: 4px;
+	border-radius: 4px;
+}
+
 .tisa-otp__masked {
 	direction: ltr;
 	unicode-bidi: embed;
-	font-weight: 600;
+	font-weight: 700;
 	color: var(--tisa-text);
+	letter-spacing: 0.02em;
 }
 
-/* Fields ------------------------------------------------------------------- */
+/* Fields -------------------------------------------------------------------- */
 
 .tisa-fields {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var(--tisa-space);
-	margin-bottom: var(--tisa-space);
+	gap: var(--tisa-space-4);
+	margin-bottom: var(--tisa-space-5);
 }
 
 .tisa-field {
 	width: 100%;
-	margin-bottom: var(--tisa-space);
+	margin-bottom: var(--tisa-space-5);
 }
 
 .tisa-fields .tisa-field {
@@ -260,7 +433,7 @@
 }
 
 .tisa-field--half {
-	flex: 1 1 calc(50% - (var(--tisa-space) / 2));
+	flex: 1 1 calc(50% - (var(--tisa-space-4) / 2));
 	min-width: 160px;
 }
 
@@ -270,7 +443,7 @@
 
 .tisa-field__label {
 	display: block;
-	margin-bottom: 6px;
+	margin-bottom: 7px;
 	color: var(--tisa-text);
 	font-size: 13.5px;
 	font-weight: 600;
@@ -280,27 +453,49 @@
 	color: var(--tisa-danger);
 }
 
+.tisa-field__hint {
+	margin: 7px 0 0;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+}
+
+.tisa-field__error {
+	margin: 7px 0 0;
+	color: var(--tisa-danger);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.tisa-field__error[hidden] {
+	display: none;
+}
+
+/*
+ * 16px, not 15px: iOS zooms the whole page when a focused input is smaller,
+ * which leaves the form sitting half off-screen on every iPhone.
+ */
 .tisa-field__input,
 .tisa-field__select,
 .tisa-phone__input,
 .tisa-code__bulk {
 	width: 100%;
-	padding: 11px 14px;
-	border: 1px solid var(--tisa-line);
-	border-radius: calc(var(--tisa-radius) * 0.7);
+	padding: 13px 15px;
+	border: 1px solid var(--tisa-input-line);
+	border-radius: var(--tisa-radius-control);
 	background: var(--tisa-surface);
 	color: var(--tisa-text);
 	font-family: inherit;
-	font-size: 15px;
+	font-size: 16px;
 	line-height: 1.6;
-	transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+	transition: border-color var(--tisa-dur-fast) var(--tisa-ease-out), box-shadow var(--tisa-dur-fast) var(--tisa-ease-out), background-color var(--tisa-dur-fast) var(--tisa-ease-out);
 	appearance: none;
 }
 
 .tisa-field__input::placeholder,
 .tisa-phone__input::placeholder,
 .tisa-code__bulk::placeholder {
-	color: #98a2b3;
+	color: var(--tisa-placeholder);
+	letter-spacing: normal;
 }
 
 .tisa-field__input:focus,
@@ -309,8 +504,8 @@
 .tisa-code__bulk:focus,
 .tisa-code__box:focus {
 	outline: none;
-	border-color: var(--tisa-accent);
-	box-shadow: 0 0 0 4px var(--tisa-accent-soft);
+	border-color: var(--tisa-focus);
+	box-shadow: var(--tisa-ring);
 }
 
 .tisa-field__input.has-error,
@@ -330,34 +525,6 @@
 	box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.14);
 }
 
-/* A step title is focused programmatically when a new step opens. */
-.tisa-step__title:focus {
-	outline: none;
-}
-
-.tisa-step__title:focus-visible {
-	outline: 2px solid var(--tisa-focus);
-	outline-offset: 4px;
-	border-radius: 4px;
-}
-
-.tisa-field__hint {
-	margin: 6px 0 0;
-	color: var(--tisa-muted);
-	font-size: 13px;
-}
-
-.tisa-field__error {
-	margin: 6px 0 0;
-	color: var(--tisa-danger);
-	font-size: 13.5px;
-	font-weight: 500;
-}
-
-.tisa-field__error[hidden] {
-	display: none;
-}
-
 .tisa-check {
 	display: flex;
 	align-items: center;
@@ -373,11 +540,22 @@
 	accent-color: var(--tisa-accent);
 }
 
-/* Phone -------------------------------------------------------------------- */
+/* Phone ---------------------------------------------------------------------
+ *
+ * One control, one border, one prefix. The chip is the country prefix the
+ * visitor does not have to type, and the placeholder only shows what is left —
+ * `912 345 6789` rather than `09xxxxxxxxx`, which repeated the chip and made
+ * the field look like it had two values.
+ *
+ * The `<input>` resets carry `!important` because a theme that styles
+ * `input[type="tel"]` with a heavier selector would otherwise draw a second
+ * rounded box inside the chip and break the whole control.
+ */
 
 .tisa-phone {
 	display: flex;
 	align-items: stretch;
+	min-height: 54px;
 	border: 1px solid var(--tisa-input-line);
 	border-radius: var(--tisa-radius-control);
 	background: var(--tisa-surface);
@@ -387,39 +565,80 @@
 
 .tisa-phone:focus-within {
 	border-color: var(--tisa-focus);
-	box-shadow: 0 0 0 4px var(--tisa-accent-soft);
+	box-shadow: var(--tisa-ring);
 }
 
 .tisa-phone[aria-invalid="true"],
 .tisa-phone.has-error {
 	border-color: var(--tisa-danger);
+	background: var(--tisa-danger-soft);
 }
 
 .tisa-phone__dial {
 	display: flex;
 	align-items: center;
-	padding: 0 14px;
-	border-inline-end: 1px solid var(--tisa-input-line);
+	justify-content: center;
+	flex: none;
+	padding: 0 15px;
+	border-inline-end: 1px solid var(--tisa-line);
 	background: var(--tisa-surface-sunken);
-	color: var(--tisa-muted);
-	font-size: 15px;
-	direction: ltr;
+	color: var(--tisa-text);
+	font-size: 17px;
+	font-weight: 700;
+	font-feature-settings: "tnum" 1;
+	letter-spacing: 0.04em;
+	user-select: none;
 }
 
-.tisa-phone__input {
+.tisa-phone__input,
+.tisa-phone__input:focus {
 	flex: 1 1 auto;
+	min-width: 0;
 	border: 0 !important;
 	border-radius: 0 !important;
+	background: transparent !important;
 	box-shadow: none !important;
+	/* `right` keeps the digits against the chip: in an LTR box the number is
+	   written left to right, but it belongs next to the prefix it follows. */
+	text-align: right;
 	direction: ltr;
-	text-align: left;
 	letter-spacing: 0.06em;
+}
+
+.tisa-phone__input::placeholder {
+	/* The placeholder is a tail, not a value: it should not shout. */
+	color: var(--tisa-placeholder);
 }
 
 /* Code --------------------------------------------------------------------- */
 
 .tisa-code {
-	margin-bottom: var(--tisa-space);
+	margin-bottom: var(--tisa-space-4);
+}
+
+.tisa-code__phone {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: var(--tisa-space-2);
+	margin-bottom: var(--tisa-space-4);
+	padding: 7px var(--tisa-space-4);
+	border: 1px solid var(--tisa-line);
+	border-radius: 999px;
+	background: var(--tisa-surface-sunken);
+	color: var(--tisa-muted);
+	font-size: 13px;
+}
+
+.tisa-code__phone[hidden] {
+	display: none;
+}
+
+.tisa-code__phone-value {
+	color: var(--tisa-text);
+	font-weight: 700;
+	letter-spacing: 0.02em;
 }
 
 .tisa-code__boxes {
@@ -433,7 +652,7 @@
 	flex: 1 1 0;
 	min-width: 0;
 	max-width: 58px;
-	height: 56px;
+	height: 58px;
 	padding: 0;
 	border: 1px solid var(--tisa-input-line);
 	border-radius: var(--tisa-radius-control);
@@ -466,13 +685,28 @@
 	font-variant-numeric: tabular-nums;
 }
 
+.tisa-code__paste {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	margin: calc(var(--tisa-space-5) * -0.35) auto 0;
+	min-height: 40px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.tisa-code__paste svg {
+	width: 17px;
+	height: 17px;
+}
+
 .tisa-code__footer {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--tisa-space-3);
 	justify-content: space-between;
 	align-items: center;
-	margin-top: var(--tisa-space);
+	margin-top: var(--tisa-space-5);
 	font-size: 13.5px;
 }
 
@@ -491,9 +725,9 @@
 /* Cooldown bar: one CSS animation instead of a second timer (UI plan 4.5). */
 
 .tisa-code__cooldown {
-	height: 2px;
+	height: 3px;
 	margin-top: var(--tisa-space-2);
-	border-radius: 2px;
+	border-radius: 999px;
 	background: var(--tisa-line);
 	overflow: hidden;
 }
@@ -505,6 +739,7 @@
 .tisa-code__cooldown > i {
 	display: block;
 	height: 100%;
+	border-radius: inherit;
 	background: var(--tisa-accent);
 	transform-origin: inline-start;
 	animation: tisa-cooldown var(--tisa-cooldown, 60s) linear forwards;
@@ -520,14 +755,17 @@
 	}
 }
 
-/* "No SMS?" helper — revealed after 30 seconds on the code step (U-A6). */
+/* "No SMS?" helper — an offer, not a warning, so it reads like a card. */
 
 .tisa-code__rescue {
-	margin-top: var(--tisa-space);
-	padding: var(--tisa-space-3);
-	border: 1px dashed var(--tisa-line);
+	display: flex;
+	align-items: flex-start;
+	gap: var(--tisa-space-3);
+	margin-top: var(--tisa-space-4);
+	padding: var(--tisa-space-3) var(--tisa-space-4);
+	border: 1px solid var(--tisa-info-line);
 	border-radius: var(--tisa-radius-control);
-	background: var(--tisa-surface-sunken);
+	background: var(--tisa-info-soft);
 	animation: tisa-step-in var(--tisa-dur-base) var(--tisa-ease-out);
 }
 
@@ -536,7 +774,7 @@
 }
 
 .tisa-code__rescue-title {
-	margin: 0 0 var(--tisa-space-2);
+	margin: 0 0 2px;
 	color: var(--tisa-text);
 	font-size: 14px;
 	font-weight: 700;
@@ -545,7 +783,7 @@
 .tisa-code__rescue-actions {
 	display: flex;
 	flex-wrap: wrap;
-	gap: var(--tisa-space-3);
+	gap: var(--tisa-space-4);
 }
 
 .tisa-otp.is-expired .tisa-code__box,
@@ -553,7 +791,7 @@
 	border-color: var(--tisa-danger-line);
 }
 
-/* Buttons ------------------------------------------------------------------ */
+/* Buttons ------------------------------------------------------------------- */
 
 .tisa-btn {
 	display: inline-flex;
@@ -561,10 +799,10 @@
 	justify-content: center;
 	gap: 10px;
 	width: 100%;
-	/* 44px is the WCAG 2.2 target-size floor; 48px is the comfortable one. */
-	min-height: 48px;
+	/* 44px is the WCAG 2.2 target-size floor; 52px is the comfortable one. */
+	min-height: 52px;
 	margin: 0;
-	padding: 12px 20px;
+	padding: 13px 22px;
 	border: 1px solid transparent;
 	border-radius: var(--tisa-radius-control);
 	font-family: inherit;
@@ -572,7 +810,7 @@
 	font-weight: 700;
 	line-height: 1.5;
 	cursor: pointer;
-	transition: background-color var(--tisa-dur-fast) var(--tisa-ease-out), color var(--tisa-dur-fast) var(--tisa-ease-out), border-color var(--tisa-dur-fast) var(--tisa-ease-out), transform 90ms var(--tisa-ease-out), opacity var(--tisa-dur-fast) var(--tisa-ease-out);
+	transition: background-color var(--tisa-dur-fast) var(--tisa-ease-out), color var(--tisa-dur-fast) var(--tisa-ease-out), border-color var(--tisa-dur-fast) var(--tisa-ease-out), box-shadow var(--tisa-dur-base) var(--tisa-ease-out), transform 90ms var(--tisa-ease-out), opacity var(--tisa-dur-fast) var(--tisa-ease-out);
 }
 
 /* The label keeps its resting width so "..." does not resize the button. */
@@ -581,23 +819,31 @@
 }
 
 .tisa-btn--primary {
-	background: var(--tisa-accent);
+	/* A 6% gradient is the whole "premium" difference: the button catches
+	   light at the top instead of reading as a flat rectangle. */
+	background-image: linear-gradient(180deg, var(--tisa-accent) 0%, var(--tisa-accent-strong) 100%);
+	background-color: var(--tisa-accent);
 	color: var(--tisa-accent-contrast);
+	box-shadow: var(--tisa-elev-button);
 }
 
 .tisa-btn--primary:hover:not(:disabled) {
-	background: var(--tisa-accent-strong);
+	background-image: none;
+	background-color: var(--tisa-accent-strong);
+	box-shadow: 0 16px 30px -16px rgba(11, 92, 86, 0.95);
 }
 
 .tisa-btn--primary:active:not(:disabled) {
 	transform: translateY(1px);
+	box-shadow: 0 6px 14px -10px rgba(11, 92, 86, 0.9);
 }
 
 .tisa-btn--ghost {
-	margin-top: 10px;
+	margin-top: var(--tisa-space-2);
 	background: transparent;
-	border-color: var(--tisa-input-line);
-	color: var(--tisa-text);
+	border-color: var(--tisa-line);
+	color: var(--tisa-muted);
+	font-size: 15px;
 	font-weight: 600;
 }
 
@@ -610,12 +856,16 @@
 .tisa-btn:disabled {
 	opacity: 0.65;
 	cursor: not-allowed;
+	box-shadow: none;
 }
 
 .tisa-btn:focus-visible,
-.tisa-link:focus-visible {
+.tisa-link:focus-visible,
+.tisa-code__paste:focus-visible,
+.tisa-otp__status-action:focus-visible {
 	outline: 2px solid var(--tisa-focus);
 	outline-offset: 2px;
+	border-radius: 6px;
 }
 
 .tisa-btn__spinner {
@@ -663,30 +913,106 @@
 	font-family: inherit;
 	font-size: 13.5px;
 	font-weight: 600;
-	text-decoration: underline;
+	text-decoration: none;
+	text-underline-offset: 3px;
 	cursor: pointer;
+}
+
+.tisa-link:hover:not(:disabled) {
+	text-decoration: underline;
 }
 
 .tisa-link:disabled {
 	color: var(--tisa-muted);
-	text-decoration: none;
 	cursor: default;
 }
 
-/* Captcha + terms ---------------------------------------------------------- */
+/* Captcha ------------------------------------------------------------------- */
 
 .tisa-captcha {
 	display: flex;
-	justify-content: center;
-	margin-bottom: var(--tisa-space);
+	flex-direction: column;
+	align-items: center;
+	gap: var(--tisa-space-2);
+	min-height: 0;
+	margin-bottom: var(--tisa-space-4);
 }
 
 .tisa-captcha[hidden] {
 	display: none;
 }
 
+/* An empty slot is a bug the visitor should be able to see coming. */
+.tisa-captcha:not([hidden]):empty::after {
+	content: "";
+	width: 26px;
+	height: 26px;
+	border: 2px solid var(--tisa-input-line);
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: tisa-spin 900ms linear infinite;
+}
+
+.tisa-captcha__error {
+	width: 100%;
+	padding: var(--tisa-space-3) var(--tisa-space-4);
+	border: 1px solid var(--tisa-danger-line);
+	border-radius: var(--tisa-radius-control);
+	background: var(--tisa-danger-soft);
+	color: var(--tisa-text);
+	text-align: start;
+}
+
+.tisa-captcha__error-text {
+	margin: 0 0 var(--tisa-space-2);
+	font-size: 13px;
+	line-height: 1.8;
+}
+
+.tisa-captcha__error-hint {
+	margin: var(--tisa-space-2) 0 0;
+	color: var(--tisa-muted);
+	font-size: 12.5px;
+	line-height: 1.8;
+}
+
+/* Trust row -----------------------------------------------------------------
+ *
+ * Sits under the primary button, where the hesitation happens ("should I give
+ * this site my number?"). Quiet by design: it is reassurance, not a feature
+ * list, so it stays one muted line of three short claims.
+ */
+
+.tisa-otp__trust {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--tisa-space-2) var(--tisa-space-4);
+	margin: var(--tisa-space-5) 0 0;
+	padding: 0;
+	list-style: none;
+	color: var(--tisa-muted);
+	font-size: 12px;
+	line-height: 1.7;
+}
+
+.tisa-otp__trust-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.tisa-otp__trust-item svg {
+	width: 15px;
+	height: 15px;
+	flex: none;
+	color: var(--tisa-accent);
+}
+
+/* Terms --------------------------------------------------------------------- */
+
 .tisa-otp__terms {
-	margin: var(--tisa-space) 0 0;
+	margin: var(--tisa-space-4) 0 0;
 	color: var(--tisa-muted);
 	font-size: 12.5px;
 	text-align: center;
@@ -696,105 +1022,37 @@
 	color: var(--tisa-accent);
 }
 
-/* Step bar ----------------------------------------------------------------- */
-
-/*
- * Decorative for assistive tech: `aria-hidden` on the list, with a visually
- * hidden "step N of M" sentence next to it doing the announcing.
+/* Skins --------------------------------------------------------------------
+ *
+ * `line` is the default: no card at all, so the form can be dropped into a
+ * theme that already draws one. The others add a surface of their own.
  */
 
-.tisa-otp__steps {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--tisa-space-1);
-	margin: 0 0 var(--tisa-space);
+.tisa-skin-line .tisa-otp__form {
 	padding: 0;
-	list-style: none;
-	counter-reset: tisa-step;
 }
 
-.tisa-otp__steps[hidden] {
-	display: none;
-}
-
-.tisa-otp__steps li {
-	flex: 1 1 0;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 6px;
-	position: relative;
-	color: var(--tisa-muted);
-	font-size: 12.5px;
-	line-height: 1.5;
-	text-align: center;
-}
-
-.tisa-otp__steps li::before {
-	counter-increment: tisa-step;
-	content: counter(tisa-step);
-	display: grid;
-	place-items: center;
-	width: 26px;
-	height: 26px;
-	border: 1px solid var(--tisa-input-line);
-	border-radius: 50%;
-	background: var(--tisa-surface);
-	color: var(--tisa-muted);
-	font-size: 12.5px;
-	font-weight: 700;
-	transition: background-color var(--tisa-dur-fast) var(--tisa-ease-out), border-color var(--tisa-dur-fast) var(--tisa-ease-out), color var(--tisa-dur-fast) var(--tisa-ease-out);
-}
-
-/* The connector sits between circles, never before the first one. */
-.tisa-otp__steps li + li::after {
-	content: "";
-	position: absolute;
-	top: 13px;
-	inset-inline-end: 50%;
-	width: 100%;
-	height: 1px;
-	background: var(--tisa-line);
-}
-
-.tisa-otp__steps li.is-current {
-	color: var(--tisa-text);
-	font-weight: 700;
-}
-
-.tisa-otp__steps li.is-current::before {
-	border-color: var(--tisa-accent);
-	background: var(--tisa-accent);
-	color: var(--tisa-accent-contrast);
-}
-
-.tisa-otp__steps li.is-done::before {
-	content: "\2713";
-	border-color: var(--tisa-accent);
-	color: var(--tisa-accent);
-}
-
-.tisa-otp__steps li.is-done {
-	color: var(--tisa-accent);
-}
-
-/* Skins -------------------------------------------------------------------- */
-
-.tisa-skin-card .tisa-otp__form {
-	padding: 26px var(--tisa-space-6) var(--tisa-space-6);
+.tisa-skin-card .tisa-otp__form,
+.tisa-skin-glass .tisa-otp__form,
+.tisa-skin-slate .tisa-otp__form {
+	padding: var(--tisa-space-8) var(--tisa-space-6) var(--tisa-space-6);
 	border: 1px solid var(--tisa-line);
-	border-radius: var(--tisa-radius);
+	border-radius: var(--tisa-radius-card);
 	background: var(--tisa-surface);
 	box-shadow: var(--tisa-elev-2);
 }
 
+.tisa-skin-card .tisa-otp__form {
+	/* A hairline of the accent at the very top: the card gets an edge to sit
+	   against without a header band eating vertical space. */
+	border-top: 3px solid var(--tisa-accent);
+}
+
 .tisa-skin-glass .tisa-otp__form {
-	padding: 26px var(--tisa-space-6) var(--tisa-space-6);
-	border: 1px solid rgba(255, 255, 255, 0.45);
-	border-radius: var(--tisa-radius);
-	background: rgba(255, 255, 255, 0.62);
-	backdrop-filter: blur(14px) saturate(140%);
-	-webkit-backdrop-filter: blur(14px) saturate(140%);
+	border-color: rgba(255, 255, 255, 0.45);
+	background: rgba(255, 255, 255, 0.66);
+	backdrop-filter: blur(16px) saturate(140%);
+	-webkit-backdrop-filter: blur(16px) saturate(140%);
 	box-shadow: var(--tisa-elev-3);
 }
 
@@ -802,7 +1060,7 @@
 .tisa-skin-glass .tisa-phone,
 .tisa-skin-glass .tisa-code__box,
 .tisa-skin-glass .tisa-code__bulk {
-	background: rgba(255, 255, 255, 0.75);
+	background: rgba(255, 255, 255, 0.78);
 }
 
 /*
@@ -835,9 +1093,7 @@
 }
 
 .tisa-skin-slate .tisa-otp__form {
-	padding: 26px var(--tisa-space-6) var(--tisa-space-6);
-	border: 1px solid var(--tisa-line);
-	border-radius: var(--tisa-radius);
+	border-color: var(--tisa-line);
 	background: var(--tisa-surface-sunken);
 }
 
@@ -845,8 +1101,13 @@
 .tisa-skin-slate .tisa-field__select,
 .tisa-skin-slate .tisa-phone,
 .tisa-skin-slate .tisa-code__box,
-.tisa-skin-slate .tisa-code__bulk {
+.tisa-skin-slate .tisa-code__bulk,
+.tisa-skin-slate .tisa-code__phone {
 	background: var(--tisa-surface);
+}
+
+.tisa-skin-slate .tisa-code__phone-value {
+	color: var(--tisa-text);
 }
 
 .tisa-skin-pill {
@@ -863,18 +1124,18 @@
 	border-radius: 999px;
 }
 
-/* Responsive --------------------------------------------------------------- */
+/* Responsive ---------------------------------------------------------------- */
 
 /* md — tablets and narrow desktop columns. */
 @media (max-width: 768px) {
 	.tisa-otp__steps li {
-		font-size: 12px;
+		font-size: 11.5px;
 	}
 
 	.tisa-skin-card .tisa-otp__form,
 	.tisa-skin-glass .tisa-otp__form,
 	.tisa-skin-slate .tisa-otp__form {
-		padding: var(--tisa-space-6) 20px;
+		padding: var(--tisa-space-6) 20px var(--tisa-space-5);
 	}
 }
 
@@ -888,14 +1149,26 @@
 		flex: 1 1 100%;
 	}
 
+	/* The action stays within thumb reach while the boxes are typed. */
+	.tisa-step.is-current .tisa-btn--primary {
+		position: sticky;
+		bottom: 10px;
+		z-index: 3;
+	}
+
 	.tisa-code__box {
-		height: 52px;
+		height: 54px;
 		/* Still 16px+ so iOS does not zoom when a box takes focus. */
-		font-size: 21px;
+		font-size: 22px;
 	}
 
 	.tisa-code__boxes {
 		gap: 6px;
+	}
+
+	.tisa-code__phone {
+		justify-content: flex-start;
+		border-radius: var(--tisa-radius-control);
 	}
 
 	.tisa-code__footer {
@@ -905,19 +1178,19 @@
 	.tisa-skin-card .tisa-otp__form,
 	.tisa-skin-glass .tisa-otp__form,
 	.tisa-skin-slate .tisa-otp__form {
-		padding: 20px 16px;
+		padding: 22px 16px 18px;
 	}
 
 	.tisa-step__title {
-		font-size: 18px;
+		font-size: 19px;
 	}
 }
 
 /* xs — 360px and below, where eight code boxes stop fitting. */
 @media (max-width: 380px) {
 	.tisa-code__box {
-		height: 48px;
-		font-size: 19px;
+		height: 50px;
+		font-size: 20px;
 	}
 
 	.tisa-code__boxes {
@@ -925,10 +1198,10 @@
 	}
 
 	.tisa-phone__dial {
-		padding: 0 10px;
+		padding: 0 11px;
 	}
 
-	/* Only the "step 2 of 3" sentence survives; the circles would wrap. */
+	/* Only the "step 2 of 3" sentence survives; the labels would wrap. */
 	.tisa-otp__steps {
 		display: none;
 	}
@@ -937,12 +1210,12 @@
 		position: static !important;
 		width: auto;
 		height: auto;
-		margin: 0 0 var(--tisa-space-2);
+		margin: 0 0 var(--tisa-space-3);
 		padding: 0;
 		overflow: visible;
 		clip: auto;
 		color: var(--tisa-muted);
-		font-size: 13px;
+		font-size: 12.5px;
 		white-space: normal;
 	}
 
@@ -954,6 +1227,7 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.tisa-step.is-current,
+	.tisa-otp__status,
 	.tisa-code__rescue {
 		animation: none;
 	}
@@ -994,7 +1268,8 @@
 	}
 
 	.tisa-field__hint,
-	.tisa-step__hint {
+	.tisa-step__hint,
+	.tisa-otp__trust {
 		font-weight: 600;
 	}
 }
@@ -1003,6 +1278,23 @@
 .tisa-otp[dir="ltr"] {
 	direction: ltr;
 	text-align: left;
+}
+
+/* The chip is on the left here, so the digits start from the left as well. */
+.tisa-otp[dir="ltr"] .tisa-phone__input,
+.tisa-otp[dir="ltr"] .tisa-phone__input:focus {
+	text-align: left;
+}
+
+/* The skip link centres itself with a transform, which is physical, so the
+   LTR form needs the mirrored value. */
+.tisa-otp[dir="ltr"] .tisa-otp__skip {
+	transform: translateX(-50%) translateY(-12px);
+}
+
+.tisa-otp[dir="ltr"] .tisa-otp__skip:focus,
+.tisa-otp[dir="ltr"] .tisa-otp__skip:focus-visible {
+	transform: translateX(-50%) translateY(0);
 }
 
 .tisa-otp[dir="ltr"] .tisa-code__boxes {
@@ -1015,24 +1307,25 @@
 
 @media (forced-colors: active) {
 	.tisa-btn--primary {
+		background-image: none;
 		background: ButtonFace;
 		color: ButtonText;
 		border-color: ButtonText;
+		box-shadow: none;
 	}
 
 	.tisa-field__input,
 	.tisa-phone,
 	.tisa-code__box,
 	.tisa-otp__status,
-	.tisa-otp__status-action {
+	.tisa-otp__status-action,
+	.tisa-code__rescue {
 		border-color: CanvasText;
 	}
 
-	.tisa-otp__steps li.is-current::before,
-	.tisa-otp__steps li.is-done::before {
-		border-color: CanvasText;
-		color: CanvasText;
-		background: Canvas;
+	.tisa-otp__steps li::before,
+	.tisa-code__cooldown > i {
+		background: Highlight;
 	}
 
 	.tisa-otp__status-icon {
@@ -1040,7 +1333,7 @@
 	}
 }
 
-/* wp-login.php takeover ---------------------------------------------------- */
+/* wp-login.php takeover ----------------------------------------------------- */
 
 .login.tisa-otp-login #login {
 	width: 100%;
@@ -1069,193 +1362,4 @@
 
 .login.tisa-otp-login #login .tisa-otp {
 	margin-top: 12px;
-}
-
-/* =========================================================================
- * v1.3 layer — trust row, status headline, captcha failure states, paste,
- * phone chip and a phone-sized sticky action.
- *
- * Everything here reuses the measured tokens above, so the contrast gate in
- * tests/contrast.js keeps covering it. No new colour is introduced.
- * ====================================================================== */
-
-/* Trust row: three claims, before the first keystroke. ---------------------- */
-
-.tisa-otp__trust {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--tisa-space-2) var(--tisa-space-3);
-	margin: 0 0 var(--tisa-space-4);
-	padding: 0;
-	list-style: none;
-	color: var(--tisa-muted);
-	font-size: 12.5px;
-	line-height: 1.7;
-}
-
-.tisa-otp__trust-item {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.tisa-otp__trust-item svg {
-	width: 16px;
-	height: 16px;
-	flex: none;
-	color: var(--tisa-accent);
-}
-
-.tisa-skin-slate .tisa-otp__trust {
-	color: #cbd5e1;
-}
-
-/* Status card: a headline the eye can catch, then the sentence. ------------ */
-
-.tisa-otp__status-title {
-	margin: 0 0 2px;
-	font-size: 14px;
-	font-weight: 700;
-	line-height: 1.6;
-}
-
-.tisa-otp__status-title[hidden] {
-	display: none;
-}
-
-/* Captcha: never an empty box. -------------------------------------------- */
-
-.tisa-captcha {
-	min-height: 0;
-	flex-direction: column;
-	align-items: center;
-	gap: var(--tisa-space-2);
-}
-
-.tisa-captcha:not([hidden]):empty::after {
-	content: '';
-	width: 28px;
-	height: 28px;
-	border: 2px solid var(--tisa-input-line);
-	border-top-color: transparent;
-	border-radius: 50%;
-	animation: tisa-spin 900ms linear infinite;
-}
-
-.tisa-captcha__error {
-	width: 100%;
-	padding: var(--tisa-space-3);
-	border: 1px solid var(--tisa-danger-line);
-	border-radius: var(--tisa-radius-control);
-	background: var(--tisa-danger-soft);
-	color: var(--tisa-text);
-	text-align: start;
-}
-
-.tisa-captcha__error-text {
-	margin: 0 0 var(--tisa-space-2);
-	font-size: 13px;
-	line-height: 1.8;
-}
-
-.tisa-captcha__error-hint {
-	margin: var(--tisa-space-2) 0 0;
-	color: var(--tisa-muted);
-	font-size: 12.5px;
-	line-height: 1.8;
-}
-
-.tisa-skin-slate .tisa-captcha__error {
-	border-color: rgba(253, 162, 155, 0.45);
-	background: rgba(180, 35, 24, 0.22);
-	color: #fee4e2;
-}
-
-/* Phone chip: which number the code went to, and the way back. ------------ */
-
-.tisa-code__phone {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--tisa-space-2);
-	justify-content: center;
-	margin-bottom: var(--tisa-space-3);
-	padding: 6px 12px;
-	border: 1px solid var(--tisa-line);
-	border-radius: 999px;
-	background: var(--tisa-surface-sunken);
-	color: var(--tisa-muted);
-	font-size: 13px;
-}
-
-.tisa-code__phone[hidden] {
-	display: none;
-}
-
-.tisa-code__phone-value {
-	color: var(--tisa-text);
-	font-weight: 700;
-	letter-spacing: 0.02em;
-}
-
-.tisa-skin-slate .tisa-code__phone {
-	background: rgba(255, 255, 255, 0.04);
-	border-color: #344054;
-	color: #98a2b3;
-}
-
-.tisa-skin-slate .tisa-code__phone-value {
-	color: #f2f4f7;
-}
-
-/* Paste from the SMS. ----------------------------------------------------- */
-
-.tisa-code__paste {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	margin: calc(var(--tisa-space) * -0.4) auto 0;
-	min-height: 40px;
-	font-weight: 600;
-}
-
-.tisa-code__paste svg {
-	width: 17px;
-	height: 17px;
-}
-
-/* Code boxes: a little calmer on focus, tabular digits so they stop dancing. */
-
-.tisa-code__box,
-.tisa-code__bulk {
-	font-variant-numeric: tabular-nums;
-	font-feature-settings: 'tnum';
-}
-
-.tisa-code__box:focus-visible,
-.tisa-code__bulk:focus-visible {
-	outline: 3px solid var(--tisa-focus);
-	outline-offset: 2px;
-}
-
-/* Phone-sized sticky action: the button stays reachable with a thumb. ------ */
-
-@media (max-width: 480px) {
-	.tisa-step.is-current .tisa-btn--primary {
-		position: sticky;
-		bottom: 10px;
-		z-index: 3;
-		box-shadow: 0 10px 24px -12px rgba(16, 24, 40, 0.55);
-	}
-
-	.tisa-code__phone {
-		justify-content: flex-start;
-		border-radius: var(--tisa-radius-control);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.tisa-captcha:not([hidden]):empty::after {
-		animation-duration: 2.4s;
-	}
 }

@@ -7,6 +7,7 @@
  * Available variables: instance, classes, style, heading, hint, regHeading,
  * regHint, redirect, labels, codeLength, cooldown, showBrand, logo, logoWidth,
  * fields, flow, registration, captcha, terms, dir, configUrl, cacheMode, nonce,
+ * formToken, renderedAt, phonePlaceholder, trust,
  * restUrl, honeypot, timestampKey, renderedAt, steps, view.
  *
  * @package TisaOtp
@@ -48,31 +49,9 @@ defined( 'ABSPATH' ) || exit;
 
 		<?php
 		/*
-		 * Three claims, said once, before the first field. They answer the question
-		 * a visitor actually has ("why is this site asking for my number?") in the
-		 * place where the decision to type it happens.
-		 */
-		?>
-		<ul class="tisa-otp__trust">
-			<li class="tisa-otp__trust-item">
-				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-				<span><?php esc_html_e( 'بدون رمز عبور', 'tisa-otp' ); ?></span>
-			</li>
-			<li class="tisa-otp__trust-item">
-				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 3.2c1.9 0 3.6 1 4.4 2.6" stroke-linecap="round"></path><path d="M3.4 8.3A8 8 0 0 1 15.6 5" stroke-linecap="round"></path><path d="m2.5 2.5 15 15" stroke-linecap="round"></path><path d="M7.1 12.9a3 3 0 0 0 4.2 0" stroke-linecap="round"></path></svg>
-				<span><?php esc_html_e( 'شماره شما محفوظ می‌ماند', 'tisa-otp' ); ?></span>
-			</li>
-			<li class="tisa-otp__trust-item">
-				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-				<span><?php esc_html_e( 'ورود در چند ثانیه', 'tisa-otp' ); ?></span>
-			</li>
-		</ul>
-
-		<?php
-		/*
-		 * Step bar. The list is decorative (`aria-hidden`); the sentence beside
-		 * it is what a screen reader hears, and JS keeps both in sync. It is only
-		 * rendered when the flow really has three steps.
+		 * Progress. The list is decorative (`aria-hidden`); the sentence beside
+		 * it is what a screen reader hears, and JS keeps both in sync. It is
+		 * only rendered when the flow really has three steps.
 		 */
 		if ( count( $steps ) > 2 ) :
 			?>

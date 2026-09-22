@@ -111,6 +111,9 @@ final class FormRenderer {
 			'regHint'      => $this->settings->str( 'register_subheading' ),
 			'redirect'     => $this->resolveRedirect( $args ),
 			'phoneLabel'   => __( 'شماره موبایل', 'tisa-otp' ),
+			// The chip already shows 09; the placeholder shows what is left to type.
+			'phonePlaceholder' => __( '912 345 6789', 'tisa-otp' ),
+			'trust'        => $this->trust(),
 			'codeLabel'    => __( 'کد تأیید', 'tisa-otp' ),
 			'sendLabel'    => $this->settings->str( 'label_send', __( 'دریافت کد تأیید', 'tisa-otp' ) ),
 			'verifyLabel'  => $this->settings->str( 'label_verify', __( 'ورود به حساب', 'tisa-otp' ) ),
@@ -148,6 +151,39 @@ final class FormRenderer {
 	 *
 	 * @return array<int,array{id:string,label:string}>
 	 */
+	/**
+	 * The three quiet claims under the send button.
+	 *
+	 * Icons are inline SVG on purpose: this row has to work on a page with no
+	 * icon font, no external request and no theme stylesheet.
+	 *
+	 * @return array<int,array{icon:string,label:string}>
+	 */
+	private function trust(): array {
+		$items = array(
+			array(
+				'icon'  => '<path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path>',
+				'label' => __( 'بدون رمز عبور', 'tisa-otp' ),
+			),
+			array(
+				'icon'  => '<circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path>',
+				'label' => __( 'ورود در چند ثانیه', 'tisa-otp' ),
+			),
+			array(
+				'icon'  => '<rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path>',
+				'label' => __( 'شماره شما محفوظ می‌ماند', 'tisa-otp' ),
+			),
+		);
+
+		/**
+		 * Filter the reassurance row under the send button. Return an empty array
+		 * to hide it.
+		 *
+		 * @param array<int,array{icon:string,label:string}> $items Icon path plus label.
+		 */
+		return (array) apply_filters( 'tisa_otp_form_trust', $items );
+	}
+
 	private function steps(): array {
 		$phone = array(
 			'id'    => 'phone',

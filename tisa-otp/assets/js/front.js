@@ -56,22 +56,43 @@
 		});
 	}
 
-	function looksLikePhone(value) {
+	/**
+	 * Every spelling of an Iranian mobile number, folded to `09xxxxxxxxx`.
+	 *
+	 * This is what gets sent, not what got typed. Without it the field could
+	 * accept `9123456789` (which the old validator did) and then post those ten
+	 * digits, which the server — correctly — rejected as an invalid number.
+	 */
+	function canonicalPhone(value) {
 		var digits = digitsOnly(value);
 
+		// `00` is how the international prefix is dialled in Iran; people paste
+		// `0098912…` straight out of their contacts, so fold it first.
+		if (0 === digits.indexOf('00')) {
+			digits = digits.substr(2);
+		}
+
 		if (12 === digits.length && '98' === digits.substr(0, 2)) {
-			digits = '0' + digits.substr(2);
+			return '0' + digits.substr(2);
 		}
 
-		if (11 === digits.length && '+' === String(value).trim().substr(0, 1)) {
-			digits = '0' + digits.substr(1);
+		if (11 === digits.length && '0' === digits.charAt(0)) {
+			return digits;
 		}
 
-		if (10 === digits.length && '9' === digits.substr(0, 1)) {
-			digits = '0' + digits;
+		if (11 === digits.length && '9' === digits.charAt(0)) {
+			return '0' + digits.substr(1);
 		}
 
-		return /^09\d{9}$/.test(digits);
+		if (10 === digits.length && '9' === digits.charAt(0)) {
+			return '0' + digits;
+		}
+
+		return digits;
+	}
+
+	function looksLikePhone(value) {
+		return /^09\d{9}$/.test(canonicalPhone(value));
 	}
 
 	function flag(value, fallback) {
@@ -926,7 +947,7 @@
 
 	Form.prototype.basePayload = function (route) {
 		return {
-			phone: this.phoneInput ? this.phoneInput.value.trim() : this.phone,
+			phone: this.phoneInput ? canonicalPhone(this.phoneInput.value) : this.phone,
 			channel: this.channel,
 			redirect: this.redirect,
 			tisa_hp: this.honeypot ? this.honeypot.value : '',
@@ -1162,7 +1183,7 @@
 			return;
 		}
 
-		this.phone = digitsOnly(value);
+		this.phone = canonicalPhone(value);
 		this.clearFieldErrors();
 
 		this.run('start', this.basePayload('start'), function (data) {
