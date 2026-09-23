@@ -31,6 +31,7 @@ jobs:
           php tests/php/colour-test.php
           php tests/php/transport-test.php
           php tests/php/smsir-test.php
+          php tests/php/settings-render-test.php
           php tests/php/app-mode-test.php
           php tests/php/wiring-test.php
           php tests/php/package-test.php

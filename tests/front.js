@@ -1114,7 +1114,9 @@ function testSmsIrAgainstItsDocumentation() {
 	// The demo can be clicked through to the same rows.
 	check('the demo answers the gateways test with the two new rows', server.indexOf('کلید API و اعتبار') >= 0 && server.indexOf('شماره خط') >= 0);
 	check('and with a reachability row that carries a cause', server.indexOf('دسترسی این سرور به سامانه') >= 0 && server.indexOf('CONNECT') >= 0);
-	check('the demo version follows the plugin', admin.indexOf('(۱.۳.۵)') >= 0 || /۱\.۳\.\d/.test(admin));
+	const pluginVersion = (read('tisa-otp', 'tisa-otp.php').match(/Version:\s*([0-9.]+)/) || [])[1];
+	const faPluginVersion = !!pluginVersion && pluginVersion.replace(/[0-9]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[digit]);
+	check('the demo version follows the plugin', !!pluginVersion && admin.indexOf(faPluginVersion) >= 0 && admin.indexOf(pluginVersion) >= 0, pluginVersion);
 }
 
 async function main() {

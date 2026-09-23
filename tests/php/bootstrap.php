@@ -86,6 +86,80 @@ function delete_transient( $key ): bool {
 	return true;
 }
 
+
+/*
+ * A `$wpdb` that answers instead of dying.
+ *
+ * The log store talks to MySQL through the global, and every admin screen draws
+ * numbers that come from it. Rendering a screen in a test therefore needs a
+ * database that returns empty rows rather than a fatal on `null->get_results()`.
+ */
+class Tisa_Wpdb_Stub {
+
+	/** @var string */
+	public $prefix = 'wp_';
+
+	/** @var int */
+	public $insert_id = 0;
+
+	/** @var array<int,array<string,mixed>> */
+	public $rows = array();
+
+	/** @var array<int,array<string,mixed>> */
+	public $writes = array();
+
+	public function prepare( $query, ...$args ) {
+		// WordPress accepts both `prepare( $sql, $a, $b )` and the single
+		// array form `prepare( $sql, array( $a, $b ) )`; the log store uses both.
+		if ( 1 === count( $args ) && is_array( $args[0] ) ) {
+			$args = array_values( $args[0] );
+		}
+
+		$filled = @vsprintf( (string) $query, $args );
+
+		return false === $filled ? (string) $query : $filled;
+	}
+
+	/** @return array<int,array<string,mixed>> */
+	public function get_results( $query = '' ) {
+		return $this->rows;
+	}
+
+	/** @return array<string,mixed> */
+	public function get_row( $query = '' ) {
+		return isset( $this->rows[0] ) ? $this->rows[0] : array();
+	}
+
+	public function get_var( $query = '' ) {
+		return 0;
+	}
+
+	public function query( $query = '' ) {
+		return 0;
+	}
+
+	public function insert( $table, $data ) {
+		$this->writes[] = $data;
+
+		return 1;
+	}
+
+	public function get_charset_collate(): string {
+		return '';
+	}
+
+	public function esc_like( $text ): string {
+		return addcslashes( (string) $text, '_%\\' );
+	}
+
+	/** @return array<int,mixed> */
+	public function get_col( $query = '' ) {
+		return array();
+	}
+}
+
+$GLOBALS['wpdb'] = new Tisa_Wpdb_Stub();
+
 /**
  * @param string $text
  * @return string
@@ -604,4 +678,238 @@ function tisa_finish(): void {
 	echo "\n{$checks} checks, {$failures} failed\n";
 
 	exit( $failures > 0 ? 1 : 0 );
+}
+
+/* --- the rest of the function surface an admin screen touches ------------- */
+
+function number_format_i18n( $number, $decimals = 0 ): string {
+	return number_format( (float) $number, (int) $decimals );
+}
+
+function wp_kses_post( $text ): string {
+	return (string) $text;
+}
+
+/**
+ * @param array<string,array<string,bool>> $allowed
+ */
+function wp_kses( $text, $allowed = array() ): string {
+	return (string) $text;
+}
+
+function esc_textarea( $text ): string {
+	return htmlspecialchars( (string) $text, ENT_QUOTES );
+}
+
+function size_format( $bytes, $decimals = 0 ): string {
+	return number_format( (float) $bytes, (int) $decimals ) . ' B';
+}
+
+function is_rtl(): bool {
+	return true;
+}
+
+function absint( $value ): int {
+	return abs( (int) $value );
+}
+
+function wp_rand( $min = 0, $max = 0 ) {
+	return $max > $min ? random_int( (int) $min, (int) $max ) : 4;
+}
+
+function wp_create_nonce( $action = -1 ): string {
+	return substr( md5( 'nonce' . (string) $action ), 0, 10 );
+}
+
+function wp_verify_nonce( $nonce, $action = -1 ) {
+	return 1;
+}
+
+/**
+ * @param mixed $selected
+ * @param mixed $current
+ */
+function selected( $selected, $current = true, $echo = true ): string {
+	$out = (string) $selected === (string) $current ? " selected='selected'" : '';
+
+	if ( $echo ) {
+		echo $out;
+	}
+
+	return $out;
+}
+
+/**
+ * @param mixed $checked
+ * @param mixed $current
+ */
+function checked( $checked, $current = true, $echo = true ): string {
+	$out = (string) $checked === (string) $current ? " checked='checked'" : '';
+
+	if ( $echo ) {
+		echo $out;
+	}
+
+	return $out;
+}
+
+function submit_button( $text = '', $type = 'primary', $name = 'submit', $wrap = true, $other = '' ): void {
+	echo '<button type="submit" class="button">' . esc_html( (string) $text ) . '</button>';
+}
+
+function settings_fields( $group ): void {
+	echo '<input type="hidden" name="option_page" value="' . esc_attr( (string) $group ) . '">';
+}
+
+function add_settings_error( $setting, $code, $message, $type = 'error' ): void {
+	$GLOBALS['tisa_settings_errors'][] = array( $setting, $code, $message, $type );
+}
+
+function date_i18n( $format, $timestamp = null, $gmt = false ): string {
+	return gmdate( (string) $format, null === $timestamp ? time() : (int) $timestamp );
+}
+
+/**
+ * @param mixed $args
+ * @param mixed $defaults
+ */
+function wp_parse_args( $args, $defaults = array() ): array {
+	return array_merge( (array) $defaults, (array) $args );
+}
+
+function wp_enqueue_script( ...$args ): void {}
+function wp_enqueue_style( ...$args ): void {}
+function wp_localize_script( ...$args ): void {}
+function wp_add_inline_script( ...$args ): void {}
+
+function get_current_screen() {
+	return null;
+}
+
+function wp_mail( ...$args ): bool {
+	return true;
+}
+
+function wp_get_attachment_image_url( $attachment_id, $size = 'thumbnail' ) {
+	return '';
+}
+
+function wp_dropdown_roles( $selected = '' ): void {}
+
+/**
+ * @return array<string,array<string,mixed>>
+ */
+function get_editable_roles(): array {
+	return array();
+}
+
+/* --- a role list, a login URL and an escaped query ------------------------ */
+
+class Tisa_Wp_Roles_Stub {
+
+	/** @var array<string,string> */
+	private $names = array(
+		'administrator' => 'مدیر',
+		'editor'        => 'ویرایشگر',
+		'subscriber'    => 'مشترک',
+	);
+
+	/** @return array<string,string> */
+	public function get_names(): array {
+		return $this->names;
+	}
+}
+
+function wp_roles(): Tisa_Wp_Roles_Stub {
+	return new Tisa_Wp_Roles_Stub();
+}
+
+function wp_login_url( $redirect = '' ): string {
+	return 'https://example.test/wp-login.php';
+}
+
+function esc_sql( $text ): string {
+	return addslashes( (string) $text );
+}
+
+/**
+ * @param array<string,mixed> $args
+ */
+function add_query_arg( $args, string $url = '' ): string {
+	if ( is_array( $args ) ) {
+		$query = http_build_query( $args );
+
+		return '' === $url ? '?' . $query : $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . $query;
+	}
+
+	return (string) $url;
+}
+
+function remove_query_arg( $keys, string $url = '' ): string {
+	$parts = explode( '?', $url );
+
+	return $parts[0];
+}
+function esc_url_raw( $url ): string {
+	return (string) $url;
+}
+
+function wp_safe_remote_get( $url, $args = array() ) {
+	return wp_remote_get( $url, $args );
+}
+
+function wp_nonce_url( string $url, $action = -1, string $name = '_wpnonce' ): string {
+	return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . $name . '=' . wp_create_nonce( $action );
+}
+
+function wp_using_ext_object_cache(): bool {
+	return false;
+}
+
+function wp_cache_get( $key, $group = '' ) {
+	return false;
+}
+
+function wp_cache_set( $key, $value, $group = '', $ttl = 0 ): bool {
+	return true;
+}
+
+function wp_cache_delete( $key, $group = '' ): bool {
+	return true;
+}
+
+function wp_debug_backtrace_summary( $ignore_class = null, $skip_frames = 0, $pretty = true ): string {
+	return '';
+}
+
+function wp_next_scheduled( $hook, $args = array() ) {
+	return false;
+}
+
+function wp_schedule_event( $timestamp, $recurrence, $hook, $args = array() ): bool {
+	return true;
+}
+
+function wp_clear_scheduled_hook( $hook, $args = array() ): int {
+	return 0;
+}
+
+function wp_get_schedules(): array {
+	return array();
+}
+
+function wp_timezone_string(): string {
+	return 'UTC';
+}
+
+function get_woocommerce_currency(): string {
+	return 'IRR';
+}
+
+function wc_get_page_id( $page ): int {
+	return 0;
+}
+
+function wc_get_page_permalink( $page ): string {
+	return '';
 }

@@ -511,6 +511,7 @@ final class SettingsScreen {
 		$this->testCard(
 			'gateways',
 			__( 'آزمایش سامانه‌های پیامکی', 'tisa-otp' ),
+			'',
 			function () {
 				printf(
 					'<button type="button" class="button button-primary" data-tisa-sms-test>%s</button>',
@@ -674,6 +675,7 @@ final class SettingsScreen {
 		$this->testCard(
 			'security',
 			__( 'آزمایش کپچا در این مرورگر', 'tisa-otp' ),
+			'',
 			null,
 			' data-tisa-captcha-test'
 		);
