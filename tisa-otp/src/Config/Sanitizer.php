@@ -132,6 +132,7 @@ final class Sanitizer {
 			'skin'                 => array( 'type' => 'enum', 'choices' => array( 'line', 'card', 'glass', 'slate', 'pill' ) ),
 			'form_font'            => array( 'type' => 'enum', 'choices' => array( 'vazirmatn', 'theme', 'custom' ) ),
 			'form_font_custom'     => array( 'type' => 'font' ),
+			'style_isolation'      => array( 'type' => 'bool' ),
 			'accent'               => array( 'type' => 'color' ),
 			'surface'              => array( 'type' => 'color' ),
 			'radius'               => array( 'type' => 'int', 'min' => 0, 'max' => 40 ),

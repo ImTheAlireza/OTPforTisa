@@ -72,6 +72,10 @@ jobs:
         run: |
           npm install --no-save php-parser
           node tools/php-static-check.js tisa-otp
+      - name: Stylesheets parse, stay namespaced, and ship their fonts
+        run: |
+          npm install --no-save css-tree
+          node tools/css-check.js
       - name: Design token contrast (WCAG 1.4.3 / 1.4.11)
         run: node tests/contrast.js
       - name: Behaviour and accessibility wiring

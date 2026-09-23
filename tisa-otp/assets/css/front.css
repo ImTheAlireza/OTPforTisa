@@ -159,6 +159,37 @@
 	line-height: 1.75;
 	direction: rtl;
 	text-align: right;
+
+	/* Nothing inherited --------------------------------------------------
+	 *
+	 * These are the properties a theme's content column is most likely to set
+	 * — and the ones that make a form look like somebody else's prose: a
+	 * stretched or squeezed letter-spacing, a theme-wide bold, a text shadow,
+	 * a minimum or maximum weight. The form declares every one of them, so it
+	 * reads the same on any site and inside a shadow root.
+	 */
+	font-weight: 400;
+	font-style: normal;
+	font-variant: normal;
+	font-feature-settings: normal;
+	font-kerning: normal;
+	letter-spacing: normal;
+	word-spacing: normal;
+	text-transform: none;
+	text-shadow: none;
+	text-indent: 0;
+	visibility: visible;
+}
+
+/*
+ * Inside a shadow root the host element is the boundary: light DOM themes set
+ * properties on it, and a bare `display: inline` host would collapse the form
+ * to the width of one word. This rule is inert in the light DOM (nothing
+ * matches `:host` outside a shadow tree), so the same file serves both paths.
+ */
+:host {
+	display: block;
+	contain: layout style;
 }
 
 .tisa-otp *,

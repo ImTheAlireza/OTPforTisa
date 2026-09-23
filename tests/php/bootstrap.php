@@ -14,6 +14,8 @@
 
 define( 'ABSPATH', __DIR__ );
 define( 'TISA_OTP_PATH', dirname( __DIR__, 2 ) . '/tisa-otp/' );
+// The plugin's public URL, which `TISA_OTP_URL` carries on a real install.
+define( 'TISA_OTP_URL', 'https://example.test/wp-content/plugins/tisa-otp/' );
 define( 'TISA_OTP_FILE', TISA_OTP_PATH . 'tisa-otp.php' );
 
 /*
@@ -895,14 +897,37 @@ function esc_sql( $text ): string {
 /**
  * @param array<string,mixed> $args
  */
-function add_query_arg( $args, string $url = '' ): string {
+/**
+ * WordPress' own signature: `( key, value, url )` or `( array, url )`.
+ *
+ * The single-key form used to fall through and return the URL untouched, which
+ * is worse than a missing stub: the plugin asked for a cache-busting version
+ * and the test quietly agreed there was none.
+ */
+function add_query_arg( $args, $value = '', string $url = '' ): string {
 	if ( is_array( $args ) ) {
+		$url   = (string) $value;
 		$query = http_build_query( $args );
-
-		return '' === $url ? '?' . $query : $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . $query;
+	} elseif ( '' === $url ) {
+		// Two arguments: key, url.
+		$url   = (string) $value;
+		$query = '';
+	} else {
+		$query = rawurlencode( (string) $args ) . '=' . rawurlencode( (string) $value );
 	}
 
-	return (string) $url;
+	if ( '' === $query ) {
+		return $url;
+	}
+
+	return $url . ( false === strpos( $url, '?' ) ? '?' : '&' ) . $query;
+}
+
+/**
+ * The REST root, as `rest_url()` builds it.
+ */
+function rest_url( string $path = '' ): string {
+	return 'https://example.test/wp-json/' . ltrim( $path, '/' );
 }
 
 function remove_query_arg( $keys, string $url = '' ): string {

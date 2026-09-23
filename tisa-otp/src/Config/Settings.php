@@ -215,6 +215,9 @@ final class Settings {
 			// which is how "your plugin looks different from your preview" happens.
 			'form_font'              => 'vazirmatn',
 			'form_font_custom'       => '',
+			// The form is rendered inside a shadow root so the theme's CSS cannot
+			// restyle it. Off means "let the theme in", which is a choice, not a bug.
+			'style_isolation'        => '1',
 			'accent'                 => '#0f766e',
 			'surface'                => '#ffffff',
 			'radius'                 => '14',

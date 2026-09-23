@@ -922,6 +922,14 @@ final class SettingsScreen {
 					__( '«وزیرمتن» همان فونت پیش‌نمایش است و همراه افزونه می‌آید.', 'tisa-otp' )
 				);
 
+				$c->row(
+					__( 'جداسازی استایل از پوسته', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->toggle( 'style_isolation', __( 'فرم داخل Shadow DOM رندر شود', 'tisa-otp' ) );
+					},
+					__( 'روشن: قالب سایت نمی‌تواند فونت، رنگ و شکل کنترل‌های فرم را عوض کند.', 'tisa-otp' )
+				);
+
 				$c->row( __( 'چینش', 'tisa-otp' ), function () use ( $c ) {
 					$c->select(
 						'align',

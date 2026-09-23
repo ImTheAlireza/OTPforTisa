@@ -309,6 +309,69 @@ $tisa_design   = tisa_appearance_row(
 tisa_check( 'a custom stack is reported as it is typed', 'Tahoma, sans-serif' === $tisa_design['value'] );
 
 /* -------------------------------------------------------------------------
+ * 4b. Style isolation: the form is rendered where the theme cannot reach
+ */
+
+$GLOBALS['tisa_options']['tisa_otp_settings'] = array();
+
+tisa_check( 'isolation is on for a fresh install', '1' === Settings::defaults()['style_isolation'] );
+tisa_check( 'and it can be turned off, because that is a choice a site may make', in_array( 'style_isolation', array_keys( Sanitizer::spec() ), true ) );
+
+$tisa_settings = new Settings();
+$tisa_logs     = new LogStore( $tisa_settings );
+$tisa_captcha  = new Manager( $tisa_settings, new Logger( $tisa_settings, new Redactor(), $tisa_logs ) );
+$tisa_assets   = new Assets( $tisa_settings, $tisa_captcha );
+$tisa_config   = $tisa_assets->clientConfig();
+
+tisa_check( 'the browser is told to isolate', true === $tisa_config['isolate'] );
+tisa_check( 'it is handed the stylesheet to inject', false !== strpos( (string) $tisa_config['css'], 'assets/css/front.css' ) );
+tisa_check( 'with the same ?ver the <link> used, so the fetch is a cache hit', false !== strpos( (string) $tisa_config['css'], 'ver=' . TISA_OTP_VERSION ) );
+tisa_check( 'and the base the font URLs are rewritten against', 'assets/' === substr( (string) $tisa_config['assets'], -7 ) );
+
+/*
+ * Inside a shadow root a `:root` block cannot reach, so the values have to
+ * travel as values. Their shape is what the stylesheet expects, and the accent
+ * shades have to be derived — a fixed hover colour is the bug the owner already
+ * reported once, on a crimson form that hovered green.
+ */
+$tisa_vars = (array) $tisa_config['vars'];
+
+tisa_check( 'the plugin\'s variables travel to the shadow as values', '#0f766e' === $tisa_vars['tisa-accent'] );
+tisa_check( 'the darker shade is derived from the accent, not fixed', '#0f766e' !== $tisa_vars['tisa-accent-strong'] && 0 === strpos( (string) $tisa_vars['tisa-accent-strong'], '#' ) );
+tisa_check( 'the wash is translucent', 0 === strpos( (string) $tisa_vars['tisa-accent-soft'], 'rgba(' ) );
+tisa_check( 'and radius and width keep their units', 'px' === substr( (string) $tisa_vars['tisa-width'], -2 ) && 'px' === substr( (string) $tisa_vars['tisa-radius'], -2 ) );
+
+$GLOBALS['tisa_options']['tisa_otp_settings'] = array( 'accent' => '#b91c1c' );
+
+$tisa_vars = (array) ( new Assets( new Settings(), new Manager( new Settings(), new Logger( new Settings(), new Redactor(), $tisa_logs ) ) ) )->clientConfig()['vars'];
+
+tisa_check( 'changing the accent changes the hover shade with it', 'rgba(185, 28, 28, 0.14)' === $tisa_vars['tisa-accent-soft'] && '#b91c1c' === $tisa_vars['tisa-accent'] );
+
+/* --- the panel says whether it is on ------------------------------------ */
+
+$GLOBALS['tisa_options']['tisa_otp_settings'] = array( 'form_font' => 'vazirmatn' );
+
+$tisa_settings = new Settings();
+$tisa_logs     = new LogStore( $tisa_settings );
+$tisa_isolation = tisa_appearance_row(
+	tisa_appearance_test( $tisa_settings, $tisa_logs, new Manager( $tisa_settings, new Logger( $tisa_settings, new Redactor(), $tisa_logs ) ) )->run( 'design' ),
+	'جداسازی از پوسته'
+);
+
+tisa_check( 'the appearance test reports isolation as on', 'روشن' === $tisa_isolation['value'] && 'ok' === $tisa_isolation['status'] );
+tisa_check( 'and names what it protects the form from', false !== strpos( $tisa_isolation['note'], 'CSS قالب' ) );
+
+$GLOBALS['tisa_options']['tisa_otp_settings'] = array( 'style_isolation' => '0' );
+
+$tisa_settings  = new Settings();
+$tisa_isolation = tisa_appearance_row(
+	tisa_appearance_test( $tisa_settings, $tisa_logs, new Manager( $tisa_settings, new Logger( $tisa_settings, new Redactor(), $tisa_logs ) ) )->run( 'design' ),
+	'جداسازی از پوسته'
+);
+
+tisa_check( 'turning it off is reported as a warning, not as silence', 'خاموش' === $tisa_isolation['value'] && 'warn' === $tisa_isolation['status'] );
+
+/* -------------------------------------------------------------------------
  * 5. The setting has a control on the screen
  */
 
@@ -334,5 +397,6 @@ $tisa_html = (string) ob_get_clean();
 tisa_check( 'the settings screen offers the font choice', false !== strpos( $tisa_html, 'name="tisa_otp_settings[form_font]"' ) );
 tisa_check( 'with the shipped font selected, so the default is what is read', preg_match( '/value="vazirmatn" selected/', $tisa_html ) === 1 );
 tisa_check( 'and a box for a custom stack', false !== strpos( $tisa_html, 'tisa_otp_settings[form_font_custom]' ) );
+tisa_check( 'the settings screen offers the isolation switch', false !== strpos( $tisa_html, 'tisa_otp_settings[style_isolation]' ) );
 
 tisa_finish();

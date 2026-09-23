@@ -75,8 +75,17 @@ function boot(options) {
 	if (!config) throw new Error('could not find the tisaOtp config block in the harness page');
 	win.eval(config[0]);
 
-	// Merge the test's overrides over it, exactly as a site's settings would.
-	win.eval('window.__tisaOverride = ' + JSON.stringify(opts.config || {}) + ';');
+	/*
+	 * Merge the test's overrides over it, exactly as a site's settings would.
+	 *
+	 * Style isolation moves the form into a shadow root, and with it every node
+	 * the scenarios below reach for; those scenarios are about the form's
+	 * behaviour, not about where it is rendered, so they run in the light DOM.
+	 * `testStyleIsolation()` — the scenario that *is* about isolation — turns it
+	 * on and waits for the swap, and the PHP suite pins the shipped default.
+	 */
+	const overrides = Object.assign({ isolate: false }, opts.config || {});
+	win.eval('window.__tisaOverride = ' + JSON.stringify(overrides) + ';');
 	win.eval('window.tisaOtp = Object.assign({}, window.tisaOtp, window.__tisaOverride);');
 
 	const calls = [];
@@ -127,11 +136,35 @@ function boot(options) {
 
 	const root = win.document.querySelector('[data-tisa-form]');
 
-	if (!root || !root.tisaForm) {
+	if (!root || (!root.tisaForm && !opts.deferred)) {
 		throw new Error('front.js did not mount the form');
 	}
 
 	return { win, doc: win.document, root, form: root.tisaForm, calls };
+}
+
+/**
+ * Boot with style isolation on and wait for the swap.
+ *
+ * Isolation is asynchronous by nature — the stylesheet text has to be in hand
+ * before the form can move into its own tree — so this waits for the mount
+ * instead of asserting it happened in the same tick.
+ */
+async function bootIsolated(options) {
+	const opts = Object.assign({ deferred: true }, options || {});
+	const ctx = boot(opts);
+
+	for (let i = 0; i < 60 && !ctx.root.tisaForm; i++) {
+		await wait(5);
+	}
+
+	ctx.form = ctx.root.tisaForm;
+
+	if (!ctx.form) {
+		throw new Error('the isolated form never mounted');
+	}
+
+	return ctx;
 }
 
 /** The `{success: true, data}` envelope Api.php wraps every success in. */
@@ -729,7 +762,10 @@ function testTheAccentIsTheOnlyColour() {
 	check('hover darkens the very same accent', /\.tisa-btn--primary:hover[\s\S]{0,220}rgba\(0, 0, 0/.test(primary));
 	check('the button shadow follows the accent', /--tisa-elev-button:\s*0 12px 26px -16px var\(--tisa-accent-strong\)/.test(css));
 	check('PHP derives the darker shade from the accent', /mix\( \$accent, '#000000', 0\.22 \)/.test(php));
-	check('the accent wash is translucent, so the dark skin keeps it', /--tisa-accent-soft:%3\$s/.test(php) && /rgba\( *%d, %d, %d, %s *\)/.test(php));
+	check(
+		'the accent wash is translucent, so the dark skin keeps it',
+		/'tisa-accent-soft'\s*=>\s*\$this->rgba\( \$accent, 0\.14 \)/.test(php) && /sprintf\( 'rgba\(%d, %d, %d, %s\)'/.test(php)
+	);
 	check('the demo derives the same shade when a swatch is clicked', /shade\(accent, 0\.22\)/.test(pageSource));
 
 	// Two complaints from the same screenshot batch.
@@ -1358,6 +1394,103 @@ function testTheFormLooksLikeItself() {
 	check('every address the preview promises is an address it serves', /pathname === '\/login'[\s\S]{0,160}index\.html/.test(server));
 }
 
+/*
+ * Round 14: «چیزی که توی دمو هست رو ببین؛ اینو میخوام. هیچ چیزی رو از وردپرس
+ * نخونه.» The form is now rendered inside a shadow root with the plugin's own
+ * stylesheet injected into it, so the theme's cascade and inheritance stop at
+ * the boundary. These checks drive the real swap, the real fallback, and the
+ * two things a shadow root could quietly break: events leaving the tree, and a
+ * site that recolours the form from the outside.
+ */
+async function testStyleIsolation() {
+	scenario('the form renders in its own tree, so the theme cannot restyle it');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const cssFile = read('tisa-otp', 'assets', 'css', 'front.css');
+	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
+	const index = read('preview', 'public', 'index.html');
+
+	/* --- it is the shipped default, and the panel says so ---------------- */
+	check('isolation is on unless a site turns it off', /'isolate'\s*=> \$this->settings->bool\( 'style_isolation', true \)/.test(assets));
+	check('the stylesheet URL is the one the <link> already loaded, so the fetch is a cache hit', /add_query_arg\( 'ver', TISA_OTP_VERSION, TISA_OTP_URL \. 'assets\/css\/front.css' \)/.test(assets));
+	check('the font base travels with it', /'assets'\s*=> esc_url_raw\( TISA_OTP_URL \. 'assets\/' \)/.test(assets));
+	check('and the computed variables travel as values, not as a :root block', /'vars'\s*=> \$this->variables\(\)/.test(assets));
+
+	/* --- the stylesheet is self-sufficient inside a shadow tree ---------- */
+	check('the root block declares what a theme would otherwise pass down', /font-weight: 400;[\s\S]{0,400}letter-spacing: normal;[\s\S]{0,200}text-transform: none;/.test(cssFile));
+	check('and a shadow host does not collapse to inline', /:host \{\s*display: block;/.test(cssFile));
+	check('the font lives in the same file the shadow gets', /@font-face/.test(cssFile) && /\.\.\/fonts\/vazirmatn-arabic-400-normal\.woff2/.test(cssFile));
+
+	/* --- the swap itself -------------------------------------------------- */
+	const booted = await bootIsolated({
+		config: { isolate: true, css: '/plugin-assets/css/front.css', assets: '/plugin-assets/' },
+		fetch: (request) => {
+			if (String(request.url).indexOf('.css') > 0) {
+				return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(cssFile) });
+			}
+
+			return ok(verifyStep());
+		},
+	});
+
+	const host = booted.root;
+	const shadow = host.shadowRoot;
+	const style = shadow && shadow.querySelector('style[data-tisa-shadow-style]');
+	const inner = shadow && shadow.querySelector('.tisa-otp');
+
+	check('the form is moved into a shadow root', !!shadow && 'open' === shadow.mode);
+	check('the plugin stylesheet is injected there', !!style && style.textContent.length > 30000);
+	check('with the font URLs made absolute, because a <style> resolves against the page', !!style && style.textContent.indexOf('url(/plugin-assets/fonts/vazirmatn-arabic-400-normal.woff2)') >= 0);
+	check(
+		'the markup moved in, and nothing was left behind to be restyled',
+		inner ? inner.querySelectorAll('[data-tisa-step]').length === 3 && !!inner.querySelector('[data-tisa-phone]') && 0 === host.children.length : false
+	);
+	check('the inner element carries the same classes, so the skin still applies', inner ? 'tisa-otp' === inner.className.split(' ')[0] && inner.classList.contains('tisa-skin-line') : false);
+	check(
+		'the plugin\'s own variables are inline on it, where a theme cannot outrank them',
+		inner ? '#0f766e' === inner.style.getPropertyValue('--tisa-accent') && 'rgba(15, 118, 110, 0.14)' === inner.style.getPropertyValue('--tisa-accent-soft') : false
+	);
+	check('the form object was built on the inner element', booted.form.root === inner);
+	check('and it is interactive: the phone step is the current one', inner ? inner.querySelector('[data-tisa-step="phone"]').classList.contains('is-current') : false);
+	check('the host records that it was isolated', '1' === host.getAttribute('data-tisa-isolated'));
+	check('the stylesheet was fetched once, not per form', booted.calls.filter((call) => call.url.indexOf('.css') > 0).length === 1);
+	check('and it is the same URL the page already loaded', booted.calls.some((call) => call.url === '/plugin-assets/css/front.css'));
+
+	/* --- a site that recolours the form from outside still works --------- */
+	host.style.setProperty('--tisa-accent', '#b91c1c');
+	host.classList.add('tisa-skin-card');
+	await wait(10);
+
+	check('changing the accent on the host reaches the form', inner.style.getPropertyValue('--tisa-accent') === '#b91c1c');
+	check('and so does changing the skin class', inner.classList.contains('tisa-skin-card'));
+
+	/* --- events still reach the page ------------------------------------- */
+	let heard = 0;
+	booted.doc.addEventListener('tisa:sent', () => { heard++; });
+	inner.dispatchEvent(new booted.win.CustomEvent('tisa:sent', { bubbles: true, composed: true, detail: {} }));
+	check('an event crosses the shadow boundary, so a site still hears it', heard === 1);
+
+	/* --- the fallback: no stylesheet text, no isolation, form still works - */
+	const broken = await bootIsolated({
+		config: { isolate: true, css: '/plugin-assets/css/front.css', assets: '/plugin-assets/' },
+		fetch: () => Promise.reject(new Error('offline')),
+	});
+
+	check('a stylesheet that cannot be read leaves the form in the light DOM', !broken.root.shadowRoot);
+	check('and the form is mounted and usable anyway', !!broken.root.tisaForm && !!broken.root.tisaForm.phoneInput);
+	check('nothing claims it was isolated', !broken.root.getAttribute('data-tisa-isolated'));
+
+	/* --- no CSS URL at all: do not fetch the page and call it a stylesheet */
+	const bare = await bootIsolated({ config: { isolate: true, css: '' } });
+
+	check('without a stylesheet URL there is no swap at all', !bare.root.shadowRoot && !!bare.root.tisaForm);
+
+	/* --- the demo shows it, with a theme trying to get in ---------------- */
+	check('the demo can switch a hostile theme on around the form', /id="demo-hostile"/.test(index) && /demo-page\.is-hostile/.test(index));
+	check('and that theme is written to be aggressive', /font-family: 'Courier New', monospace !important/.test(index) && /background: #f0f0f1 !important/.test(index));
+	check('while the demo form is isolated for real', /isolate: true/.test(index) && /css: '\/plugin-assets\/css\/front\.css'/.test(index));
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -1371,6 +1504,7 @@ async function main() {
 	await testTheBlockHasAnAnswer();
 	await testTheCaptchaKnowsWhoItIsTalkingTo();
 	await testTheFormLooksLikeItself();
+	await testStyleIsolation();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

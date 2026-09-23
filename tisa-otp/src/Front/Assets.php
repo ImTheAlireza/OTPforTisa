@@ -228,6 +228,19 @@ final class Assets implements Bootable {
 			'channel'    => $this->settings->str( 'channel', 'sms' ),
 			'skin'       => $this->settings->str( 'skin', 'line' ),
 			'captcha'    => $this->captcha->clientBundle(),
+			/*
+			 * Style isolation. The form is moved into a shadow root and this
+			 * stylesheet is injected into it, so the theme's CSS cannot reach
+			 * the markup — see the note in assets/js/front.js. `css` is the
+			 * same URL the <link> already loaded (so the fetch is a cache
+			 * hit), and `assets` is the base the font URLs are rewritten
+			 * against, because a <style> element resolves `url()` next to the
+			 * page rather than next to the file the text came from.
+			 */
+			'isolate'    => $this->settings->bool( 'style_isolation', true ),
+			'css'        => esc_url_raw( add_query_arg( 'ver', TISA_OTP_VERSION, TISA_OTP_URL . 'assets/css/front.css' ) ),
+			'assets'     => esc_url_raw( TISA_OTP_URL . 'assets/' ),
+			'vars'       => $this->variables(),
 			'labels'     => array(
 				'send'     => $this->settings->str( 'label_send', __( 'دریافت کد ورود', 'tisa-otp' ) ),
 				'verify'   => $this->settings->str( 'label_verify', __( 'ورود به حساب', 'tisa-otp' ) ),
@@ -323,27 +336,45 @@ final class Assets implements Bootable {
 		return '' !== trim( $this->settings->str( 'custom_css' ) ) || '' !== trim( $this->settings->str( 'custom_js' ) );
 	}
 
-	private function cssVariables(): string {
+	/**
+	 * Every design value the settings imply, as CSS custom properties.
+	 *
+	 * It is a map rather than a stylesheet because it has two consumers: the
+	 * `:root` block for the light DOM, and the form itself inside its shadow
+	 * root — where a `:root` rule cannot reach and the values have to be set on
+	 * the element.
+	 *
+	 * Every colour the accent implies is derived here, next to the accent
+	 * itself. `--tisa-accent-strong` is what the button hover, its shadow and
+	 * the cooldown bar darken to; when it was a fixed teal, a crimson form
+	 * hovered green.
+	 *
+	 * @return array<string,string>
+	 */
+	public function variables(): array {
 		$accent  = $this->settings->str( 'accent', '#0f766e' );
 		$surface = $this->settings->str( 'surface', '#ffffff' );
 		$radius  = max( 0, min( 40, $this->settings->int( 'radius', 14 ) ) );
 		$width   = max( 280, min( 900, $this->settings->int( 'width', 420 ) ) );
 
-		/*
-		 * Every colour the accent implies is derived here, next to the accent
-		 * itself. `--tisa-accent-strong` is what the button hover, its shadow
-		 * and the cooldown bar darken to; when it was a fixed teal, a crimson
-		 * form hovered green.
-		 */
-		return sprintf(
-			':root{--tisa-accent:%1$s;--tisa-accent-strong:%2$s;--tisa-accent-soft:%3$s;--tisa-surface:%4$s;--tisa-radius:%5$dpx;--tisa-width:%6$dpx;}',
-			esc_attr( $accent ),
-			esc_attr( $this->mix( $accent, '#000000', 0.22 ) ),
-			esc_attr( $this->rgba( $accent, 0.14 ) ),
-			esc_attr( $surface ),
-			$radius,
-			$width
+		return array(
+			'tisa-accent'        => $accent,
+			'tisa-accent-strong' => $this->mix( $accent, '#000000', 0.22 ),
+			'tisa-accent-soft'   => $this->rgba( $accent, 0.14 ),
+			'tisa-surface'       => $surface,
+			'tisa-radius'        => $radius . 'px',
+			'tisa-width'         => $width . 'px',
 		);
+	}
+
+	private function cssVariables(): string {
+		$parts = array();
+
+		foreach ( $this->variables() as $name => $value ) {
+			$parts[] = '--' . $name . ':' . $value;
+		}
+
+		return ':root{' . implode( ';', $parts ) . ';}';
 	}
 
 	private function injectCustomCode(): void {

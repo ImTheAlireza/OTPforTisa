@@ -2303,22 +2303,326 @@
 
 	Form.prototype.emit = function (name, detail) {
 		try {
-			this.root.dispatchEvent(new window.CustomEvent('tisa:' + name, { bubbles: true, detail: detail || {} }));
+			/*
+			 * `composed` so the event still reaches the page when the form lives
+			 * inside a shadow root: a bubbling event stops at the shadow boundary
+			 * unless it is composed, and a site listening for `tisa:sent` on
+			 * `document` would silently stop hearing it.
+			 */
+			this.root.dispatchEvent(new window.CustomEvent('tisa:' + name, {
+				bubbles: true,
+				composed: true,
+				detail: detail || {}
+			}));
 		} catch (error) {
 			// Older browsers: the event is only a convenience for custom scripts.
 		}
 	};
 
-	/* ------------------------------------------------------------------ Mount */
+	/* ------------------------------------------------------- Style isolation */
 
-	function mount() {
-		$$(document, '[data-tisa-form]').forEach(function (root) {
-			if (root.dataset.tisaMounted) {
+	/*
+	 * The form renders inside a shadow root, with the plugin's own stylesheet
+	 * injected into it. That is the difference between "the form looks like
+	 * the demo" and "the form looks like whatever the theme does to buttons".
+	 *
+	 * Two things decide a form's look on a real site, and neither of them is
+	 * WordPress rewriting anything:
+	 *
+	 *   1. cascade   — the plugin names one class per rule; a theme writing
+	 *                  `.entry-content input` or `button { ... }` outranks it,
+	 *                  so the theme wins the button, the placeholder and the
+	 *                  link colours;
+	 *   2. inheritance — a theme that sets a font, a letter-spacing or a bold
+	 *                  weight on its content column hands those down to the
+	 *                  form, which then looks like the theme's prose.
+	 *
+	 * A shadow root ends both: no outer selector matches inside it, and the
+	 * values it inherits are declared by the form itself. The stylesheet is
+	 * the same file the light DOM uses — one design, two delivery paths.
+	 *
+	 * It is progressive: the markup is in the page already (so a visitor with
+	 * JavaScript off sees a styled form), the swap happens once the stylesheet
+	 * text is in hand, and if anything goes wrong the form falls back to the
+	 * light DOM rather than disappearing.
+	 */
+
+	var SHADOW = { text: null, failed: false, loading: null };
+
+	/**
+	 * Can this form be isolated, and does the site want it?
+	 */
+	function isolatable(host) {
+		if (false === cfg.isolate || 'off' === cfg.isolate) {
+			return false;
+		}
+
+		if (!window.Element || !window.Element.prototype.attachShadow) {
+			return false;
+		}
+
+		if (!window.Promise || !window.fetch) {
+			return false;
+		}
+
+		/*
+		 * Without a stylesheet URL there is nothing to inject, and an empty
+		 * `fetch('')` would fetch *this page* and inject the HTML as CSS.
+		 */
+		if ('' === String(cfg.css || '')) {
+			return false;
+		}
+
+		// Somebody else's shadow root, or this form opted out.
+		return !host.shadowRoot && '1' !== host.getAttribute('data-tisa-no-shadow');
+	}
+
+	/**
+	 * Absolute URLs, because a `<style>` element resolves `url()` against the
+	 * page, not against the file the text was read from: `../fonts/x.woff2`
+	 * inside `assets/css/` would be requested from the site root.
+	 */
+	function absolutise(css) {
+		var base = String(cfg.assets || '');
+
+		return '' === base ? css : css.replace(/url\(\s*\.\.\//g, 'url(' + base);
+	}
+
+	/**
+	 * The stylesheet text, fetched once per page. The URL is the same one the
+	 * `<link>` already loaded, so this is a cache hit — not a second download.
+	 */
+	function stylesheet() {
+		if (null !== SHADOW.text || SHADOW.failed) {
+			return window.Promise.resolve(SHADOW.text || '');
+		}
+
+		if (SHADOW.loading) {
+			return SHADOW.loading;
+		}
+
+		SHADOW.loading = window.fetch(String(cfg.css || ''), { credentials: 'same-origin' })
+			.then(function (response) {
+				return response && response.ok ? response.text() : '';
+			})
+			.then(function (text) {
+				SHADOW.text = text ? absolutise(text) : '';
+				return SHADOW.text;
+			})
+			.catch(function () {
+				// Blocked, offline, a security plugin: the form simply stays in
+				// the light DOM, exactly as it shipped before.
+				SHADOW.failed = true;
+
+				return '';
+			});
+
+		return SHADOW.loading;
+	}
+
+	/**
+	 * Everything the form reads from its element travels with it: the classes
+	 * (skins, code mode), the inline custom properties PHP printed, the
+	 * `data-*` settings, and the direction.
+	 */
+	function carry(inner, host) {
+		inner.className = host.className;
+
+		if (host.getAttribute('dir')) {
+			inner.setAttribute('dir', host.getAttribute('dir'));
+		}
+
+		if (host.getAttribute('style')) {
+			inner.setAttribute('style', host.getAttribute('style'));
+		}
+
+		Array.prototype.forEach.call(host.attributes, function (attribute) {
+			if (0 === attribute.name.indexOf('data-')) {
+				inner.setAttribute(attribute.name, attribute.value);
+			}
+		});
+	}
+
+	/**
+	 * The values PHP computed for this request. They are written as inline
+	 * custom properties on the form itself, so they outrank anything — a theme
+	 * cannot recolour the button by declaring the same variable.
+	 */
+	function paint(inner) {
+		var vars = cfg.vars || {};
+
+		Object.keys(vars).forEach(function (name) {
+			if (!vars[name]) {
 				return;
 			}
 
-			root.dataset.tisaMounted = '1';
-			root.tisaForm = new Form(root);
+			if ('' === inner.style.getPropertyValue('--' + name)) {
+				inner.style.setProperty('--' + name, String(vars[name]));
+			}
+		});
+	}
+
+	/**
+	 * Keep the inside in step with the outside.
+	 *
+	 * The host element stays the handle a site holds: a builder or a script
+	 * that changes the accent, the skin or the width on it must still see the
+	 * form change, even though the form no longer lives in that tree. Only the
+	 * plugin's own properties and the class list are mirrored — a theme's
+	 * styles still cannot reach in.
+	 */
+	function mirror(host, inner) {
+		if (!window.MutationObserver) {
+			return;
+		}
+
+		try {
+			var observer = new window.MutationObserver(function () {
+				if (inner.className !== host.className) {
+					inner.className = host.className;
+				}
+
+				Array.prototype.forEach.call(host.style, function (name) {
+					var value = host.style.getPropertyValue(name);
+
+					if (0 === name.indexOf('--tisa-') && inner.style.getPropertyValue(name) !== value) {
+						inner.style.setProperty(name, value);
+					}
+				});
+			});
+
+			observer.observe(host, { attributes: true, attributeFilter: ['class', 'style'] });
+
+			host.tisaShadowObserver = observer;
+		} catch (error) {
+			// No mirroring: the values copied at build time are what the form
+			// renders with, which is exactly what a static page needs.
+		}
+	}
+
+	/**
+	 * Put this form inside its own tree. Resolves with the element the form
+	 * should be built on — the inner one, or the host when isolation is not
+	 * available.
+	 */
+	function shell(host) {
+		if (!isolatable(host)) {
+			return window.Promise.resolve(host);
+		}
+
+		return stylesheet().then(function (text) {
+			var shadow;
+
+			if ('' === text) {
+				return host;
+			}
+
+			try {
+				shadow = host.attachShadow({ mode: 'open' });
+			} catch (error) {
+				return host;
+			}
+
+			var style = document.createElement('style');
+			style.setAttribute('data-tisa-shadow-style', '1');
+			style.textContent = text;
+
+			var inner = document.createElement('div');
+			carry(inner, host);
+			paint(inner);
+
+			shadow.appendChild(style);
+			shadow.appendChild(inner);
+
+			// Moving nodes is synchronous: the browser paints once, after the
+			// swap, so there is no frame where the form is invisible.
+			while (host.firstChild) {
+				inner.appendChild(host.firstChild);
+			}
+
+			host.setAttribute('data-tisa-isolated', '1');
+			mirror(host, inner);
+
+			return inner;
+		});
+	}
+
+	/**
+	 * Undo an isolation that did not work out.
+	 *
+	 * A shadow root cannot be removed, but a slot makes the light DOM visible
+	 * again — and the light children are styled by the very same stylesheet,
+	 * so a failed swap degrades into the form as it shipped before.
+	 */
+	function unresolve(host, inner) {
+		try {
+			while (inner.firstChild) {
+				host.appendChild(inner.firstChild);
+			}
+
+			host.removeAttribute('data-tisa-isolated');
+			host.setAttribute('data-tisa-isolated', 'failed');
+
+			if (host.shadowRoot) {
+				host.shadowRoot.innerHTML = '<slot></slot>';
+			}
+		} catch (error) {
+			// Nothing left to do: the form stays where it is.
+		}
+	}
+
+	/* ------------------------------------------------------------------ Mount */
+
+	/**
+	 * One form, mounted where it can be styled by this plugin alone.
+	 */
+	function boot(host) {
+		/*
+		 * Without isolation there is nothing to wait for: the form mounts on
+		 * the element it was printed on, synchronously, exactly as before.
+		 */
+		if (!isolatable(host)) {
+			host.tisaForm = new Form(host);
+
+			return;
+		}
+
+		shell(host).then(function (root) {
+			var form;
+
+			try {
+				form = new Form(root);
+			} catch (error) {
+				if (root === host) {
+					throw error;
+				}
+
+				// A bug in the controller must not cost the visitor the form.
+				unresolve(host, root);
+				form = new Form(host);
+			}
+
+			host.tisaForm = form;
+		}).catch(function (error) {
+			if (window.console && window.console.error) {
+				window.console.error('[tisa-otp] the form could not be started', error);
+			}
+		});
+	}
+
+	/* ------------------------------------------------------------------ Mount */
+
+	function mount() {
+		$$(document, '[data-tisa-form]').forEach(function (host) {
+			if (host.dataset.tisaMounted) {
+				return;
+			}
+
+			// Marked before the swap so a second call cannot mount twice while
+			// the stylesheet is still in flight.
+			host.dataset.tisaMounted = '1';
+
+			boot(host);
 		});
 	}
 

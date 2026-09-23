@@ -1191,6 +1191,15 @@ final class SelfTest {
 		$font = $this->settings->str( 'form_font', 'vazirmatn' );
 
 		$rows[] = $this->row(
+			__( 'جداسازی از پوسته', 'tisa-otp' ),
+			$this->settings->bool( 'style_isolation', true ) ? __( 'روشن', 'tisa-otp' ) : __( 'خاموش', 'tisa-otp' ),
+			$this->settings->bool( 'style_isolation', true ) ? 'ok' : 'warn',
+			$this->settings->bool( 'style_isolation', true )
+				? __( 'فرم داخل Shadow DOM رندر می‌شود؛ CSS قالب به آن نمی‌رسد.', 'tisa-otp' )
+				: __( 'با خاموش بودن این گزینه، قالب سایت می‌تواند ظاهر فرم را عوض کند.', 'tisa-otp' )
+		);
+
+		$rows[] = $this->row(
 			__( 'فونت فرم', 'tisa-otp' ),
 			$this->fontLabel(),
 			'theme' === $font ? 'info' : 'ok',
