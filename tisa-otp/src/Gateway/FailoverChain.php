@@ -8,6 +8,7 @@
 namespace TisaOtp\Gateway;
 
 use TisaOtp\Config\Settings;
+use TisaOtp\Support\Transport;
 use TisaOtp\Log\Logger;
 
 defined( 'ABSPATH' ) || exit;
@@ -112,10 +113,23 @@ final class FailoverChain {
 			);
 
 			$this->record( $result, $attempt, $id );
-			$this->health->failure( $result->gateway(), $result->errorCode(), $detail, $result->httpStatus() );
+
+			/*
+			 * A request the site itself refused is recorded, but not counted:
+			 * the gateway was never asked, so it is neither unhealthy nor
+			 * benched. The event keeps its own name too, so the events screen
+			 * reads «خروجی سایت بسته است» instead of a gateway failure.
+			 */
+			$outbound = Transport::isBlocked( isset( $meta['reason'] ) ? (string) $meta['reason'] : (string) $result->message() );
+
+			if ( $outbound ) {
+				$this->health->blocked( $result->gateway(), $detail, $result->httpStatus() );
+			} else {
+				$this->health->failure( $result->gateway(), $result->errorCode(), $detail, $result->httpStatus() );
+			}
 
 			$this->logger->warning(
-				'gateway.failed',
+				$outbound ? 'gateway.blocked' : 'gateway.failed',
 				array(
 					'gateway'    => $result->gateway(),
 					'error_code' => $result->errorCode(),

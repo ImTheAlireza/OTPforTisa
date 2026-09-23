@@ -144,9 +144,7 @@ abstract class HttpGateway implements SmsGateway {
 		 */
 		if ( Transport::egressBlocked( $host ) ) {
 			if ( ! $this->settings->bool( 'direct_send', false ) ) {
-				$blocked = Transport::blockFailure( $host );
-
-				return new \WP_Error( 'http_request_not_executed', (string) $blocked['reason'] );
+				return new \WP_Error( 'http_request_not_executed', Transport::blockReason( $host ) );
 			}
 
 			return $this->direct( $url, $args, $tries );

@@ -70,6 +70,33 @@ final class GatewayResult {
 		return '' !== $this->message ? $this->message : __( 'ارسال کد ناموفق بود.', 'tisa-otp' );
 	}
 
+	/**
+	 * What the visitor in front of the form may be told.
+	 *
+	 * `message()` is written for the administrator: it names the gateway's host,
+	 * the wp-config constant and the person to call. For three releases that
+	 * sentence was handed to whoever was trying to log in, because it was the
+	 * only message the send path had. A visitor cannot edit wp-config.php, so the
+	 * sentence is not just noise — it is the site's plumbing, published to
+	 * strangers.
+	 *
+	 * Two cases keep their own words, because a visitor can act on both: asking
+	 * again a moment later, and the panel refusing the number. Everything else is
+	 * one calm sentence; the technical reason stays in the log, the gateway trace
+	 * and the admin screens, where somebody can use it.
+	 */
+	public function visitorMessage(): string {
+		if ( $this->sent ) {
+			return __( 'کد تأیید ارسال شد.', 'tisa-otp' );
+		}
+
+		if ( 'rate_limited' === $this->errorCode ) {
+			return __( 'تعداد درخواست‌ها زیاد بود؛ یک دقیقه بعد دوباره تلاش کنید.', 'tisa-otp' );
+		}
+
+		return __( 'امکان ارسال کد در این لحظه نیست. کمی بعد دوباره تلاش کنید و اگر تکرار شد به مدیر سایت بگویید.', 'tisa-otp' );
+	}
+
 	public function reference(): string {
 		return $this->reference;
 	}

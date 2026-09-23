@@ -55,7 +55,11 @@ final class Transport {
 		 * constant produces the same code.
 		 */
 		if (
-			false !== strpos( $hay, 'block_external' )
+			// A reason this class wrote starts with its kind, so it can be
+			// classified again from the health record, the log row or the trace
+			// without the original WP_Error — the reason is all that is kept.
+			0 === strpos( ltrim( $hay ), 'blocked:' )
+			|| false !== strpos( $hay, 'block_external' )
 			|| false !== strpos( $hay, 'blocked_external' )
 			|| false !== strpos( $hay, 'http_request_not_executed' )
 			|| false !== strpos( $hay, 'blocked requests' )
@@ -160,6 +164,20 @@ final class Transport {
 	}
 
 	/**
+	 * Is this stored reason the site's own outbound block?
+	 *
+	 * A reason is written as `KIND: detail`, so the class that wrote it can be
+	 * asked for it again without the original WP_Error — which is exactly what
+	 * the health record keeps, and what the breaker has to read to stop blaming
+	 * a gateway for a decision the site made.
+	 *
+	 * @param string $reason A stored reason, or any sentence.
+	 */
+	public static function isBlocked( string $reason ): bool {
+		return self::BLOCKED === self::classify( '', $reason );
+	}
+
+	/**
 	 * The host a transport sentence names, when it names one.
 	 *
 	 * Our own block message carries the host ("… api.sms.ir is not in
@@ -171,8 +189,20 @@ final class Transport {
 	 * @param string $message WP_Error message.
 	 */
 	public static function host( string $message ): string {
-		if ( preg_match( '/\b((?:[a-z0-9-]+\.)+[a-z]{2,})\b/i', $message, $matches ) ) {
-			return strtolower( $matches[1] );
+		if ( preg_match_all( '/\b((?:[a-z0-9-]+\.)+[a-z]{2,})\b/i', $message, $matches ) ) {
+			foreach ( $matches[1] as $candidate ) {
+				$candidate = strtolower( $candidate );
+
+				/*
+				 * A sentence about a blocked request talks about wp-config.php
+				 * as well as about the gateway, and the file comes first. The
+				 * instruction has to name the host, not the file the owner is
+				 * being told to edit.
+				 */
+				if ( ! preg_match( '/\.(php|html?|js|css|txt|json)$/', $candidate ) ) {
+					return $candidate;
+				}
+			}
 		}
 
 		return __( 'دامنهٔ سامانهٔ پیامکی', 'tisa-otp' );
@@ -259,10 +289,22 @@ final class Transport {
 			return null;
 		}
 
-		return self::from(
-			'http_request_not_executed',
-			sprintf( 'WordPress blocks outbound HTTP: %s is not in WP_ACCESSIBLE_HOSTS.', $host )
-		);
+		return self::from( 'http_request_not_executed', self::blockReason( $host ) );
+	}
+
+	/**
+	 * The technical line for a request the site refuses to make.
+	 *
+	 * It is the message handed to the `WP_Error` itself, which is why it lives
+	 * here: the error travels back through `from()`, and a reason passed as a
+	 * *message* would be prefixed a second time — the modal showed owners
+	 * «BLOCKED: BLOCKED: WordPress blocks outbound HTTP…» because of exactly
+	 * that.
+	 *
+	 * @param string $host Host that is not in WP_ACCESSIBLE_HOSTS.
+	 */
+	public static function blockReason( string $host ): string {
+		return sprintf( 'WordPress blocks outbound HTTP: %s is not in WP_ACCESSIBLE_HOSTS.', $host );
 	}
 
 	/**

@@ -62,6 +62,39 @@ final class Health {
 	}
 
 	/**
+	 * Record a failure that was not the gateway's fault.
+	 *
+	 * When wp-config.php blocks outbound HTTP, WordPress refuses the request
+	 * before cURL is reached: no gateway was asked anything, and nothing about
+	 * the panel's credentials, credit or line has changed. Counting that as a
+	 * gateway failure did two visible wrongs — the health card said «ناموفق»
+	 * with a three-strike count, and after three attempts the circuit breaker
+	 * benched a gateway that was innocent for ten minutes, so a site that had
+	 * just fixed wp-config.php still waited.
+	 *
+	 * The record is kept (the owner needs to see it) but with no count, which
+	 * is what the breaker reads.
+	 */
+	public function blocked( string $gateway, string $detail = '', int $status = 0 ): void {
+		$state  = $this->all();
+		$record = isset( $state[ $gateway ] ) ? $state[ $gateway ] : array();
+
+		$state[ $gateway ] = array(
+			'ok'        => false,
+			'at'        => time(),
+			'error'     => 'blocked',
+			'detail'    => substr( $detail, 0, 160 ),
+			'status'    => $status,
+			'reference' => '',
+			'blocked'   => true,
+			'since'     => isset( $record['ok'] ) && $record['ok'] ? time() : ( isset( $record['since'] ) ? (int) $record['since'] : time() ),
+			'count'     => 0,
+		);
+
+		$this->save( $state );
+	}
+
+	/**
 	 * Record a failure — always, because this is the interesting case.
 	 */
 	public function failure( string $gateway, string $error, string $detail = '', int $status = 0 ): void {
@@ -167,6 +200,26 @@ final class Health {
 
 		$ago     = human_time_diff( (int) $record['at'], time() );
 		$blocked = $this->blockedUntil( $gateway );
+
+		/*
+		 * The site's own block, said as such: «این سامانه خطا نداد؛ خودِ سایت
+		 * اجازهٔ خروج درخواست را نمیدهد». The gateway is not resting and never
+		 * will be for this, so the row must not promise a retry in ten minutes.
+		 */
+		if ( ! empty( $record['blocked'] ) ) {
+			return '' !== (string) $record['detail']
+				? sprintf(
+					/* translators: 1: the sentence WordPress gave, 2: human readable time difference */
+					__( 'خودِ سایت درخواست خروجی را می‌بندد (%1$s) — %2$s پیش. این سامانه خطا نداد؛ در wp-config.php دامنه را در WP_ACCESSIBLE_HOSTS بگذارید یا «ارسال مستقیم» را روشن کنید.', 'tisa-otp' ),
+					(string) $record['detail'],
+					$ago
+				)
+				: sprintf(
+					/* translators: %s: human readable time difference */
+					__( 'خودِ سایت درخواست خروجی را می‌بندد — %s پیش.', 'tisa-otp' ),
+					$ago
+				);
+		}
 
 		if ( 0 < $blocked ) {
 			return sprintf(

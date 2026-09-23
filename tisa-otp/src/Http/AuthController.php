@@ -328,9 +328,16 @@ final class AuthController {
 			$this->otp->revoke( $phone );
 			$this->throttle->releaseReservation( $phone );
 
+			/*
+			 * The visitor reads `visitorMessage()`, never `message()`: the
+			 * sentence that names wp-config.php and the wp-config constants is
+			 * for the administrator, and it was being handed to whoever was
+			 * trying to log in. The technical one still reaches the log and the
+			 * admin panels, which is where somebody can act on it.
+			 */
 			throw Rejection::make(
 				'delivery_failed',
-				$result->message(),
+				$result->visitorMessage(),
 				array(
 					'gateway'    => $result->gateway(),
 					'error_code' => $result->errorCode(),

@@ -13,6 +13,7 @@ namespace TisaOtp\Admin;
 use TisaOtp\Captcha\Manager;
 use TisaOtp\Config\Sanitizer;
 use TisaOtp\Config\Settings;
+use TisaOtp\Support\Transport;
 use TisaOtp\Gateway\Registry;
 use TisaOtp\Log\LogStore;
 use TisaOtp\Log\Report;
@@ -1069,6 +1070,8 @@ final class SettingsScreen {
 
 		echo '<div class="tisa-overview">';
 
+		$this->egressNotice();
+
 		if ( ! $this->settings->bool( 'logs_enabled', true ) ) {
 			$this->controls->notice( __( 'ثبت رویدادها خاموش است؛ آماری برای نمایش نیست.', 'tisa-otp' ), 'warning' );
 		} else {
@@ -1120,6 +1123,50 @@ final class SettingsScreen {
 		);
 
 		echo '</div></div>';
+	}
+
+	/**
+	 * The one sentence the owner needs before pressing any button.
+	 *
+	 * Everything else about the outbound block answers a question the owner has
+	 * already asked (a failed test, a failed send). This one is on every screen,
+	 * above the tabs, because a site whose wp-config.php blocks outbound HTTP
+	 * cannot send a single SMS — and finding that out from a test result is a
+	 * worse afternoon than finding it out from a banner.
+	 *
+	 * It is shown only when it is true for the gateway they configured, and it
+	 * names both answers: the switch in this panel, and the two lines in
+	 * wp-config.php. Turning the switch on makes it disappear on its own.
+	 */
+	private function egressNotice(): void {
+		if ( $this->settings->bool( 'direct_send', false ) ) {
+			return;
+		}
+
+		$host = '';
+
+		foreach ( $this->gateways->deliveryOrder() as $id ) {
+			$plan = $this->gateways->planFor( (string) $id );
+
+			if ( ! empty( $plan['endpoint'] ) ) {
+				$host = (string) wp_parse_url( (string) $plan['endpoint'], PHP_URL_HOST );
+				break;
+			}
+		}
+
+		if ( '' === $host || ! Transport::egressBlocked( $host ) ) {
+			return;
+		}
+
+		$this->controls->notice(
+			sprintf(
+				/* translators: %s: the host this site refuses to reach */
+				__( 'این سایت اجازهٔ درخواست خروجی به %s را نمی‌دهد؛ تا آن خط عوض نشود هیچ پیامکی فرستاده نمی‌شود.', 'tisa-otp' ),
+				$host
+			) . ' '
+			. __( 'یا در wp-config.php خط WP_HTTP_BLOCK_EXTERNAL را false کنید، یا در سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید.', 'tisa-otp' ),
+			'warning'
+		);
 	}
 
 	private function dataSection(): void {

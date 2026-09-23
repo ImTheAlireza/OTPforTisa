@@ -1151,7 +1151,7 @@ function testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess() {
 	check('and the whitelist is matched the way core does, plus the bare domain', /function allowed\(/.test(transport) && /function blocked\(/.test(transport) && /function egressBlocked\(/.test(transport));
 
 	// Detected before the request, not only after the failure.
-	check('a blocked host is refused before the request is made', /function blockFailure\(/.test(transport) && /Transport::blockFailure\(/.test(gateway) && gateway.indexOf('http_request_not_executed') >= 0);
+	check('a blocked host is refused before the request is made', /function blockFailure\(/.test(transport) && /Transport::egressBlocked\( \$host \)/.test(gateway) && gateway.indexOf('http_request_not_executed') >= 0);
 	check('and the self-test says it without knocking', /Transport::blockFailure\( \$host \)/.test(selfTest));
 	check('the row names the host that is not allowed', /Transport::BLOCKED|\$block\['message'\]/.test(selfTest));
 
@@ -1223,6 +1223,28 @@ function testTheBlockHasAnAnswer() {
 	// 5. The demo promises the same thing, and CI runs the suite that proves it.
 	check('the demo has the switch and the fix', /ارسال مستقیم/.test(adminHtml) && /fix: 'راه‌حل'/.test(adminHtml));
 	check('and its mock answers with the Persian channel label', /carrier_label: 'ایمیل'/.test(server) && /fix: '/.test(server));
+	// 6. Who is told what: the administrator's sentence stays in the panel.
+	const auth = read('tisa-otp', 'src', 'Http', 'AuthController.php');
+	const result = read('tisa-otp', 'src', 'Gateway', 'GatewayResult.php');
+	const health = read('tisa-otp', 'src', 'Gateway', 'Health.php');
+	const chain = read('tisa-otp', 'src', 'Gateway', 'FailoverChain.php');
+
+	check('the visitor is never handed the administrator’s diagnosis', /\$result->visitorMessage\(\)/.test(auth) && auth.indexOf("'delivery_failed',\n\t\t\t\t$result->message()") < 0);
+	check('and the sentence exists for both visitors', /public function visitorMessage\(\): string/.test(result) && /rate_limited/.test(result));
+	check('it names no constant and no gateway', result.indexOf('visitorMessage') > 0 && /__\( 'امکان ارسال کد در این لحظه نیست/.test(result));
+
+	// 7. The site's own block is not the gateway's failure.
+	check('a blocked request does not count against the gateway', /public function blocked\( string \$gateway/.test(health) && /'count'\s*=> 0/.test(health));
+	check('so the breaker never benches it', /function blockedUntil/.test(health) && health.indexOf("if ( ! empty( $record['blocked'] ) )") > 0);
+	check('and the row says whose problem it is', /خودِ سایت درخواست خروجی را می\u200cبندد/.test(health));
+	check('the chain chooses which record to keep', /Transport::isBlocked\(/.test(chain) && /gateway\.blocked/.test(chain) && chain.indexOf('gateway.failed') > 0);
+	check('the pre-flight error carries the technical line, not a finished reason', /Transport::blockReason\( \$host \)/.test(gateway) && /public static function blockReason/.test(transport));
+	check('and the reason can be read back from the text alone', /public static function isBlocked/.test(transport));
+
+	// 8. The banner that answers the question before it is asked.
+	check('every settings screen leads with the block, when it is true', /private function egressNotice/.test(settingsScreen) && /\$this->egressNotice\(\);/.test(settingsScreen));
+	check('it names the host and both answers', /اجازهٔ درخواست خروجی به %s/.test(settingsScreen) && /ارسال مستقیم/.test(settingsScreen) && /WP_HTTP_BLOCK_EXTERNAL/.test(settingsScreen));
+	check('and it disappears once the switch is on', /bool\( 'direct_send', false \)\s*\)\s*\{\s*return;/.test(settingsScreen));
 	check('the blocked-site suite runs in CI', /php tests\/php\/direct-send-test\.php/.test(ci));
 	check('and is documented in the test README', /direct-send-test\.php/.test(read('tests', 'README.md')));
 }
