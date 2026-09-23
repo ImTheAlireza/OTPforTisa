@@ -118,4 +118,53 @@ tisa_check( 'and its sentence is kept', false !== strpos( $from['reason'], 'Conn
 tisa_same( 'a plain string still works', Transport::TIMEOUT, Transport::fromError( 'cURL error 28: timed out' )['kind'] );
 tisa_same( 'and nothing at all does not throw', Transport::UNKNOWN, Transport::fromError( null )['kind'] );
 
+/*
+ * The block WordPress performs itself.
+ *
+ * `WP_HTTP_BLOCK_EXTERNAL` in wp-config.php (or a security plugin that defines
+ * it) makes WordPress answer every outbound request with
+ * `http_request_not_executed` before cURL is reached. The owner's log showed
+ * exactly this: the gateway failed with the word `transport`, and the test card
+ * said the cause was unknown — while the remedy was one constant away.
+ */
+tisa_start( 'a site that blocked outbound HTTP is diagnosed, not guessed at' );
+
+$blocked = Transport::from( 'http_request_not_executed', 'User has blocked requests through HTTP.' );
+
+tisa_same( 'the kind is blocked', Transport::BLOCKED, $blocked['kind'] );
+tisa_check( 'the reason keeps the sentence WordPress wrote', false !== strpos( $blocked['reason'], 'blocked requests' ) );
+tisa_check( 'and it names the constant to change', false !== strpos( $blocked['message'], 'WP_HTTP_BLOCK_EXTERNAL' ) );
+tisa_check( 'and the constant that fixes it', false !== strpos( $blocked['message'], 'WP_ACCESSIBLE_HOSTS' ) );
+
+// The same failure, translated: a Persian WordPress says «بوکله نمود».
+tisa_same( 'the Persian wording is the same cause', Transport::BLOCKED, Transport::from( 'http_request_not_executed', 'کاربر درخواست HTTP را بوکله نمود.' )['kind'] );
+tisa_same( 'and so is the older spelling', Transport::BLOCKED, Transport::from( '', 'کاربر درخواست HTTP را بلوکه کرد.' )['kind'] );
+
+tisa_start( 'the whitelist is read the way WordPress reads it' );
+
+$rules = 'api.sms.ir, kavenegar.com,*.example.com,.panel.ir';
+
+tisa_check( 'an exact host is allowed', Transport::allowed( 'api.sms.ir', $rules ) );
+tisa_check( 'a host that is not listed is not', ! Transport::allowed( 'api.sms.ir.evil.test', $rules ) );
+tisa_check( 'a wildcard suffix covers subdomains', Transport::allowed( 'a.example.com', $rules ) && Transport::allowed( 'example.com', $rules ) );
+tisa_check( 'a dot suffix does too', Transport::allowed( 'panel.ir', $rules ) && Transport::allowed( 'app.panel.ir', $rules ) );
+tisa_check( 'and `*` allows everything', Transport::allowed( 'anything.test', '*' ) );
+tisa_check( 'an empty list allows nothing', ! Transport::allowed( 'api.sms.ir', '' ) );
+tisa_check( 'blocked() needs the block to be on', ! Transport::blocked( 'api.sms.ir', false, '' ) && Transport::blocked( 'api.sms.ir', true, '' ) );
+tisa_check( 'and an allowed host is never blocked', ! Transport::blocked( 'api.sms.ir', true, 'api.sms.ir' ) );
+
+tisa_start( 'the failure is built before the request is made' );
+
+define( 'WP_HTTP_BLOCK_EXTERNAL', true );
+define( 'WP_ACCESSIBLE_HOSTS', 'kavenegar.com' );
+
+$pre     = Transport::blockFailure( 'api.sms.ir' );
+$allowed = Transport::blockFailure( 'kavenegar.com' );
+
+tisa_same( 'an unlisted host is a blocked failure', Transport::BLOCKED, $pre['kind'] );
+tisa_check( 'the reason names the host', false !== strpos( $pre['reason'], 'api.sms.ir' ) );
+tisa_check( 'and the sentence is the actionable one', false !== strpos( $pre['message'], 'WP_ACCESSIBLE_HOSTS' ) );
+tisa_check( 'a listed host is left alone', null === $allowed );
+tisa_check( 'and the same question answered for the row', Transport::egressBlocked( 'api.sms.ir' ) && ! Transport::egressBlocked( 'kavenegar.com' ) );
+
 tisa_finish();

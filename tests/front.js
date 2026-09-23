@@ -972,7 +972,7 @@ function testThePanelKeepsItsOwnPromises() {
 	check('the gateways self-test asks the server to reach the gateway', /private function reachability\( array \$chain \)/.test(selfTest) && /wp_remote_get\(/.test(selfTest));
 	check('it never sends a message and never carries a key', /'limit_response_size' => 1024/.test(selfTest) && selfTest.indexOf('Authorization', selfTest.indexOf('private function reachability')) < 0);
 	check('it reports the millisecond and the status', /میلی‌ثانیه · پاسخ HTTP/.test(selfTest));
-	check('and it respects the site that blocked outbound HTTP', /WP_HTTP_BLOCK_EXTERNAL/.test(selfTest));
+	check('and it respects the site that blocked outbound HTTP', /Transport::blockFailure\( \$host \)/.test(selfTest) && /WP_HTTP_BLOCK_EXTERNAL/.test(transport));
 	check('the self-test says which channel the site sends with', /کانال ارسال کد/.test(selfTest));
 	check('a gateway whose last send failed is not called ready', /\$status = 'fail';/.test(selfTest) && /\$health && empty\( \$health\['ok'\] \)/.test(selfTest));
 	check('the captcha rejects are counted, not guessed', /private function captchaRejects\( int \$days \)/.test(selfTest) && /'captcha_missing' === \$row->error_code/.test(selfTest));
@@ -1119,6 +1119,53 @@ function testSmsIrAgainstItsDocumentation() {
 	check('the demo version follows the plugin', !!pluginVersion && admin.indexOf(faPluginVersion) >= 0 && admin.indexOf(pluginVersion) >= 0, pluginVersion);
 }
 
+/*
+ * The screenshot that arrived with 1.3.6 in it:
+ *
+ *   «ارسال شد  0911***375
+ *    از طریق email — کد آزمایشی ارسال شد.»
+ *   smsir   transport   UNKNOWN: کاربر درخواست HTTP را بوکله نمود.
+ *
+ * Two things were wrong. The test button says "send a test SMS" and the code
+ * left by email, with a green tick over it. And the cause WordPress named —
+ * the site blocks outbound HTTP, so the request never reached cURL — came back
+ * as UNKNOWN, which sends an owner to check DNS for a one-line wp-config fix.
+ */
+function testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess() {
+	scenario('a blocked outbound request is named, and a fallback is not a success');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const transport = read('tisa-otp', 'src', 'Support', 'Transport.php');
+	const gateway = read('tisa-otp', 'src', 'Gateway', 'HttpGateway.php');
+	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
+	const controller = read('tisa-otp', 'src', 'Http', 'AdminController.php');
+	const adminJs = read('tisa-otp', 'assets', 'js', 'admin.js');
+	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
+	const server = read('preview', 'server.js');
+	const transportTest = read('tests', 'php', 'transport-test.php');
+
+	// The cause WordPress itself reports when wp-config blocks outbound HTTP.
+	check('the WordPress-level block is a cause of its own', /http_request_not_executed/.test(transport) && /blocked requests/.test(transport));
+	check('and the Persian wording of it too', transport.indexOf('بوکله') >= 0 && transport.indexOf('بلوکه') >= 0);
+	check('the sentence names both constants', /WP_HTTP_BLOCK_EXTERNAL/.test(transport) && /WP_ACCESSIBLE_HOSTS/.test(transport));
+	check('and the whitelist is matched the way core does, plus the bare domain', /function allowed\(/.test(transport) && /function blocked\(/.test(transport) && /function egressBlocked\(/.test(transport));
+
+	// Detected before the request, not only after the failure.
+	check('a blocked host is refused before the request is made', /function blockFailure\(/.test(transport) && /Transport::blockFailure\(/.test(gateway) && gateway.indexOf('http_request_not_executed') >= 0);
+	check('and the self-test says it without knocking', /Transport::blockFailure\( \$host \)/.test(selfTest));
+	check('the row names the host that is not allowed', /Transport::BLOCKED|\$block\['message'\]/.test(selfTest));
+
+	// The modal: which channel actually carried the code.
+	check('the send test reports the channel that carried the code', /'carrier' => \$carrier/.test(controller) && /'direct'\s*=> \$direct/.test(controller));
+	check('and stops calling an email a sent SMS', controller.indexOf('پیامک ارسال نشد؛ کد آزمایشی از راه %s رفت') >= 0);
+	check('the script shows a warning instead of a tick', /false === data\.direct \? 'warn' : 'ok'/.test(adminJs));
+	check('with the word for it localised', /'smsNotSent'\s*=>/.test(assets) && /i18n\.smsNotSent/.test(adminJs));
+	check('and the demo shows that same case', /carrier: 'email'/.test(server) && /direct: false/.test(server));
+
+	// And the whole thing is a test in the PHP suite, not a claim.
+	check('the PHP suite feeds it the real sentences', transportTest.indexOf("'User has blocked requests through HTTP.'") >= 0 && transportTest.indexOf('WP_ACCESSIBLE_HOSTS') >= 0);
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -1128,6 +1175,7 @@ async function main() {
 	await testEveryScreenIsReachable();
 	await testThePanelKeepsItsOwnPromises();
 	await testSmsIrAgainstItsDocumentation();
+	await testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

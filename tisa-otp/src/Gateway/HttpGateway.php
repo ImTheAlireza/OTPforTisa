@@ -111,6 +111,18 @@ abstract class HttpGateway implements SmsGateway {
 		$args  = array_merge( $defaults, $args );
 		$tries = max( 0, $retries );
 
+		/*
+		 * A site that blocked outbound HTTP gets no further than this line. The
+		 * failure is the same one WordPress would return, built here so the
+		 * reason names the constant instead of leaving the owner with a cURL
+		 * sentence that never existed (the request never reached cURL).
+		 */
+		$blocked = Transport::blockFailure( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+
+		if ( null !== $blocked ) {
+			return new \WP_Error( 'http_request_not_executed', $blocked['reason'] );
+		}
+
 		for ( $attempt = 0; $attempt <= $tries; $attempt++ ) {
 			$response = wp_remote_post( $url, $args );
 

@@ -505,12 +505,15 @@ final class SelfTest {
 			);
 		}
 
-		if ( defined( 'WP_HTTP_BLOCK_EXTERNAL' ) && WP_HTTP_BLOCK_EXTERNAL ) {
+		$host  = (string) wp_parse_url( $target, PHP_URL_HOST );
+		$block = Transport::blockFailure( $host );
+
+		if ( null !== $block ) {
 			return $this->row(
 				__( 'دسترسی این سرور به سامانه', 'tisa-otp' ),
 				__( 'بسته است', 'tisa-otp' ),
 				'fail',
-				Transport::explain( 'block_external', 'WP_HTTP_BLOCK_EXTERNAL' )
+				$host . ' — ' . $block['message']
 			);
 		}
 

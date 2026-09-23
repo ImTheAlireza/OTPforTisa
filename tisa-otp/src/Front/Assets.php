@@ -132,6 +132,7 @@ final class Assets implements Bootable {
 					'smsNeedPhone'  => __( 'بدون شماره، آزمایشی ارسال نمی‌شود.', 'tisa-otp' ),
 					'smsSend'       => __( 'ارسال', 'tisa-otp' ),
 					'smsSent'       => __( 'ارسال شد', 'tisa-otp' ),
+					'smsNotSent'    => __( 'پیامک ارسال نشد', 'tisa-otp' ),
 					'smsVia'        => __( 'از طریق', 'tisa-otp' ),
 					'smsChannel'    => __( 'پیامک', 'tisa-otp' ),
 					'emailChannel'  => __( 'ایمیل', 'tisa-otp' ),

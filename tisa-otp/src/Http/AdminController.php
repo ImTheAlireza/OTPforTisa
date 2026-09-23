@@ -118,6 +118,16 @@ final class AdminController {
 
 		$meta = $result->meta();
 
+		/*
+		 * «ارسال شد» was true and misleading at once: the owner pressed "send a
+		 * test SMS", the panel was unreachable, the email channel carried the
+		 * code, and the modal showed a green tick. The channel that actually
+		 * carried it is named in the meta the dispatcher returns, so the panel
+		 * can say "the SMS did not go" instead.
+		 */
+		$carrier = isset( $meta['channel'] ) ? (string) $meta['channel'] : $channel;
+		$direct   = $carrier === $channel;
+
 		$this->logger->info(
 			'admin.test_send',
 			array(
@@ -154,11 +164,28 @@ final class AdminController {
 			'sent'    => true,
 			'via'     => $result->gateway(),
 			'channel' => $channel,
+			'carrier' => $carrier,
+			'direct'  => $direct,
 			'masked'  => Phone::mask( $phone ),
 			'trace'   => $this->dispatcher->trace(),
 			'plan'    => $this->gateways->planFor( $result->gateway() ),
-			'message' => __( 'کد آزمایشی ارسال شد. اگر نرسید، رویدادها را ببینید.', 'tisa-otp' ),
+			'message' => $direct
+				? __( 'کد آزمایشی ارسال شد. اگر نرسید، رویدادها را ببینید.', 'tisa-otp' )
+				: sprintf(
+					/* translators: %s: the channel that carried the code instead */
+					__( 'پیامک ارسال نشد؛ کد آزمایشی از راه %s رفت. علت شکست پیامک در همین پنجره آمده است.', 'tisa-otp' ),
+					$this->channelLabel( $carrier )
+				),
 		);
+	}
+
+	/**
+	 * The name of a channel as a person reads it: «ایمیل», not `email`.
+	 */
+	private function channelLabel( string $id ): string {
+		$channel = $this->dispatcher->channel( $id );
+
+		return null !== $channel ? $channel->label() : $id;
 	}
 
 	/**

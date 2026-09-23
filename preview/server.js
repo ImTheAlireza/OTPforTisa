@@ -565,12 +565,25 @@ function handleRest(route, body, headers) {
 			if (!/^09\d{9}$/.test(phone)) {
 				return fail('invalid_phone', 'شماره موبایل معتبر نیست.');
 			}
+			/*
+			 * The case the owner photographed: the panel is unreachable because
+			 * the site blocks outbound HTTP, the email channel still delivers
+			 * the code, and the modal has to say exactly that instead of a
+			 * green «ارسال شد» over a failed SMS test.
+			 */
 			return ok({
 				sent: true,
 				via: 'smsir',
 				channel: body.channel || 'sms',
+				carrier: 'email',
+				direct: false,
 				masked: mask(phone),
-				message: 'کد آزمایشی ارسال شد. اگر نرسید، رویدادها را ببینید.',
+				trace: [
+					{ gateway: 'smsir', sent: false, error_code: 'transport', status: 0, message: 'خود وردپرس اجازهٔ این درخواست را نمی‌دهد: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و دامنهٔ سامانهٔ پیامکی در WP_ACCESSIBLE_HOSTS نیست. یا آن گزینه را بردارید یا دامنه را به فهرست اضافه کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'api.sms.ir\' );', reason: 'BLOCKED: http_request_not_executed — WordPress blocks outbound HTTP: api.sms.ir is not in WP_ACCESSIBLE_HOSTS.' },
+					{ gateway: 'email', sent: true, error_code: '', status: 200, message: 'کد از راه ایمیل ارسال شد.', reason: '' },
+				],
+				plan: { mode: 'pattern', sender: '3000505', template: '123456' },
+				message: 'پیامک ارسال نشد؛ کد آزمایشی از راه ایمیل رفت. علت شکست پیامک در همین پنجره آمده است.',
 			});
 
 		case 'admin/throttle-reset':

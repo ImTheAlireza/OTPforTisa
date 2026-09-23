@@ -343,10 +343,15 @@
 
 			api('admin/test', { phone: number, channel: channel.value }).then(function (data) {
 				busy(send, false);
+				/*
+				 * The code went out, but not through the channel this button
+				 * asks about. A green «ارسال شد» on a failed SMS test is the
+				 * kind of green that costs an owner an afternoon.
+				 */
 				list.appendChild(checkRow({
-					label: i18n.smsSent || '',
+					label: false === data.direct ? (i18n.smsNotSent || '') : (i18n.smsSent || ''),
 					value: data.masked || number,
-					status: 'ok',
+					status: false === data.direct ? 'warn' : 'ok',
 					note: (data.via ? (i18n.smsVia || '') + ' ' + data.via : '') + (data.message ? ' — ' + data.message : '')
 				}));
 

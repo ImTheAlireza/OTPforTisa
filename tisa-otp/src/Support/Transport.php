@@ -42,7 +42,26 @@ final class Transport {
 	public static function classify( string $code, string $message ): string {
 		$hay = strtolower( $code . ' ' . $message );
 
-		if ( false !== strpos( $hay, 'block_external' ) || false !== strpos( $hay, 'blocked_external' ) ) {
+		/*
+		 * Two different blocks land here.
+		 *
+		 * `WP_HTTP_BLOCK_EXTERNAL` makes WordPress answer with
+		 * `http_request_not_executed` and the sentence "User has blocked
+		 * requests through HTTP." — on a Persian site, «کاربر درخواست HTTP را
+		 * بوکله نمود.» — and cURL is never reached, so no cURL sentence exists
+		 * to classify. That is the case an owner hit in 1.3.6: the panel said
+		 * UNKNOWN and sent them to check DNS, while the answer was one constant
+		 * in wp-config.php away. A security plugin that defines the same
+		 * constant produces the same code.
+		 */
+		if (
+			false !== strpos( $hay, 'block_external' )
+			|| false !== strpos( $hay, 'blocked_external' )
+			|| false !== strpos( $hay, 'http_request_not_executed' )
+			|| false !== strpos( $hay, 'blocked requests' )
+			|| false !== strpos( $hay, 'بوکله' )
+			|| false !== strpos( $hay, 'بلوکه' )
+		) {
 			return self::BLOCKED;
 		}
 
@@ -125,7 +144,7 @@ final class Transport {
 				return __( 'پاسخ سامانه پیامکی در مهلت مقرر نرسید. یا سامانه کند است یا مسیر خروجی این سرور بسته است؛ چند دقیقه دیگر دوباره آزمایش کنید و اگر تکرار شد با هاست تماس بگیرید.', 'tisa-otp' );
 
 			case self::BLOCKED:
-				return __( 'ارتباط خروجی وردپرس بسته است (WP_HTTP_BLOCK_EXTERNAL در wp-config.php). یا آن را بردارید یا دامنهٔ سامانهٔ پیامکی را به WP_ACCESSIBLE_HOSTS اضافه کنید.', 'tisa-otp' );
+				return __( 'خود وردپرس اجازهٔ این درخواست را نمی‌دهد: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و دامنهٔ سامانهٔ پیامکی در WP_ACCESSIBLE_HOSTS نیست. یا آن گزینه را بردارید (define( \'WP_HTTP_BLOCK_EXTERNAL\', false );) یا دامنه را به فهرست اضافه کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'api.sms.ir\' );', 'tisa-otp' );
 
 			default:
 				return sprintf(
@@ -134,6 +153,90 @@ final class Transport {
 					'' !== $code ? $code : __( 'نامشخص', 'tisa-otp' )
 				);
 		}
+	}
+
+	/**
+	 * May WordPress reach this host at all?
+	 *
+	 * Core keeps `WP_HTTP_BLOCK_EXTERNAL` and `WP_ACCESSIBLE_HOSTS` in
+	 * wp-config.php, and both are read here rather than discovered from a
+	 * failed request: the answer decides whether a test even bothers to knock.
+	 *
+	 * @param string $host Host name, without a scheme.
+	 */
+	public static function egressBlocked( string $host ): bool {
+		$blocking = defined( 'WP_HTTP_BLOCK_EXTERNAL' ) && WP_HTTP_BLOCK_EXTERNAL;
+		$allowed  = defined( 'WP_ACCESSIBLE_HOSTS' ) ? (string) WP_ACCESSIBLE_HOSTS : '';
+
+		return self::blocked( $host, (bool) $blocking, $allowed );
+	}
+
+	/**
+	 * The rule itself, with the constants passed in so it can be tested.
+	 *
+	 * Core's own matching: an exact host, `*` for everything, `*.example.com`
+	 * and `.example.com` for a domain and its subdomains. Comma or space
+	 * separated, the way wp-config.php is usually written.
+	 *
+	 * @param string $host     Host name.
+	 * @param bool   $blocking Is external HTTP blocked at all?
+	 * @param string $allowed  The WP_ACCESSIBLE_HOSTS value.
+	 */
+	public static function blocked( string $host, bool $blocking, string $allowed ): bool {
+		return $blocking && ! self::allowed( $host, $allowed );
+	}
+
+	public static function allowed( string $host, string $allowed ): bool {
+		$host = strtolower( trim( $host ) );
+
+		foreach ( (array) preg_split( '/[,\s]+/', $allowed ) as $rule ) {
+			$rule = strtolower( trim( (string) $rule ) );
+
+			if ( '' === $rule ) {
+				continue;
+			}
+
+			if ( '*' === $rule || $rule === $host ) {
+				return true;
+			}
+
+			/*
+			 * `*.sms.ir` and `.sms.ir` mean the domain and its subdomains.
+			 *
+			 * Core is stricter about the bare domain (it matches the suffix
+			 * with its dot, so `api.sms.ir` matches and `sms.ir` does not).
+			 * Being forgiving on this side is the safe direction: the worst
+			 * case is that we make a request core then refuses, and that
+			 * refusal is classified as a block anyway. The other direction —
+			 * refusing a request that would have worked — is the one that
+			 * would turn a working panel into a false alarm.
+			 */
+			if ( '*.' === substr( $rule, 0, 2 ) || '.' === substr( $rule, 0, 1 ) ) {
+				$suffix = ltrim( $rule, '.*' );
+
+				if ( '' !== $suffix && ( $suffix === $host || substr( $host, -strlen( $suffix ) - 1 ) === '.' . $suffix ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * The failure WordPress would answer with, built before it answers.
+	 *
+	 * @return array{kind:string,reason:string,message:string}|null
+	 */
+	public static function blockFailure( string $host ) {
+		if ( ! self::egressBlocked( $host ) ) {
+			return null;
+		}
+
+		return self::from(
+			'http_request_not_executed',
+			sprintf( 'WordPress blocks outbound HTTP: %s is not in WP_ACCESSIBLE_HOSTS.', $host )
+		);
 	}
 
 	/**
