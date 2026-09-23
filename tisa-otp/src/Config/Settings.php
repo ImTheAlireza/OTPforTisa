@@ -124,6 +124,11 @@ final class Settings {
 			'code_length'            => '5',
 			'code_ttl'               => '120',
 			'code_store'             => 'database',
+			// A 14-day cookie behind a one-time code: the site chooses, and the
+			// default keeps behaving the way every earlier version did.
+			'remember_login'         => '1',
+			'password_login_off'     => '0',
+
 			'verify_attempts'        => '5',
 			'resend_delay'           => '60',
 			'auto_verify'            => '1',
@@ -141,6 +146,9 @@ final class Settings {
 
 			// Gateways.
 			'sms_gateway'            => 'smsir',
+			// Off by default: it bypasses the site's own outbound block, so it
+			// is the owner's decision to make, not ours.
+			'direct_send'            => '0',
 			'sms_backup_gateway'     => '',
 			'smsir_api_key'          => '',
 			'smsir_template_id'      => '',
@@ -165,9 +173,17 @@ final class Settings {
 			'limit_per_phone'        => '5',
 			'limit_per_ip'           => '12',
 			'limit_per_ip_daily'     => '60',
+			// The site's own ceiling, so a distributed flood cannot spend the
+			// whole credit line before anyone notices. 0 turns it off.
+			'limit_per_site_daily'   => '300',
 			'limit_verify_per_ip'    => '25',
 			'proxy_mode'             => 'none',
 			'trusted_proxies'        => '',
+			// Numbers that should not be stopped by the traffic guards. Off by
+			// default: an allowlist that nobody turned on is a hole, not a feature.
+			'trusted_enabled'        => '0',
+			'trusted_numbers'        => '',
+			'trusted_skip'           => 'captcha,throttle',
 
 			// Captcha.
 			'captcha_provider'       => 'none',
@@ -175,6 +191,10 @@ final class Settings {
 			'captcha_secret_key'     => '',
 			'captcha_score'          => '0.5',
 			'captcha_trigger'        => 'always',
+			'captcha_fail_open'      => '1',
+			'captcha_timeout'        => '8000',
+			'captcha_script_override'=> '',
+			'captcha_arcaptcha_v3'   => '0',
 
 			// Registration.
 			'registration_enabled'   => '1',
@@ -184,6 +204,13 @@ final class Settings {
 			'username_from'          => 'phone',
 			'display_name_from'      => 'full_name',
 			'email_mode'             => 'optional',
+			// WoodMart: the header's sign-in panel. On by default because the panel
+			// only exists on a WoodMart site, and because it is the one place a
+			// WoodMart visitor tries to sign in.
+			'woodmart_sidebar'       => '1',
+			'woodmart_mode'          => 'replace',
+			'woodmart_account_block' => '1',
+
 			'woo_account_form'       => '1',
 			'woo_checkout_gate'      => '0',
 			'woo_checkout_notice'    => 'برای ادامه خرید و مشاهده صفحه تسویه حساب، ابتدا وارد حساب کاربری شوید.',
@@ -198,6 +225,14 @@ final class Settings {
 
 			// Appearance.
 			'skin'                   => 'line',
+			// The form ships with its own Persian font (assets/fonts, OFL). A theme
+			// whose font has no Persian glyphs otherwise decides how the form looks,
+			// which is how "your plugin looks different from your preview" happens.
+			'form_font'              => 'vazirmatn',
+			'form_font_custom'       => '',
+			// The form is rendered inside a shadow root so the theme's CSS cannot
+			// restyle it. Off means "let the theme in", which is a choice, not a bug.
+			'style_isolation'        => '1',
 			'accent'                 => '#0f766e',
 			'surface'                => '#ffffff',
 			'radius'                 => '14',
@@ -221,6 +256,7 @@ final class Settings {
 			// Data, logs & housekeeping.
 			'logs_enabled'           => '1',
 			'logs_keep_days'         => '7',
+			'logs_max_rows'          => '200000',
 			'debug'                  => '0',
 			'phone_meta_key'         => 'tisa_phone',
 			'lookup_meta_keys'       => 'billing_phone,digits_phone,digits_phone_no',

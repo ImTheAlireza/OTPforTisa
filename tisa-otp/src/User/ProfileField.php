@@ -20,6 +20,29 @@ final class ProfileField implements Bootable {
 
 	const NONCE = 'tisa_otp_profile';
 
+	/**
+	 * Where the signup form's own questions are kept.
+	 *
+	 * They are edited here as well as collected at signup, because a customer
+	 * who moves house should not have to re-register to say so.
+	 *
+	 * @var array<string,array<string,mixed>>
+	 */
+	const PROFILE_KEYS = array(
+		'tisa_city'     => array(
+			'label' => 'شهر',
+			'type'  => 'text',
+		),
+		'tisa_postcode' => array(
+			'label' => 'کد پستی',
+			'type'  => 'postcode',
+		),
+		'tisa_address'  => array(
+			'label' => 'آدرس',
+			'type'  => 'textarea',
+		),
+	);
+
 	/** @var Settings */
 	private $settings;
 
@@ -74,11 +97,63 @@ final class ProfileField implements Bootable {
 		}
 
 		echo '</td></tr></tbody></table>';
+
+		$this->renderProfileFields( $user->ID );
 	}
 
 	/**
-	 * @param string $type 'add-new-user' on the Add New User screen.
+	 * The answers the signup form collected, editable in the same place.
 	 */
+	private function renderProfileFields( int $userId ): void {
+		$rows = array();
+
+		foreach ( self::PROFILE_KEYS as $key => $spec ) {
+			$value = (string) get_user_meta( $userId, $key, true );
+
+			// Nothing collected and nothing stored: stay out of the way.
+			if ( '' === trim( $value ) ) {
+				continue;
+			}
+
+			$rows[ $key ] = array( $spec, $value );
+		}
+
+		if ( array() === $rows ) {
+			return;
+		}
+
+		echo '<h2>' . esc_html__( 'اطلاعات ثبت‌نام', 'tisa-otp' ) . '</h2>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		foreach ( $rows as $key => $row ) {
+			$spec  = $row[0];
+			$value = $row[1];
+			$id    = 'tisa-' . str_replace( '_', '-', $key );
+
+			echo '<tr><th scope="row"><label for="' . esc_attr( $id ) . '">' . esc_html( $spec['label'] ) . '</label></th><td>';
+
+			if ( 'textarea' === $spec['type'] ) {
+				printf(
+					'<textarea name="%1$s" id="%2$s" rows="3" class="regular-text">%3$s</textarea>',
+					esc_attr( $key ),
+					esc_attr( $id ),
+					esc_textarea( $value )
+				);
+			} else {
+				printf(
+					'<input type="text" name="%1$s" id="%2$s" value="%3$s" class="regular-text"%4$s>',
+					esc_attr( $key ),
+					esc_attr( $id ),
+					esc_attr( $value ),
+					'postcode' === $spec['type'] ? ' dir="ltr" inputmode="numeric" maxlength="10"' : ''
+				);
+			}
+
+			echo '</td></tr>';
+		}
+
+		echo '</tbody></table>';
+	}
 	public function renderNew( string $type ): void {
 		if ( 'add-new-user' !== $type ) {
 			return;
@@ -108,6 +183,7 @@ final class ProfileField implements Bootable {
 		$raw = isset( $_POST['tisa_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['tisa_phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		$this->store( $userId, $raw );
+		$this->storeProfileFields( $userId );
 	}
 
 	public function saveNew( int $userId ): void {
@@ -118,6 +194,37 @@ final class ProfileField implements Bootable {
 		$raw = isset( $_POST['tisa_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['tisa_phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		$this->store( $userId, $raw );
+		$this->storeProfileFields( $userId );
+	}
+
+	/**
+	 * Save the signup-profile fields, but only the ones already on the record.
+	 *
+	 * A field the site never collected is not created here: the profile screen
+	 * would otherwise grow three empty rows on every installation.
+	 */
+	private function storeProfileFields( int $userId ): void {
+		foreach ( self::PROFILE_KEYS as $key => $spec ) {
+			if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+				continue;
+			}
+
+			if ( '' === trim( (string) get_user_meta( $userId, $key, true ) ) ) {
+				continue;
+			}
+
+			$value = wp_unslash( $_POST[ $key ] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$value = 'textarea' === $spec['type']
+				? sanitize_textarea_field( (string) $value )
+				: sanitize_text_field( (string) $value );
+
+			if ( 'postcode' === $spec['type'] ) {
+				$value = preg_replace( '/[^0-9]/', '', Phone::latinDigits( $value ) );
+				$value = substr( (string) $value, 0, 10 );
+			}
+
+			update_user_meta( $userId, $key, $value );
+		}
 	}
 
 	private function store( int $userId, string $raw ): void {

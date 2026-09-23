@@ -63,6 +63,25 @@ final class CacheCodeStore implements CodeStore {
 		wp_cache_delete( $this->key( $record->fingerprint() ), self::GROUP );
 	}
 
+	/**
+	 * Claim a record through a second cache key.
+	 *
+	 * `wp_cache_add()` only succeeds when the key is absent, which makes it the
+	 * closest thing a cache has to a compare-and-swap: the winner writes the
+	 * marker, everybody else is told the record is already spoken for.
+	 */
+	public function claim( CodeRecord $record ): bool {
+		$ttl = max( 1, $record->expiresAt() - time() );
+
+		$claimed = wp_cache_add( $this->key( $record->fingerprint() ) . '_used', 1, self::GROUP, $ttl );
+
+		if ( $claimed ) {
+			wp_cache_delete( $this->key( $record->fingerprint() ), self::GROUP );
+		}
+
+		return (bool) $claimed;
+	}
+
 	public function revoke( string $fingerprint ): void {
 		wp_cache_delete( $this->key( $fingerprint ), self::GROUP );
 	}

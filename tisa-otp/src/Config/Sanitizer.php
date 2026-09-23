@@ -46,6 +46,8 @@ final class Sanitizer {
 			'login_redirect'       => array( 'type' => 'url' ),
 			'register_redirect'    => array( 'type' => 'url' ),
 			'replace_wp_login'     => array( 'type' => 'bool' ),
+			'remember_login'       => array( 'type' => 'bool' ),
+			'password_login_off'   => array( 'type' => 'bool' ),
 			'cache_mode'           => array( 'type' => 'enum', 'choices' => array( 'auto', 'inline' ) ),
 			'prevent_enumeration'  => array( 'type' => 'bool' ),
 			'guard_roles'          => array( 'type' => 'bool' ),
@@ -68,6 +70,7 @@ final class Sanitizer {
 			'email_body'           => array( 'type' => 'textarea' ),
 			'email_from'           => array( 'type' => 'email' ),
 
+			'direct_send'          => array( 'type' => 'bool' ),
 			'sms_gateway'          => array( 'type' => 'key' ),
 			'sms_backup_gateway'   => array( 'type' => 'key' ),
 			'smsir_api_key'        => array( 'type' => 'secret' ),
@@ -92,15 +95,23 @@ final class Sanitizer {
 			'limit_per_phone'      => array( 'type' => 'int', 'min' => 1, 'max' => 100 ),
 			'limit_per_ip'         => array( 'type' => 'int', 'min' => 1, 'max' => 500 ),
 			'limit_per_ip_daily'   => array( 'type' => 'int', 'min' => 1, 'max' => 5000 ),
+			'limit_per_site_daily' => array( 'type' => 'int', 'min' => 0, 'max' => 100000 ),
 			'limit_verify_per_ip'  => array( 'type' => 'int', 'min' => 5, 'max' => 1000 ),
 			'proxy_mode'           => array( 'type' => 'enum', 'choices' => array( 'none', 'cloudflare', 'forwarded', 'real_ip' ) ),
 			'trusted_proxies'      => array( 'type' => 'text' ),
+			'trusted_enabled'      => array( 'type' => 'bool' ),
+			'trusted_numbers'      => array( 'type' => 'textarea' ),
+			'trusted_skip'         => array( 'type' => 'text' ),
 
 			'captcha_provider'     => array( 'type' => 'enum', 'choices' => array( 'none', 'recaptcha_v3', 'hcaptcha', 'arcaptcha' ) ),
 			'captcha_site_key'     => array( 'type' => 'text' ),
 			'captcha_secret_key'   => array( 'type' => 'secret' ),
 			'captcha_score'        => array( 'type' => 'float', 'min' => 0, 'max' => 1 ),
 			'captcha_trigger'      => array( 'type' => 'enum', 'choices' => array( 'always', 'after_limit' ) ),
+			'captcha_fail_open'    => array( 'type' => 'bool' ),
+			'captcha_timeout'      => array( 'type' => 'int', 'min' => 3000, 'max' => 20000 ),
+			'captcha_script_override' => array( 'type' => 'url' ),
+			'captcha_arcaptcha_v3' => array( 'type' => 'bool' ),
 
 			'registration_enabled' => array( 'type' => 'bool' ),
 			'registration_flow'    => array( 'type' => 'enum', 'choices' => array( 'fields_then_code', 'code_then_fields' ) ),
@@ -113,6 +124,9 @@ final class Sanitizer {
 			'woo_checkout_gate'    => array( 'type' => 'bool' ),
 			'woo_checkout_notice'  => array( 'type' => 'textarea' ),
 			'woo_checkout_page'    => array( 'type' => 'url' ),
+			'woodmart_sidebar'     => array( 'type' => 'bool' ),
+			'woodmart_mode'          => array( 'type' => 'enum', 'choices' => array( 'replace', 'append' ) ),
+			'woodmart_account_block' => array( 'type' => 'bool' ),
 			'sync_billing_phone'   => array( 'type' => 'bool' ),
 			'link_guest_orders'    => array( 'type' => 'bool' ),
 			'send_welcome_email'   => array( 'type' => 'bool' ),
@@ -122,6 +136,9 @@ final class Sanitizer {
 			'register_subheading'  => array( 'type' => 'textarea' ),
 
 			'skin'                 => array( 'type' => 'enum', 'choices' => array( 'line', 'card', 'glass', 'slate', 'pill' ) ),
+			'form_font'            => array( 'type' => 'enum', 'choices' => array( 'vazirmatn', 'theme', 'custom' ) ),
+			'form_font_custom'     => array( 'type' => 'font' ),
+			'style_isolation'      => array( 'type' => 'bool' ),
 			'accent'               => array( 'type' => 'color' ),
 			'surface'              => array( 'type' => 'color' ),
 			'radius'               => array( 'type' => 'int', 'min' => 0, 'max' => 40 ),
@@ -144,6 +161,7 @@ final class Sanitizer {
 
 			'logs_enabled'         => array( 'type' => 'bool' ),
 			'logs_keep_days'       => array( 'type' => 'int', 'min' => 1, 'max' => 90 ),
+			'logs_max_rows'        => array( 'type' => 'int', 'min' => 0, 'max' => 5000000 ),
 			'debug'                => array( 'type' => 'bool' ),
 			'phone_meta_key'       => array( 'type' => 'meta_key' ),
 			'lookup_meta_keys'     => array( 'type' => 'csv_keys' ),
@@ -254,10 +272,31 @@ final class Sanitizer {
 			case 'fields':
 				return is_array( $value ) ? self::sanitizeFields( $value ) : (array) $fallback;
 
+			case 'font':
+				return self::fontFamily( $value );
+
 			case 'text':
 			default:
 				return sanitize_text_field( (string) $value );
 		}
+	}
+
+	/**
+	 * A CSS `font-family` list, and nothing else.
+	 *
+	 * The value is printed inside a `style` attribute, so the whole grammar is
+	 * kept to what a font list can contain: family names, quotes, commas and
+	 * spaces. Braces, semicolons and angle brackets — the characters that would
+	 * let one setting escape its declaration and rewrite the rest of the page —
+	 * are dropped rather than escaped, and an empty result falls back to the
+	 * default font.
+	 */
+	public static function fontFamily( $value ): string {
+		$value = wp_strip_all_tags( (string) $value );
+		$value = preg_replace( '/[^A-Za-z0-9 ,\'"\-_\.]/', '', $value );
+		$value = trim( (string) $value, " \t\n\r\0\x0B," );
+
+		return substr( $value, 0, 180 );
 	}
 
 	/**

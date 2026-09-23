@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تیسا — فرم OTP داخل سایدبار ورود وودمارت</title>
+<!--
+	پوستهٔ واقعی وودمارت این صفحه را نمی‌سازد: اینجا فقط چهارچوب پوسته (هدر، کشو،
+	رنگ‌های تیره) بازسازی شده تا فرم در همان جایی دیده شود که روی سایت دیده
+	می‌شود. خود فرم، خروجی واقعی افزونه است.
+-->
+<link rel="stylesheet" href="/plugin-assets/css/front.css">
+<style>
+	:root { color-scheme: dark; }
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		background: #14161a;
+		color: #e8eaed;
+		font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+		line-height: 1.8;
+	}
+	.wm-bar {
+		display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+		padding: 14px 22px; background: #0f1114; border-bottom: 1px solid #262a31;
+		position: sticky; top: 0; z-index: 5;
+	}
+	.wm-bar a { color: #9fb4c7; text-decoration: none; font-size: 14px; padding: 4px 10px; border-radius: 999px; }
+	.wm-bar a.is-here { background: #1d2127; color: #fff; }
+	.wm-bar strong { font-size: 15px; margin-inline-end: 8px; }
+	.wm-lead { max-width: 900px; padding: 26px 22px 6px; }
+	.wm-lead h1 { font-size: 22px; margin: 0 0 8px; }
+	.wm-lead p { margin: 0 0 10px; color: #b6bdc7; font-size: 15px; }
+	.wm-lead code { background: #1d2127; padding: 2px 6px; border-radius: 6px; font-size: 13px; }
+	.wm-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); padding: 20px 22px 60px; }
+	.wm-col { background: #191c21; border: 1px solid #262a31; border-radius: 16px; padding: 16px; }
+	.wm-col__title { font-size: 16px; margin: 0 0 6px; }
+	.wm-col__note { margin: 0 0 14px; font-size: 13.5px; color: #a9b1bc; }
+	.wm-shell { position: relative; min-height: 460px; border-radius: 12px; overflow: hidden; background: #101216; border: 1px solid #23272e; }
+	.wm-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .45); opacity: 0; transition: opacity .25s; }
+	.wm-side {
+		position: absolute; inset-block: 0; inset-inline-end: 0; width: min(360px, 92%);
+		background: #1b1e23; border-inline-start: 1px solid #2b3037;
+		overflow-y: auto; transform: translateX(-102%);
+		transition: transform .32s ease;
+	}
+	[dir="rtl"] .wm-side { transform: translateX(102%); }
+	.wm-shell.is-open .wm-side { transform: none; }
+	.wm-shell.is-open .wm-backdrop { opacity: 1; }
+	.wm-backdrop[data-close] { cursor: pointer; }
+	.wm-open {
+		margin-top: 12px; background: #0f766e; color: #fff; border: 0; border-radius: 10px;
+		padding: 9px 16px; font: inherit; font-size: 14px; cursor: pointer;
+	}
+	/* چهارچوب پوسته: عنوان کشو، دکمهٔ بستن، و فرم قدیمی ووکامرس */
+	.wm-side .wd-heading { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; }
+	.wm-side .wd-heading .title { font-weight: 700; }
+	.wm-side .close-side-widget { color: #8d97a3; text-decoration: none; font-size: 13px; }
+	.wm-side form.login { display: grid; gap: 10px; padding: 0 20px 18px; }
+	.wm-side form.login label { display: block; font-size: 13px; color: #a9b1bc; margin-bottom: 4px; }
+	.wm-side form.login input[type="text"],
+	.wm-side form.login input[type="password"] {
+		width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #333a43;
+		background: #14171b; color: #e8eaed; font: inherit;
+	}
+	.wm-side .woocommerce-form-login__submit {
+		background: #333941; color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font: inherit; cursor: pointer;
+	}
+	.wm-side .create-account-question { padding: 0 20px 22px; font-size: 14px; color: #a9b1bc; text-align: center; }
+	/* وودمارت همین آیکن را با فونت آیکن خودش روی همین عنصر می‌کشد؛ اینجا
+	   همان تصویر با یک SVG درون‌خطی بازسازی شده تا وابستگی به فونت پوسته نباشد. */
+	.wm-side .create-account-question:before {
+		content: ""; display: block; width: 54px; height: 54px; margin: 0 auto 14px;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9c0c9' stroke-width='1.3' stroke-linecap='round'%3E%3Ccircle cx='12' cy='7.6' r='3.6'/%3E%3Cpath d='M4.6 20.2c1.2-3.8 4.1-5.7 7.4-5.7s6.2 1.9 7.4 5.7'/%3E%3C/svg%3E") center / contain no-repeat;
+	}
+	.wm-side .create-account-question .create-account-button { color: #7fd1c8; text-decoration: none; }
+	.wm-side .woocommerce-notices-wrapper:empty { display: none; }
+</style>
+</head>
+<body>
+<nav class="wm-bar">
+	<strong>تیسا</strong>
+	<a href="/">فرم ورود</a>
+	<a href="/account">حساب کاربری</a>
+	<a href="/admin">پنل مدیریت</a>
+	<a class="is-here" href="/woodmart">سایدبار وودمارت</a>
+	<a href="/download/tisa-otp.zip" download>دانلود افزونه</a>
+</nav>
+
+<main>
+	<section class="wm-lead">
+		<h1>فرم OTP داخل سایدبار ورود وودمارت</h1>
+		<p>
+			ستون وسط، خروجی واقعی افزونه است: پوسته وودمارت پنل ورود را در فوتر چاپ می‌کند و افزونه همان
+			فراخوانی را قاب می‌گیرد و فقط فرم ووکامرس داخل پنل را عوض می‌کند. هیچ فایلی از پوسته تغییر نمی‌کند.
+		</p>
+		<p>
+			همین سه ستون در پیش‌نمایش ساخته شده‌اند تا حالت‌ها را کنار هم ببینید؛ روی سایت واقعی فقط یکی از آن دو
+			اتفاق می‌افتد، بسته به تنظیم <code>سایدبار ورود وودمارت</code> در پنل.
+		</p>
+	</section>
+
+	<div class="wm-grid">
+		<section class="wm-col">
+			<h2 class="wm-col__title">پیش از افزونه</h2>
+			<p class="wm-col__note">این همان چیزی است که وودمارت خودش چاپ می‌کند: نام کاربری و گذرواژه، و پایین پنل آیکن و متن و لینک «ایجاد حساب کاربری».</p>
+			<div class="wm-shell" data-drawer>
+				<div class="wm-backdrop" data-close></div>
+				<aside class="wm-sidewm-before" id="wm-before" aria-label="پیش از افزونه">
+					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
+	<div class="wd-heading">
+		<span class="title">ورود</span>
+		<div class="close-side-widget"><a href="#" rel="nofollow">بستن</a></div>
+	</div>
+
+	<div class="widget woocommerce widget_shopping_cart_content"></div>
+	<div class="woocommerce-notices-wrapper"></div>
+	<form method="post" class="login woocommerce-form woocommerce-form-login hidden-form">
+		<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
+			<label for="username">نام کاربری یا ایمیل</label>
+			<input type="text" class="woocommerce-Input woocommerce-Input--text input-text" name="username" id="username" autocomplete="username">
+		</p>
+		<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
+			<label for="password">گذرواژه</label>
+			<input class="woocommerce-Input woocommerce-Input--text input-text" type="password" name="password" id="password" autocomplete="current-password">
+		</p>
+		<p class="form-row">
+			<label class="woocommerce-form-login__rememberme"><input name="rememberme" type="checkbox" value="forever"> مرا به خاطر بسپار</label>
+			<button type="submit" class="woocommerce-button button woocommerce-form-login__submit" name="login">ورود</button>
+		</p>
+		<p class="lost-password"><a href="#">گذرواژه را فراموش کرده‌اید؟</a></p>
+	</form>
+	<div class="create-account-question">
+		<p>هنوز حساب کاربری ندارید؟</p>
+		<a href="#?action=register" class="btn create-account-button">ایجاد حساب کاربری</a>
+	</div>
+</div>
+				</aside>
+			</div>
+			<button type="button" class="wm-open" data-open="wm-before">کشو را باز کن</button>
+		</section>		<section class="wm-col">
+			<h2 class="wm-col__title">با افزونه، حالت «جایگزین شود»</h2>
+			<p class="wm-col__note">فرم ووکامرس از داخل همان پنل برداشته می‌شود و فرم OTP جای آن می‌آید. بخش «ایجاد حساب کاربری» وودمارت هم می‌رود، چون فرم افزونه خودش عضویت می‌سازد؛ عنوان و دکمهٔ بستن دست‌نخورده‌اند.</p>
+			<div class="wm-shell" data-drawer>
+				<div class="wm-backdrop" data-close></div>
+				<aside class="wm-sidewm-after" id="wm-after" aria-label="با افزونه، حالت «جایگزین شود»">
+					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
+	<div class="wd-heading">
+		<span class="title">ورود</span>
+		<div class="close-side-widget"><a href="#" rel="nofollow">بستن</a></div>
+	</div>
+
+	<div class="widget woocommerce widget_shopping_cart_content"></div>
+	<div class="woocommerce-notices-wrapper"></div>
+	
+<!-- tisa-otp: woodmart login sidebar -->
+<div
+	class="tisa-otp tisa-skin-line tisa-align-center tisa-code-boxes tisa-otp--woodmart"
+	id="tisa-form-1-1"
+	dir="rtl"
+	style="--tisa-accent:#0f766e;--tisa-surface:#ffffff;--tisa-font:&#039;Vazirmatn&#039;,&#039;Vazir&#039;,&#039;IRANSans&#039;,&#039;Iranian Sans&#039;,Tahoma,sans-serif;--tisa-width:420px;--tisa-radius:14px"
+	data-tisa-form
+	data-endpoint="/mock/tisa-otp/v1/"
+	data-config-url="/mock/tisa-otp/v1/form-config"
+	data-cache-mode="auto"
+	data-nonce="d01dba5c1c"
+	data-form-token="demo-form-token"
+	data-cooldown="60"
+	data-code-length="5"
+	data-flow="fields_then_code"
+	data-registration="1"
+	data-redirect=""
+>
+	<form class="tisa-otp__form" method="post" novalidate autocomplete="on">
+
+				<a class="tisa-otp__skip" href="#tisa-form-1-1-phone" data-tisa-skip>رفتن به فرم ورود</a>
+
+				<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
+		<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="0">
+
+		
+					<ol class="tisa-otp__steps" data-tisa-steps aria-hidden="true">
+									<li
+						class="is-current"
+						data-tisa-step-marker="phone"
+					>شماره</li>
+									<li
+						class=""
+						data-tisa-step-marker="fields"
+					>اطلاعات</li>
+									<li
+						class=""
+						data-tisa-step-marker="code"
+					>کد</li>
+							</ol>
+			<p class="tisa-screen-reader tisa-otp__steps-text" data-tisa-steps-text>
+				گام 1 از 3: شماره			</p>
+			
+		<div
+			class="tisa-otp__status"
+			id="tisa-form-1-1-status"
+			role="status"
+			aria-live="polite"
+			aria-atomic="true"
+			data-tisa-status
+			hidden
+		>
+			<svg class="tisa-otp__status-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false" data-tisa-status-icon>
+				<circle cx="10" cy="10" r="8"></circle>
+				<path d="M10 6.5v4.5" stroke-linecap="round"></path>
+				<path d="M10 13.6h.01" stroke-linecap="round"></path>
+			</svg>
+			<div class="tisa-otp__status-body">
+				<p class="tisa-otp__status-title" data-tisa-status-title hidden></p>
+				<p class="tisa-otp__status-text" data-tisa-status-text></p>
+				<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
+			</div>
+		</div>
+
+		<section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="tisa-form-1-1-phone-title">
+	<header class="tisa-step__head">
+		<h2 class="tisa-step__title" id="tisa-form-1-1-phone-title" tabindex="-1">ورود یا عضویت</h2>
+					<p class="tisa-step__hint" id="tisa-form-1-1-phone-hint">شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود.</p>
+			</header>
+
+	<div class="tisa-field">
+		<label class="tisa-field__label" for="tisa-form-1-1-phone">
+			شماره موبایل		</label>
+
+		<div class="tisa-phone">
+			<input
+				class="tisa-field__input tisa-phone__input"
+				id="tisa-form-1-1-phone"
+				type="tel"
+				inputmode="numeric"
+				autocomplete="tel"
+				maxlength="11"
+				dir="ltr"
+				placeholder="09121234567"
+				data-tisa-phone
+				aria-describedby="tisa-form-1-1-phone-hint tisa-form-1-1-phone-error"
+				aria-invalid="false"
+				required
+			>
+		</div>
+
+		<p
+			class="tisa-field__error"
+			id="tisa-form-1-1-phone-error"
+			data-tisa-error="phone"
+			role="alert"
+			hidden
+		></p>
+	</div>
+
+	<div class="tisa-captcha" data-tisa-captcha hidden></div>
+
+	<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="start">
+		<span class="tisa-btn__label">دریافت کد تأیید</span>
+		<span class="tisa-btn__spinner" aria-hidden="true"></span>
+	</button>
+
+				<ul class="tisa-otp__trust">
+							<li class="tisa-otp__trust-item">
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+					<span>بدون رمز عبور</span>
+				</li>
+							<li class="tisa-otp__trust-item">
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+					<span>ورود در چند ثانیه</span>
+				</li>
+							<li class="tisa-otp__trust-item">
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path></svg>
+					<span>شماره شما محفوظ می‌ماند</span>
+				</li>
+					</ul>
+	</section>
+<section class="tisa-step" data-tisa-step="fields" aria-labelledby="tisa-form-1-1-fields-title">
+	<header class="tisa-step__head">
+		<h2 class="tisa-step__title" id="tisa-form-1-1-fields-title" tabindex="-1">تکمیل اطلاعات</h2>
+					<p class="tisa-step__hint" id="tisa-form-1-1-fields-hint">برای ساخت حساب کاربری، اطلاعات زیر را کامل کنید.</p>
+			</header>
+
+	<div class="tisa-fields">
+								<div class="tisa-field tisa-field--half" data-tisa-field="first_name">
+				<label class="tisa-field__label" for="tisa-form-1-1-f-first_name">
+					نام											<span class="tisa-field__star" aria-hidden="true">*</span>
+									</label>
+
+									<input
+						class="tisa-field__input"
+						id="tisa-form-1-1-f-first_name"
+						type="text"
+																	placeholder=""
+						data-tisa-input="first_name"
+						aria-describedby="tisa-form-1-1-f-first_name-error"
+						aria-invalid="false"
+						required					>
+				
+				
+				<p
+					class="tisa-field__error"
+					id="tisa-form-1-1-f-first_name-error"
+					data-tisa-error="first_name"
+					role="alert"
+					hidden
+				></p>
+			</div>
+								<div class="tisa-field tisa-field--half" data-tisa-field="last_name">
+				<label class="tisa-field__label" for="tisa-form-1-1-f-last_name">
+					نام خانوادگی											<span class="tisa-field__star" aria-hidden="true">*</span>
+									</label>
+
+									<input
+						class="tisa-field__input"
+						id="tisa-form-1-1-f-last_name"
+						type="text"
+																	placeholder=""
+						data-tisa-input="last_name"
+						aria-describedby="tisa-form-1-1-f-last_name-error"
+						aria-invalid="false"
+						required					>
+				
+				
+				<p
+					class="tisa-field__error"
+					id="tisa-form-1-1-f-last_name-error"
+					data-tisa-error="last_name"
+					role="alert"
+					hidden
+				></p>
+			</div>
+			</div>
+
+	<div class="tisa-captcha" data-tisa-captcha hidden></div>
+
+	<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="submit-fields">
+		<span class="tisa-btn__label">ادامه</span>
+		<span class="tisa-btn__spinner" aria-hidden="true"></span>
+	</button>
+
+	<button type="button" class="tisa-btn tisa-btn--ghost" data-tisa-action="back">ویرایش شماره</button>
+</section>
+<section class="tisa-step" data-tisa-step="code" aria-labelledby="tisa-form-1-1-code-title">
+	<header class="tisa-step__head">
+		<h2 class="tisa-step__title" id="tisa-form-1-1-code-title" tabindex="-1">کد تأیید</h2>
+		<p class="tisa-step__hint">
+			کد ارسال‌شده به <span class="tisa-otp__masked" data-tisa-masked>—</span> را وارد کنید.		</p>
+	</header>
+
+		<div class="tisa-code__phone" data-tisa-phone-chip hidden>
+		<span class="tisa-code__phone-label">کد ارسال‌شده به</span>
+		<strong class="tisa-code__phone-value" data-tisa-phone-chip-value dir="ltr">—</strong>
+		<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+	</div>
+
+	<div class="tisa-code" data-tisa-code>
+		<label class="tisa-screen-reader" for="tisa-form-1-1-code">کد تأیید</label>
+
+		<input
+			class="tisa-code__bulk"
+			id="tisa-form-1-1-code"
+			type="text"
+			inputmode="numeric"
+			autocomplete="one-time-code"
+			maxlength="5"
+			data-tisa-code-bulk
+			aria-describedby="tisa-form-1-1-boxes"
+			aria-invalid="false"
+		>
+
+		<div
+			class="tisa-code__boxes"
+			id="tisa-form-1-1-boxes"
+			role="group"
+			aria-labelledby="tisa-form-1-1-code-title"
+			data-tisa-boxes
+		>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="one-time-code"
+					aria-label="رقم 1"
+					aria-invalid="false"
+					data-tisa-box="0"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 2"
+					aria-invalid="false"
+					data-tisa-box="1"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 3"
+					aria-invalid="false"
+					data-tisa-box="2"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 4"
+					aria-invalid="false"
+					data-tisa-box="3"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 5"
+					aria-invalid="false"
+					data-tisa-box="4"
+				>
+					</div>
+	</div>
+
+	<button type="button" class="tisa-link tisa-code__paste" data-tisa-paste>
+		<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="6.5" y="3.5" width="9" height="12" rx="2"></rect><path d="M4.5 6.5v8a2 2 0 0 0 2 2h6" stroke-linecap="round"></path></svg>
+		<span>چسباندن کد از پیامک</span>
+	</button>
+
+	<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="verify">
+		<span class="tisa-btn__label">ورود به حساب</span>
+		<span class="tisa-btn__spinner" aria-hidden="true"></span>
+	</button>
+
+		<p class="tisa-code__attempts" data-tisa-attempts role="status" aria-live="polite" hidden></p>
+
+	<div class="tisa-code__footer">
+		<button type="button" class="tisa-link" data-tisa-action="resend" disabled>
+			<span data-tisa-resend-label>ارسال دوباره کد</span>
+		</button>
+		<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+	</div>
+
+		<div class="tisa-code__cooldown" data-tisa-cooldown aria-hidden="true" hidden><i></i></div>
+
+		<div class="tisa-code__rescue" data-tisa-rescue hidden>
+		<p class="tisa-code__rescue-title">
+			<span class="tisa-code__rescue-icon" aria-hidden="true">
+				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false"><circle cx="10" cy="10" r="7"></circle><path d="M10 6.2V10l2.6 1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+			</span>
+			پیامک نرسید؟		</p>
+		<ul class="tisa-code__rescue-list">
+			<li>معمولاً تا یک دقیقه می‌رسد؛ اگر نرسید، «ارسال دوبارهٔ کد» را بزنید.</li>
+			<li>اگر شماره را اشتباه وارد کرده‌اید، «ویرایش شماره» را بزنید.</li>
+		</ul>
+	</div>
+
+		<p class="tisa-screen-reader" role="status" aria-live="polite" data-tisa-resend-live></p>
+</section>
+
+			</form>
+</div>
+</div>
+				</aside>
+			</div>
+			<button type="button" class="wm-open" data-open="wm-after">کشو را باز کن</button>
+		</section>		<section class="wm-col">
+			<h2 class="wm-col__title">حالت «بماند»</h2>
+			<p class="wm-col__note">اگر بخواهید ورود با گذرواژه هم بماند، فرم OTP زیر آن می‌آید و هیچ فرمی داخل فرم دیگر نمی‌رود.</p>
+			<div class="wm-shell" data-drawer>
+				<div class="wm-backdrop" data-close></div>
+				<aside class="wm-sidewm-alongside" id="wm-alongside" aria-label="حالت «بماند»">
+					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
+	<div class="wd-heading">
+		<span class="title">ورود</span>
+		<div class="close-side-widget"><a href="#" rel="nofollow">بستن</a></div>
+	</div>
+
+	<div class="widget woocommerce widget_shopping_cart_content"></div>
+	<div class="woocommerce-notices-wrapper"></div>
+	<form method="post" class="login woocommerce-form woocommerce-form-login hidden-form">
+		<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
+			<label for="username">نام کاربری یا ایمیل</label>
+			<input type="text" class="woocommerce-Input woocommerce-Input--text input-text" name="username" id="username" autocomplete="username">
+		</p>
+		<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
+			<label for="password">گذرواژه</label>
+			<input class="woocommerce-Input woocommerce-Input--text input-text" type="password" name="password" id="password" autocomplete="current-password">
+		</p>
+		<p class="form-row">
+			<label class="woocommerce-form-login__rememberme"><input name="rememberme" type="checkbox" value="forever"> مرا به خاطر بسپار</label>
+			<button type="submit" class="woocommerce-button button woocommerce-form-login__submit" name="login">ورود</button>
+		</p>
+		<p class="lost-password"><a href="#">گذرواژه را فراموش کرده‌اید؟</a></p>
+	</form>
+	
+<!-- tisa-otp: woodmart login sidebar -->
+<div
+	class="tisa-otp tisa-skin-line tisa-align-center tisa-code-boxes tisa-otp--woodmart"
+	id="tisa-form-2-2"
+	dir="rtl"
+	style="--tisa-accent:#0f766e;--tisa-surface:#ffffff;--tisa-font:&#039;Vazirmatn&#039;,&#039;Vazir&#039;,&#039;IRANSans&#039;,&#039;Iranian Sans&#039;,Tahoma,sans-serif;--tisa-width:420px;--tisa-radius:14px"
+	data-tisa-form
+	data-endpoint="/mock/tisa-otp/v1/"
+	data-config-url="/mock/tisa-otp/v1/form-config"
+	data-cache-mode="auto"
+	data-nonce="d01dba5c1c"
+	data-form-token="demo-form-token"
+	data-cooldown="60"
+	data-code-length="5"
+	data-flow="fields_then_code"
+	data-registration="1"
+	data-redirect=""
+>
+	<form class="tisa-otp__form" method="post" novalidate autocomplete="on">
+
+				<a class="tisa-otp__skip" href="#tisa-form-2-2-phone" data-tisa-skip>رفتن به فرم ورود</a>
+
+				<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
+		<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="0">
+
+		
+					<ol class="tisa-otp__steps" data-tisa-steps aria-hidden="true">
+									<li
+						class="is-current"
+						data-tisa-step-marker="phone"
+					>شماره</li>
+									<li
+						class=""
+						data-tisa-step-marker="fields"
+					>اطلاعات</li>
+									<li
+						class=""
+						data-tisa-step-marker="code"
+					>کد</li>
+							</ol>
+			<p class="tisa-screen-reader tisa-otp__steps-text" data-tisa-steps-text>
+				گام 1 از 3: شماره			</p>
+			
+		<div
+			class="tisa-otp__status"
+			id="tisa-form-2-2-status"
+			role="status"
+			aria-live="polite"
+			aria-atomic="true"
+			data-tisa-status
+			hidden
+		>
+			<svg class="tisa-otp__status-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false" data-tisa-status-icon>
+				<circle cx="10" cy="10" r="8"></circle>
+				<path d="M10 6.5v4.5" stroke-linecap="round"></path>
+				<path d="M10 13.6h.01" stroke-linecap="round"></path>
+			</svg>
+			<div class="tisa-otp__status-body">
+				<p class="tisa-otp__status-title" data-tisa-status-title hidden></p>
+				<p class="tisa-otp__status-text" data-tisa-status-text></p>
+				<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
+			</div>
+		</div>
+
+		<section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="tisa-form-2-2-phone-title">
+	<header class="tisa-step__head">
+		<h2 class="tisa-step__title" id="tisa-form-2-2-phone-title" tabindex="-1">ورود یا عضویت</h2>
+					<p class="tisa-step__hint" id="tisa-form-2-2-phone-hint">شماره موبایل خود را وارد کنید تا کد تأیید برایتان ارسال شود.</p>
+			</header>
+
+	<div class="tisa-field">
+		<label class="tisa-field__label" for="tisa-form-2-2-phone">
+			شماره موبایل		</label>
+
+		<div class="tisa-phone">
+			<input
+				class="tisa-field__input tisa-phone__input"
+				id="tisa-form-2-2-phone"
+				type="tel"
+				inputmode="numeric"
+				autocomplete="tel"
+				maxlength="11"
+				dir="ltr"
+				placeholder="09121234567"
+				data-tisa-phone
+				aria-describedby="tisa-form-2-2-phone-hint tisa-form-2-2-phone-error"
+				aria-invalid="false"
+				required
+			>
+		</div>
+
+		<p
+			class="tisa-field__error"
+			id="tisa-form-2-2-phone-error"
+			data-tisa-error="phone"
+			role="alert"
+			hidden
+		></p>
+	</div>
+
+	<div class="tisa-captcha" data-tisa-captcha hidden></div>
+
+	<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="start">
+		<span class="tisa-btn__label">دریافت کد تأیید</span>
+		<span class="tisa-btn__spinner" aria-hidden="true"></span>
+	</button>
+
+				<ul class="tisa-otp__trust">
+							<li class="tisa-otp__trust-item">
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+					<span>بدون رمز عبور</span>
+				</li>
+							<li class="tisa-otp__trust-item">
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+					<span>ورود در چند ثانیه</span>
+				</li>
+							<li class="tisa-otp__trust-item">
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path></svg>
+					<span>شماره شما محفوظ می‌ماند</span>
+				</li>
+					</ul>
+	</section>
+<section class="tisa-step" data-tisa-step="fields" aria-labelledby="tisa-form-2-2-fields-title">
+	<header class="tisa-step__head">
+		<h2 class="tisa-step__title" id="tisa-form-2-2-fields-title" tabindex="-1">تکمیل اطلاعات</h2>
+					<p class="tisa-step__hint" id="tisa-form-2-2-fields-hint">برای ساخت حساب کاربری، اطلاعات زیر را کامل کنید.</p>
+			</header>
+
+	<div class="tisa-fields">
+								<div class="tisa-field tisa-field--half" data-tisa-field="first_name">
+				<label class="tisa-field__label" for="tisa-form-2-2-f-first_name">
+					نام											<span class="tisa-field__star" aria-hidden="true">*</span>
+									</label>
+
+									<input
+						class="tisa-field__input"
+						id="tisa-form-2-2-f-first_name"
+						type="text"
+																	placeholder=""
+						data-tisa-input="first_name"
+						aria-describedby="tisa-form-2-2-f-first_name-error"
+						aria-invalid="false"
+						required					>
+				
+				
+				<p
+					class="tisa-field__error"
+					id="tisa-form-2-2-f-first_name-error"
+					data-tisa-error="first_name"
+					role="alert"
+					hidden
+				></p>
+			</div>
+								<div class="tisa-field tisa-field--half" data-tisa-field="last_name">
+				<label class="tisa-field__label" for="tisa-form-2-2-f-last_name">
+					نام خانوادگی											<span class="tisa-field__star" aria-hidden="true">*</span>
+									</label>
+
+									<input
+						class="tisa-field__input"
+						id="tisa-form-2-2-f-last_name"
+						type="text"
+																	placeholder=""
+						data-tisa-input="last_name"
+						aria-describedby="tisa-form-2-2-f-last_name-error"
+						aria-invalid="false"
+						required					>
+				
+				
+				<p
+					class="tisa-field__error"
+					id="tisa-form-2-2-f-last_name-error"
+					data-tisa-error="last_name"
+					role="alert"
+					hidden
+				></p>
+			</div>
+			</div>
+
+	<div class="tisa-captcha" data-tisa-captcha hidden></div>
+
+	<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="submit-fields">
+		<span class="tisa-btn__label">ادامه</span>
+		<span class="tisa-btn__spinner" aria-hidden="true"></span>
+	</button>
+
+	<button type="button" class="tisa-btn tisa-btn--ghost" data-tisa-action="back">ویرایش شماره</button>
+</section>
+<section class="tisa-step" data-tisa-step="code" aria-labelledby="tisa-form-2-2-code-title">
+	<header class="tisa-step__head">
+		<h2 class="tisa-step__title" id="tisa-form-2-2-code-title" tabindex="-1">کد تأیید</h2>
+		<p class="tisa-step__hint">
+			کد ارسال‌شده به <span class="tisa-otp__masked" data-tisa-masked>—</span> را وارد کنید.		</p>
+	</header>
+
+		<div class="tisa-code__phone" data-tisa-phone-chip hidden>
+		<span class="tisa-code__phone-label">کد ارسال‌شده به</span>
+		<strong class="tisa-code__phone-value" data-tisa-phone-chip-value dir="ltr">—</strong>
+		<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+	</div>
+
+	<div class="tisa-code" data-tisa-code>
+		<label class="tisa-screen-reader" for="tisa-form-2-2-code">کد تأیید</label>
+
+		<input
+			class="tisa-code__bulk"
+			id="tisa-form-2-2-code"
+			type="text"
+			inputmode="numeric"
+			autocomplete="one-time-code"
+			maxlength="5"
+			data-tisa-code-bulk
+			aria-describedby="tisa-form-2-2-boxes"
+			aria-invalid="false"
+		>
+
+		<div
+			class="tisa-code__boxes"
+			id="tisa-form-2-2-boxes"
+			role="group"
+			aria-labelledby="tisa-form-2-2-code-title"
+			data-tisa-boxes
+		>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="one-time-code"
+					aria-label="رقم 1"
+					aria-invalid="false"
+					data-tisa-box="0"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 2"
+					aria-invalid="false"
+					data-tisa-box="1"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 3"
+					aria-invalid="false"
+					data-tisa-box="2"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 4"
+					aria-invalid="false"
+					data-tisa-box="3"
+				>
+							<input
+					class="tisa-code__box"
+					type="text"
+					inputmode="numeric"
+					maxlength="1"
+										autocomplete="off"
+					aria-label="رقم 5"
+					aria-invalid="false"
+					data-tisa-box="4"
+				>
+					</div>
+	</div>
+
+	<button type="button" class="tisa-link tisa-code__paste" data-tisa-paste>
+		<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="6.5" y="3.5" width="9" height="12" rx="2"></rect><path d="M4.5 6.5v8a2 2 0 0 0 2 2h6" stroke-linecap="round"></path></svg>
+		<span>چسباندن کد از پیامک</span>
+	</button>
+
+	<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="verify">
+		<span class="tisa-btn__label">ورود به حساب</span>
+		<span class="tisa-btn__spinner" aria-hidden="true"></span>
+	</button>
+
+		<p class="tisa-code__attempts" data-tisa-attempts role="status" aria-live="polite" hidden></p>
+
+	<div class="tisa-code__footer">
+		<button type="button" class="tisa-link" data-tisa-action="resend" disabled>
+			<span data-tisa-resend-label>ارسال دوباره کد</span>
+		</button>
+		<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+	</div>
+
+		<div class="tisa-code__cooldown" data-tisa-cooldown aria-hidden="true" hidden><i></i></div>
+
+		<div class="tisa-code__rescue" data-tisa-rescue hidden>
+		<p class="tisa-code__rescue-title">
+			<span class="tisa-code__rescue-icon" aria-hidden="true">
+				<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false"><circle cx="10" cy="10" r="7"></circle><path d="M10 6.2V10l2.6 1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+			</span>
+			پیامک نرسید؟		</p>
+		<ul class="tisa-code__rescue-list">
+			<li>معمولاً تا یک دقیقه می‌رسد؛ اگر نرسید، «ارسال دوبارهٔ کد» را بزنید.</li>
+			<li>اگر شماره را اشتباه وارد کرده‌اید، «ویرایش شماره» را بزنید.</li>
+		</ul>
+	</div>
+
+		<p class="tisa-screen-reader" role="status" aria-live="polite" data-tisa-resend-live></p>
+</section>
+
+			</form>
+</div>
+</div>
+				</aside>
+			</div>
+			<button type="button" class="wm-open" data-open="wm-alongside">کشو را باز کن</button>
+		</section>
+	</div>
+</main>
+
+<script>
+	/* Stands in for wp_localize_script( 'tisa-otp-front', 'tisaOtp', ... ) */
+	window.tisaOtp = {
+		restUrl: '/mock/tisa-otp/v1/',
+		nonce: 'demo-nonce',
+		configUrl: '/mock/tisa-otp/v1/form-config',
+		cacheMode: 'auto',
+		autoVerify: true,
+		webOtp: false,
+		timeoutMs: 15000,
+		enabled: true,
+		codeLength: 5,
+		codeInput: 'boxes',
+		rescueAfter: 30,
+		cooldown: 60,
+		ttl: 120,
+		channel: 'sms',
+		skin: 'line',
+		formToken: 'demo-form-token',
+		captcha: { enabled: false, provider: 'none', config: {} },
+		isolate: true,
+		css: '/plugin-assets/css/front.css',
+		assets: '/plugin-assets/',
+		vars: {
+			'--tisa-accent': '#7fd1c8',
+			'--tisa-accent-strong': '#5bb3aa',
+			'--tisa-accent-soft': 'rgba(127, 209, 200, .16)',
+			'--tisa-surface': '#1b1e23',
+			'--tisa-radius': '12px',
+			'--tisa-width': '100%'
+		}
+	};
+</script>
+<script src="/plugin-assets/js/front.js" defer></script>
+<script>
+	document.addEventListener('click', function (event) {
+		var open = event.target.closest('[data-open]');
+		var close = event.target.closest('[data-close]');
+
+		if (open) {
+			var shell = document.getElementById(open.getAttribute('data-open')).closest('[data-drawer]');
+			document.querySelectorAll('[data-drawer].is-open').forEach(function (other) {
+				if (other !== shell) { other.classList.remove('is-open'); }
+			});
+			shell.classList.toggle('is-open');
+		}
+
+		if (close) {
+			close.closest('[data-drawer]').classList.remove('is-open');
+		}
+	});
+
+	/* One panel open on load, so the form is visible without a click. */
+	window.addEventListener('DOMContentLoaded', function () {
+		document.querySelector('#wm-after').closest('[data-drawer]').classList.add('is-open');
+	});
+</script>
+</body>
+</html>

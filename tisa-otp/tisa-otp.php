@@ -3,7 +3,7 @@
  * Plugin Name:       تیسا OTP — ورود و عضویت با کد یکبارمصرف
  * Plugin URI:        https://example.com/tisa-otp
  * Description:       ورود، عضویت و تأیید شماره موبایل با کد یکبارمصرف از طریق پیامک یا ایمیل؛ معماری ماژولار، کانال‌های قابل‌تعویض و محافظت چندلایه در برابر ربات.
- * Version:           1.2.0
+ * Version:           1.7.2
  * Requires at least: 6.1
  * Requires PHP:      7.4
  * Author:            Tisa
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'TISA_OTP_VERSION', '1.2.0' );
+define( 'TISA_OTP_VERSION', '1.7.2' );
 define( 'TISA_OTP_FILE', __FILE__ );
 define( 'TISA_OTP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'TISA_OTP_URL', plugin_dir_url( __FILE__ ) );

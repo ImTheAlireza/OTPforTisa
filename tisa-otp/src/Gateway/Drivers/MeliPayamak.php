@@ -59,6 +59,32 @@ final class MeliPayamak extends HttpGateway {
 		return $missing;
 	}
 
+	/**
+	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
+	 */
+	public function plan(): array {
+		$sender = trim( $this->option( 'meli_from' ) );
+		$issues = array();
+
+		foreach ( $this->missing() as $key ) {
+			$label    = isset( $this->fields()[ $key ]['label'] ) ? (string) $this->fields()[ $key ]['label'] : $key;
+			$issues[] = sprintf( /* translators: %s: settings field label */ __( 'مقدار «%s» تنظیم نشده است.', 'tisa-otp' ), $label );
+		}
+
+		if ( '' === $sender ) {
+			$issues[] = __( 'شماره فرستنده تنظیم نشده است؛ پنل ملی پیامک بدون آن پیام را رد می‌کند.', 'tisa-otp' );
+		}
+
+		return array(
+			'mode'     => 'text',
+			'sender'   => $sender,
+			'template' => '',
+			'endpoint' => self::ENDPOINT,
+			'issues'   => $issues,
+			'notes'    => array( __( 'اگر حساب شما فقط الگو (Pattern) دارد، ارسال متنی آزاد کار نمی‌کند.', 'tisa-otp' ) ),
+		);
+	}
+
 	public function deliver( DeliveryRequest $request ): GatewayResult {
 		if ( array() !== $this->missing() ) {
 			return $this->notConfigured( __( 'برای ملی پیامک نام کاربری و رمز را در تنظیمات کامل کنید.', 'tisa-otp' ) );

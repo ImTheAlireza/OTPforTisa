@@ -62,6 +62,8 @@ final class AccessScreen implements Bootable {
 		echo '<p>' . esc_html__( 'دو اهرم اضطراری: کدی برای روزی که پیامک قطع است، و فهرستی از شماره‌هایی که اجازه ورود ندارند.', 'tisa-otp' ) . '</p>';
 		echo '</div></div>';
 
+		ScreenNav::render( self::SLUG );
+
 		$this->notice();
 		$this->emergencyCard();
 		$this->blocklistCard();
@@ -78,7 +80,7 @@ final class AccessScreen implements Bootable {
 		$reveal  = $this->emergency->pull( get_current_user_id() );
 
 		echo '<section class="tisa-panel tisa-card"><h2>' . esc_html__( 'کد اضطراری', 'tisa-otp' ) . '</h2>';
-		echo '<p class="tisa-card__intro">' . esc_html__( 'اگر سامانه پیامکی از کار افتاد و کد ورود به دست شما نرسید، این کد جای کد یکبارمصرف را می‌گیرد. فقط برای حساب‌های موجود کار می‌کند و هرگز کاربر تازه نمی‌سازد.', 'tisa-otp' ) . '</p>';
+		echo '<p class="tisa-card__intro">' . esc_html__( 'برای وقتی که پیامک قطع است. فقط برای حساب‌های موجود؛ کاربر تازه نمی‌سازد.', 'tisa-otp' ) . '</p>';
 
 		if ( '' !== $reveal ) {
 			echo '<div class="tisa-secret"><span class="tisa-secret__label">' . esc_html__( 'کد تازه شما (فقط همین یک‌بار نمایش داده می‌شود)', 'tisa-otp' ) . '</span>';
@@ -255,7 +257,7 @@ final class AccessScreen implements Bootable {
 		$rules = $this->blocklist->all();
 
 		echo '<section class="tisa-panel tisa-card"><h2>' . esc_html__( 'فهرست مسدود', 'tisa-otp' ) . '</h2>';
-		echo '<p class="tisa-card__intro">' . esc_html__( 'شماره‌های مسدود پیش از هر بررسی دیگری رد می‌شوند: نه کدی گرفته می‌شود، نه سهمیه‌ای مصرف می‌شود و نه هزینه‌ای به سامانه پیامکی می‌رسد. برای پیش‌شماره کافی است چند رقم بنویسید، برای بازه از ستاره استفاده کنید (۰۹۱۲*۴۵).', 'tisa-otp' ) . '</p>';
+		echo '<p class="tisa-card__intro">' . esc_html__( 'پیش از هر بررسی دیگری رد می‌شوند و هزینه‌ای مصرف نمی‌شود. پیش‌شماره: چند رقم؛ بازه: ستاره (۰۹۱۲*۴۵).', 'tisa-otp' ) . '</p>';
 
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="tisa-access-form">';
 		echo '<input type="hidden" name="action" value="tisa_otp_block_add">';

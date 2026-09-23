@@ -11,6 +11,7 @@
 namespace TisaOtp\Front;
 
 use TisaOtp\Captcha\Manager;
+use TisaOtp\Config\Sanitizer;
 use TisaOtp\Config\Settings;
 use TisaOtp\Registration\FieldSchema;
 use TisaOtp\Support\View;
@@ -18,6 +19,16 @@ use TisaOtp\Support\View;
 defined( 'ABSPATH' ) || exit;
 
 final class FormRenderer {
+
+	/**
+	 * The font the form was designed in, shipped with the plugin.
+	 *
+	 * Vazirmatn (SIL OFL, see assets/fonts/OFL.txt) is a Persian-first family,
+	 * so a form inside a theme with no Persian glyphs stops falling back to
+	 * whatever the operating system has lying around. The names after it are
+	 * only there for the case where a site already loads its own copy.
+	 */
+	const FONT_STACK = "'Vazirmatn','Vazir','IRANSans','Iranian Sans',Tahoma,sans-serif";
 
 	/** @var Settings */
 	private $settings;
@@ -111,6 +122,9 @@ final class FormRenderer {
 			'regHint'      => $this->settings->str( 'register_subheading' ),
 			'redirect'     => $this->resolveRedirect( $args ),
 			'phoneLabel'   => __( 'شماره موبایل', 'tisa-otp' ),
+			// The chip already shows 09; the placeholder shows what is left to type.
+			'phonePlaceholder' => __( '09121234567', 'tisa-otp' ),
+			'trust'        => $this->trust(),
 			'codeLabel'    => __( 'کد تأیید', 'tisa-otp' ),
 			'sendLabel'    => $this->settings->str( 'label_send', __( 'دریافت کد تأیید', 'tisa-otp' ) ),
 			'verifyLabel'  => $this->settings->str( 'label_verify', __( 'ورود به حساب', 'tisa-otp' ) ),
@@ -135,6 +149,7 @@ final class FormRenderer {
 			'restUrl'      => esc_url_raw( rest_url( 'tisa-otp/v1/' ) ),
 			'honeypot'     => \TisaOtp\Guard\BotGuard::HONEYPOT,
 			'timestampKey' => \TisaOtp\Guard\BotGuard::TIMESTAMP,
+			'formToken'    => \TisaOtp\Support\FormToken::issue(),
 			'renderedAt'   => time(),
 		);
 	}
@@ -147,6 +162,39 @@ final class FormRenderer {
 	 *
 	 * @return array<int,array{id:string,label:string}>
 	 */
+	/**
+	 * The three quiet claims under the send button.
+	 *
+	 * Icons are inline SVG on purpose: this row has to work on a page with no
+	 * icon font, no external request and no theme stylesheet.
+	 *
+	 * @return array<int,array{icon:string,label:string}>
+	 */
+	private function trust(): array {
+		$items = array(
+			array(
+				'icon'  => '<path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path>',
+				'label' => __( 'بدون رمز عبور', 'tisa-otp' ),
+			),
+			array(
+				'icon'  => '<circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path>',
+				'label' => __( 'ورود در چند ثانیه', 'tisa-otp' ),
+			),
+			array(
+				'icon'  => '<rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path>',
+				'label' => __( 'شماره شما محفوظ می‌ماند', 'tisa-otp' ),
+			),
+		);
+
+		/**
+		 * Filter the reassurance row under the send button. Return an empty array
+		 * to hide it.
+		 *
+		 * @param array<int,array{icon:string,label:string}> $items Icon path plus label.
+		 */
+		return (array) apply_filters( 'tisa_otp_form_trust', $items );
+	}
+
 	private function steps(): array {
 		$phone = array(
 			'id'    => 'phone',
@@ -234,6 +282,24 @@ final class FormRenderer {
 		if ( $accent ) {
 			$parts[] = '--tisa-accent:' . $accent;
 		}
+
+		/*
+		 * The surface and the font are set here rather than on `:root`, because a
+		 * variable declared on `.tisa-otp` in the stylesheet beats one inherited
+		 * from `:root` — the settings used to be emitted per request and silently
+		 * lose to the stylesheet's own defaults.
+		 */
+		$surface = sanitize_hex_color( (string) $this->pick( $args, 'surface', $this->settings->str( 'surface', '#ffffff' ), array() ) );
+
+		if ( $surface ) {
+			$parts[] = '--tisa-surface:' . $surface;
+		}
+
+		$font = $this->fontFamily();
+
+		if ( '' !== $font ) {
+			$parts[] = '--tisa-font:' . $font;
+		}
 		if ( $width >= 280 && $width <= 900 ) {
 			$parts[] = '--tisa-width:' . $width . 'px';
 		}
@@ -242,6 +308,32 @@ final class FormRenderer {
 		}
 
 		return implode( ';', $parts );
+	}
+
+	/**
+	 * The font stack the form prints with.
+	 *
+	 * `theme` keeps the old behaviour (`inherit`), which is also the honest name
+	 * for it: the form then looks like whatever the site's theme uses, Persian
+	 * glyphs or not. The default is the font shipped in `assets/fonts`, which is
+	 * the same one the packaged preview renders with.
+	 */
+	private function fontFamily(): string {
+		$choice = $this->settings->str( 'form_font', 'vazirmatn' );
+
+		if ( 'theme' === $choice ) {
+			return 'inherit';
+		}
+
+		if ( 'custom' === $choice ) {
+			$custom = Sanitizer::fontFamily( $this->settings->str( 'form_font_custom' ) );
+
+			if ( '' !== $custom ) {
+				return $custom;
+			}
+		}
+
+		return self::FONT_STACK;
 	}
 
 	/**

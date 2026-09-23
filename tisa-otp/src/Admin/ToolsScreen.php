@@ -20,6 +20,8 @@ defined( 'ABSPATH' ) || exit;
 
 final class ToolsScreen implements Bootable {
 
+	const SLUG = 'tisa-otp-tools';
+
 	/** @var Settings */
 	private $settings;
 
@@ -55,7 +57,10 @@ final class ToolsScreen implements Bootable {
 
 		echo '<div class="wrap tisa-wrap" dir="rtl"><div class="tisa-header"><div class="tisa-header__title"><h1>' . esc_html__( 'ابزارها و وضعیت', 'tisa-otp' ) . '</h1></div></div>';
 
+		ScreenNav::render( self::SLUG );
+
 		$this->statusCards();
+		$this->doctorCard();
 		$this->testSendCard();
 		$this->importCard();
 		$this->housekeepingCard();
@@ -171,9 +176,23 @@ final class ToolsScreen implements Bootable {
 		);
 	}
 
+	/**
+	 * "Why did my SMS not arrive?" — answered before asking the question.
+	 */
+	private function doctorCard(): void {
+		echo '<section class="tisa-panel tisa-card" data-tisa-doctor>';
+		echo '<h2>' . esc_html__( 'سلامت ارسال و کپچا', 'tisa-otp' ) . '</h2>';
+		echo '<p class="tisa-card__intro">' . esc_html__( 'مسیر ارسال، شماره خط، آخرین خطا و دسترسی خروجی سرور.', 'tisa-otp' ) . '</p>';
+		echo '<p class="tisa-inline"><button type="button" class="button button-primary" data-tisa-doctor-refresh>' . esc_html__( 'بررسی سلامت', 'tisa-otp' ) . '</button>';
+		echo '<span class="tisa-note">' . esc_html__( 'هیچ پیامکی در این بخش ارسال نمی‌شود.', 'tisa-otp' ) . '</span></p>';
+		echo '<div class="tisa-doctor" data-tisa-doctor-report hidden></div>';
+		echo '<p class="tisa-result" data-tisa-doctor-result hidden></p>';
+		echo '</section>';
+	}
+
 	private function testSendCard(): void {
 		echo '<section class="tisa-panel tisa-card"><h2>' . esc_html__( 'ارسال آزمایشی', 'tisa-otp' ) . '</h2>';
-		echo '<p class="tisa-card__intro">' . esc_html__( 'یک کد واقعی به شماره زیر ارسال می‌شود تا تنظیمات سامانه را بسنجید.', 'tisa-otp' ) . '</p>';
+		echo '<p class="tisa-card__intro">' . esc_html__( 'یک کد واقعی به این شماره فرستاده می‌شود.', 'tisa-otp' ) . '</p>';
 
 		echo '<div class="tisa-inline">';
 		echo '<input type="tel" class="regular-text" dir="ltr" data-tisa-test-phone placeholder="09xxxxxxxxx">';
@@ -189,7 +208,7 @@ final class ToolsScreen implements Bootable {
 		$found = $this->importer->detect();
 
 		echo '<section class="tisa-panel tisa-card" data-tisa-import><h2>' . esc_html__( 'واردسازی شماره‌های قدیمی', 'tisa-otp' ) . '</h2>';
-		echo '<p class="tisa-card__intro">' . esc_html__( 'شماره‌های ذخیره‌شده توسط ووکامرس یا افزونه‌های مشابه را به کلید اصلی تیسا منتقل کنید. کار به‌صورت دسته‌ای اجرا و قابل بازگشت است.', 'tisa-otp' ) . '</p>';
+		echo '<p class="tisa-card__intro">' . esc_html__( 'شماره‌های ووکامرس را به کلید اصلی تیسا منتقل می‌کند؛ دسته‌ای و قابل بازگشت.', 'tisa-otp' ) . '</p>';
 
 		echo '<div class="tisa-inline">';
 		echo '<select data-tisa-import-source>';

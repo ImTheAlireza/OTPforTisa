@@ -4,21 +4,46 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>پیش‌نمایش و دانلود — تیسا OTP</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- The plugin's REAL stylesheet, served straight from tisa-otp/assets/css/front.css -->
+<!-- The font is not borrowed from a CDN any more: tisa-otp/assets/fonts is
+	     served with the plugin and declared in front.css, exactly as it is on a
+	     real site. -->
 <link rel="stylesheet" href="/plugin-assets/css/front.css">
 
 <style>
-	/* Preview chrome only — none of this ships with the plugin. */
+	/*
+	 * Preview chrome only — none of this ships with the plugin. It is written
+	 * to look like a real page around the form, because the form is what is
+	 * being judged and a bare white box makes every detail of it look cheap.
+	 */
+	:root {
+		--ink: #0f172a;
+		--ink-2: #334155;
+		--muted: #64748b;
+		--line: #e2e8f0;
+		--surface: #ffffff;
+		--accent: #0f766e;
+		--accent-soft: rgba(15, 118, 110, 0.1);
+		--radius: 16px;
+		--shadow-lg: 0 30px 60px -40px rgba(15, 23, 42, 0.45);
+		--shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+	}
+
+	* { box-sizing: border-box; }
+
 	body {
 		margin: 0;
-		background: #eef1f5;
-		color: #101828;
-		font-family: 'Vazirmatn', Tahoma, sans-serif;
+		background: #f1f5f9;
+		background-image:
+			radial-gradient(60rem 32rem at 88% -10%, rgba(15, 118, 110, 0.14), transparent 60%),
+			radial-gradient(48rem 28rem at 5% 8%, rgba(37, 99, 235, 0.12), transparent 62%);
+		color: var(--ink);
+		font-family: 'Vazirmatn', Tahoma, 'Segoe UI', sans-serif;
+		-webkit-font-smoothing: antialiased;
 	}
+
+	/* Top bar ------------------------------------------------------------- */
 
 	.demo-bar {
 		position: sticky;
@@ -26,170 +51,416 @@
 		z-index: 20;
 		display: flex;
 		flex-wrap: wrap;
-		gap: 10px 22px;
+		gap: 12px 18px;
 		align-items: center;
 		justify-content: space-between;
-		padding: 12px 22px;
-		background: #101828;
-		color: #e4e7ec;
+		padding: 12px 24px;
+		background: rgba(15, 23, 42, 0.96);
+		backdrop-filter: blur(10px);
+		color: #e2e8f0;
 		font-size: 13px;
 	}
 
-	.demo-bar a { color: #99f6e4; text-decoration: none; font-weight: 600; }
-	.demo-bar nav { display: flex; gap: 16px; flex-wrap: wrap; }
-	.demo-bar strong { color: #fff; }
+	.demo-brand { display: flex; align-items: center; gap: 11px; font-weight: 700; color: #fff; }
 
-	.demo-bar .dl {
-		padding: 7px 14px;
-		border-radius: 999px;
-		background: #0f766e;
+	.demo-brand__mark {
+		display: grid;
+		place-items: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 11px;
+		background: linear-gradient(160deg, #14b8a6, #0f766e);
 		color: #fff;
+		box-shadow: 0 8px 18px -10px rgba(20, 184, 166, 0.9);
 	}
+
+	.demo-brand__mark svg { width: 18px; height: 18px; }
+
+	.demo-brand__text { display: flex; flex-direction: column; line-height: 1.4; }
+	.demo-brand__text small { color: #94a3b8; font-weight: 500; font-size: 11.5px; }
+
+	.demo-bar nav { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+	.demo-bar nav a {
+		padding: 8px 13px;
+		border-radius: 999px;
+		color: #cbd5e1;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.demo-bar nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+	.demo-bar nav a.is-active { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+	.demo-bar nav a.dl {
+		background: linear-gradient(160deg, #14b8a6, #0f766e);
+		color: #fff;
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+	}
+
+	.demo-bar nav a.dl svg { width: 16px; height: 16px; }
+
+	/* Stage --------------------------------------------------------------- */
 
 	.demo-stage {
 		display: grid;
-		grid-template-columns: 260px minmax(0, 1fr);
-		gap: 24px;
-		max-width: 1160px;
-		margin: 26px auto 60px;
-		padding: 0 20px;
+		grid-template-columns: 304px minmax(0, 1fr);
+		gap: 26px;
+		max-width: 1200px;
+		margin: 26px auto 70px;
+		padding: 0 22px;
 		align-items: start;
 	}
 
+	/* Controls ------------------------------------------------------------ */
+
 	.demo-controls {
 		position: sticky;
-		top: 74px;
-		padding: 18px;
-		border-radius: 14px;
-		background: #fff;
-		border: 1px solid #e4e7ec;
+		top: 78px;
+		display: grid;
+		gap: 18px;
+		padding: 20px;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: rgba(255, 255, 255, 0.92);
+		backdrop-filter: blur(6px);
+		box-shadow: var(--shadow-sm);
 		font-size: 13px;
 	}
 
-	.demo-controls h2 { margin: 0 0 4px; font-size: 14px; }
+	.demo-controls header h2 { margin: 0 0 4px; font-size: 15px; }
+	.demo-controls header p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.8; }
 
-	.demo-controls p.note {
-		margin: 0 0 14px;
-		color: #667085;
-		font-size: 12px;
-		line-height: 1.7;
+	.demo-group { display: grid; gap: 9px; }
+
+	.demo-group > h3 {
+		margin: 0;
+		color: var(--muted);
+		font-size: 11.5px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		text-transform: none;
 	}
 
-	.demo-controls fieldset { margin: 0 0 14px; padding: 0; border: 0; }
+	.demo-row { display: flex; flex-wrap: wrap; gap: 6px; }
 
-	.demo-controls legend { padding: 0; color: #667085; font-size: 12px; font-weight: 600; }
-
-	.demo-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+	/* A segmented control, not a row of loose pills. */
+	.demo-seg {
+		display: flex;
+		gap: 4px;
+		padding: 4px;
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		background: #f8fafc;
+	}
 
 	.demo-chip {
-		padding: 6px 11px;
-		border: 1px solid #e4e7ec;
-		border-radius: 999px;
-		background: #fff;
-		color: #344054;
+		flex: 1 1 auto;
+		padding: 7px 11px;
+		border: 0;
+		border-radius: 9px;
+		background: transparent;
+		color: var(--ink-2);
 		font-family: inherit;
 		font-size: 12px;
 		font-weight: 600;
+		white-space: nowrap;
 		cursor: pointer;
+		transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
 	}
+
+	.demo-chip:hover { background: rgba(15, 23, 42, 0.05); }
 
 	.demo-chip.is-active {
-		border-color: #0f766e;
-		background: rgba(15, 118, 110, 0.1);
-		color: #0f766e;
+		background: var(--surface);
+		color: var(--accent);
+		box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
 	}
 
+	.demo-chip[data-behavior].is-active { color: #b42318; }
+
+	.demo-swatches { display: flex; gap: 8px; }
+
 	.demo-swatch {
-		width: 26px;
-		height: 26px;
+		width: 28px;
+		height: 28px;
 		padding: 0;
 		border: 2px solid #fff;
 		border-radius: 50%;
-		box-shadow: 0 0 0 1px #e4e7ec;
+		box-shadow: 0 0 0 1px var(--line);
 		cursor: pointer;
 	}
 
-	.demo-swatch.is-active { box-shadow: 0 0 0 2px #101828; }
+	.demo-swatch.is-active { box-shadow: 0 0 0 2px var(--ink); }
 
 	.demo-hints {
-		margin-top: 16px;
-		padding: 12px;
-		border-radius: 10px;
-		background: #f9fafb;
-		border: 1px dashed #e4e7ec;
-		color: #475467;
+		display: grid;
+		gap: 6px;
+		padding: 13px;
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		background: #f8fafc;
+		color: var(--ink-2);
 		font-size: 12px;
-		line-height: 2;
+		line-height: 1.9;
 	}
+
+	.demo-hints b { color: var(--ink); font-size: 12.5px; }
 
 	.demo-hints code {
 		direction: ltr;
 		unicode-bidi: embed;
-		background: #fff;
-		padding: 1px 6px;
+		padding: 1px 7px;
+		border: 1px solid var(--line);
 		border-radius: 6px;
-		border: 1px solid #e4e7ec;
-		color: #0f766e;
+		background: #fff;
+		color: var(--accent);
 		font-weight: 700;
+		font-size: 11.5px;
 	}
 
-	.demo-page {
-		padding: 34px 24px 46px;
-		border-radius: 18px;
+	/* Canvas: a fake site around the real form ---------------------------- */
+
+	.demo-canvas {
+		overflow: hidden;
+		border: 1px solid var(--line);
+		border-radius: 22px;
+		background: var(--surface);
+		box-shadow: var(--shadow-lg);
+		transition: background-color 240ms ease;
+	}
+
+	.demo-canvas__bar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 16px;
+		border-bottom: 1px solid var(--line);
+		background: #f8fafc;
+	}
+
+	.demo-canvas__dot { width: 10px; height: 10px; border-radius: 50%; background: #e2e8f0; }
+	.demo-canvas__dot:nth-child(1) { background: #fda4af; }
+	.demo-canvas__dot:nth-child(2) { background: #fcd34d; }
+	.demo-canvas__dot:nth-child(3) { background: #86efac; }
+
+	.demo-canvas__url {
+		flex: 1 1 auto;
+		margin-inline-start: 8px;
+		padding: 5px 12px;
+		border: 1px solid var(--line);
+		border-radius: 999px;
 		background: #fff;
-		border: 1px solid #e4e7ec;
-		min-height: 520px;
+		color: var(--muted);
+		font-size: 11.5px;
+		direction: ltr;
+		text-align: left;
+	}
+
+	.demo-site {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12px 20px;
+		align-items: center;
+		justify-content: space-between;
+		padding: 16px 26px;
+		border-bottom: 1px solid var(--line);
+		background: #fff;
+	}
+
+	.demo-site__logo { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 14px; }
+
+	.demo-site__logo span {
+		display: grid;
+		place-items: center;
+		width: 26px;
+		height: 26px;
+		border-radius: 8px;
+		background: var(--accent-soft);
+		color: var(--accent);
+		font-size: 12px;
+	}
+
+	.demo-site__nav { display: flex; gap: 18px; color: var(--muted); font-size: 12.5px; }
+
+	.demo-page {
+		min-height: 480px;
+		padding: 40px 26px 48px;
+		background: #fff;
+		transition: background 240ms ease;
 	}
 
 	.demo-page--pattern {
-		background-image: radial-gradient(circle at 18% 12%, rgba(15, 118, 110, 0.1), transparent 42%),
-			radial-gradient(circle at 82% 78%, rgba(124, 58, 237, 0.12), transparent 45%);
+		background-image:
+			radial-gradient(circle at 16% 10%, rgba(15, 118, 110, 0.12), transparent 42%),
+			radial-gradient(circle at 86% 82%, rgba(124, 58, 237, 0.14), transparent 46%);
 	}
 
-	.demo-page--dark {
-		background: #0b1220;
-		background-image: radial-gradient(circle at 20% 10%, rgba(15, 118, 110, 0.35), transparent 45%),
-			radial-gradient(circle at 80% 85%, rgba(124, 58, 237, 0.3), transparent 45%);
+	.demo-page--dark { background: #0b1220; }
+
+	.demo-canvas.is-dark { border-color: #1f2937; }
+	.demo-canvas.is-dark .demo-canvas__bar { border-color: #1f2937; background: #0b1220; }
+	.demo-canvas.is-dark .demo-canvas__url { border-color: #1f2937; background: rgba(255, 255, 255, 0.04); color: #94a3b8; }
+	.demo-canvas.is-dark .demo-site { border-color: #1f2937; background: #111c2e; color: #e2e8f0; }
+	.demo-canvas.is-dark .demo-site__nav { color: #94a3b8; }
+	.demo-canvas.is-dark .demo-site__logo span { background: rgba(20, 184, 166, 0.16); color: #5eead4; }
+
+	.demo-hostile {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		align-items: center;
+		justify-content: center;
+		max-width: 460px;
+		margin: 0 auto 22px;
 	}
 
-	.demo-caption { margin: 0 0 22px; color: #667085; font-size: 12.5px; text-align: center; }
+	.demo-hostile__note {
+		color: var(--muted);
+		font-size: 11.5px;
+	}
 
-	@media (max-width: 900px) {
+	/*
+	 * The hostile theme, applied to the demo page only. Everything here is what
+	 * a real theme does to a form it knows nothing about: a font of its own, a
+	 * grey button from the admin palette, a bold everything, tinted links.
+	 */
+	.demo-page.is-hostile,
+	.demo-page.is-hostile * {
+		font-family: 'Courier New', monospace !important;
+		letter-spacing: 0.08em !important;
+		text-transform: none !important;
+		color: #7c2d12 !important;
+	}
+
+	.demo-page.is-hostile button {
+		background: #f0f0f1 !important;
+		background-image: none !important;
+		border: 1px solid #c3c4c7 !important;
+		border-radius: 3px !important;
+		color: #50575e !important;
+		height: auto !important;
+		padding: 4px 8px !important;
+		box-shadow: none !important;
+	}
+
+	.demo-page.is-hostile input,
+	.demo-page.is-hostile .tisa-phone__input,
+	.demo-page.is-hostile .tisa-code__box {
+		background: #fffdf5 !important;
+		border-color: #d97706 !important;
+		border-radius: 0 !important;
+		font-weight: 700 !important;
+	}
+
+	.demo-page.is-hostile ::placeholder {
+		color: #111827 !important;
+		opacity: 1 !important;
+	}
+
+	.demo-page.is-hostile h1,
+	.demo-page.is-hostile h2,
+	.demo-page.is-hostile h3,
+	.demo-page.is-hostile strong,
+	.demo-page.is-hostile b {
+		font-size: 26px !important;
+		font-weight: 900 !important;
+		text-shadow: 0 1px 0 #fde68a !important;
+	}
+
+	.demo-page.is-hostile ol,
+	.demo-page.is-hostile ul,
+	.demo-page.is-hostile li {
+		list-style: square inside !important;
+		color: #b45309 !important;
+	}
+
+	.demo-page__note {
+		max-width: 460px;
+		margin: 0 auto 26px;
+		color: var(--muted);
+		font-size: 12px;
+		line-height: 1.9;
+		text-align: center;
+		transition: color 240ms ease;
+	}
+
+	.demo-page__note code {
+		direction: ltr;
+		unicode-bidi: embed;
+		padding: 1px 6px;
+		border: 1px solid var(--line);
+		border-radius: 6px;
+		background: #fff;
+		color: var(--accent);
+		font-weight: 700;
+		font-size: 11.5px;
+	}
+
+	.demo-page--dark .demo-page__note { color: #94a3b8; }
+	.demo-page--dark .demo-page__note code { background: rgba(255, 255, 255, 0.06); border-color: #1f2937; color: #5eead4; }
+
+	@media (max-width: 960px) {
 		.demo-stage { grid-template-columns: minmax(0, 1fr); }
 		.demo-controls { position: static; }
+	}
+
+	@media (max-width: 520px) {
+		.demo-page { padding: 26px 16px 32px; }
+		.demo-site { padding: 14px 16px; }
+		.demo-bar { padding: 10px 14px; }
 	}
 </style>
 </head>
 <body>
 
 <div class="demo-bar">
-	<strong>تیسا OTP — پیش‌نمایش رابط کاربری</strong>
+	<div class="demo-brand">
+		<span class="demo-brand__mark" aria-hidden="true">
+			<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12.5 3.5a4 4 0 0 0-3.9 5l-5.1 5.1V17h3.4l5.1-5.1a4 4 0 0 0 5-3.9l-2.7 2.7-2.4-2.4 2.6-2.8Z" stroke-linejoin="round"></path></svg>
+		</span>
+		<span class="demo-brand__text">
+			تیسا OTP
+			<small>پیش‌نمایش زندهٔ رابط کاربری · نسخهٔ ۱.۶.۱</small>
+		</span>
+	</div>
+
 	<nav>
-		<a href="/">فرم ورود</a>
-		<a class="dl" href="/download/tisa-otp.zip" download>⬇ دانلود tisa-otp.zip</a>
+		<a class="is-active" href="/">فرم ورود</a>
+		<a href="/account">پنل کاربری</a>
+		<a href="/woodmart">سایدبار وودمارت</a>
+		<a href="/admin">پیشخوان</a>
+		<a class="dl" href="/download/tisa-otp.zip" download>
+			<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 3.5v9m0 0 3.2-3.2M10 12.5 6.8 9.3" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 15.5h12" stroke-linecap="round"></path></svg>
+			دانلود بسته
+		</a>
 	</nav>
 </div>
 
 <div class="demo-stage">
 
 	<aside class="demo-controls">
-		<h2>تنظیمات ظاهری</h2>
-		<p class="note">همان گزینه‌های تب «ظاهر فرم» در پیشخوان؛ در افزونه سمت سرور روی مارک‌آپ اعمال می‌شوند.</p>
+		<header>
+			<h2>تنظیمات ظاهری</h2>
+			<p>همان گزینه‌های تب «ظاهر فرم» در پیشخوان. در افزونه سمت سرور روی فرم اعمال می‌شوند.</p>
+		</header>
 
-		<fieldset>
-			<legend>پوسته (کلیدهای ۱ تا ۵)</legend>
-			<div class="demo-chips" data-skins>
+		<section class="demo-group">
+			<h3>پوسته (کلیدهای ۱ تا ۵)</h3>
+			<div class="demo-seg" data-skins>
 				<button type="button" class="demo-chip is-active" data-skin="line">خطی</button>
 				<button type="button" class="demo-chip" data-skin="card">کارت</button>
 				<button type="button" class="demo-chip" data-skin="glass">شیشه‌ای</button>
 				<button type="button" class="demo-chip" data-skin="slate">تیره</button>
 				<button type="button" class="demo-chip" data-skin="pill">گرد</button>
 			</div>
-		</fieldset>
+		</section>
 
-		<fieldset>
-			<legend>رنگ تأکیدی</legend>
-			<div class="demo-chips" data-accents>
+		<section class="demo-group">
+			<h3>رنگ تأکیدی</h3>
+			<div class="demo-swatches" data-accents>
 				<button type="button" class="demo-swatch is-active" data-accent="#0f766e" style="background:#0f766e" aria-label="سبز"></button>
 				<button type="button" class="demo-swatch" data-accent="#2563eb" style="background:#2563eb" aria-label="آبی"></button>
 				<button type="button" class="demo-swatch" data-accent="#7c3aed" style="background:#7c3aed" aria-label="بنفش"></button>
@@ -197,68 +468,103 @@
 				<button type="button" class="demo-swatch" data-accent="#ea580c" style="background:#ea580c" aria-label="نارنجی"></button>
 				<button type="button" class="demo-swatch" data-accent="#111827" style="background:#111827" aria-label="مشکی"></button>
 			</div>
-		</fieldset>
+		</section>
 
-		<fieldset>
-			<legend>ورودی کد</legend>
-			<div class="demo-chips" data-code-inputs>
+		<section class="demo-group">
+			<h3>ورودی کد</h3>
+			<div class="demo-seg" data-code-inputs>
 				<button type="button" class="demo-chip is-active" data-code-input="boxes">خانه‌های جدا</button>
 				<button type="button" class="demo-chip" data-code-input="single">یک کادر</button>
 			</div>
-		</fieldset>
+		</section>
 
-		<fieldset>
-			<legend>چینش و عرض</legend>
-			<div class="demo-chips" data-aligns>
+		<section class="demo-group">
+			<h3>چینش</h3>
+			<div class="demo-seg" data-aligns>
 				<button type="button" class="demo-chip is-active" data-align="center">مرکز</button>
 				<button type="button" class="demo-chip" data-align="start">ابتدا</button>
 				<button type="button" class="demo-chip" data-align="end">انتها</button>
 			</div>
-			<div class="demo-chips" data-widths>
+		</section>
+
+		<section class="demo-group">
+			<h3>عرض فرم</h3>
+			<div class="demo-seg" data-widths>
 				<button type="button" class="demo-chip" data-width="360">۳۶۰</button>
 				<button type="button" class="demo-chip is-active" data-width="420">۴۲۰</button>
 				<button type="button" class="demo-chip" data-width="520">۵۲۰</button>
 			</div>
-		</fieldset>
+		</section>
 
-		<fieldset>
-			<legend>پس‌زمینه صفحه</legend>
-			<div class="demo-chips" data-backdrops>
+		<section class="demo-group">
+			<h3>پس‌زمینه صفحه</h3>
+			<div class="demo-seg" data-backdrops>
 				<button type="button" class="demo-chip is-active" data-backdrop="plain">ساده</button>
 				<button type="button" class="demo-chip" data-backdrop="pattern">الگودار</button>
 				<button type="button" class="demo-chip" data-backdrop="dark">تیره</button>
 			</div>
-		</fieldset>
+		</section>
 
-		<fieldset>
-			<legend>رفتار (نسخه ۱.۰.۱)</legend>
-			<div class="demo-chips" data-behaviors>
+		<section class="demo-group">
+			<h3>رفتار</h3>
+			<div class="demo-row" data-behaviors>
 				<button type="button" class="demo-chip is-active" data-behavior="auto-verify">بررسی خودکار کد</button>
-				<button type="button" class="demo-chip" data-behavior="stale-nonce">nonce کهنه (کش صفحه)</button>
+				<button type="button" class="demo-chip" data-behavior="stale-nonce">nonce کهنه</button>
+				<button type="button" class="demo-chip" data-behavior="stale-form">فرم کهنه</button>
+				<button type="button" class="demo-chip" data-behavior="captcha">کپچای مسدود</button>
 				<button type="button" class="demo-chip" data-behavior="short-timeout">مهلت ۲ ثانیه</button>
 				<button type="button" class="demo-chip" data-behavior="webotp">WebOTP</button>
 			</div>
-			<p class="note">
-				«nonce کهنه» نخستین درخواست را با ۴۰۳ رد می‌کند تا بازیابی خودکار را ببینید.
-				«مهلت ۲ ثانیه» را با شمارهٔ <code>09129999999</code> (سامانهٔ کند) امتحان کنید.
-				WebOTP فقط در کروم/اندروید روی پیامک واقعی کار می‌کند.
+			<p class="demo-hints">
+				«nonce کهنه» و «فرم کهنه» نخستین درخواست را رد می‌کنند تا بازیابی خودکار را ببینید؛
+				«کپچای مسدود» حالتی است که اسکریپت کپچا در مرورگر باز نمی‌شود.
 			</p>
-		</fieldset>
+		</section>
 
 		<div class="demo-hints">
-			شماره‌های آزمایشی:<br>
-			<code>09121234567</code> کاربر موجود ← مستقیم کد<br>
-			<code>09351112233</code> کاربر تازه ← فرم عضویت<br>
-			<code>09000000000</code> خطای فاصله ارسال<br>
-			<code>09111111111</code> خطای کپچا<br>
-			<code>09129999999</code> سامانهٔ کُند ← مهلت درخواست<br>
-			کد تأیید: <code>12345</code>
+			<b>شماره‌های آزمایشی</b>
+			<span><code>09121234567</code> کاربر موجود ← مستقیم به مرحلهٔ کد</span>
+			<span><code>09351112233</code> کاربر تازه ← فرم عضویت</span>
+			<span><code>09000000000</code> فاصلهٔ ارسال دوباره</span>
+			<span><code>09111111111</code> خطای کپچا</span>
+			<span><code>09129999999</code> سامانهٔ کُند ← مهلت درخواست</span>
+			<span>کد تأیید: <code>12345</code></span>
 		</div>
 	</aside>
 
 	<main>
-		<div class="demo-page" id="demo-page">
-			<p class="demo-caption">مارک‌آپ زیر دقیقاً همان چیزی است که <code>templates/form.php</code> و پارتیشن‌هایش چاپ می‌کنند.</p>
+		<div class="demo-canvas">
+			<div class="demo-canvas__bar" aria-hidden="true">
+				<span class="demo-canvas__dot"></span>
+				<span class="demo-canvas__dot"></span>
+				<span class="demo-canvas__dot"></span>
+				<span class="demo-canvas__url">https://example.ir/login</span>
+			</div>
+
+			<div class="demo-site" aria-hidden="true">
+				<span class="demo-site__logo"><span>تیسا</span> فروشگاه نمونه</span>
+				<span class="demo-site__nav"><span>فروشگاه</span><span>پشتیبانی</span><span>ورود</span></span>
+			</div>
+
+			<div class="demo-page" id="demo-page">
+				<p class="demo-page__note">
+					این همان فرمی است که افزونه در سایت شما چاپ می‌کند؛ تنظیمات کنار صفحه را بزنید و
+					همین‌جا نتیجه را ببینید.
+				</p>
+
+				<!--
+				  The hostile-theme switch. It writes a theme's worth of aggressive CSS
+				  (with !important) over this whole page — everything except the form,
+				  which lives in its own shadow root and cannot see it.
+				-->
+				<div class="demo-hostile">
+					<button type="button" class="demo-chip" id="demo-hostile" aria-pressed="false">
+						پوستهٔ مزاحم را روشن کن
+					</button>
+					<span class="demo-hostile__note">
+						فرم داخل Shadow DOM است؛ این پوسته فقط دور و برش را عوض می‌کند.
+					</span>
+				</div>
 
 			<!-- ↓↓↓ markup produced by FormRenderer::render() ↓↓↓ -->
 			<div
@@ -271,6 +577,7 @@
 				data-config-url="/mock/tisa-otp/v1/form-config"
 				data-cache-mode="auto"
 				data-nonce="demo-nonce"
+				data-form-token="demo-form-token"
 				data-cooldown="60"
 				data-code-length="5"
 				data-flow="fields_then_code"
@@ -283,6 +590,7 @@
 
 					<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
 					<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="1758146400">
+					<input type="hidden" name="tisa_ft" value="demo-form-token">
 
 					<ol class="tisa-otp__steps" data-tisa-steps aria-hidden="true">
 						<li class="is-current" data-tisa-step-marker="phone">شماره</li>
@@ -298,6 +606,7 @@
 							<path d="M10 13.6h.01" stroke-linecap="round"></path>
 						</svg>
 						<div class="tisa-otp__status-body">
+							<p class="tisa-otp__status-title" data-tisa-status-title hidden></p>
 							<p class="tisa-otp__status-text" data-tisa-status-text></p>
 							<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
 						</div>
@@ -313,8 +622,7 @@
 						<div class="tisa-field">
 							<label class="tisa-field__label" for="tisa-form-1-demo-phone">شماره موبایل</label>
 							<div class="tisa-phone">
-								<span class="tisa-phone__dial" aria-hidden="true">۰۹</span>
-								<input class="tisa-field__input tisa-phone__input" id="tisa-form-1-demo-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09xxxxxxxxx" data-tisa-phone aria-describedby="tisa-form-1-demo-phone-hint tisa-form-1-demo-phone-error" aria-invalid="false" required>
+								<input class="tisa-field__input tisa-phone__input" id="tisa-form-1-demo-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09121234567" data-tisa-phone aria-describedby="tisa-form-1-demo-phone-hint tisa-form-1-demo-phone-error" aria-invalid="false" required>
 							</div>
 							<p class="tisa-field__error" id="tisa-form-1-demo-phone-error" data-tisa-error="phone" role="alert" hidden></p>
 						</div>
@@ -325,6 +633,22 @@
 							<span class="tisa-btn__label">دریافت کد تأیید</span>
 							<span class="tisa-btn__spinner" aria-hidden="true"></span>
 						</button>
+
+						<ul class="tisa-otp__trust">
+							<li class="tisa-otp__trust-item">
+								<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+								<span>بدون رمز عبور</span>
+							</li>
+							<li class="tisa-otp__trust-item">
+								<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+								<span>ورود در چند ثانیه</span>
+							</li>
+							<li class="tisa-otp__trust-item">
+								<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path></svg>
+								<span>شماره شما محفوظ می‌ماند</span>
+							</li>
+						</ul>
+
 					</section>
 
 					<!-- step-fields.php -->
@@ -353,10 +677,23 @@
 								<p class="tisa-field__error" id="tisa-form-1-demo-f-user_email-error" data-tisa-error="user_email" role="alert" hidden></p>
 							</div>
 
-							<div class="tisa-field tisa-field--full" data-tisa-field="city">
+							<div class="tisa-field tisa-field--half" data-tisa-field="city">
 								<label class="tisa-field__label" for="tisa-form-1-demo-f-city">شهر</label>
 								<input class="tisa-field__input" id="tisa-form-1-demo-f-city" type="text" data-tisa-input="city" aria-describedby="tisa-form-1-demo-f-city-error" aria-invalid="false">
 								<p class="tisa-field__error" id="tisa-form-1-demo-f-city-error" data-tisa-error="city" role="alert" hidden></p>
+							</div>
+
+							<div class="tisa-field tisa-field--half" data-tisa-field="postcode">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-postcode">کد پستی</label>
+								<input class="tisa-field__input" id="tisa-form-1-demo-f-postcode" type="text" inputmode="numeric" dir="ltr" maxlength="10" autocomplete="postal-code" placeholder="1234567890" data-tisa-input="postcode" aria-describedby="tisa-form-1-demo-f-postcode-error" aria-invalid="false">
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-postcode-error" data-tisa-error="postcode" role="alert" hidden></p>
+							</div>
+
+							<div class="tisa-field tisa-field--full" data-tisa-field="address">
+								<label class="tisa-field__label" for="tisa-form-1-demo-f-address">آدرس</label>
+								<textarea class="tisa-field__input" id="tisa-form-1-demo-f-address" rows="3" data-tisa-input="address" aria-describedby="tisa-form-1-demo-f-address-hint tisa-form-1-demo-f-address-error" aria-invalid="false"></textarea>
+								<p class="tisa-field__hint" id="tisa-form-1-demo-f-address-hint">خیابان، کوچه، پلاک و واحد را کامل بنویسید.</p>
+								<p class="tisa-field__error" id="tisa-form-1-demo-f-address-error" data-tisa-error="address" role="alert" hidden></p>
 							</div>
 						</div>
 
@@ -377,6 +714,12 @@
 							<p class="tisa-step__hint">کد ارسال‌شده به <span class="tisa-otp__masked" data-tisa-masked>—</span> را وارد کنید.</p>
 						</header>
 
+						<div class="tisa-code__phone" data-tisa-phone-chip hidden>
+							<span class="tisa-code__phone-label">کد ارسال‌شده به</span>
+							<strong class="tisa-code__phone-value" data-tisa-phone-chip-value dir="ltr">—</strong>
+							<button type="button" class="tisa-link" data-tisa-action="edit-phone">ویرایش شماره</button>
+						</div>
+
 						<div class="tisa-code" data-tisa-code>
 							<label class="tisa-screen-reader" for="tisa-form-1-demo-code">کد تأیید</label>
 							<input class="tisa-code__bulk" id="tisa-form-1-demo-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="5" data-tisa-code-bulk aria-describedby="tisa-form-1-demo-boxes" aria-invalid="false">
@@ -388,6 +731,11 @@
 								<input class="tisa-code__box" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="رقم ۵" aria-invalid="false" data-tisa-box="4">
 							</div>
 						</div>
+
+						<button type="button" class="tisa-link tisa-code__paste" data-tisa-paste>
+							<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="6.5" y="3.5" width="9" height="12" rx="2"></rect><path d="M4.5 6.5v8a2 2 0 0 0 2 2h6" stroke-linecap="round"></path></svg>
+							<span>چسباندن کد از پیامک</span>
+						</button>
 
 						<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="verify">
 							<span class="tisa-btn__label">ورود به حساب</span>
@@ -406,11 +754,16 @@
 						<div class="tisa-code__cooldown" data-tisa-cooldown aria-hidden="true" hidden><i></i></div>
 
 						<div class="tisa-code__rescue" data-tisa-rescue hidden>
-							<p class="tisa-code__rescue-title">پیامک نرسید؟</p>
-							<div class="tisa-code__rescue-actions">
-								<button type="button" class="tisa-link" data-tisa-action="resend">ارسال دوبارهٔ کد</button>
-								<button type="button" class="tisa-link" data-tisa-action="edit-phone">شماره را اصلاح می‌کنم</button>
-							</div>
+							<p class="tisa-code__rescue-title">
+								<span class="tisa-code__rescue-icon" aria-hidden="true">
+									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" focusable="false"><circle cx="10" cy="10" r="7"></circle><path d="M10 6.2V10l2.6 1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+								</span>
+								پیامک نرسید؟
+							</p>
+							<ul class="tisa-code__rescue-list">
+								<li>معمولاً تا یک دقیقه می‌رسد؛ اگر نرسید، «ارسال دوبارهٔ کد» را بزنید.</li>
+								<li>اگر شماره را اشتباه وارد کرده‌اید، «ویرایش شماره» را بزنید.</li>
+							</ul>
 						</div>
 
 						<p class="tisa-screen-reader" role="status" aria-live="polite" data-tisa-resend-live></p>
@@ -418,7 +771,8 @@
 
 				</form>
 			</div>
-			<!-- ↑↑↑ end of FormRenderer output ↑↑↑ -->
+				<!-- ↑↑↑ end of FormRenderer output ↑↑↑ -->
+			</div>
 		</div>
 	</main>
 </div>
@@ -441,7 +795,19 @@
 		ttl: 120,
 		channel: 'sms',
 		skin: 'line',
-		captcha: { enabled: false, provider: 'none' },
+		formToken: 'demo-form-token',
+		captcha: { enabled: false, provider: 'none', config: {} },
+		isolate: true,
+		css: '/plugin-assets/css/front.css',
+		assets: '/plugin-assets/',
+		vars: {
+			'tisa-accent': '#0f766e',
+			'tisa-accent-strong': '#0b5c56',
+			'tisa-accent-soft': 'rgba(15, 118, 110, 0.14)',
+			'tisa-surface': '#ffffff',
+			'tisa-radius': '14px',
+			'tisa-width': '420px'
+		},
 		labels: {
 			send: 'دریافت کد ورود',
 			verify: 'ورود به حساب',
@@ -511,11 +877,33 @@
 			return 'rgba(' + parseInt(value.substr(0, 2), 16) + ', ' + parseInt(value.substr(2, 2), 16) + ', ' + parseInt(value.substr(4, 2), 16) + ', ' + alpha + ')';
 		}
 
+		/* Same rule as Assets::mix() in PHP: the plugin derives the darker
+		   shade from the accent, so the preview has to as well. */
+		function shade(hex, ratio) {
+			var value = hex.replace('#', '');
+			var out = '';
+
+			for (var i = 0; i < 3; i++) {
+				var part = Math.round(parseInt(value.substr(i * 2, 2), 16) * (1 - ratio));
+				out += ('0' + part.toString(16)).slice(-2);
+			}
+
+			return '#' + out;
+		}
+
 		function setBackdrop(mode) {
 			page.classList.remove('demo-page--pattern', 'demo-page--dark');
 
 			if (mode !== 'plain') {
 				page.classList.add('demo-page--' + mode);
+			}
+
+			// The fake browser chrome follows, otherwise a dark page sits inside
+			// a white frame and looks like a rendering mistake.
+			var canvas = page.closest('.demo-canvas');
+
+			if (canvas) {
+				canvas.classList.toggle('is-dark', 'dark' === mode);
 			}
 
 			var container = document.querySelector('[data-backdrops]');
@@ -553,6 +941,7 @@
 		bind('accents', 'accent', function (accent) {
 			form.style.setProperty('--tisa-accent', accent);
 			form.style.setProperty('--tisa-accent-soft', hexToRgba(accent, 0.14));
+			form.style.setProperty('--tisa-accent-strong', shade(accent, 0.22));
 		});
 
 		bind('code-inputs', 'code-input', function (mode) {
@@ -569,6 +958,23 @@
 		});
 
 		bind('backdrops', 'backdrop', setBackdrop);
+
+		/*
+		 * The form is already inside a shadow root by the time this runs, so the
+		 * hostile stylesheet below reaches every element around it and none
+		 * inside it. That is the whole demonstration.
+		 */
+		var hostile = document.getElementById('demo-hostile');
+
+		if (hostile) {
+			hostile.addEventListener('click', function () {
+				var on = page.classList.toggle('is-hostile');
+
+				hostile.classList.toggle('is-active', on);
+				hostile.setAttribute('aria-pressed', on ? 'true' : 'false');
+				hostile.textContent = on ? 'پوستهٔ مزاحم را خاموش کن' : 'پوستهٔ مزاحم را روشن کن';
+			});
+		}
 
 		/* Runtime flags added in 1.0.1 — the plugin sets them from the settings page. */
 		function applyBehavior(name, on) {
@@ -594,6 +1000,50 @@
 				set('timeoutMs', on ? 2000 : 15000);
 			} else if (name === 'webotp') {
 				set('webOtp', on);
+			} else if (name === 'captcha') {
+				// The bundle the plugin hands out when a provider is configured, but
+				// the vendor script never answers — the failure that used to leave an
+				// empty gap and a dead form.
+				var bundle = on
+					? {
+						enabled: true,
+						provider: 'hcaptcha',
+						siteKey: '10000000-ffff-ffff-ffff-000000000001',
+						kind: 'widget',
+						scripts: ['/mock/captcha-unreachable.js'],
+						failOpen: true,
+						loadTimeout: 3000,
+						config: {}
+					}
+					: { enabled: false, provider: 'none', config: {} };
+
+				set('captcha', bundle);
+
+				if (live && live.captcha) {
+					live.captcha.conf = bundle;
+					live.captcha.config = bundle.config || {};
+					live.captcha.pending = null;
+					live.captcha.unavailable = false;
+					live.captcha.container.textContent = '';
+
+					if (bundle.enabled) {
+						live.captcha.prepare();
+					}
+				}
+			} else if (name === 'stale-form') {
+				var token = on ? 'stale-form-token' : 'demo-form-token';
+				var hidden = form.querySelector('input[name="tisa_ft"]');
+
+				form.setAttribute('data-form-token', token);
+				set('formToken', token);
+
+				if (hidden) {
+					hidden.value = token;
+				}
+
+				if (live) {
+					live.formToken = token;
+				}
 			}
 		}
 

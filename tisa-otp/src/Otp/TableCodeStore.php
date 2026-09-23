@@ -100,6 +100,30 @@ final class TableCodeStore implements CodeStore {
 		);
 	}
 
+	/**
+	 * Claim a record with a conditional update, and let the database arbitrate.
+	 *
+	 * The `consumed = 0` in the WHERE clause is the whole trick: MySQL reports
+	 * how many rows it actually changed, so a second request in the same second
+	 * sees `0` and loses the race instead of replaying the code.
+	 */
+	public function claim( CodeRecord $record ): bool {
+		global $wpdb;
+
+		if ( $record->id() <= 0 ) {
+			return false;
+		}
+
+		$changed = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare(
+				'UPDATE ' . $this->table() . ' SET consumed = 1 WHERE id = %d AND consumed = 0',
+				$record->id()
+			) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		);
+
+		return 1 === (int) $changed;
+	}
+
 	public function revoke( string $fingerprint ): void {
 		global $wpdb;
 

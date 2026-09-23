@@ -13,7 +13,10 @@ namespace TisaOtp\Admin;
 use TisaOtp\Captcha\Manager;
 use TisaOtp\Config\Sanitizer;
 use TisaOtp\Config\Settings;
+use TisaOtp\Support\Transport;
 use TisaOtp\Gateway\Registry;
+use TisaOtp\Log\LogStore;
+use TisaOtp\Log\Report;
 use TisaOtp\Registration\FieldCatalog;
 use TisaOtp\Registration\FieldSchema;
 use TisaOtp\User\AccessPolicy;
@@ -21,6 +24,8 @@ use TisaOtp\User\AccessPolicy;
 defined( 'ABSPATH' ) || exit;
 
 final class SettingsScreen {
+
+	const OVERVIEW_DAYS = 7;
 
 	/** @var Settings */
 	private $settings;
@@ -37,12 +42,20 @@ final class SettingsScreen {
 	/** @var Manager */
 	private $captcha;
 
-	public function __construct( Settings $settings, Controls $controls, Registry $gateways, FieldSchema $schema, Manager $captcha ) {
+	/** @var LogStore */
+	private $logs;
+
+	/** @var ReportScreen */
+	private $reports;
+
+	public function __construct( Settings $settings, Controls $controls, Registry $gateways, FieldSchema $schema, Manager $captcha, LogStore $logs, ReportScreen $reports ) {
 		$this->settings = $settings;
 		$this->controls = $controls;
 		$this->gateways = $gateways;
 		$this->schema   = $schema;
 		$this->captcha  = $captcha;
+		$this->logs     = $logs;
+		$this->reports  = $reports;
 	}
 
 	/**
@@ -65,8 +78,29 @@ final class SettingsScreen {
 
 		$this->header( $tab );
 
+		ScreenNav::render( Menu::ROOT );
+
+		if ( 'reports' !== $tab ) {
+			$this->overview();
+		}
+
 		echo '<div class="tisa-layout">';
 		$this->tabs( $tab );
+
+		/*
+		 * The reports tab is a report, not a form: there is nothing to save, so it
+		 * skips the form and its submit button and draws the same body the reports
+		 * screen draws.
+		 */
+		if ( 'reports' === $tab ) {
+			echo '<div class="tisa-tabbody">';
+			$this->reports->body( $this->reports->range() );
+			echo '</div>';
+
+			echo '</div></div>';
+
+			return;
+		}
 
 		echo '<div class="tisa-panel">';
 		echo '<form method="post" action="' . esc_url( admin_url( 'options.php' ) ) . '" class="tisa-form">';
@@ -96,11 +130,21 @@ final class SettingsScreen {
 		echo '</div></div>';
 	}
 
+	/**
+	 * Address of one settings tab.
+	 *
+	 * Everything that points at a tab builds its URL here, so a link written in
+	 * one section cannot disagree with the tab row above it.
+	 */
+	public static function tabUrl( string $tab ): string {
+		return admin_url( 'admin.php?page=' . Menu::ROOT . '&tab=' . $tab );
+	}
+
 	private function tabs( string $current ): void {
 		echo '<nav class="tisa-tabs" aria-label="' . esc_attr__( 'بخش‌های تنظیمات', 'tisa-otp' ) . '"><ul>';
 
 		foreach ( $this->tabLabels() as $id => $label ) {
-			$url = admin_url( 'admin.php?page=tisa-otp&tab=' . $id );
+			$url = self::tabUrl( $id );
 
 			printf(
 				'<li><a href="%1$s" class="tisa-tab%2$s">%3$s</a></li>',
@@ -129,6 +173,7 @@ final class SettingsScreen {
 			'design'       => __( 'ظاهر فرم', 'tisa-otp' ),
 			'store'        => __( 'فروشگاه', 'tisa-otp' ),
 			'data'         => __( 'داده و رویدادها', 'tisa-otp' ),
+			'reports'      => __( 'گزارش‌ها و آمار', 'tisa-otp' ),
 		);
 	}
 
@@ -157,12 +202,51 @@ final class SettingsScreen {
 			case 'data':
 				$this->dataSection();
 				break;
+			case 'reports':
+				// Drawn by the reports screen itself; see render().
+				break;
 			case 'general':
 			default:
 				$this->generalSection();
 		}
 
 		echo '</div>';
+	}
+
+	/**
+	 * The "test this section" card.
+	 *
+	 * Every tab can prove itself without leaving it: the button opens a modal
+	 * that is filled from `/admin/check`. Nothing here needs a second screen, a
+	 * second URL or a save button.
+	 *
+	 * @param string        $kind   Which self-test to run.
+	 * @param string        $button Button label.
+	 * @param string        $intro  One line about what the test actually does.
+	 * @param callable|null $extra  Extra controls, such as the real send button.
+	 * @param string        $attrs  Extra attributes for the button.
+	 */
+	private function testCard( string $kind, string $button, string $intro = '', ?callable $extra = null, string $attrs = '' ): void {
+		$this->card(
+			__( 'آزمایش این بخش', 'tisa-otp' ),
+			function () use ( $kind, $button, $extra, $attrs ) {
+				echo '<p class="tisa-inline">';
+
+				printf(
+					'<button type="button" class="button" data-tisa-check="%1$s"%2$s>%3$s</button>',
+					esc_attr( $kind ),
+					$attrs, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static markup written in this file.
+					esc_html( $button )
+				);
+
+				if ( null !== $extra ) {
+					$extra();
+				}
+
+				echo '</p>';
+			},
+			$intro
+		);
 	}
 
 	private function card( string $title, callable $body, string $intro = '' ): void {
@@ -202,6 +286,22 @@ final class SettingsScreen {
 					$c->toggle( 'replace_wp_login', __( 'فرم OTP روی wp-login.php نمایش داده شود', 'tisa-otp' ), __( 'فرم کلاسیک وردپرس پنهان می‌شود.', 'tisa-otp' ) );
 				} );
 
+				$c->row(
+					__( 'ورود فقط با کد', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->toggle( 'password_login_off', __( 'ورود با نام کاربری و گذرواژه بسته شود', 'tisa-otp' ) );
+					},
+					__( 'جلوی ارسال گذرواژه به wp-login.php را می‌گیرد، نه فقط پنهان‌کردن فرم. راه بازگشت: کد اضطراری.', 'tisa-otp' )
+				);
+
+				$c->row(
+					__( 'ماندن در حساب', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->toggle( 'remember_login', __( 'کاربر ۱۴ روز وارد بماند', 'tisa-otp' ) );
+					},
+					__( 'اگر خاموش باشد، نشست با بسته‌شدن مرورگر تمام می‌شود.', 'tisa-otp' )
+				);
+
 				$c->row( __( 'پنهان‌سازی وجود حساب', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'prevent_enumeration', __( 'پیام‌ها یکسان باشند', 'tisa-otp' ), __( 'هیچ‌کس نمی‌فهمد شماره‌اش قبلاً ثبت شده یا نه.', 'tisa-otp' ) );
 				} );
@@ -221,8 +321,7 @@ final class SettingsScreen {
 						)
 					);
 				}, __( 'اگر کش صفحه، وارنیش یا Cloudflare دارید حالت «nonce تازه از سرور» را نگه دارید؛ وگرنه فرم خطای ۴۰۳ می‌گیرد.', 'tisa-otp' ) );
-			},
-			__( 'رفتار کلی فرم ورود را اینجا تعیین کنید.', 'tisa-otp' )
+			}
 		);
 
 		$this->card(
@@ -236,6 +335,11 @@ final class SettingsScreen {
 					$c->text( 'register_redirect', '', 'url' );
 				} );
 			}
+		);
+
+		$this->testCard(
+			'general',
+			__( 'آزمایش تنظیمات عمومی', 'tisa-otp' )
 		);
 	}
 
@@ -272,11 +376,11 @@ final class SettingsScreen {
 
 				$c->row( __( 'بررسی خودکار کد', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'auto_verify', __( 'به‌محض کامل شدن کد، بدون زدن دکمه بررسی شود', 'tisa-otp' ) );
-				}, __( 'روی هر دو حالت ورودی (خانه‌خانه و یک‌کادر) و نیز هنگام چسباندن کد کار می‌کند.', 'tisa-otp' ) );
+				} );
 
 				$c->row( __( 'مهلت پاسخ سرور', 'tisa-otp' ), function () use ( $c ) {
 					$c->number( 'request_timeout', 5, 60, __( 'ثانیه', 'tisa-otp' ) );
-				}, __( 'پس از این مدت درخواست لغو و پیام خطای شبکه نمایش داده می‌شود تا کاربر منتظر نماند.', 'tisa-otp' ) );
+				} );
 
 				$c->row( __( 'محل نگهداری کد', 'tisa-otp' ), function () use ( $c ) {
 					$c->cards(
@@ -325,7 +429,7 @@ final class SettingsScreen {
 					$c->toggle( 'webotp_enabled', __( 'خط شناسایی به انتهای پیامک اضافه شود', 'tisa-otp' ) );
 				}, sprintf(
 					/* translators: %s: the WebOTP binding line, for example @example.com #12345 */
-					__( 'با فعال کردن، خط %s به انتهای پیامک‌های متنی اضافه می‌شود تا کروم و اندروید خودشان کد را پیشنهاد دهند. چند نویسه به پیامک اضافه می‌کند، پس اگر هزینه یا طول پیامک برایتان مهم است خاموش نگه دارید. برای سامانه‌های الگودار (Pattern) همین خط را داخل الگوی خود سامانه بگذارید یا از نشانه {webotp} در متن استفاده کنید.', 'tisa-otp' ),
+					__( 'خط %s به انتهای پیامک متنی اضافه می‌شود (هزینهٔ چند نویسه بیشتر). برای الگوها نشانهٔ {webotp}.', 'tisa-otp' ),
 					'@' . $this->webOtpDomain() . ' #12345'
 				) );
 			}
@@ -346,6 +450,12 @@ final class SettingsScreen {
 					$c->text( 'email_from', get_option( 'admin_email' ), 'email' );
 				}, __( 'خالی بگذارید تا از آدرس پیش‌فرض وردپرس استفاده شود.', 'tisa-otp' ) );
 			}
+		);
+
+		$this->testCard(
+			'code',
+			__( 'آزمایش ساخت کد', 'tisa-otp' ),
+			__( 'هیچ پیامکی ارسال نمی‌شود.', 'tisa-otp' )
 		);
 	}
 
@@ -368,6 +478,17 @@ final class SettingsScreen {
 				$c->row( __( 'سامانه پشتیبان', 'tisa-otp' ), function () use ( $c, $options ) {
 					$c->select( 'sms_backup_gateway', array( '' => __( 'بدون پشتیبان', 'tisa-otp' ) ) + $options );
 				}, __( 'فقط برای خطاهای موقت (تایم‌اوت، خطای ۵xx، اتمام اعتبار) استفاده می‌شود.', 'tisa-otp' ) );
+
+				/*
+				 * The switch that answers «راه حلش چیه» for a site whose own
+				 * wp-config.php blocks outbound HTTP. It is labelled with what
+				 * it bypasses, and the note says which of the two answers is
+				 * better — a plugin that quietly walked around the site's
+				 * setting would be worse than the problem it solves.
+				 */
+				$c->row( __( 'ارسال مستقیم', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'direct_send', __( 'نادیده گرفتن WP_HTTP_BLOCK_EXTERNAL برای پیامک', 'tisa-otp' ) );
+				}, __( 'افزونه درخواست را با cURL مستقیم می‌فرستد؛ فقط اگر به wp-config.php دسترسی ندارید.', 'tisa-otp' ) );
 			}
 		);
 
@@ -412,7 +533,20 @@ final class SettingsScreen {
 		}
 
 		$this->controls->description(
-			__( 'می‌توانید اعتبارنامه‌ها را به‌جای دیتابیس در wp-config.php هم تعریف کنید؛ مثلاً <code>TISA_OTP_SMSIR_API_KEY</code>.', 'tisa-otp' )
+			__( 'اعتبارنامه‌ها را می‌توان در wp-config.php هم گذاشت: <code>TISA_OTP_SMSIR_API_KEY</code>.', 'tisa-otp' )
+		);
+
+		$this->testCard(
+			'gateways',
+			__( 'آزمایش سامانه‌های پیامکی', 'tisa-otp' ),
+			'',
+			function () {
+				printf(
+					'<button type="button" class="button button-primary" data-tisa-sms-test>%s</button>',
+					esc_html__( 'ارسال پیامک آزمایشی', 'tisa-otp' )
+				);
+			},
+			''
 		);
 	}
 
@@ -445,8 +579,32 @@ final class SettingsScreen {
 				$c->row( __( 'سقف تأیید کد هر IP', 'tisa-otp' ), function () use ( $c ) {
 					$c->number( 'limit_verify_per_ip', 5, 1000, __( 'تلاش در بازه', 'tisa-otp' ) );
 				} );
-			},
-			__( 'شمارنده‌ها در جدول اختصاصی و به‌صورت اتمی ثبت می‌شوند.', 'tisa-otp' )
+
+				$c->row(
+					__( 'سقف روزانهٔ کل سایت', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->number( 'limit_per_site_daily', 0, 100000, __( 'ارسال در روز', 'tisa-otp' ) );
+					},
+					__( 'سقف‌های بالا برای هر شماره و هر IP است؛ این یکی برای خود سایت است. صفر = بی‌سقف.', 'tisa-otp' )
+				);
+			}
+		);
+
+		$this->card(
+			__( 'شماره‌های مورد اعتماد', 'tisa-otp' ),
+			function () use ( $c ) {
+				$c->row( __( 'فعال بودن فهرست', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'trusted_enabled', __( 'شماره‌های این فهرست از کپچا و محدودیت‌ها معاف باشند', 'tisa-otp' ) );
+				} );
+
+				$c->row( __( 'شماره‌ها', 'tisa-otp' ), function () use ( $c ) {
+					$c->textarea( 'trusted_numbers', 4, "09121234567\n0912*\n0935*4567" );
+				}, __( 'هر خط یک شماره، پیش‌شماره (۰۹۱۲) یا الگو (۰۹۳۵*۴۵۶۷).', 'tisa-otp' ) );
+
+				$c->row( __( 'معافیت از', 'tisa-otp' ), function () use ( $c ) {
+					$c->text( 'trusted_skip', 'captcha,throttle' );
+				}, __( 'نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود.', 'tisa-otp' ) );
+			}
 		);
 
 		$this->card(
@@ -500,6 +658,34 @@ final class SettingsScreen {
 						)
 					);
 				} );
+
+				$c->row(
+					__( 'وقتی سرویس کپچا در دسترس نیست', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->toggle(
+							'captcha_fail_open',
+							__( 'ورود را نبند (پیشنهاد می‌شود)', 'tisa-otp' ),
+							__( 'هانی‌پات و سقف ارسال فعال می‌مانند', 'tisa-otp' )
+						);
+					},
+					__( 'اگر سرویس کپچا در دسترس نباشد: روشن = کاربر رد نمی‌شود، خاموش = هر ورودی کپچا می‌خواهد.', 'tisa-otp' )
+				);
+
+				$c->row(
+					__( 'نشانی جایگزین اسکریپت', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->text( 'captcha_script_override', 'https://my-mirror.example/1/api.js' );
+					},
+					__( 'اختیاری؛ برای وقتی دامنهٔ رسمی سرویس روی سایت شما باز نمی‌شود.', 'tisa-otp' )
+				);
+
+				$c->row( __( 'مهلت بارگذاری اسکریپت', 'tisa-otp' ), function () use ( $c ) {
+					$c->number( 'captcha_timeout', 3000, 20000, __( 'میلی‌ثانیه', 'tisa-otp' ) );
+				} );
+
+				$c->row( __( 'حالت آرکپچا', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'captcha_arcaptcha_v3', __( 'نسخه ۳ (امتیازی/نامرئی)', 'tisa-otp' ), __( 'اگر حساب آرکپچای شما v3 است روشن کنید', 'tisa-otp' ) );
+				} );
 			}
 		);
 
@@ -521,6 +707,14 @@ final class SettingsScreen {
 		);
 
 		$this->accessPointerCard();
+
+		$this->testCard(
+			'security',
+			__( 'آزمایش کپچا در این مرورگر', 'tisa-otp' ),
+			'',
+			null,
+			' data-tisa-captcha-test'
+		);
 	}
 
 	/**
@@ -531,7 +725,6 @@ final class SettingsScreen {
 		$this->card(
 			__( 'دسترسی اضطراری و فهرست مسدود', 'tisa-otp' ),
 			function () {
-				echo '<p class="tisa-desc">' . esc_html__( 'کد اضطراری برای روزی است که سامانه پیامکی از کار می‌افتد، و فهرست مسدود شماره‌هایی را رد می‌کند که نباید حتی یک پیامک بگیرند. هر دو در صفحه‌ای جداگانه مدیریت می‌شوند.', 'tisa-otp' ) . '</p>';
 
 				printf(
 					'<p><a class="button" href="%1$s">%2$s</a></p>',
@@ -618,7 +811,7 @@ final class SettingsScreen {
 			function () use ( $c ) {
 				$c->row( __( 'مجموعه آماده', 'tisa-otp' ), function () use ( $c ) {
 					$c->select( 'field_preset', FieldCatalog::labels() );
-				}, __( 'گزینه «دلخواه» فیلدهای پایین را اعمال می‌کند.', 'tisa-otp' ) );
+				} );
 
 				$this->fieldRepeater();
 			}
@@ -630,6 +823,11 @@ final class SettingsScreen {
 				esc_html__( 'اکنون %d فیلد در فرم عضویت فعال است.', 'tisa-otp' ),
 				count( $this->schema->active() )
 			)
+		);
+
+		$this->testCard(
+			'registration',
+			__( 'آزمایش فرم عضویت', 'tisa-otp' )
 		);
 	}
 
@@ -732,6 +930,30 @@ final class SettingsScreen {
 					$c->number( 'width', 280, 900, 'px' );
 				} );
 
+				$c->row(
+					__( 'فونت فرم', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->select(
+							'form_font',
+							array(
+								'vazirmatn' => __( 'وزیرمتن (همراه افزونه)', 'tisa-otp' ),
+								'theme'     => __( 'فونت پوسته', 'tisa-otp' ),
+								'custom'    => __( 'فونت دلخواه', 'tisa-otp' ),
+							)
+						);
+						$c->text( 'form_font_custom', 'Vazirmatn, Tahoma, sans-serif' );
+					},
+					__( '«وزیرمتن» همان فونت پیش‌نمایش است و همراه افزونه می‌آید.', 'tisa-otp' )
+				);
+
+				$c->row(
+					__( 'جداسازی استایل از پوسته', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->toggle( 'style_isolation', __( 'فرم داخل Shadow DOM رندر شود', 'tisa-otp' ) );
+					},
+					__( 'روشن: قالب سایت نمی‌تواند فونت، رنگ و شکل کنترل‌های فرم را عوض کند.', 'tisa-otp' )
+				);
+
 				$c->row( __( 'چینش', 'tisa-otp' ), function () use ( $c ) {
 					$c->select(
 						'align',
@@ -825,6 +1047,11 @@ final class SettingsScreen {
 				}, __( 'فقط برای مدیران دارای دسترسی unfiltered_html ذخیره می‌شود.', 'tisa-otp' ) );
 			}
 		);
+
+		$this->testCard(
+			'design',
+			__( 'آزمایش رنگ‌ها و کنتراست', 'tisa-otp' )
+		);
 	}
 
 	private function storeSection(): void {
@@ -833,6 +1060,43 @@ final class SettingsScreen {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			$c->notice( __( 'ووکامرس فعال نیست؛ این تنظیمات فعلاً اثری ندارند.', 'tisa-otp' ), 'warning' );
 		}
+
+		$this->card(
+			__( 'وودمارت', 'tisa-otp' ),
+			function () use ( $c ) {
+				$detected = \TisaOtp\Integrations\WoodMart::detected();
+
+				$c->row(
+					__( 'پوسته', 'tisa-otp' ),
+					function () use ( $detected ) {
+						printf(
+							'<span class="tisa-badge %s">%s</span>',
+							$detected ? 'is-on' : 'is-off',
+							esc_html( $detected ? __( 'وودمارت شناسایی شد', 'tisa-otp' ) : __( 'وودمارت فعال نیست', 'tisa-otp' ) )
+						);
+					},
+					$detected ? '' : __( 'این تنظیمات فقط روی سایت‌های وودمارت اثر دارند.', 'tisa-otp' )
+				);
+
+				$c->row( __( 'فرم در سایدبار ورود', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'woodmart_sidebar', __( 'فرم OTP در پنل ورود وودمارت رندر شود', 'tisa-otp' ) );
+				}, __( 'پنل ورود همان کشوی حساب کاربری در هدر است؛ فرم داخل خودش، با همان AJAX و کپچا.', 'tisa-otp' ) );
+
+				$c->row( __( 'فرم رمز عبور وودمارت', 'tisa-otp' ), function () use ( $c ) {
+					$c->select(
+						'woodmart_mode',
+						array(
+							'replace' => __( 'جایگزین شود', 'tisa-otp' ),
+							'append'  => __( 'بماند (فرم OTP زیرش بیاید)', 'tisa-otp' ),
+						)
+					);
+				}, __( 'هیچ فایلی از پوسته تغییر نمی‌کند؛ فرم در همان جای پنل جایگزین می‌شود.', 'tisa-otp' ) );
+
+				$c->row( __( 'بخش «ساخت حساب» وودمارت', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'woodmart_account_block', __( 'آیکن، متن و لینک «ساخت حساب» وودمارت هم برداشته شود', 'tisa-otp' ) );
+				}, __( 'فرم خود افزونه عضویت دارد. اگر عضویت افزونه خاموش باشد، این بخش می‌ماند تا راه ثبت‌نام باز بماند.', 'tisa-otp' ) );
+			}
+		);
 
 		$this->card(
 			__( 'ووکامرس', 'tisa-otp' ),
@@ -847,7 +1111,7 @@ final class SettingsScreen {
 
 				$c->row( __( 'صفحه ورود', 'tisa-otp' ), function () use ( $c ) {
 					$c->text( 'woo_checkout_page', wp_login_url(), 'url' );
-				}, __( 'خالی بگذارید تا از wp-login.php استفاده شود.', 'tisa-otp' ) );
+				} );
 
 				$c->row( __( 'پیام صفحه تسویه حساب', 'tisa-otp' ), function () use ( $c ) {
 					$c->textarea( 'woo_checkout_notice', 2 );
@@ -867,9 +1131,126 @@ final class SettingsScreen {
 			__( 'المنتور', 'tisa-otp' ),
 			function () use ( $c ) {
 				$c->description(
-					__( 'ویجت «فرم ورود پیامکی تیسا» در دستهٔ تیسا OTP در المنتور در دسترس است. تمام تنظیمات این صفحه به‌صورت پیش‌فرض ویجت به کار می‌روند و در هر ویجت قابل بازنویسی‌اند.', 'tisa-otp' )
+					__( 'ویجت «فرم ورود پیامکی تیسا» در دستهٔ تیسا OTP المنتور است.', 'tisa-otp' )
 				);
 			}
+		);
+
+		$this->testCard(
+			'store',
+			__( 'آزمایش فروشگاه', 'tisa-otp' )
+		);
+	}
+
+	/**
+	 * The last week, on every settings tab.
+	 *
+	 * The plugin has a full reports screen, but nothing on the screen people
+	 * actually open said so — and nothing anywhere said "is it working?". Four
+	 * numbers answer that before a single setting is read, and the button next
+	 * to them opens the screen that explains them.
+	 */
+	private function overview(): void {
+		$reports = self::tabUrl( 'reports' );
+
+		echo '<div class="tisa-overview">';
+
+		$this->egressNotice();
+
+		if ( ! $this->settings->bool( 'logs_enabled', true ) ) {
+			$this->controls->notice( __( 'ثبت رویدادها خاموش است؛ آماری برای نمایش نیست.', 'tisa-otp' ), 'warning' );
+		} else {
+			$counts = $this->logs->countByEvent(
+				array_merge( Report::requestEvents(), array( Report::CREATED ) ),
+				self::OVERVIEW_DAYS
+			);
+
+			$kpis = Report::kpis( $counts );
+
+			$cells = array(
+				array( __( 'درخواست‌ها', 'tisa-otp' ), number_format_i18n( (int) $kpis['requests'] ), '' ),
+				array( __( 'موفق', 'tisa-otp' ), number_format_i18n( (int) $kpis['sent'] ), 'is-good' ),
+				array( __( 'ناموفق', 'tisa-otp' ), number_format_i18n( (int) $kpis['failed'] ), (int) $kpis['failed'] > 0 ? 'is-bad' : '' ),
+				array( __( 'نرخ موفقیت', 'tisa-otp' ), number_format_i18n( (float) $kpis['rate'], 1 ) . '٪', 'is-rate' ),
+			);
+
+			echo '<div class="tisa-kpis">';
+
+			foreach ( $cells as $cell ) {
+				printf(
+					'<div class="tisa-kpi %1$s"><span class="tisa-kpi__value">%2$s</span><span class="tisa-kpi__label">%3$s</span></div>',
+					esc_attr( $cell[2] ),
+					esc_html( $cell[1] ),
+					esc_html( $cell[0] )
+				);
+			}
+
+			echo '</div>';
+		}
+
+		echo '<div class="tisa-overview__side">';
+
+		printf(
+			'<a class="button" href="%1$s">%2$s</a>',
+			esc_url( $reports ),
+			esc_html__( 'گزارش‌ها', 'tisa-otp' )
+		);
+
+		printf(
+			'<p class="tisa-muted">%s</p>',
+			esc_html(
+				sprintf(
+					/* translators: %d: number of days */
+					__( 'آمار %d روز گذشته', 'tisa-otp' ),
+					self::OVERVIEW_DAYS
+				)
+			)
+		);
+
+		echo '</div></div>';
+	}
+
+	/**
+	 * The one sentence the owner needs before pressing any button.
+	 *
+	 * Everything else about the outbound block answers a question the owner has
+	 * already asked (a failed test, a failed send). This one is on every screen,
+	 * above the tabs, because a site whose wp-config.php blocks outbound HTTP
+	 * cannot send a single SMS — and finding that out from a test result is a
+	 * worse afternoon than finding it out from a banner.
+	 *
+	 * It is shown only when it is true for the gateway they configured, and it
+	 * names both answers: the switch in this panel, and the two lines in
+	 * wp-config.php. Turning the switch on makes it disappear on its own.
+	 */
+	private function egressNotice(): void {
+		if ( $this->settings->bool( 'direct_send', false ) ) {
+			return;
+		}
+
+		$host = '';
+
+		foreach ( $this->gateways->deliveryOrder() as $id ) {
+			$plan = $this->gateways->planFor( (string) $id );
+
+			if ( ! empty( $plan['endpoint'] ) ) {
+				$host = (string) wp_parse_url( (string) $plan['endpoint'], PHP_URL_HOST );
+				break;
+			}
+		}
+
+		if ( '' === $host || ! Transport::egressBlocked( $host ) ) {
+			return;
+		}
+
+		$this->controls->notice(
+			sprintf(
+				/* translators: %s: the host this site refuses to reach */
+				__( 'این سایت اجازهٔ درخواست خروجی به %s را نمی‌دهد؛ تا آن خط عوض نشود هیچ پیامکی فرستاده نمی‌شود.', 'tisa-otp' ),
+				$host
+			) . ' '
+			. __( 'یا در wp-config.php خط WP_HTTP_BLOCK_EXTERNAL را false کنید، یا در سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید.', 'tisa-otp' ),
+			'warning'
 		);
 	}
 
@@ -887,11 +1268,37 @@ final class SettingsScreen {
 					$c->number( 'logs_keep_days', 1, 90, __( 'روز', 'tisa-otp' ) );
 				} );
 
+				$c->row(
+					__( 'سقف تعداد ردیف‌ها', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->number( 'logs_max_rows', 0, 5000000, __( 'ردیف', 'tisa-otp' ) );
+					},
+					__( 'نگهداری «هفت روز» زیر حمله می‌تواند میلیون‌ها ردیف شود. این سقف قدیمی‌ترین‌ها را حذف می‌کند. صفر = بی‌سقف.', 'tisa-otp' )
+				);
+
 				$c->row( __( 'حالت اشکال‌زدایی', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'debug', __( 'رویدادها در error_log هم نوشته شوند', 'tisa-otp' ), __( 'فقط وقتی WP_DEBUG فعال است.', 'tisa-otp' ) );
 				} );
 			},
 			__( 'شماره موبایل هرگز به‌صورت خام ذخیره نمی‌شود؛ فقط اثر انگشت HMAC و نسخه ماسک‌شده.', 'tisa-otp' )
+		);
+
+		$this->card(
+			__( 'گزارش و رویدادها', 'tisa-otp' ),
+			function () use ( $c ) {
+				$c->row(
+					__( 'صفحه‌ها', 'tisa-otp' ),
+					function () {
+						printf(
+							'<a class="button" href="%1$s">%2$s</a> <a class="button" href="%3$s">%4$s</a>',
+							esc_url( self::tabUrl( 'reports' ) ),
+							esc_html__( 'گزارش‌ها', 'tisa-otp' ),
+							esc_url( admin_url( 'admin.php?page=' . LogsScreen::SLUG ) ),
+							esc_html__( 'تک‌تک رویدادها', 'tisa-otp' )
+						);
+					}
+				);
+			}
 		);
 
 		$this->card(
@@ -914,6 +1321,11 @@ final class SettingsScreen {
 					$c->toggle( 'wipe_on_uninstall', __( 'جدول‌ها و تنظیمات هم پاک شوند', 'tisa-otp' ), __( 'متای شماره کاربران در هر صورت نگه داشته می‌شود.', 'tisa-otp' ) );
 				} );
 			}
+		);
+
+		$this->testCard(
+			'data',
+			__( 'آزمایش ثبت رویداد', 'tisa-otp' )
 		);
 	}
 }

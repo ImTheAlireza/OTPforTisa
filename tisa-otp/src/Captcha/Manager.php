@@ -94,6 +94,20 @@ final class Manager {
 	}
 
 	/**
+	 * A provider picked but half-configured is the worst state: nothing renders
+	 * and nobody knows why. The admin screen asks this to warn early.
+	 */
+	public function halfConfigured(): bool {
+		$id = $this->settings->str( 'captcha_provider', 'none' );
+
+		if ( 'none' === $id || ! isset( $this->providers()[ $id ] ) ) {
+			return false;
+		}
+
+		return ! $this->configured();
+	}
+
+	/**
 	 * `always` challenges every send, `after_limit` only once quotas tighten.
 	 */
 	public function trigger(): string {
@@ -103,21 +117,73 @@ final class Manager {
 	}
 
 	/**
+	 * When the captcha service itself cannot be reached, should a visitor be let
+	 * through (keeping the honeypot and the quota), or locked out?
+	 *
+	 * Locking out is the wrong trade in Iran, where the largest provider is
+	 * routinely unreachable: it turns a spam filter into a total outage of
+	 * sign-in. Default is therefore "let them through, and shout in the log".
+	 */
+	public function failOpen(): bool {
+		return $this->settings->bool( 'captcha_fail_open', true );
+	}
+
+	/**
 	 * Everything the browser needs to render and solve the challenge.
+	 *
+	 * `scripts` is a list, not a URL: the client walks it until a bundle loads,
+	 * which is what makes a blocked or filtered host survivable.
 	 */
 	public function clientBundle(): array {
 		$provider = $this->active();
 
 		if ( null === $provider ) {
-			return array( 'enabled' => false, 'provider' => 'none' );
+			return array(
+				'enabled'  => false,
+				'provider' => 'none',
+				'kind'     => 'none',
+				'config'   => array(),
+				'scripts'  => array(),
+			);
 		}
 
+		$config   = $provider->clientConfig();
+		$primary  = $provider->scriptUrl();
+		$override = trim( $this->settings->str( 'captcha_script_override' ) );
+		$scripts  = array();
+
+		// A self-hosted mirror wins when the admin typed one in.
+		if ( '' !== $override && ( 0 === strpos( $override, 'https://' ) || 0 === strpos( $override, 'http://' ) ) ) {
+			$scripts[] = $override;
+		}
+
+		if ( '' !== $primary ) {
+			$scripts[] = $primary;
+		}
+
+		if ( $provider instanceof ScriptFallbacks ) {
+			$scripts = array_merge( $scripts, $provider->fallbackScriptUrls() );
+		}
+
+		/**
+		 * Filter every script URL offered to the browser, in order.
+		 *
+		 * @param string[]        $scripts  Script URLs.
+		 * @param CaptchaProvider $provider Active provider.
+		 */
+		$scripts = (array) apply_filters( 'tisa_otp_captcha_script_urls', $scripts, $provider );
+
 		return array(
-			'enabled'  => true,
-			'provider' => $provider->id(),
-			'script'   => $provider->scriptUrl(),
-			'config'   => $provider->clientConfig(),
-			'trigger'  => $this->trigger(),
+			'enabled'     => true,
+			'provider'    => $provider->id(),
+			'kind'        => isset( $config['kind'] ) ? (string) $config['kind'] : 'widget',
+			'siteKey'     => isset( $config['siteKey'] ) ? (string) $config['siteKey'] : '',
+			'script'      => $primary,
+			'scripts'     => array_values( array_unique( array_filter( array_map( 'strval', $scripts ) ) ) ),
+			'config'      => $config,
+			'trigger'     => $this->trigger(),
+			'failOpen'    => $this->failOpen(),
+			'loadTimeout' => max( 3000, min( 20000, $this->settings->int( 'captcha_timeout', 8000 ) ) ),
 		);
 	}
 
@@ -133,5 +199,27 @@ final class Manager {
 		}
 
 		return $provider->verify( $token, $ip );
+	}
+
+	/**
+	 * Plain data for the tools screen: what is configured, and what is not.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function diagnostics(): array {
+		$id       = $this->settings->str( 'captcha_provider', 'none' );
+		$provider = isset( $this->providers()[ $id ] ) ? $this->providers()[ $id ] : null;
+		$bundle   = $this->clientBundle();
+
+		return array(
+			'provider'       => $id,
+			'label'          => null === $provider ? __( 'بدون کپچا', 'tisa-otp' ) : $provider->label(),
+			'enabled'        => $this->isOn(),
+			'halfConfigured' => $this->halfConfigured(),
+			'trigger'        => $this->trigger(),
+			'failOpen'       => $this->failOpen(),
+			'scripts'        => isset( $bundle['scripts'] ) ? $bundle['scripts'] : array(),
+			'kind'           => isset( $bundle['kind'] ) ? $bundle['kind'] : 'none',
+		);
 	}
 }

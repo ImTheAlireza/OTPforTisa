@@ -87,7 +87,8 @@ $fieldsHintId  = $instance . '-fields-hint';
 						class="tisa-field__input"
 						id="<?php echo esc_attr( $fieldId ); ?>"
 						type="<?php echo esc_attr( in_array( $field['type'], array( 'email', 'tel', 'number', 'date', 'text' ), true ) ? $field['type'] : 'text' ); ?>"
-						<?php echo 'tel' === $field['type'] ? 'inputmode="numeric" dir="ltr"' : ''; ?>
+						<?php echo in_array( $field['type'], array( 'tel', 'postcode' ), true ) ? 'inputmode="numeric" dir="ltr"' : ''; ?>
+					<?php echo 'postcode' === $field['type'] ? 'maxlength="10" autocomplete="postal-code"' : ''; ?>
 						placeholder="<?php echo esc_attr( $field['placeholder'] ); ?>"
 						data-tisa-input="<?php echo esc_attr( $field['id'] ); ?>"
 						aria-describedby="<?php echo esc_attr( $fieldDescribedBy ); ?>"

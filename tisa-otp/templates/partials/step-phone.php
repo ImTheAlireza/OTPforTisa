@@ -15,6 +15,16 @@ $hasPhoneHint = '' !== trim( (string) $hint );
 
 // Point the field at its own hint and error so screen readers read the reason.
 $phoneDescribedBy = trim( ( $hasPhoneHint ? $phoneHintId . ' ' : '' ) . $phoneErrorId );
+
+/*
+ * One field, one number, no decoration.
+ *
+ * A fixed "09" chip used to sit inside this control while the error text asked
+ * people to "start with 09" — the field contradicted its own rule. The field
+ * now takes the number exactly as it is written on a phone, and the placeholder
+ * shows the whole shape of it.
+ */
+$phonePlaceholder = isset( $phonePlaceholder ) && '' !== $phonePlaceholder ? (string) $phonePlaceholder : '09121234567';
 ?>
 <section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="<?php echo esc_attr( $phoneTitleId ); ?>">
 	<header class="tisa-step__head">
@@ -30,7 +40,6 @@ $phoneDescribedBy = trim( ( $hasPhoneHint ? $phoneHintId . ' ' : '' ) . $phoneEr
 		</label>
 
 		<div class="tisa-phone">
-			<span class="tisa-phone__dial" aria-hidden="true">۰۹</span>
 			<input
 				class="tisa-field__input tisa-phone__input"
 				id="<?php echo esc_attr( $phoneFieldId ); ?>"
@@ -39,7 +48,7 @@ $phoneDescribedBy = trim( ( $hasPhoneHint ? $phoneHintId . ' ' : '' ) . $phoneEr
 				autocomplete="tel"
 				maxlength="11"
 				dir="ltr"
-				placeholder="09xxxxxxxxx"
+				placeholder="<?php echo esc_attr( $phonePlaceholder ); ?>"
 				data-tisa-phone
 				aria-describedby="<?php echo esc_attr( $phoneDescribedBy ); ?>"
 				aria-invalid="false"
@@ -62,4 +71,23 @@ $phoneDescribedBy = trim( ( $hasPhoneHint ? $phoneHintId . ' ' : '' ) . $phoneEr
 		<span class="tisa-btn__label"><?php echo esc_html( $sendLabel ); ?></span>
 		<span class="tisa-btn__spinner" aria-hidden="true"></span>
 	</button>
+
+	<?php
+	/*
+	 * Three claims, right under the button the visitor is about to press. They
+	 * answer the question that actually stops people ("why does this site want
+	 * my number?") where the hesitation happens, and they stay quiet: this is
+	 * reassurance, not a feature list.
+	 */
+	?>
+	<?php if ( ! empty( $trust ) ) : ?>
+		<ul class="tisa-otp__trust">
+			<?php foreach ( (array) $trust as $item ) : ?>
+				<li class="tisa-otp__trust-item">
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><?php echo $item['icon']; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed markup from the renderer. ?></svg>
+					<span><?php echo esc_html( (string) $item['label'] ); ?></span>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	<?php endif; ?>
 </section>

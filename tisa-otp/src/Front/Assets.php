@@ -104,12 +104,42 @@ final class Assets implements Bootable {
 			array(
 				'restUrl' => esc_url_raw( rest_url( 'tisa-otp/v1/' ) ),
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
+				'captcha' => $this->captchaTest(),
 				'i18n'    => array(
-					'working' => __( 'در حال انجام…', 'tisa-otp' ),
-					'done'    => __( 'انجام شد', 'tisa-otp' ),
-					'failed'  => __( 'ناموفق', 'tisa-otp' ),
-					'confirm' => __( 'این عملیات قابل بازگشت نیست. ادامه می‌دهید؟', 'tisa-otp' ),
+					'working'    => __( 'در حال انجام…', 'tisa-otp' ),
+					'done'       => __( 'انجام شد', 'tisa-otp' ),
+					'failed'     => __( 'ناموفق', 'tisa-otp' ),
+					'confirm'    => __( 'این عملیات قابل بازگشت نیست. ادامه می‌دهید؟', 'tisa-otp' ),
+					'captcha'    => __( 'کپچا', 'tisa-otp' ),
+					'traceTitle' => __( 'مسیر تلاش برای ارسال:', 'tisa-otp' ),
+					'traceSent'  => __( 'ارسال شد', 'tisa-otp' ),
+					'ok'         => __( 'فعال', 'tisa-otp' ),
+					'testing'    => __( 'در حال آزمایش…', 'tisa-otp' ),
+					'captchaOk'  => __( 'کپچا درست بارگذاری شد.', 'tisa-otp' ),
+					'captchaNoScript' => __( 'نشانی اسکریپت خالی است. کلید سایت را در همین کارت وارد کنید.', 'tisa-otp' ),
+					'captchaBlocked'  => __( 'اسکریپت کپچا در مرورگر بارگذاری نشد. افزونهٔ مسدودکننده، DNS یا فیلترینگ را بررسی کنید؛ می‌توانید «نشانی جایگزین اسکریپت» را هم پر کنید.', 'tisa-otp' ),
+					'close'         => __( 'بستن', 'tisa-otp' ),
+					'rerun'         => __( 'اجرای دوباره', 'tisa-otp' ),
+					'statusOk'      => __( 'سالم', 'tisa-otp' ),
+					'statusWarn'    => __( 'هشدار', 'tisa-otp' ),
+					'statusFail'    => __( 'نیاز به رسیدگی', 'tisa-otp' ),
+					'statusInfo'    => __( 'اطلاع', 'tisa-otp' ),
+					'captchaRow'    => __( 'بارگذاری در مرورگر', 'tisa-otp' ),
+					'captchaTrying' => __( 'اسکریپت‌هایی که امتحان می‌شوند', 'tisa-otp' ),
+					'smsTitle'      => __( 'ارسال پیامک آزمایشی', 'tisa-otp' ),
+					'smsIntro'      => __( 'یک کد واقعی از مسیر واقعی ارسال می‌شود. شماره‌ای را وارد کنید که در دسترس خودتان است؛ هر سامانه‌ای که امتحان شود با پاسخش نشان داده می‌شود.', 'tisa-otp' ),
+					'smsPhone'      => __( 'شماره', 'tisa-otp' ),
+					'smsNeedPhone'  => __( 'بدون شماره، آزمایشی ارسال نمی‌شود.', 'tisa-otp' ),
+					'smsSend'       => __( 'ارسال', 'tisa-otp' ),
+					'smsSent'       => __( 'ارسال شد', 'tisa-otp' ),
+					'smsNotSent'    => __( 'پیامک ارسال نشد', 'tisa-otp' ),
+					'smsVia'        => __( 'از طریق', 'tisa-otp' ),
+					'smsChannel'    => __( 'پیامک', 'tisa-otp' ),
+					'emailChannel'  => __( 'ایمیل', 'tisa-otp' ),
+					'fix'           => __( 'راه‌حل', 'tisa-otp' ),
+					'planIssues'    => __( 'ایرادهای پیکربندی این سامانه', 'tisa-otp' ),
 				),
+				'myPhone' => $this->ownPhone(),
 			)
 		);
 
@@ -121,6 +151,59 @@ final class Assets implements Bootable {
 	}
 
 	/**
+	 * The administrator's own number, used to pre-fill the test-send modal.
+	 *
+	 * It is read from the profile key the plugin itself writes, so the field is
+	 * empty rather than wrong when nothing is stored.
+	 */
+	private function ownPhone(): string {
+		$key  = $this->settings->str( 'phone_meta_key', 'tisa_phone' );
+		$user = get_current_user_id();
+
+		if ( ! $user || '' === trim( $key ) ) {
+			return '';
+		}
+
+		return trim( (string) get_user_meta( $user, $key, true ) );
+	}
+
+	/**
+	 * What the admin screen needs to test the captcha the way a visitor meets it.
+	 *
+	 * The point is to answer "why is there no captcha on my login page?" from
+	 * inside the dashboard: the same script URLs the front end tries, in the
+	 * same order, in a real browser.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private function captchaTest(): array {
+		$provider = $this->captcha->active();
+
+		if ( null === $provider ) {
+			return array( 'on' => false );
+		}
+
+		$globals = array(
+			'arcaptcha'    => 'arcaptcha',
+			'hcaptcha'     => 'hcaptcha',
+			'recaptcha_v3' => 'grecaptcha',
+		);
+
+		$config = (array) $provider->clientConfig();
+
+		return array(
+			'on'        => true,
+			'id'        => $provider->id(),
+			'label'     => $provider->label(),
+			'script'    => $provider->scriptUrl(),
+			'fallbacks' => method_exists( $provider, 'fallbackScriptUrls' ) ? array_values( (array) $provider->fallbackScriptUrls() ) : array(),
+			'global'    => isset( $globals[ $provider->id() ] ) ? $globals[ $provider->id() ] : '',
+			'siteKey'   => isset( $config['siteKey'] ) ? (string) $config['siteKey'] : '',
+			'kind'      => isset( $config['kind'] ) ? (string) $config['kind'] : 'widget',
+		);
+	}
+
+	/**
 	 * Everything the browser needs; also served over `GET /form-config`.
 	 */
 	public function clientConfig(): array {
@@ -129,6 +212,10 @@ final class Assets implements Bootable {
 			'nonce'      => wp_create_nonce( 'wp_rest' ),
 			'configUrl'  => esc_url_raw( rest_url( 'tisa-otp/v1/form-config' ) ),
 			'cacheMode'  => $this->settings->str( 'cache_mode', 'auto' ),
+			// Minted here and refreshed by `/form-config`, never cached: this is
+			// what keeps the bot-timing check honest behind a page cache.
+			'formToken'  => \TisaOtp\Support\FormToken::issue(),
+			'renderedAt' => time(),
 			'autoVerify' => $this->settings->bool( 'auto_verify', true ),
 			'webOtp'     => $this->settings->bool( 'webotp_enabled', false ),
 			'timeoutMs'  => max( 5, min( 60, $this->settings->int( 'request_timeout', 15 ) ) ) * 1000,
@@ -141,6 +228,19 @@ final class Assets implements Bootable {
 			'channel'    => $this->settings->str( 'channel', 'sms' ),
 			'skin'       => $this->settings->str( 'skin', 'line' ),
 			'captcha'    => $this->captcha->clientBundle(),
+			/*
+			 * Style isolation. The form is moved into a shadow root and this
+			 * stylesheet is injected into it, so the theme's CSS cannot reach
+			 * the markup — see the note in assets/js/front.js. `css` is the
+			 * same URL the <link> already loaded (so the fetch is a cache
+			 * hit), and `assets` is the base the font URLs are rewritten
+			 * against, because a <style> element resolves `url()` next to the
+			 * page rather than next to the file the text came from.
+			 */
+			'isolate'    => $this->settings->bool( 'style_isolation', true ),
+			'css'        => esc_url_raw( add_query_arg( 'ver', TISA_OTP_VERSION, TISA_OTP_URL . 'assets/css/front.css' ) ),
+			'assets'     => esc_url_raw( TISA_OTP_URL . 'assets/' ),
+			'vars'       => $this->variables(),
 			'labels'     => array(
 				'send'     => $this->settings->str( 'label_send', __( 'دریافت کد ورود', 'tisa-otp' ) ),
 				'verify'   => $this->settings->str( 'label_verify', __( 'ورود به حساب', 'tisa-otp' ) ),
@@ -174,6 +274,22 @@ final class Assets implements Bootable {
 				'attemptsLeft'     => __( '{n} تلاش دیگر باقی مانده.', 'tisa-otp' ),
 				'stepOf'           => __( 'گام {n} از {total}: {name}', 'tisa-otp' ),
 				'digitLabel'       => __( 'رقم {n}', 'tisa-otp' ),
+				// Captcha loading is a real failure mode, so it has real sentences.
+				'captchaLoad'      => __( 'تأیید امنیتی بارگذاری نشد. اگر افزونهٔ مسدودکننده دارید، آن را برای این سایت غیرفعال کنید.', 'tisa-otp' ),
+				'captchaRetry'     => __( 'تلاش دوباره برای بارگذاری', 'tisa-otp' ),
+				'captchaContinue'  => __( 'می‌توانید بدون تأیید امنیتی ادامه دهید؛ سایت از روش‌های دیگر محافظت می‌کند.', 'tisa-otp' ),
+				'captchaBlocked'   => __( 'تأیید امنیتی در مرورگر شما بارگذاری نشد. صفحه را دوباره باز کنید یا افزونهٔ مسدودکننده را غیرفعال کنید.', 'tisa-otp' ),
+				'pasteLabel'       => __( 'چسباندن کد از پیامک', 'tisa-otp' ),
+				'pasteManual'      => __( 'کد پیامک را دستی در خانه‌ها وارد کنید.', 'tisa-otp' ),
+				'pasteEmpty'       => __( 'کدی در حافظه پیدا نشد. پیامک را باز کنید و کد را کپی کنید.', 'tisa-otp' ),
+				'pasteDone'        => __( 'کد از حافظه چسبانده شد.', 'tisa-otp' ),
+				'pasteDenied'      => __( 'مرورگر اجازهٔ خواندن حافظه را نداد. کد را در کادر اول بچسبانید (Ctrl+V).', 'tisa-otp' ),
+				'problemTitle'     => __( 'یک مشکل پیش آمد', 'tisa-otp' ),
+				'doneTitle'        => __( 'انجام شد', 'tisa-otp' ),
+				'noteTitle'        => __( 'توجه', 'tisa-otp' ),
+				'trustSecure'      => __( 'بدون رمز عبور', 'tisa-otp' ),
+				'trustInstant'     => __( 'ورود در چند ثانیه', 'tisa-otp' ),
+				'trustPrivate'     => __( 'شماره شما محفوظ می‌ماند', 'tisa-otp' ),
 			),
 			/* Buttons offered inside an error message, keyed by the server's code. */
 			'actions'    => array(
@@ -220,20 +336,45 @@ final class Assets implements Bootable {
 		return '' !== trim( $this->settings->str( 'custom_css' ) ) || '' !== trim( $this->settings->str( 'custom_js' ) );
 	}
 
-	private function cssVariables(): string {
+	/**
+	 * Every design value the settings imply, as CSS custom properties.
+	 *
+	 * It is a map rather than a stylesheet because it has two consumers: the
+	 * `:root` block for the light DOM, and the form itself inside its shadow
+	 * root — where a `:root` rule cannot reach and the values have to be set on
+	 * the element.
+	 *
+	 * Every colour the accent implies is derived here, next to the accent
+	 * itself. `--tisa-accent-strong` is what the button hover, its shadow and
+	 * the cooldown bar darken to; when it was a fixed teal, a crimson form
+	 * hovered green.
+	 *
+	 * @return array<string,string>
+	 */
+	public function variables(): array {
 		$accent  = $this->settings->str( 'accent', '#0f766e' );
 		$surface = $this->settings->str( 'surface', '#ffffff' );
 		$radius  = max( 0, min( 40, $this->settings->int( 'radius', 14 ) ) );
 		$width   = max( 280, min( 900, $this->settings->int( 'width', 420 ) ) );
 
-		return sprintf(
-			':root{--tisa-accent:%1$s;--tisa-accent-soft:%2$s;--tisa-surface:%3$s;--tisa-radius:%4$dpx;--tisa-width:%5$dpx;}',
-			esc_attr( $accent ),
-			esc_attr( $this->mix( $accent, '#ffffff', 0.12 ) ),
-			esc_attr( $surface ),
-			$radius,
-			$width
+		return array(
+			'tisa-accent'        => $accent,
+			'tisa-accent-strong' => $this->mix( $accent, '#000000', 0.22 ),
+			'tisa-accent-soft'   => $this->rgba( $accent, 0.14 ),
+			'tisa-surface'       => $surface,
+			'tisa-radius'        => $radius . 'px',
+			'tisa-width'         => $width . 'px',
 		);
+	}
+
+	private function cssVariables(): string {
+		$parts = array();
+
+		foreach ( $this->variables() as $name => $value ) {
+			$parts[] = '--' . $name . ':' . $value;
+		}
+
+		return ':root{' . implode( ';', $parts ) . ';}';
 	}
 
 	private function injectCustomCode(): void {
@@ -247,6 +388,22 @@ final class Assets implements Bootable {
 		if ( '' !== trim( $js ) ) {
 			wp_add_inline_script( self::SCRIPT, $js, 'after' );
 		}
+	}
+
+	/**
+	 * The accent as a translucent wash.
+	 *
+	 * Alpha, not a lightened solid: the same ring has to sit on a white card
+	 * and on the dark skin without turning into an opaque band.
+	 */
+	private function rgba( string $hex, float $alpha ): string {
+		$rgb = $this->toRgb( $hex );
+
+		if ( null === $rgb ) {
+			return $hex;
+		}
+
+		return sprintf( 'rgba(%d, %d, %d, %s)', $rgb[0], $rgb[1], $rgb[2], rtrim( rtrim( number_format( $alpha, 3, '.', '' ), '0' ), '.' ) );
 	}
 
 	/**

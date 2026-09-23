@@ -23,6 +23,9 @@ final class Menu implements Bootable {
 	/** @var SettingsScreen */
 	private $settingsScreen;
 
+	/** @var ReportScreen */
+	private $reportScreen;
+
 	/** @var LogsScreen */
 	private $logsScreen;
 
@@ -32,9 +35,10 @@ final class Menu implements Bootable {
 	/** @var AccessScreen */
 	private $accessScreen;
 
-	public function __construct( Settings $settings, SettingsScreen $settingsScreen, LogsScreen $logsScreen, ToolsScreen $toolsScreen, AccessScreen $accessScreen ) {
+	public function __construct( Settings $settings, SettingsScreen $settingsScreen, ReportScreen $reportScreen, LogsScreen $logsScreen, ToolsScreen $toolsScreen, AccessScreen $accessScreen ) {
 		$this->settings       = $settings;
 		$this->settingsScreen = $settingsScreen;
+		$this->reportScreen   = $reportScreen;
 		$this->logsScreen     = $logsScreen;
 		$this->toolsScreen    = $toolsScreen;
 		$this->accessScreen   = $accessScreen;
@@ -60,8 +64,9 @@ final class Menu implements Bootable {
 		);
 
 		add_submenu_page( self::ROOT, __( 'تنظیمات', 'tisa-otp' ), __( 'تنظیمات', 'tisa-otp' ), self::CAPABILITY, self::ROOT, array( $this->settingsScreen, 'render' ) );
-		add_submenu_page( self::ROOT, __( 'رویدادها', 'tisa-otp' ), __( 'رویدادها', 'tisa-otp' ), self::CAPABILITY, self::ROOT . '-logs', array( $this->logsScreen, 'render' ) );
-		add_submenu_page( self::ROOT, __( 'ابزارها و وضعیت', 'tisa-otp' ), __( 'ابزارها', 'tisa-otp' ), self::CAPABILITY, self::ROOT . '-tools', array( $this->toolsScreen, 'render' ) );
+		add_submenu_page( self::ROOT, __( 'گزارش‌ها', 'tisa-otp' ), __( 'گزارش‌ها', 'tisa-otp' ), self::CAPABILITY, ReportScreen::SLUG, array( $this->reportScreen, 'render' ) );
+		add_submenu_page( self::ROOT, __( 'رویدادها', 'tisa-otp' ), __( 'رویدادها', 'tisa-otp' ), self::CAPABILITY, LogsScreen::SLUG, array( $this->logsScreen, 'render' ) );
+		add_submenu_page( self::ROOT, __( 'ابزارها و وضعیت', 'tisa-otp' ), __( 'ابزارها', 'tisa-otp' ), self::CAPABILITY, ToolsScreen::SLUG, array( $this->toolsScreen, 'render' ) );
 		add_submenu_page( self::ROOT, __( 'دسترسی و مسدودی', 'tisa-otp' ), __( 'دسترسی و مسدودی', 'tisa-otp' ), self::CAPABILITY, AccessScreen::SLUG, array( $this->accessScreen, 'render' ) );
 	}
 

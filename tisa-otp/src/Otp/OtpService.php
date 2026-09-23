@@ -103,7 +103,14 @@ final class OtpService {
 			return VerificationResult::rejected( VerificationResult::MISMATCH, max( 0, $maxTries - $attempts ) );
 		}
 
-		$this->store->consume( $record );
+		/*
+		 * The code is right — now win the right to spend it. A correct code
+		 * that somebody else already spent in the same second is treated as
+		 * used up, not as a second sign-in.
+		 */
+		if ( ! $this->store->claim( $record ) ) {
+			return VerificationResult::rejected( VerificationResult::MISSING );
+		}
 
 		return VerificationResult::accepted();
 	}

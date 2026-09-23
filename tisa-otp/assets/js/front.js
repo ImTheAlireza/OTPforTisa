@@ -56,22 +56,53 @@
 		});
 	}
 
-	function looksLikePhone(value) {
+	/**
+	 * Every spelling of an Iranian mobile number, folded to `09xxxxxxxxx`.
+	 *
+	 * This is what gets sent, not what got typed. Without it the field could
+	 * accept `9123456789` (which the old validator did) and then post those ten
+	 * digits, which the server — correctly — rejected as an invalid number.
+	 */
+	/**
+	 * Can this browser hand us the clipboard at all?
+	 *
+	 * `readText` only exists in a secure context, so a plain-http site gets no
+	 * promise to reject — the function is simply absent.
+	 */
+	function supportsClipboardRead() {
+		return !!(window.navigator && navigator.clipboard && navigator.clipboard.readText);
+	}
+
+	function canonicalPhone(value) {
 		var digits = digitsOnly(value);
 
+		// `00` is how the international prefix is dialled in Iran; people paste
+		// `0098912…` straight out of their contacts, so fold it first.
+		if (0 === digits.indexOf('00')) {
+			digits = digits.substr(2);
+		}
+
 		if (12 === digits.length && '98' === digits.substr(0, 2)) {
-			digits = '0' + digits.substr(2);
+			return '0' + digits.substr(2);
 		}
 
-		if (11 === digits.length && '+' === String(value).trim().substr(0, 1)) {
-			digits = '0' + digits.substr(1);
+		if (11 === digits.length && '0' === digits.charAt(0)) {
+			return digits;
 		}
 
-		if (10 === digits.length && '9' === digits.substr(0, 1)) {
-			digits = '0' + digits;
+		if (11 === digits.length && '9' === digits.charAt(0)) {
+			return '0' + digits.substr(1);
 		}
 
-		return /^09\d{9}$/.test(digits);
+		if (10 === digits.length && '9' === digits.charAt(0)) {
+			return '0' + digits;
+		}
+
+		return digits;
+	}
+
+	function looksLikePhone(value) {
+		return /^09\d{9}$/.test(canonicalPhone(value));
 	}
 
 	function flag(value, fallback) {
@@ -101,115 +132,852 @@
 
 	/* ---------------------------------------------------------------- Captcha */
 
-	function Captcha(root, conf) {
-		this.conf = conf || {};
-		this.container = $(root, '[data-tisa-captcha]');
-		this.widgetId = null;
-		this.token = '';
+	/*
+	 * Captcha loading is the part that breaks in the real world, so it is the
+	 * part written defensively here.
+	 *
+	 * What went wrong before:
+	 *   - the vendor script was assumed to be present the instant the form was
+	 *     mounted, so a slow or blocked bundle meant `render()` silently did
+	 *     nothing and the visitor stared at an empty space;
+	 *   - ARCaptcha was called through `arcaptcha.widget.*`, an object the
+	 *     library has never exposed, so the Iranian widget never rendered at all;
+	 *   - every failure resolved to an empty token, and the server answered
+	 *     "prove you are not a robot" while showing no robot test.
+	 *
+	 * Now: the script list is walked (mirrors included), the widget is rendered
+	 * after the library is really there, a failure is *visible* with a retry
+	 * button, and the last chance is a clear sentence instead of a dead end.
+	 */
+
+	var CAPTCHA_GLOBALS = {
+		recaptcha_v3: 'grecaptcha',
+		hcaptcha: 'hcaptcha',
+		arcaptcha: 'arcaptcha'
+	};
+
+	/*
+	 * A token can arrive as a string, or wrapped in an object.
+	 *
+	 * reCAPTCHA v3 resolves a string. ARCaptcha's `execute()` resolves the same
+	 * string in v3, but its invisible flow is documented as resolving an object
+	 * carrying `arcaptcha_token`. Both are token-bearing answers; the server
+	 * wants the token itself, and posting `[object Object]` would be a rejection
+	 * the visitor could do nothing about.
+	 */
+	function unwrapToken(value) {
+		if (!value) {
+			return '';
+		}
+
+		if ('string' === typeof value) {
+			return value;
+		}
+
+		if ('object' === typeof value) {
+			if ('string' === typeof value.arcaptcha_token) {
+				return value.arcaptcha_token;
+			}
+
+			if ('string' === typeof value.token) {
+				return value.token;
+			}
+		}
+
+		return '';
 	}
 
+	/*
+	 * A captcha widget is a whole design of its own, and it arrives with its own
+	 * stylesheet — written for the page, injected into the document's head.
+	 * A shadow root cannot see the head: no selector crosses that boundary. So
+	 * the widget renders as bare markup, and bare markup is not small.
+	 *
+	 * ARCaptcha is the worked example. Its loader and its checkbox are Vue
+	 * components styled by classes (`spinner-loader`, `spinner-logo`, plus a
+	 * compiled Tailwind set), and the brand mark inside the loader is an SVG
+	 * with viewBox 0 0 621 363. With no stylesheet in reach, that SVG is laid
+	 * out at its own size and a purple cloud takes over the form — a screenshot
+	 * a customer actually sent, with the question "why does it load like this?"
+	 *
+	 * The fix is to let the vendor's styles follow the widget into our tree:
+	 * whatever the page's head gains while this form is on screen is copied
+	 * into the shadow root as well.
+	 *
+	 *   - a <link> is cloned as a <link>, so its own url() references still
+	 *     resolve against the vendor's file rather than against this page;
+	 *   - a <style> is copied as text, at the very end of the root, so the
+	 *     vendor's rules outrank this plugin's fallback sizing;
+	 *   - constructable sheets (document.adoptedStyleSheets) are adopted too,
+	 *     for bundles that inject that way;
+	 *   - anything already in the document that names the vendor is copied up
+	 *     front, in case the library loaded before this form mounted;
+	 *   - anything else the page injects later is copied too, but *before* this
+	 *     plugin's stylesheet, so a theme that loads its CSS late still cannot
+	 *     outrank the form's own layout.
+	 *
+	 * Nothing happens in the light DOM, where the page's own CSS already
+	 * applies.
+	 */
+	function mirrorVendorStyles(container) {
+		if (!container) {
+			return null;
+		}
+
+		if (container.tisaVendorStyles) {
+			return container.tisaVendorStyles;
+		}
+
+		var root = container.getRootNode ? container.getRootNode() : null;
+
+		if (!root || root === document || !root.host) {
+			container.tisaVendorStyles = { shadow: false };
+
+			return container.tisaVendorStyles;
+		}
+
+		var state = { shadow: true, seen: {}, sheets: 0, observer: null };
+
+		container.tisaVendorStyles = state;
+
+		/*
+		 * The widget's own classes. Its styling is compiled per component and
+		 * carries names like these; a stylesheet that mentions them is the
+		 * widget's, not the theme's.
+		 */
+		var HINT = /arcaptcha|spinner-logo|spinner-loader|bg-purple-s5/i;
+
+		var vendorish = function (node) {
+			var href = String((node.getAttribute && node.getAttribute('href')) || '');
+			var text = 'LINK' === node.tagName ? '' : String(node.textContent || '');
+
+			return HINT.test(href + ' ' + text);
+		};
+
+		var fingerprint = function (node) {
+			if ('LINK' === node.tagName) {
+				return 'href:' + String(node.getAttribute('href') || '');
+			}
+
+			var text = String(node.textContent || '');
+
+			return 'text:' + text.length + ':' + text.slice(0, 96);
+		};
+
+		/*
+		 * Where a copy lands decides who wins a tie, and the two cases want
+		 * opposite answers:
+		 *
+		 *   - the widget's own sheet goes last, so its sizing and colours beat
+		 *     this plugin's fallback caps;
+		 *   - anything else the page injects while the form is on screen goes
+		 *     *before* this plugin's stylesheet, so a theme that loads CSS late
+		 *     still cannot outrank the form's own layout — which is the whole
+		 *     point of putting the form in its own tree.
+		 */
+		var place = function (copy, own) {
+			if (own && own.parentNode === root) {
+				root.insertBefore(copy, own);
+			} else {
+				root.insertBefore(copy, root.firstChild);
+			}
+		};
+
+		var spread = function (node) {
+			var tag = node && node.tagName ? String(node.tagName).toUpperCase() : '';
+
+			if ('LINK' !== tag && 'STYLE' !== tag) {
+				return;
+			}
+
+			if ('LINK' === tag && -1 === String(node.getAttribute('rel') || '').toLowerCase().indexOf('stylesheet')) {
+				return;
+			}
+
+			var id = fingerprint(node);
+
+			if (!id || state.seen[id]) {
+				return;
+			}
+
+			state.seen[id] = true;
+
+			try {
+				var copy = 'LINK' === tag ? node.cloneNode(false) : document.createElement('style');
+				var own = root.querySelector('style[data-tisa-shadow-style]');
+
+				if ('STYLE' === tag) {
+					copy.textContent = node.textContent;
+				}
+
+				if (vendorish(node)) {
+					copy.setAttribute('data-tisa-vendor-style', '1');
+					root.appendChild(copy);
+				} else {
+					copy.setAttribute('data-tisa-page-style', '1');
+					place(copy, own);
+				}
+			} catch (error) {
+				// A closed or detached root simply keeps the fallback sizing.
+			}
+		};
+
+		var tree = function (node) {
+			spread(node);
+
+			if (node && node.querySelectorAll) {
+				Array.prototype.forEach.call(node.querySelectorAll('link[rel~="stylesheet"], style'), spread);
+			}
+		};
+
+		var adoptSheets = function () {
+			var list = document.adoptedStyleSheets;
+
+			if (!list || !('adoptedStyleSheets' in root)) {
+				return;
+			}
+
+			try {
+				for (var i = state.sheets; i < list.length; i++) {
+					if (root.adoptedStyleSheets.indexOf(list[i]) < 0) {
+						root.adoptedStyleSheets = root.adoptedStyleSheets.concat(list[i]);
+					}
+				}
+
+				state.sheets = list.length;
+			} catch (error) {
+				// Older engines grew shadow-root adopted sheets late; the
+				// <link>/<style> path above carries the same stylesheet.
+			}
+		};
+
+		/*
+		 * A widget that loaded before this form mounted has already injected its
+		 * stylesheet. Recognise it by name and copy it in; the page's own sheets
+		 * are deliberately left behind, because leaving them behind is the whole
+		 * reason the form lives in its own tree.
+		 */
+		Array.prototype.forEach.call(document.querySelectorAll('head link[rel~="stylesheet"], head style'), function (node) {
+			if (vendorish(node)) {
+				spread(node);
+			}
+		});
+
+		try {
+			state.observer = new MutationObserver(function (records) {
+				records.forEach(function (record) {
+					Array.prototype.forEach.call(record.addedNodes, tree);
+				});
+
+				adoptSheets();
+			});
+
+			// Anywhere in the light DOM, not only the head: a widget may append
+			// its sheet to the body, and the copy has to be there before the
+			// widget's own first frame.
+			state.observer.observe(document.documentElement, { childList: true, subtree: true });
+		} catch (error) {
+			state.observer = null;
+		}
+
+		return state;
+	}
+
+	function Captcha(root, conf) {
+		this.conf = conf || {};
+		this.config = this.conf.config || {};
+		/*
+		 * Why the last attempt produced no token. The server cannot see the
+		 * browser, so this is the only party that can report "the challenge never
+		 * became available here" — and it is reported, not assumed: the guard only
+		 * acts on it for an administrator who chose to stay open during an outage.
+		 */
+		this.state = '';
+
+		this.container = $(root, '[data-tisa-captcha]');
+
+		// Installed before the vendor script can run, so no injected rule is
+		// missed; see mirrorVendorStyles above for why it is needed at all.
+		mirrorVendorStyles(this.container);
+
+		this.widgetId = null;
+		this.token = '';
+		this.pending = null;
+		this.unavailable = false;
+		this.solving = false;
+		this.onSolved = null;
+	}
+
+	/**
+	 * Adopt a fresher bundle from `/form-config` (new nonce, possibly new mirror
+	 * list) without losing the widget that is already on screen.
+	 */
+	Captcha.prototype.absorb = function (bundle) {
+		if (!bundle || !bundle.enabled) {
+			return;
+		}
+
+		var key;
+
+		for (key in bundle) {
+			if (Object.prototype.hasOwnProperty.call(bundle, key)) {
+				this.conf[key] = bundle[key];
+			}
+		}
+
+		this.config = this.conf.config || {};
+		this.pending = null;
+	};
+
 	Captcha.prototype.enabled = function () {
-		return !!(this.conf && this.conf.enabled && this.conf.config && this.conf.config.siteKey);
+		return !!(this.conf && this.conf.enabled && this.siteKey());
+	};
+
+	Captcha.prototype.siteKey = function () {
+		return String(this.config.siteKey || this.conf.siteKey || '');
+	};
+
+	Captcha.prototype.kind = function () {
+		return String(this.conf.kind || this.config.kind || 'widget');
 	};
 
 	Captcha.prototype.isScore = function () {
-		return this.enabled() && 'score' === this.conf.config.kind;
+		return this.enabled() && 'score' === this.kind();
 	};
 
-	Captcha.prototype.showWidget = function () {
-		if (!this.enabled() || this.isScore() || !this.container) {
+	Captcha.prototype.globalName = function () {
+		return CAPTCHA_GLOBALS[this.conf.provider] || '';
+	};
+
+	Captcha.prototype.library = function () {
+		var name = this.globalName();
+
+		return name ? window[name] || null : null;
+	};
+
+	/**
+	 * Walk every script URL until one defines the library.
+	 *
+	 * A bundle that loads but never defines the global (blocked by an extension,
+	 * a captive portal HTML page, a wrong mirror) is treated exactly like a
+	 * network failure: the next URL is tried.
+	 */
+	Captcha.prototype.load = function () {
+		var self = this;
+
+		if (this.pending) {
+			return this.pending;
+		}
+
+		if (!this.enabled()) {
+			return Promise.resolve(true);
+		}
+
+		var name = this.globalName();
+		var urls = (this.conf.scripts || []).slice();
+
+		if (!urls.length && this.conf.script) {
+			urls.push(this.conf.script);
+		}
+
+		if (!name || !urls.length) {
+			return Promise.resolve(!!this.library());
+		}
+
+		if (this.library()) {
+			this.pending = Promise.resolve(true);
+
+			return this.pending;
+		}
+
+		this.pending = new Promise(function (resolve) {
+			var index = 0;
+			var budget = parseInt(self.conf.loadTimeout || 8000, 10);
+
+			function waitForGlobal(deadline) {
+				if (window[name]) {
+					resolve(true);
+					return;
+				}
+
+				if (Date.now() > deadline) {
+					next();
+					return;
+				}
+
+				window.setTimeout(function () {
+					waitForGlobal(deadline);
+				}, 80);
+			}
+
+			function next() {
+				if (index >= urls.length) {
+					resolve(false);
+					return;
+				}
+
+				var url = urls[index++];
+				var script = document.createElement('script');
+				var settled = false;
+				var timer = window.setTimeout(function () {
+					settled = true;
+					cleanup();
+					next();
+				}, budget);
+
+				function cleanup() {
+					window.clearTimeout(timer);
+
+					if (script.parentNode) {
+						script.parentNode.removeChild(script);
+					}
+				}
+
+				script.async = true;
+				script.defer = true;
+				script.setAttribute('data-tisa-captcha-script', url);
+
+				script.onload = function () {
+					if (settled) {
+						return;
+					}
+
+					settled = true;
+					// Give the bundle a moment to define its global.
+					waitForGlobal(Date.now() + 2500);
+				};
+
+				script.onerror = function () {
+					if (settled) {
+						return;
+					}
+
+					settled = true;
+					cleanup();
+					next();
+				};
+
+				script.src = url;
+				document.head.appendChild(script);
+			}
+
+			next();
+		});
+
+		return this.pending;
+	};
+
+	/**
+	 * Make the challenge ready to answer: script loaded, widget rendered.
+	 */
+	Captcha.prototype.prepare = function () {
+		var self = this;
+
+		if (!this.enabled()) {
+			return Promise.resolve(true);
+		}
+
+		return this.load().then(function (ok) {
+			if (!ok || !self.library()) {
+				self.markUnavailable();
+				return false;
+			}
+
+			if (!self.isScore() && !self.isInvisible()) {
+				self.render();
+			}
+
+			return true;
+		});
+	};
+
+	Captcha.prototype.isInvisible = function () {
+		return 'invisible' === this.config.size || 'invisible' === this.conf.size;
+	};
+
+	/**
+	 * Render the widget once, into the container the templates print.
+	 */
+	Captcha.prototype.render = function () {
+		var self = this;
+		var siteKey = this.siteKey();
+		var lib = this.library();
+
+		if (null !== this.widgetId || !this.container || !lib || !lib.render) {
 			return;
+		}
+
+		this.show();
+
+		var onToken = function (value) {
+			self.token = value || self.token;
+
+			if (self.onSolved) {
+				var callback = self.onSolved;
+				self.onSolved = null;
+				callback();
+			}
+		};
+
+		var params = { sitekey: siteKey, site_key: siteKey, callback: onToken };
+
+		if ('hcaptcha' === this.conf.provider) {
+			params = {
+				sitekey: siteKey,
+				callback: onToken,
+				'expired-callback': function () {
+					self.token = '';
+				},
+				'error-callback': function () {
+					self.markUnavailable();
+				}
+			};
+
+			if (this.config.lang) {
+				params.hl = String(this.config.lang).replace('_', '-').split('-')[0];
+			}
+		} else if ('arcaptcha' === this.conf.provider) {
+			params = {
+				site_key: siteKey,
+				lang: this.config.lang || 'fa',
+				dir: this.config.dir || 'rtl',
+				theme: this.config.theme || 'light',
+				callback: onToken,
+				'error-callback': function () {
+					self.token = '';
+				},
+				'expired-callback': function () {
+					self.token = '';
+				}
+			};
+		}
+
+		try {
+			this.widgetId = lib.render(this.container, params);
+		} catch (error) {
+			this.widgetId = null;
+			this.token = '';
+		}
+	};
+
+	Captcha.prototype.show = function () {
+		if (!this.container) {
+			return;
+		}
+
+		// A previous failure left an error block behind; clear it.
+		if (this.container.querySelector('.tisa-captcha__error')) {
+			this.container.textContent = '';
 		}
 
 		this.container.hidden = false;
-		this.render();
 	};
 
-	Captcha.prototype.render = function () {
+	/**
+	 * The script could not be loaded. Say so, and offer the way out.
+	 */
+	Captcha.prototype.markUnavailable = function () {
 		var self = this;
-		var siteKey = this.conf.config.siteKey;
 
-		if (this.widgetId || !this.container) {
+		this.unavailable = true;
+
+		if (!this.container) {
 			return;
 		}
 
-		var onToken = function (value) {
-			self.token = value || '';
+		this.show();
+		this.container.textContent = '';
+
+		var box = document.createElement('div');
+		box.className = 'tisa-captcha__error';
+		box.setAttribute('role', 'alert');
+
+		var message = document.createElement('p');
+		message.className = 'tisa-captcha__error-text';
+		message.textContent = i18n.captchaLoad || 'تأیید امنیتی بارگذاری نشد.';
+
+		var retry = document.createElement('button');
+		retry.type = 'button';
+		retry.className = 'tisa-link';
+		retry.setAttribute('data-tisa-captcha-retry', '1');
+		retry.textContent = i18n.captchaRetry || 'تلاش دوباره';
+
+		retry.addEventListener('click', function () {
+			self.retryNow();
+		});
+
+		box.appendChild(message);
+		box.appendChild(retry);
+
+		if (this.conf.failOpen && this.conf.siteKey) {
+			var hint = document.createElement('p');
+			hint.className = 'tisa-captcha__error-hint';
+			hint.textContent = i18n.captchaContinue || 'می‌توانید بدون تأیید امنیتی ادامه دهید.';
+			box.appendChild(hint);
+		}
+
+		this.container.appendChild(box);
+		this.emitRetry();
+	};
+
+	Captcha.prototype.emitRetry = function () {
+		// Nothing to announce: the error block is already in a live region.
+	};
+
+	Captcha.prototype.retryNow = function () {
+		this.unavailable = false;
+		this.pending = null;
+		this.widgetId = null;
+		this.token = '';
+
+		if (this.container) {
+			this.container.textContent = '';
+		}
+
+		var self = this;
+
+		this.prepare().then(function (ok) {
+			if (!ok) {
+				return;
+			}
+
+			if (self.onSolved) {
+				var callback = self.onSolved;
+				self.onSolved = null;
+				callback();
+			}
+		});
+	};
+
+	/**
+	 * The token for this request. Never resolves to "nothing" silently when the
+	 * server is going to require a challenge: either we have a token, or the
+	 * caller is told exactly why we do not.
+	 */
+	Captcha.prototype.value = function () {
+		var self = this;
+
+		this.state = '';
+
+		if (!this.enabled()) {
+			return Promise.resolve('');
+		}
+
+		if (this.unavailable) {
+			return this.missing();
+		}
+
+		return this.prepare().then(function (ok) {
+			if (!ok) {
+				return self.missing();
+			}
+
+			if (self.isScore()) {
+				return self.executeScore();
+			}
+
+			return self.widgetToken();
+		});
+	};
+
+	/**
+	 * The challenge never became usable in this browser.
+	 *
+	 * Two very different things used to happen here, and both were wrong: the
+	 * form was sent with an empty token (so the server logged a rejection that
+	 * looked like a bot), or the visitor was stopped with a message about their
+	 * own identity. What is true is that the service — not the visitor — is
+	 * unreachable from here, which is exactly the case `failOpen` exists for.
+	 *
+	 * With fail-open on, the request goes without a token and says why. With it
+	 * off, the visitor is told, and nothing is sent: a rejection nobody asked for
+	 * would only land in the administrator's statistics as a mystery.
+	 */
+	Captcha.prototype.missing = function () {
+		if (!this.conf.failOpen) {
+			return Promise.reject(this.error());
+		}
+
+		this.state = 'unavailable';
+
+		return Promise.resolve('');
+	};
+
+	Captcha.prototype.error = function () {
+		return httpError('captcha_unavailable', i18n.captchaLoad || 'تأیید امنیتی بارگذاری نشد.');
+	};
+
+	/**
+	 * Score based challenges mint a fresh token per request — they are single
+	 * use and expire in about two minutes, so caching one is a bug.
+	 */
+	Captcha.prototype.executeScore = function () {
+		var self = this;
+		var lib = this.library();
+
+		if (!lib || !lib.execute) {
+			return this.missing();
+		}
+
+		var once = function () {
+			return new Promise(function (resolve) {
+				var call = function () {
+					var outcome;
+
+					try {
+						outcome = lib.execute(self.siteKey(), { action: self.config.action || 'tisa_otp_send' });
+					} catch (error) {
+						resolve('');
+						return;
+					}
+
+					if (outcome && 'function' === typeof outcome.then) {
+						outcome.then(function (token) {
+							resolve(unwrapToken(token));
+						}).catch(function () {
+							resolve('');
+						});
+
+						return;
+					}
+
+					resolve(unwrapToken(outcome));
+				};
+
+				if ('function' === typeof lib.ready) {
+					lib.ready(call);
+					return;
+				}
+
+				call();
+			});
 		};
 
+		return once().then(function (token) {
+			if (token) {
+				return token;
+			}
+
+			/*
+			 * v3 mints a token per request over the network, and that request can
+			 * simply time out once — a cold connection, a filtered host, a phone
+			 * waking up. One retry after a short pause turns almost all of those
+			 * into a token; without it the form was posted with an empty token and
+			 * the server recorded a rejection that looked like a bot.
+			 */
+			return self.pause(600).then(once).then(function (again) {
+				return again ? again : self.missing();
+			});
+		});
+	};
+
+	/**
+	 * A pause, so a retry is not a hammer.
+	 */
+	Captcha.prototype.pause = function (ms) {
+		return new Promise(function (resolve) {
+			setTimeout(resolve, ms);
+		});
+	};
+
+	/**
+	 * Checkbox challenges answer through a getter, and the token is consumed by
+	 * the verification, so it is reset afterwards.
+	 */
+	Captcha.prototype.widgetToken = function () {
+		var value = '';
+
 		try {
-			if ('hcaptcha' === this.conf.provider && window.hcaptcha) {
-				this.widgetId = window.hcaptcha.render(this.container, {
-					sitekey: siteKey,
-					callback: onToken,
-					'expired-callback': function () {
-						self.token = '';
-					}
-				});
-			} else if (window.arcaptcha && window.arcaptcha.widget) {
-				this.widgetId = window.arcaptcha.widget.render(this.container, {
-					site_key: siteKey,
-					theme: 'light',
-					dir: 'rtl',
-					language: 'fa',
-					on_success_callback: onToken,
-					on_failure_callback: function () {
-						self.token = '';
-					}
-				});
-			} else if (window.grecaptcha && 'invisible' !== this.conf.provider) {
-				this.widgetId = window.grecaptcha.render(this.container, {
-					sitekey: siteKey,
-					callback: onToken
-				});
+			if ('hcaptcha' === this.conf.provider && window.hcaptcha && null !== this.widgetId) {
+				value = window.hcaptcha.getResponse(this.widgetId) || '';
+			} else if ('arcaptcha' === this.conf.provider && window.arcaptcha) {
+				value = (window.arcaptcha.getArcToken && null !== this.widgetId)
+					? window.arcaptcha.getArcToken(this.widgetId) || ''
+					: '';
+			} else if (window.grecaptcha && null !== this.widgetId) {
+				value = window.grecaptcha.getResponse(this.widgetId) || '';
+			}
+		} catch (error) {
+			value = '';
+		}
+
+		/*
+		 * ARCaptcha's own documentation promises two ways to the token: the
+		 * getter above, and a field the library writes into the surrounding
+		 * form (`arcaptcha-token`). Whichever the installed version of the
+		 * bundle supports, the token must not be lost between them — losing it
+		 * is exactly what "the captcha is solved and the server still says no
+		 * token" looks like from the visitor's side.
+		 */
+		value = unwrapToken(value) || this.fieldToken();
+
+		if (!value) {
+			value = this.token || '';
+		}
+
+		if (!value && !this.token) {
+			this.solving = true;
+		}
+
+		this.token = value || this.token;
+
+		return Promise.resolve(this.token);
+	};
+
+	/**
+	 * The hidden field ARCaptcha's widget writes on a solved challenge.
+	 *
+	 * Scoped to this form: a page can carry more than one widget, and picking up
+	 * another form's token would be worse than finding none.
+	 */
+	Captcha.prototype.fieldToken = function () {
+		var scope = null;
+
+		if (this.container) {
+			scope = this.container.closest ? this.container.closest('form') : null;
+		}
+
+		if (!scope) {
+			return '';
+		}
+
+		var field = scope.querySelector('input[name="arcaptcha-token"], textarea[name="arcaptcha-token"]');
+
+		return field && 'string' === typeof field.value ? field.value : '';
+	};
+
+	/**
+	 * Forget the solved state so the next attempt asks again. Call it right after
+	 * a request that carried a token.
+	 */
+	Captcha.prototype.consume = function () {
+		var widget = this.widgetId;
+
+		this.token = '';
+		this.solving = false;
+
+		if (null === widget) {
+			return;
+		}
+
+		try {
+			if ('hcaptcha' === this.conf.provider && window.hcaptcha && window.hcaptcha.reset) {
+				window.hcaptcha.reset(widget);
+			} else if ('arcaptcha' === this.conf.provider && window.arcaptcha && window.arcaptcha.reset) {
+				window.arcaptcha.reset(widget);
+			} else if (window.grecaptcha && window.grecaptcha.reset && !this.isScore()) {
+				window.grecaptcha.reset(widget);
 			}
 		} catch (error) {
 			this.widgetId = null;
 		}
 	};
 
-	Captcha.prototype.value = function () {
-		if (!this.enabled()) {
-			return Promise.resolve('');
-		}
-
-		if (this.isScore()) {
-			return new Promise(function (resolve) {
-				if (!window.grecaptcha || !window.grecaptcha.execute) {
-					resolve('');
-					return;
-				}
-
-				window.grecaptcha.ready(function () {
-					window.grecaptcha
-						.execute(cfg.captcha.config.siteKey, { action: cfg.captcha.config.action || 'tisa_otp_send' })
-						.then(function (token) {
-							resolve(token || '');
-						})
-						.catch(function () {
-							resolve('');
-						});
-				});
-			});
-		}
-
-		if (window.hcaptcha && this.widgetId !== null) {
-			try {
-				this.token = window.hcaptcha.getResponse(this.widgetId) || this.token;
-			} catch (error) {
-				this.token = this.token || '';
-			}
-		}
-
-		if (window.arcaptcha && window.arcaptcha.widget && window.arcaptcha.widget.getToken) {
-			try {
-				this.token = window.arcaptcha.widget.getToken() || this.token;
-			} catch (error) {
-				this.token = this.token || '';
-			}
-		}
-
-		return Promise.resolve(this.token || '');
+	/**
+	 * Is a challenge on screen that still needs an answer?
+	 */
+	Captcha.prototype.waiting = function () {
+		return this.enabled() && !this.isScore() && '' === this.token;
 	};
 
 	/* ------------------------------------------------------------------- Form */
@@ -226,6 +994,8 @@
 
 		this.configUrl = attr(root, 'config-url') || cfg.configUrl || '';
 		this.cacheMode = attr(root, 'cache-mode') || cfg.cacheMode || 'inline';
+		// Signed timestamp token; refreshed from /form-config, never cached.
+		this.formToken = attr(root, 'form-token') || cfg.formToken || '';
 		this.timeoutMs = parseInt(cfg.timeoutMs || 15000, 10);
 		this.autoVerify = flag(cfg.autoVerify, true);
 		this.webOtp = flag(cfg.webOtp, false);
@@ -258,6 +1028,10 @@
 		this.resendBtn = $(root, '[data-tisa-action="resend"]');
 		this.resendLabel = $(root, '[data-tisa-resend-label]');
 		this.resendLive = $(root, '[data-tisa-resend-live]');
+		this.pasteBtn = $(root, '[data-tisa-paste]');
+		this.phoneChip = $(root, '[data-tisa-phone-chip]');
+		this.phoneChipValue = $(root, '[data-tisa-phone-chip-value]');
+		this.statusTitle = $(root, '[data-tisa-status-title]');
 		this.honeypot = $(root, '.tisa-otp__honeypot');
 		this.timestamp = $(root, '.tisa-otp__rendered');
 
@@ -285,12 +1059,14 @@
 		}
 
 		if ('always' === (cfg.captcha || {}).trigger) {
-			this.captcha.showWidget();
+			this.captcha.prepare();
 		}
 	}
 
 	Form.prototype.bind = function () {
 		var self = this;
+
+		this.bindPaste();
 
 		$$(this.root, '[data-tisa-action]').forEach(function (button) {
 			button.addEventListener('click', function (event) {
@@ -461,18 +1237,78 @@
 		}
 	};
 
+	/**
+	 * "Paste the code" — the poor cousin of WebOTP, and the only help available
+	 * when the message arrives in another app on iOS or in a desktop browser.
+	 */
+	Form.prototype.bindPaste = function () {
+		var self = this;
+
+		if (!this.pasteBtn) {
+			return;
+		}
+
+		/*
+		 * Reading the clipboard needs a secure context (https or localhost) and
+		 * a browser that implements readText(). Without both, the button cannot
+		 * do anything — so it is not shown, and the user pastes into the first
+		 * box as they would anywhere else. An honest missing button beats a
+		 * button that answers "no" every time.
+		 */
+		if (!supportsClipboardRead()) {
+			this.pasteBtn.hidden = true;
+
+			return;
+		}
+
+		this.pasteBtn.addEventListener('click', function () {
+			self.pasteCode();
+		});
+	};
+
+	Form.prototype.pasteCode = function () {
+		var self = this;
+
+		if (!supportsClipboardRead()) {
+			this.say(i18n.pasteManual || '', 'info');
+			this.focusCode();
+
+			return;
+		}
+
+		navigator.clipboard.readText().then(function (value) {
+			var digits = digitsOnly(value).slice(0, self.codeLength);
+
+			if (digits.length < self.codeLength) {
+				self.say(i18n.pasteEmpty || '', 'info');
+				self.focusCode();
+
+				return;
+			}
+
+			self.fillCode(digits);
+			self.say(i18n.pasteDone || '', 'success');
+			self.maybeAutoVerify();
+		}).catch(function () {
+			// Refused, not broken: the first box is focused so Ctrl+V works.
+			self.say(i18n.pasteDenied || i18n.pasteManual || '', 'info');
+			self.focusCode();
+		});
+	};
+
 	Form.prototype.basePayload = function (route) {
 		return {
-			phone: this.phoneInput ? this.phoneInput.value.trim() : this.phone,
+			phone: this.phoneInput ? canonicalPhone(this.phoneInput.value) : this.phone,
 			channel: this.channel,
 			redirect: this.redirect,
 			tisa_hp: this.honeypot ? this.honeypot.value : '',
 			tisa_ts: this.timestamp ? this.timestamp.value : String(Math.floor(Date.now() / 1000)),
+			tisa_ft: this.formToken || '',
 			route: route
 		};
 	};
 
-	Form.prototype.request = function (route, payload) {
+	Form.prototype.request = function (route, payload, retried) {
 		var self = this;
 		var body = payload || {};
 
@@ -487,19 +1323,72 @@
 				body.captcha_token = token;
 			}
 
+			/*
+			 * No token, and the browser knows why. Saying it is what lets the
+			 * server tell an outage apart from a robot with a script.
+			 */
+			delete body.captcha_state;
+
+			if (!token && self.captcha.state) {
+				body.captcha_state = self.captcha.state;
+			}
+
 			return self.send(route, body);
 		}).then(function (result) {
-			// A cached page ships somebody else's nonce: refresh and retry once.
-			if (self.isStaleNonce(result)) {
-				return self.refreshNonce().then(function () {
-					return self.send(route, body);
-				}).then(function (retry) {
-					return self.unwrap(retry);
+			/*
+			 * Two things a visitor can hit through no fault of their own:
+			 *  - a cached page shipped somebody else's nonce;
+			 *  - a cached page (or a slow human) carried a form token the guard
+			 *    considered stale, or a captcha the browser could not load.
+			 * Both are answered by pulling a fresh configuration and sending once
+			 * more. One retry, never a loop.
+			 */
+			if (self.isStaleNonce(result) || self.isRecoverable(result)) {
+				if (retried) {
+					return self.unwrap(result);
+				}
+
+				return self.refreshConfig().then(function () {
+					/*
+					 * The payload was assembled before the refresh, so the fields that
+					 * came from the cached page are still in it. Swap them for the
+					 * fresh ones, otherwise the retry repeats the same rejection.
+					 */
+					body.tisa_ft = self.formToken || '';
+
+					if (self.timestamp) {
+						body.tisa_ts = self.timestamp.value;
+					}
+
+					// A consumed token is worthless — let the captcha mint a new one.
+					delete body.captcha_token;
+					delete body.captcha_state;
+
+					return self.request(route, payload, true);
 				});
 			}
 
+			self.captcha.consume();
+
 			return self.unwrap(result);
 		});
+	};
+
+	/**
+	 * Server said "your form token is stale" or "I cannot see a captcha token".
+	 */
+	Form.prototype.isRecoverable = function (result) {
+		var json = result ? result.json : null;
+
+		if (!json || json.success !== false || !json.data) {
+			return false;
+		}
+
+		if (json.data.recoverable) {
+			return true;
+		}
+
+		return 'captcha_missing' === json.code && this.captcha.unavailable;
 	};
 
 	/**
@@ -584,6 +1473,10 @@
 	 * rejection — keeps the form working behind any cache or CDN.
 	 */
 	Form.prototype.refreshNonce = function () {
+		return this.refreshConfig();
+	};
+
+	Form.prototype.refreshConfig = function () {
 		var self = this;
 
 		if (!this.configUrl || !window.fetch) {
@@ -610,6 +1503,18 @@
 
 			if (data && data.restUrl) {
 				self.endpoint = data.restUrl;
+			}
+
+			if (data && data.formToken) {
+				self.formToken = data.formToken;
+			}
+
+			if (data && data.renderedAt && self.timestamp) {
+				self.timestamp.value = String(data.renderedAt);
+			}
+
+			if (data && data.captcha) {
+				self.captcha.absorb(data.captcha);
 			}
 
 			self.nonceRequest = null;
@@ -640,7 +1545,7 @@
 			return;
 		}
 
-		this.phone = digitsOnly(value);
+		this.phone = canonicalPhone(value);
 		this.clearFieldErrors();
 
 		this.run('start', this.basePayload('start'), function (data) {
@@ -745,6 +1650,14 @@
 			this.masked.textContent = data.masked;
 		}
 
+		if (data.masked && this.phoneChip) {
+			if (this.phoneChipValue) {
+				this.phoneChipValue.textContent = data.masked;
+			}
+
+			this.phoneChip.hidden = false;
+		}
+
 		if (data.draft_token) {
 			this.draftToken = data.draft_token;
 		}
@@ -813,12 +1726,36 @@
 	Form.prototype.fail = function (error) {
 		var payload = error && error.data ? error.data : {};
 		var code = error ? error.code : '';
+		var message = (error && error.message) || i18n.network || 'Error';
 
-		this.say((error && error.message) || i18n.network || 'Error', 'error', this.actionsFor(code, payload));
+		// The server wanted a challenge the browser could never display: say that,
+		// instead of asking the visitor to solve something that is not on screen.
+		if ('captcha_missing' === code && this.captcha.unavailable) {
+			message = i18n.captchaBlocked || message;
+		}
+
+		this.say(message, 'error', this.actionsFor(code, payload));
 		this.emit('error', { code: code, data: payload });
 
 		if (payload.captcha_required) {
-			this.captcha.showWidget();
+			var self = this;
+
+			if (payload.captcha_reset) {
+				this.captcha.consume();
+			}
+
+			/*
+			 * Finish what the visitor started as soon as the challenge is answered.
+			 * Pressing "send" twice because a checkbox appeared is the sort of
+			 * detail that decides whether a login form feels broken.
+			 */
+			this.captcha.onSolved = function () {
+				if (!self.busy) {
+					self.act(self.lastAction || 'start');
+				}
+			};
+
+			this.captcha.prepare();
 		}
 
 		if (payload.retry_after) {
@@ -1486,9 +2423,19 @@
 		}
 
 		var isError = 'error' === type;
+		var titles = {
+			error: i18n.problemTitle || '',
+			success: i18n.doneTitle || '',
+			info: i18n.noteTitle || ''
+		};
 
 		this.statusBox.hidden = false;
 		this.statusBox.className = 'tisa-otp__status is-' + (type || 'info');
+
+		if (this.statusTitle) {
+			this.statusTitle.textContent = titles[type] || '';
+			this.statusTitle.hidden = !titles[type];
+		}
 
 		// Older markup (and themes overriding the template) has no inner nodes.
 		if (this.statusText) {
@@ -1549,8 +2496,13 @@
 		var labels = cfg.actions || {};
 		var retry = { action: 'retry', label: labels.retry || '' };
 		var newCode = { action: 'resend', label: labels.newCode || '', disabled: !!(payload && payload.retry_after) };
-		var editPhone = { action: 'edit-phone', label: labels.editPhone || '' };
 
+		/*
+		 * No "edit phone" button here on purpose. The number is edited on the
+		 * spot — the field itself in step 1, the chip above the boxes in step 3
+		 * — so a third control that only goes back to a screen the user can
+		 * already see is noise, not a next step.
+		 */
 		switch (code) {
 			case 'network_error':
 			case 'request_timeout':
@@ -1562,18 +2514,14 @@
 
 			case 'expired_code':
 			case 'no_pending_code':
-				return [newCode, editPhone];
+				return [newCode];
 
 			case 'cooldown':
-				return [editPhone];
-
 			case 'throttled':
 			case 'blocked':
-				return [];
-
 			case 'invalid_phone':
 			case 'unknown_phone':
-				return [editPhone];
+				return [];
 
 			default:
 				return (payload && payload.captcha_required) ? [] : [retry];
@@ -1583,6 +2531,11 @@
 	Form.prototype.clearStatus = function () {
 		if (this.statusBox) {
 			this.statusBox.hidden = true;
+
+			if (this.statusTitle) {
+				this.statusTitle.textContent = '';
+				this.statusTitle.hidden = true;
+			}
 
 			if (this.statusText) {
 				this.statusText.textContent = '';
@@ -1618,22 +2571,345 @@
 
 	Form.prototype.emit = function (name, detail) {
 		try {
-			this.root.dispatchEvent(new window.CustomEvent('tisa:' + name, { bubbles: true, detail: detail || {} }));
+			/*
+			 * `composed` so the event still reaches the page when the form lives
+			 * inside a shadow root: a bubbling event stops at the shadow boundary
+			 * unless it is composed, and a site listening for `tisa:sent` on
+			 * `document` would silently stop hearing it.
+			 */
+			this.root.dispatchEvent(new window.CustomEvent('tisa:' + name, {
+				bubbles: true,
+				composed: true,
+				detail: detail || {}
+			}));
 		} catch (error) {
 			// Older browsers: the event is only a convenience for custom scripts.
 		}
 	};
 
-	/* ------------------------------------------------------------------ Mount */
+	/* ------------------------------------------------------- Style isolation */
 
-	function mount() {
-		$$(document, '[data-tisa-form]').forEach(function (root) {
-			if (root.dataset.tisaMounted) {
+	/*
+	 * The form renders inside a shadow root, with the plugin's own stylesheet
+	 * injected into it. That is the difference between "the form looks like
+	 * the demo" and "the form looks like whatever the theme does to buttons".
+	 *
+	 * Two things decide a form's look on a real site, and neither of them is
+	 * WordPress rewriting anything:
+	 *
+	 *   1. cascade   — the plugin names one class per rule; a theme writing
+	 *                  `.entry-content input` or `button { ... }` outranks it,
+	 *                  so the theme wins the button, the placeholder and the
+	 *                  link colours;
+	 *   2. inheritance — a theme that sets a font, a letter-spacing or a bold
+	 *                  weight on its content column hands those down to the
+	 *                  form, which then looks like the theme's prose.
+	 *
+	 * A shadow root ends both: no outer selector matches inside it, and the
+	 * values it inherits are declared by the form itself. The stylesheet is
+	 * the same file the light DOM uses — one design, two delivery paths.
+	 *
+	 * It is progressive: the markup is in the page already (so a visitor with
+	 * JavaScript off sees a styled form), the swap happens once the stylesheet
+	 * text is in hand, and if anything goes wrong the form falls back to the
+	 * light DOM rather than disappearing.
+	 */
+
+	var SHADOW = { text: null, failed: false, loading: null };
+
+	/**
+	 * Can this form be isolated, and does the site want it?
+	 */
+	function isolatable(host) {
+		if (false === cfg.isolate || 'off' === cfg.isolate) {
+			return false;
+		}
+
+		if (!window.Element || !window.Element.prototype.attachShadow) {
+			return false;
+		}
+
+		if (!window.Promise || !window.fetch) {
+			return false;
+		}
+
+		/*
+		 * Without a stylesheet URL there is nothing to inject, and an empty
+		 * `fetch('')` would fetch *this page* and inject the HTML as CSS.
+		 */
+		if ('' === String(cfg.css || '')) {
+			return false;
+		}
+
+		// Somebody else's shadow root, or this form opted out.
+		return !host.shadowRoot && '1' !== host.getAttribute('data-tisa-no-shadow');
+	}
+
+	/**
+	 * Absolute URLs, because a `<style>` element resolves `url()` against the
+	 * page, not against the file the text was read from: `../fonts/x.woff2`
+	 * inside `assets/css/` would be requested from the site root.
+	 */
+	function absolutise(css) {
+		var base = String(cfg.assets || '');
+
+		return '' === base ? css : css.replace(/url\(\s*\.\.\//g, 'url(' + base);
+	}
+
+	/**
+	 * Is this text really the plugin's stylesheet?
+	 *
+	 * A security plugin, a CDN rule, or an "optimise CSS" plugin can answer a
+	 * fetch with an HTML error page and a 200, and a browser injects that as
+	 * CSS without complaining. Inside a shadow root the result is a form with
+	 * no styling at all — and the theme cannot style it back in either, because
+	 * a shadow boundary is one-way. A stylesheet that does not name this plugin
+	 * is a failed read, and a failed read leaves the form in the light DOM.
+	 */
+	function ownStylesheet(text) {
+		return 'string' === typeof text &&
+			text.length > 4096 &&
+			text.indexOf('.tisa-otp') > 0 &&
+			text.indexOf('--tisa-accent') > 0;
+	}
+
+	/**
+	 * The stylesheet text, fetched once per page. The URL is the same one the
+	 * `<link>` already loaded, so this is a cache hit — not a second download.
+	 */
+	function stylesheet() {
+		if (null !== SHADOW.text || SHADOW.failed) {
+			return window.Promise.resolve(SHADOW.text || '');
+		}
+
+		if (SHADOW.loading) {
+			return SHADOW.loading;
+		}
+
+		SHADOW.loading = window.fetch(String(cfg.css || ''), { credentials: 'same-origin' })
+			.then(function (response) {
+				return response && response.ok ? response.text() : '';
+			})
+			.then(function (text) {
+				SHADOW.text = ownStylesheet(text) ? absolutise(text) : '';
+				SHADOW.failed = !SHADOW.text;
+
+				return SHADOW.text;
+			})
+			.catch(function () {
+				// Blocked, offline, a security plugin: the form simply stays in
+				// the light DOM, exactly as it shipped before.
+				SHADOW.failed = true;
+
+				return '';
+			});
+
+		return SHADOW.loading;
+	}
+
+	/**
+	 * Everything the form reads from its element travels with it: the classes
+	 * (skins, code mode), the inline custom properties PHP printed, the
+	 * `data-*` settings, and the direction.
+	 */
+	function carry(inner, host) {
+		inner.className = host.className;
+
+		if (host.getAttribute('dir')) {
+			inner.setAttribute('dir', host.getAttribute('dir'));
+		}
+
+		if (host.getAttribute('style')) {
+			inner.setAttribute('style', host.getAttribute('style'));
+		}
+
+		Array.prototype.forEach.call(host.attributes, function (attribute) {
+			if (0 === attribute.name.indexOf('data-')) {
+				inner.setAttribute(attribute.name, attribute.value);
+			}
+		});
+	}
+
+	/**
+	 * The values PHP computed for this request. They are written as inline
+	 * custom properties on the form itself, so they outrank anything — a theme
+	 * cannot recolour the button by declaring the same variable.
+	 */
+	function paint(inner) {
+		var vars = cfg.vars || {};
+
+		Object.keys(vars).forEach(function (name) {
+			if (!vars[name]) {
 				return;
 			}
 
-			root.dataset.tisaMounted = '1';
-			root.tisaForm = new Form(root);
+			if ('' === inner.style.getPropertyValue('--' + name)) {
+				inner.style.setProperty('--' + name, String(vars[name]));
+			}
+		});
+	}
+
+	/**
+	 * Keep the inside in step with the outside.
+	 *
+	 * The host element stays the handle a site holds: a builder or a script
+	 * that changes the accent, the skin or the width on it must still see the
+	 * form change, even though the form no longer lives in that tree. Only the
+	 * plugin's own properties and the class list are mirrored — a theme's
+	 * styles still cannot reach in.
+	 */
+	function mirror(host, inner) {
+		if (!window.MutationObserver) {
+			return;
+		}
+
+		try {
+			var observer = new window.MutationObserver(function () {
+				if (inner.className !== host.className) {
+					inner.className = host.className;
+				}
+
+				Array.prototype.forEach.call(host.style, function (name) {
+					var value = host.style.getPropertyValue(name);
+
+					if (0 === name.indexOf('--tisa-') && inner.style.getPropertyValue(name) !== value) {
+						inner.style.setProperty(name, value);
+					}
+				});
+			});
+
+			observer.observe(host, { attributes: true, attributeFilter: ['class', 'style'] });
+
+			host.tisaShadowObserver = observer;
+		} catch (error) {
+			// No mirroring: the values copied at build time are what the form
+			// renders with, which is exactly what a static page needs.
+		}
+	}
+
+	/**
+	 * Put this form inside its own tree. Resolves with the element the form
+	 * should be built on — the inner one, or the host when isolation is not
+	 * available.
+	 */
+	function shell(host) {
+		if (!isolatable(host)) {
+			return window.Promise.resolve(host);
+		}
+
+		return stylesheet().then(function (text) {
+			var shadow;
+
+			if ('' === text) {
+				return host;
+			}
+
+			try {
+				shadow = host.attachShadow({ mode: 'open' });
+			} catch (error) {
+				return host;
+			}
+
+			var style = document.createElement('style');
+			style.setAttribute('data-tisa-shadow-style', '1');
+			style.textContent = text;
+
+			var inner = document.createElement('div');
+			carry(inner, host);
+			paint(inner);
+
+			shadow.appendChild(style);
+			shadow.appendChild(inner);
+
+			// Moving nodes is synchronous: the browser paints once, after the
+			// swap, so there is no frame where the form is invisible.
+			while (host.firstChild) {
+				inner.appendChild(host.firstChild);
+			}
+
+			host.setAttribute('data-tisa-isolated', '1');
+			mirror(host, inner);
+
+			return inner;
+		});
+	}
+
+	/**
+	 * Undo an isolation that did not work out.
+	 *
+	 * A shadow root cannot be removed, but a slot makes the light DOM visible
+	 * again — and the light children are styled by the very same stylesheet,
+	 * so a failed swap degrades into the form as it shipped before.
+	 */
+	function unresolve(host, inner) {
+		try {
+			while (inner.firstChild) {
+				host.appendChild(inner.firstChild);
+			}
+
+			host.removeAttribute('data-tisa-isolated');
+			host.setAttribute('data-tisa-isolated', 'failed');
+
+			if (host.shadowRoot) {
+				host.shadowRoot.innerHTML = '<slot></slot>';
+			}
+		} catch (error) {
+			// Nothing left to do: the form stays where it is.
+		}
+	}
+
+	/* ------------------------------------------------------------------ Mount */
+
+	/**
+	 * One form, mounted where it can be styled by this plugin alone.
+	 */
+	function boot(host) {
+		/*
+		 * Without isolation there is nothing to wait for: the form mounts on
+		 * the element it was printed on, synchronously, exactly as before.
+		 */
+		if (!isolatable(host)) {
+			host.tisaForm = new Form(host);
+
+			return;
+		}
+
+		shell(host).then(function (root) {
+			var form;
+
+			try {
+				form = new Form(root);
+			} catch (error) {
+				if (root === host) {
+					throw error;
+				}
+
+				// A bug in the controller must not cost the visitor the form.
+				unresolve(host, root);
+				form = new Form(host);
+			}
+
+			host.tisaForm = form;
+		}).catch(function (error) {
+			if (window.console && window.console.error) {
+				window.console.error('[tisa-otp] the form could not be started', error);
+			}
+		});
+	}
+
+	/* ------------------------------------------------------------------ Mount */
+
+	function mount() {
+		$$(document, '[data-tisa-form]').forEach(function (host) {
+			if (host.dataset.tisaMounted) {
+				return;
+			}
+
+			// Marked before the swap so a second call cannot mount twice while
+			// the stylesheet is still in flight.
+			host.dataset.tisaMounted = '1';
+
+			boot(host);
 		});
 	}
 
@@ -1642,6 +2918,16 @@
 	} else {
 		mount();
 	}
+
+	/*
+	 * Once more when the page has finished loading.
+	 *
+	 * The WoodMart sign-in panel is printed in the footer, and a site that
+	 * defers or injects its footer after `DOMContentLoaded` would otherwise
+	 * leave that one form inert. `mount()` skips anything already mounted, so
+	 * this costs a `querySelectorAll` and nothing else.
+	 */
+	window.addEventListener('load', mount);
 
 	window.tisaOtpForms = {
 		config: cfg,

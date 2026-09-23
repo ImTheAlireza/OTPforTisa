@@ -91,6 +91,21 @@ final class FieldValidator {
 				$digits = preg_replace( '/[^0-9]/', '', Phone::latinDigits( is_scalar( $value ) ? (string) $value : '' ) );
 				return '' === $digits ? '' : substr( (string) $digits, 0, 20 );
 
+			case 'postcode':
+				$raw    = is_scalar( $value ) ? (string) $value : '';
+				$digits = preg_replace( '/[^0-9]/', '', Phone::latinDigits( $raw ) );
+
+				/*
+				 * Punctuation is dropped ("12345-67890" is one postal code),
+				 * but nothing else is trimmed here: an eleven-digit number has
+				 * to come back as an error, not as its first ten digits.
+				 */
+				if ( '' === $digits ) {
+					return substr( sanitize_text_field( $raw ), 0, 20 );
+				}
+
+				return (string) $digits;
+
 			case 'textarea':
 				return sanitize_textarea_field( is_scalar( $value ) ? (string) $value : '' );
 
@@ -137,6 +152,12 @@ final class FieldValidator {
 			case 'number':
 				if ( ! is_numeric( (string) $value ) ) {
 					return __( 'مقدار باید عددی باشد.', 'tisa-otp' );
+				}
+				break;
+
+			case 'postcode':
+				if ( 1 !== preg_match( '/^\d{10}$/', (string) $value ) ) {
+					return __( 'کد پستی باید ۱۰ رقم باشد.', 'tisa-otp' );
 				}
 				break;
 

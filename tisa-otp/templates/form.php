@@ -7,6 +7,7 @@
  * Available variables: instance, classes, style, heading, hint, regHeading,
  * regHint, redirect, labels, codeLength, cooldown, showBrand, logo, logoWidth,
  * fields, flow, registration, captcha, terms, dir, configUrl, cacheMode, nonce,
+ * formToken, renderedAt, phonePlaceholder, trust,
  * restUrl, honeypot, timestampKey, renderedAt, steps, view.
  *
  * @package TisaOtp
@@ -24,6 +25,7 @@ defined( 'ABSPATH' ) || exit;
 	data-config-url="<?php echo esc_url( $configUrl ); ?>"
 	data-cache-mode="<?php echo esc_attr( $cacheMode ); ?>"
 	data-nonce="<?php echo esc_attr( $nonce ); ?>"
+	data-form-token="<?php echo esc_attr( $formToken ); ?>"
 	data-cooldown="<?php echo esc_attr( (string) $cooldown ); ?>"
 	data-code-length="<?php echo esc_attr( (string) $codeLength ); ?>"
 	data-flow="<?php echo esc_attr( $flow ); ?>"
@@ -47,9 +49,9 @@ defined( 'ABSPATH' ) || exit;
 
 		<?php
 		/*
-		 * Step bar. The list is decorative (`aria-hidden`); the sentence beside
-		 * it is what a screen reader hears, and JS keeps both in sync. It is only
-		 * rendered when the flow really has three steps.
+		 * Progress. The list is decorative (`aria-hidden`); the sentence beside
+		 * it is what a screen reader hears, and JS keeps both in sync. It is
+		 * only rendered when the flow really has three steps.
 		 */
 		if ( count( $steps ) > 2 ) :
 			?>
@@ -91,6 +93,7 @@ defined( 'ABSPATH' ) || exit;
 				<path d="M10 13.6h.01" stroke-linecap="round"></path>
 			</svg>
 			<div class="tisa-otp__status-body">
+				<p class="tisa-otp__status-title" data-tisa-status-title hidden></p>
 				<p class="tisa-otp__status-text" data-tisa-status-text></p>
 				<div class="tisa-otp__status-actions" data-tisa-status-actions></div>
 			</div>

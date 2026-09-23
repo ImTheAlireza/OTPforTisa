@@ -40,7 +40,14 @@ final class SmsChannel implements Channel {
 	}
 
 	public function unavailableReason(): string {
-		if ( ! in_array( 'sms', $this->settings->arr( 'channels_enabled' ), true ) ) {
+		$enabled = $this->settings->arr( 'channels_enabled' );
+
+		// A list saved by an older version (or by a filter) may still be a string.
+		if ( is_string( $enabled ) ) {
+			$enabled = array_filter( array_map( 'trim', explode( ',', $enabled ) ) );
+		}
+
+		if ( ! in_array( 'sms', $enabled, true ) ) {
 			return __( 'کانال پیامک غیرفعال است.', 'tisa-otp' );
 		}
 
@@ -53,7 +60,32 @@ final class SmsChannel implements Channel {
 			}
 		}
 
+		/*
+		 * Credentials alone do not make a delivery possible: a panel also
+		 * refuses a message with no sender line, and free text on a
+		 * pattern-only account never leaves the queue. Catching that here turns
+		 * an opaque upstream error into a sentence the administrator can act on.
+		 */
+		$plan = $this->chain->planFor( $gateway );
+
+		if ( array() !== $plan['issues'] ) {
+			return __( 'پیکربندی سامانه پیامکی کامل نیست:', 'tisa-otp' ) . ' ' . (string) $plan['issues'][0];
+		}
+
 		return '';
+	}
+
+	/**
+	 * Gateway-by-gateway outcome of the last attempt.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function trace(): array {
+		return $this->chain->trace();
+	}
+
+	public function health(): \TisaOtp\Gateway\Health {
+		return $this->chain->health();
 	}
 
 	public function deliver( DeliveryRequest $request ): GatewayResult {

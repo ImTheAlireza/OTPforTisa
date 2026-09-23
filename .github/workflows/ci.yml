@@ -23,6 +23,28 @@ jobs:
         run: |
           php tests/php/blocklist-test.php
           php tests/php/emergency-test.php
+          php tests/php/breaker-test.php
+          php tests/php/trusted-test.php
+          php tests/php/fields-test.php
+          php tests/php/report-test.php
+          php tests/php/screens-test.php
+          php tests/php/colour-test.php
+          php tests/php/transport-test.php
+          php tests/php/captcha-test.php
+          php tests/php/appearance-test.php
+          php tests/php/smsir-test.php
+          php tests/php/direct-send-test.php
+          php tests/php/settings-render-test.php
+          php tests/php/app-mode-test.php
+          php tests/php/wiring-test.php
+          php tests/php/woodmart-test.php
+          php tests/php/hardening-test.php
+          php tests/php/package-test.php
+      - name: The WoodMart preview page is the plugin's current output
+        # The page at preview/public/woodmart.html is generated, not drawn: if
+        # the renderer or the integration changes, this fails until it is
+        # regenerated. `php tools/woodmart-demo.php --write` does that.
+        run: php tools/woodmart-demo.php --check
       - name: Lint every PHP file
         run: |
           php -v
@@ -57,6 +79,10 @@ jobs:
         run: |
           npm install --no-save php-parser
           node tools/php-static-check.js tisa-otp
+      - name: Stylesheets parse, stay namespaced, and ship their fonts
+        run: |
+          npm install --no-save css-tree
+          node tools/css-check.js
       - name: Design token contrast (WCAG 1.4.3 / 1.4.11)
         run: node tests/contrast.js
       - name: Behaviour and accessibility wiring
@@ -69,29 +95,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: The committed zip must match the sources
+      - name: Manifest and archive must match the sources
         run: |
-          python3 - <<'PY'
-          import hashlib, os, zipfile, sys
-
-          z = zipfile.ZipFile('tisa-otp.zip')
-          in_zip = {n for n in z.namelist() if not n.endswith('/')}
-          on_disk = set()
-          for root, dirs, files in os.walk('tisa-otp'):
-              for f in files:
-                  on_disk.add(os.path.join(root, f).replace(os.sep, '/'))
-
-          problems = []
-          if in_zip - on_disk:
-              problems.append('only in zip: %s' % sorted(in_zip - on_disk)[:10])
-          if on_disk - in_zip:
-              problems.append('missing from zip: %s' % sorted(on_disk - in_zip)[:10])
-          for name in sorted(in_zip & on_disk):
-              if hashlib.sha1(z.read(name)).hexdigest() != hashlib.sha1(open(name, 'rb').read()).hexdigest():
-                  problems.append('stale in zip: %s' % name)
-
-          if problems:
-              print('\n'.join(problems))
-              sys.exit('tisa-otp.zip is out of date — rebuild it before committing.')
-          print('zip matches the %d tracked plugin files' % len(in_zip))
-          PY
+          # One tool builds the package and describes it (build.json: version
+          # plus a sha256 per file). The same tool verifies here that the
+          # committed archive and manifest still describe the committed tree —
+          # and the plugin verifies the manifest again on the site, because
+          # "half the files were replaced" has to be answerable from inside.
+          python3 tools/build_package.py --check

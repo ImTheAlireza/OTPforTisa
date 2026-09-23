@@ -8,6 +8,7 @@
 namespace TisaOtp\Gateway;
 
 use TisaOtp\Config\Settings;
+use TisaOtp\Support\Transport;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -111,19 +112,81 @@ final class Registry {
 	}
 
 	/**
+	 * How one gateway would send right now, without sending anything.
+	 *
+	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
+	 */
+	public function planFor( string $id ): array {
+		$driver = $this->find( $id );
+		$empty  = array(
+			'mode'     => 'text',
+			'sender'   => '',
+			'template' => '',
+			'endpoint' => '',
+			'issues'   => array(),
+			'notes'    => array(),
+		);
+
+		if ( null === $driver ) {
+			$empty['issues'][] = sprintf(
+				/* translators: %s: gateway id read from the settings */
+				__( 'سامانهٔ «%s» در فهرست سامانه‌ها نیست؛ از تنظیمات › سامانه‌های پیامکی یکی از سامانه‌های موجود را انتخاب کنید.', 'tisa-otp' ),
+				$id
+			);
+
+			return $empty;
+		}
+
+		$plan = $driver->plan();
+
+		/*
+		 * The site's own outbound block is a problem of this installation, not
+		 * of the gateway's credentials — and it belongs in this card, which in
+		 * the screenshot that started round 10 said «سامانه پیامکی انتخاب‌شده
+		 * شناخته نشده است» under a failed SMS test. The card answers «راه حلش
+		 * چیه»: turn the plugin's own switch on, or open wp-config.php.
+		 */
+		if ( ! empty( $plan['endpoint'] ) && ! $this->settings->bool( 'direct_send', false ) ) {
+			$host = (string) wp_parse_url( (string) $plan['endpoint'], PHP_URL_HOST );
+
+			if ( '' !== $host && Transport::egressBlocked( $host ) ) {
+				$plan['issues'][] = sprintf(
+					/* translators: %s: gateway host */
+					__( 'وردپرس درخواست‌های خروجی به %s را بسته است؛ در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید.', 'tisa-otp' ),
+					$host
+				);
+			}
+		}
+
+		return $plan;
+	}
+
+	/**
 	 * Readiness report used by the admin screens.
 	 */
 	public function report(): array {
-		$report = array();
+		$report  = array();
+		$health  = new Health();
 
 		foreach ( $this->all() as $id => $driver ) {
+			$plan = $driver->plan();
+
 			$report[ $id ] = array(
-				'label'   => $driver->label(),
-				'ready'   => $driver->ready(),
-				'missing' => $driver->missing(),
-				'docs'    => $driver->docsUrl(),
-				'active'  => $this->settings->str( 'sms_gateway' ) === $id,
-				'backup'  => $this->settings->str( 'sms_backup_gateway' ) === $id,
+				'label'    => $driver->label(),
+				'ready'    => $driver->ready() && array() === $plan['issues'],
+				'missing'  => $driver->missing(),
+				'docs'     => $driver->docsUrl(),
+				'active'   => $this->settings->str( 'sms_gateway' ) === $id,
+				'backup'   => $this->settings->str( 'sms_backup_gateway' ) === $id,
+				'mode'     => $plan['mode'],
+				'sender'   => $plan['sender'],
+				'template' => $plan['template'],
+				'issues'   => $plan['issues'],
+				'notes'    => $plan['notes'],
+				'health'   => $health->get( $id ),
+				'health_text' => $health->describe( $id ),
+				'resting'  => $health->resting( $id ),
+				'blocked_until' => $health->blockedUntil( $id ),
 			);
 		}
 

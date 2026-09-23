@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تیسا OTP — پیش‌نمایش پنل کاربری (نسخهٔ ۱.۶.۱)</title>
+<!-- Same stylesheet the plugin loads on the front end. -->
+<!-- The font is not borrowed from a CDN any more: tisa-otp/assets/fonts is
+	     served with the plugin and declared in front.css, exactly as it is on a
+	     real site. -->
+<link rel="stylesheet" href="/plugin-assets/css/front.css">
+<style>
+	body {
+		margin: 0;
+		background: #f5f6f8;
+		color: #101828;
+		font-family: Vazirmatn, Tahoma, "Segoe UI", sans-serif;
+	}
+
+	.demo-bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 14px;
+		padding: 12px 22px;
+		background: #102a27;
+		color: #d1fae5;
+		font-size: 13px;
+	}
+
+	.demo-bar strong { color: #fff; }
+	.demo-bar small { color: #6ee7b7; }
+	.demo-bar nav { display: flex; gap: 6px; margin-inline-start: auto; }
+
+	.demo-bar nav a {
+		padding: 6px 13px;
+		border-radius: 999px;
+		color: #d1fae5;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.demo-bar nav a.is-active { background: rgba(255, 255, 255, 0.14); color: #fff; }
+	.demo-bar nav a:hover { background: rgba(255, 255, 255, 0.08); }
+
+	.account {
+		max-width: 900px;
+		margin: 28px auto 60px;
+		padding: 0 18px;
+	}
+
+	.account__head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 16px;
+		margin-bottom: 22px;
+	}
+
+	.account__avatar {
+		display: grid;
+		place-items: center;
+		width: 58px;
+		height: 58px;
+		border-radius: 50%;
+		background: linear-gradient(160deg, #0f766e, #0b5c56);
+		color: #fff;
+		font-size: 22px;
+		font-weight: 700;
+	}
+
+	.account__who h1 { margin: 0; font-size: 20px; }
+	.account__who p { margin: 4px 0 0; color: #667085; font-size: 13.5px; }
+
+	.account__grid {
+		display: grid;
+		grid-template-columns: 1.15fr 1fr;
+		gap: 18px;
+	}
+
+	.card {
+		padding: 20px 22px;
+		border: 1px solid #e4e7ec;
+		border-radius: 16px;
+		background: #fff;
+		box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+	}
+
+	.card h2 {
+		margin: 0 0 4px;
+		font-size: 15px;
+		font-weight: 700;
+	}
+
+	.card__note {
+		margin: 0 0 16px;
+		color: #667085;
+		font-size: 13px;
+	}
+
+	.kv { margin: 0; }
+
+	.kv div {
+		display: flex;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 11px 0;
+		border-bottom: 1px dashed #e4e7ec;
+		font-size: 14px;
+	}
+
+	.kv div:last-child { border-bottom: 0; }
+	.kv dt { color: #667085; }
+	.kv dd { margin: 0; font-weight: 600; }
+	.kv dd[dir] { font-variant-numeric: tabular-nums; }
+
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 3px 10px;
+		border-radius: 999px;
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	.badge--ok { background: #ecfdf3; color: #067647; }
+	.badge--warn { background: #fffaeb; color: #b54708; }
+
+	.tisa-otp { max-width: none; }
+	.tisa-otp__form { padding: 20px 22px 18px; }
+
+	@media (max-width: 760px) {
+		.account__grid { grid-template-columns: 1fr; }
+		.demo-bar nav { margin-inline-start: 0; }
+	}
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+	<strong>پیش‌نمایش پنل کاربری</strong>
+	<small>همان چیزی که کاربر پس از ورود با کد یکبارمصرف می‌بیند</small>
+	<nav>
+		<a href="/">فرم ورود</a>
+		<a class="is-active" href="/account">پنل کاربری</a>
+		<a href="/woodmart">سایدبار وودمارت</a>
+		<a href="/admin">پیشخوان</a>
+	</nav>
+</div>
+
+<div class="account">
+
+	<div class="account__head">
+		<span class="account__avatar" aria-hidden="true">م</span>
+		<div class="account__who">
+			<h1>محمد رضایی</h1>
+			<p>u12345678 · <span dir="ltr">09121234567</span> <span class="badge badge--ok">تأیید‌شده با کد یکبارمصرف</span></p>
+		</div>
+	</div>
+
+	<div class="account__grid">
+
+		<div class="card">
+			<h2>اطلاعات حساب</h2>
+			<p class="card__note">این‌ها همان فیلدهایی است که فرم عضویت جمع می‌کند و مستقیم در پروفایل کاربر ذخیره می‌شود.</p>
+
+			<dl class="kv">
+				<div><dt>نام</dt><dd>محمد</dd></div>
+				<div><dt>نام خانوادگی</dt><dd>رضایی</dd></div>
+				<div><dt>ایمیل</dt><dd dir="ltr">mohammad@example.com</dd></div>
+				<div><dt>شهر</dt><dd>تهران</dd></div>
+				<div><dt>کد پستی</dt><dd dir="ltr">1234567890</dd></div>
+				<div><dt>آدرس</dt><dd style="font-weight:500;text-align:end">خیابان ولیعصر، کوچهٔ بهار، پلاک ۱۲، واحد ۳</dd></div>
+				<div><dt>شماره موبایل</dt><dd dir="ltr">09121234567</dd></div>
+				<div><dt>کانال ثبت‌نام</dt><dd><code dir="ltr">otp</code></dd></div>
+			</dl>
+		</div>
+
+		<div>
+			<div class="card" style="margin-bottom:18px">
+				<h2>امنیت ورود</h2>
+				<p class="card__note">ورود همیشه با کد پیامکی انجام می‌شود؛ رمز عبوری برای این حساب لازم نیست.</p>
+				<dl class="kv">
+					<div><dt>شمارهٔ تأییدشده</dt><dd dir="ltr">۰۹۱۲***۵۶۷</dd></div>
+					<div><dt>آخرین ورود</dt><dd dir="ltr">1405/06/31 – 14:03</dd></div>
+					<div><dt>حالت حساب</dt><dd><span class="badge badge--ok">فعال</span></dd></div>
+				</dl>
+				<p style="margin:16px 0 0">
+					<button type="button" class="tisa-btn tisa-btn--primary tisa-btn--compact" data-demo="switch">ورود با کد دیگر</button>
+				</p>
+			</div>
+
+			<div class="card">
+				<h2>تغییر شمارهٔ موبایل</h2>
+				<p class="card__note">شماره جدید پیش از ثبت، با یک کد تأیید کنترل می‌شود.</p>
+
+				<!-- The plugin's own form, mounted by the same script the site loads. -->
+				<div class="tisa-otp" dir="rtl" data-tisa-form data-skin="line">
+					<form class="tisa-otp__form" method="post" novalidate autocomplete="on">
+						<a class="tisa-otp__skip" href="#account-phone" data-tisa-skip>رفتن به فرم ورود</a>
+						<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
+						<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="1758530000">
+						<input type="hidden" name="tisa_ft" value="demo-form-token-account">
+
+						<section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="account-phone-title">
+							<header class="tisa-step__head">
+								<h2 class="tisa-step__title" id="account-phone-title" tabindex="-1">شمارهٔ جدید</h2>
+								<p class="tisa-step__hint" id="account-phone-hint">کد تأیید به شمارهٔ جدید فرستاده می‌شود.</p>
+							</header>
+
+							<div class="tisa-field">
+								<label class="tisa-field__label" for="account-phone">شماره موبایل</label>
+								<div class="tisa-phone">
+									<input class="tisa-field__input tisa-phone__input" id="account-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09121234567" data-tisa-phone aria-describedby="account-phone-hint account-phone-error" aria-invalid="false" required>
+								</div>
+								<p class="tisa-field__error" id="account-phone-error" data-tisa-error="phone" role="alert" hidden></p>
+							</div>
+
+							<div class="tisa-captcha" data-tisa-captcha hidden></div>
+
+							<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="start">
+								<span class="tisa-btn__label">ثبت شمارهٔ جدید</span>
+								<span class="tisa-btn__spinner" aria-hidden="true"></span>
+							</button>
+
+							<ul class="tisa-otp__trust">
+								<li class="tisa-otp__trust-item">
+									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									<span>شمارهٔ قبلی تا تأیید شمارهٔ تازه فعال می‌ماند</span>
+								</li>
+								<li class="tisa-otp__trust-item">
+									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									<span>تأیید در چند ثانیه</span>
+								</li>
+								<li class="tisa-otp__trust-item">
+									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path></svg>
+									<span>فقط خودتان کد را می‌بینید</span>
+								</li>
+							</ul>
+						</section>
+					</form>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<script>
+	/*
+	 * The account page has no endpoint of its own in the demo, so the plugin's
+	 * own script is pointed at the mock REST routes the form demo uses.
+	 */
+	window.tisaOtp = {
+		restUrl: '/mock/tisa-otp/v1/',
+		nonce: 'demo-nonce',
+		configUrl: '/mock/tisa-otp/v1/form-config',
+		cacheMode: 'off',
+		formToken: 'demo-form-token-account',
+		renderedAt: 1758530000,
+		autoVerify: true,
+		codeLength: 5,
+		cooldown: 60,
+		rescueAfter: 30,
+		captcha: { provider: 'none' },
+		i18n: {
+			invalidPhone: 'شمارهٔ موبایل معتبر نیست. با ۰۹ شروع شود و ۱۱ رقم باشد.',
+			requiredField: 'این فیلد الزامی است.',
+			incompleteCode: 'کد را کامل وارد کنید.',
+			network: 'ارتباط با سرور برقرار نشد.',
+			redirecting: 'خوش آمدید. در حال انتقال…',
+			stepOf: 'گام {n} از {total}: {name}',
+			trustSecure: 'بدون رمز عبور',
+			trustInstant: 'ورود در چند ثانیه',
+			trustPrivate: 'شماره شما محفوظ می‌ماند'
+		},
+		actions: { retry: 'تلاش دوباره', newCode: 'دریافت کد تازه', editPhone: 'ویرایش شماره' },
+		behavior: { autoVerify: true }
+	};
+</script>
+<script src="/plugin-assets/js/front.js"></script>
+</body>
+</html>

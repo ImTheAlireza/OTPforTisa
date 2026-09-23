@@ -66,12 +66,28 @@ final class Plugin {
 
 		load_plugin_textdomain( 'tisa-otp', false, dirname( plugin_basename( TISA_OTP_FILE ) ) . '/languages' );
 
-		$this->container->make( Install\Upgrades::class )->run();
+		/*
+		 * Every service is built and started through the guard. A constructor
+		 * whose wiring drifted, a class that is not in the package, a file that
+		 * was half replaced — all of them used to be a fatal on every request,
+		 * front end included. Now they are one sentence in the admin and the
+		 * rest of the plugin keeps working.
+		 */
+		try {
+			$this->container->make( Install\Upgrades::class )->run();
+		} catch ( \Throwable $error ) {
+			Install\Guard::record( 'Install\\Upgrades', $error );
+		}
 
 		foreach ( $this->bootables() as $id ) {
-			$service = $this->container->make( $id );
-			if ( $service instanceof Bootable ) {
-				$service->boot();
+			try {
+				$service = $this->container->make( $id );
+
+				if ( $service instanceof Bootable ) {
+					$service->boot();
+				}
+			} catch ( \Throwable $error ) {
+				Install\Guard::record( $id, $error );
 			}
 		}
 
@@ -90,17 +106,21 @@ final class Plugin {
 	 */
 	private function bootables(): array {
 		return array(
+			Install\Guard::class,
 			Http\Api::class,
 			Front\Assets::class,
 			Front\Shortcodes::class,
 			Front\LoginBridge::class,
 			Woo\Bridge::class,
+			Integrations\WoodMart::class,
 			Elementor\Module::class,
 			Cron\Maintenance::class,
 			User\ProfileField::class,
+			Admin\ReportScreen::class,
 			Admin\LogsScreen::class,
 			Admin\ToolsScreen::class,
 			Admin\AccessScreen::class,
+			Admin\AppMode::class,
 			Admin\Menu::class,
 		);
 	}
@@ -215,6 +235,7 @@ final class Plugin {
 		$c->bind( User\Session::class, static function ( Container $c ) {
 			return new User\Session(
 				$c->make( User\RedirectResolver::class ),
+				$c->make( Config\Settings::class ),
 				$c->make( Log\Logger::class )
 			);
 		} );
@@ -254,6 +275,10 @@ final class Plugin {
 			return new Blocklist\Blocklist();
 		} );
 
+		$c->bind( Blocklist\Trusted::class, static function ( Container $c ) {
+			return new Blocklist\Trusted( $c->make( Config\Settings::class ) );
+		} );
+
 		$c->bind( Access\EmergencyToken::class, static function () {
 			return new Access\EmergencyToken();
 		} );
@@ -264,7 +289,8 @@ final class Plugin {
 				$c->make( Throttle\Throttle::class ),
 				$c->make( Captcha\Manager::class ),
 				$c->make( Log\Logger::class ),
-				$c->make( Blocklist\Blocklist::class )
+				$c->make( Blocklist\Blocklist::class ),
+				$c->make( Blocklist\Trusted::class )
 			);
 		} );
 
@@ -302,7 +328,9 @@ final class Plugin {
 				$c->make( Log\Logger::class ),
 				$c->make( Log\LogStore::class ),
 				$c->make( Import\Runner::class ),
-				$c->make( Gateway\Registry::class )
+				$c->make( Gateway\Registry::class ),
+				$c->make( Captcha\Manager::class ),
+				$c->make( Diagnostics\SelfTest::class )
 			);
 		} );
 
@@ -345,6 +373,14 @@ final class Plugin {
 			return new Woo\Bridge( $c->make( Config\Settings::class ), $c->make( Front\FormRenderer::class ) );
 		} );
 
+		$c->bind( Integrations\WoodMart::class, static function ( Container $c ) {
+			return new Integrations\WoodMart(
+				$c->make( Config\Settings::class ),
+				$c->make( Front\FormRenderer::class ),
+				$c->make( Front\Assets::class )
+			);
+		} );
+
 		$c->bind( Elementor\Module::class, static function ( Container $c ) {
 			return new Elementor\Module( $c->make( Front\FormRenderer::class ), $c->make( Config\Settings::class ) );
 		} );
@@ -362,18 +398,45 @@ final class Plugin {
 			return new Admin\Controls( $c->make( Config\Settings::class ) );
 		} );
 
+		$c->bind( Admin\AppMode::class, static function () {
+			return new Admin\AppMode();
+		} );
+
+		$c->bind( Install\Guard::class, static function () {
+			return new Install\Guard();
+		} );
+
 		$c->bind( Admin\SettingsScreen::class, static function ( Container $c ) {
 			return new Admin\SettingsScreen(
 				$c->make( Config\Settings::class ),
 				$c->make( Admin\Controls::class ),
 				$c->make( Gateway\Registry::class ),
 				$c->make( Registration\FieldSchema::class ),
-				$c->make( Captcha\Manager::class )
+				$c->make( Captcha\Manager::class ),
+				$c->make( Log\LogStore::class ),
+				$c->make( Admin\ReportScreen::class )
+			);
+		} );
+
+		$c->bind( Diagnostics\SelfTest::class, static function ( Container $c ) {
+			return new Diagnostics\SelfTest(
+				$c->make( Config\Settings::class ),
+				$c->make( Install\Schema::class ),
+				$c->make( Otp\OtpService::class ),
+				$c->make( Otp\CodeStore::class ),
+				$c->make( Gateway\Registry::class ),
+				$c->make( Log\LogStore::class ),
+				$c->make( Captcha\Manager::class ),
+				$c->make( Registration\FieldSchema::class )
 			);
 		} );
 
 		$c->bind( Admin\LogsScreen::class, static function ( Container $c ) {
 			return new Admin\LogsScreen( $c->make( Log\LogStore::class ), $c->make( Config\Settings::class ) );
+		} );
+
+		$c->bind( Admin\ReportScreen::class, static function ( Container $c ) {
+			return new Admin\ReportScreen( $c->make( Log\LogStore::class ), $c->make( Config\Settings::class ) );
 		} );
 
 		$c->bind( Admin\ToolsScreen::class, static function ( Container $c ) {
@@ -399,6 +462,7 @@ final class Plugin {
 			return new Admin\Menu(
 				$c->make( Config\Settings::class ),
 				$c->make( Admin\SettingsScreen::class ),
+				$c->make( Admin\ReportScreen::class ),
 				$c->make( Admin\LogsScreen::class ),
 				$c->make( Admin\ToolsScreen::class ),
 				$c->make( Admin\AccessScreen::class )

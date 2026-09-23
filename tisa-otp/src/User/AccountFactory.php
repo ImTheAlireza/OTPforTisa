@@ -16,6 +16,18 @@ defined( 'ABSPATH' ) || exit;
 
 final class AccountFactory {
 
+	/**
+	 * Profile keys that WooCommerce also keeps, so a shop can use the address
+	 * collected at signup without asking for it twice.
+	 *
+	 * @var array<string,string>
+	 */
+	const BILLING_MIRROR = array(
+		'tisa_city'     => 'billing_city',
+		'tisa_address'  => 'billing_address_1',
+		'tisa_postcode' => 'billing_postcode',
+	);
+
 	/** @var Settings */
 	private $settings;
 
@@ -167,7 +179,39 @@ final class AccountFactory {
 			$metaKey = isset( $field['meta_key'] ) && '' !== $field['meta_key'] ? (string) $field['meta_key'] : $id;
 
 			update_user_meta( $userId, $metaKey, $values[ $id ] );
+
+			$this->mirrorBilling( $userId, $metaKey, (string) $values[ $id ] );
 		}
+	}
+
+	/**
+	 * Copy a collected value into the WooCommerce billing field, once.
+	 *
+	 * Only when WooCommerce is there, only for the three keys it shares with
+	 * us, and never over a value the customer already has — an address typed at
+	 * checkout must not be replaced by an older answer from the signup form.
+	 */
+	private function mirrorBilling( int $userId, string $metaKey, string $value ): void {
+		if ( ! isset( self::BILLING_MIRROR[ $metaKey ] ) || '' === trim( $value ) || ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+
+		$billingKey = self::BILLING_MIRROR[ $metaKey ];
+
+		if ( '' !== trim( (string) get_user_meta( $userId, $billingKey, true ) ) ) {
+			return;
+		}
+
+		update_user_meta( $userId, $billingKey, $value );
+
+		/**
+		 * Fires after a signup value was mirrored into a WooCommerce billing field.
+		 *
+		 * @param int    $userId     User id.
+		 * @param string $billingKey Billing meta key.
+		 * @param string $value      Value that was copied.
+		 */
+		do_action( 'tisa_otp_billing_mirrored', $userId, $billingKey, $value );
 	}
 
 	/**
