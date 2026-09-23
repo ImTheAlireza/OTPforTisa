@@ -156,6 +156,37 @@
 		arcaptcha: 'arcaptcha'
 	};
 
+	/*
+	 * A token can arrive as a string, or wrapped in an object.
+	 *
+	 * reCAPTCHA v3 resolves a string. ARCaptcha's `execute()` resolves the same
+	 * string in v3, but its invisible flow is documented as resolving an object
+	 * carrying `arcaptcha_token`. Both are token-bearing answers; the server
+	 * wants the token itself, and posting `[object Object]` would be a rejection
+	 * the visitor could do nothing about.
+	 */
+	function unwrapToken(value) {
+		if (!value) {
+			return '';
+		}
+
+		if ('string' === typeof value) {
+			return value;
+		}
+
+		if ('object' === typeof value) {
+			if ('string' === typeof value.arcaptcha_token) {
+				return value.arcaptcha_token;
+			}
+
+			if ('string' === typeof value.token) {
+				return value.token;
+			}
+		}
+
+		return '';
+	}
+
 	function Captcha(root, conf) {
 		this.conf = conf || {};
 		this.config = this.conf.config || {};
@@ -601,7 +632,7 @@
 
 					if (outcome && 'function' === typeof outcome.then) {
 						outcome.then(function (token) {
-							resolve(token || '');
+							resolve(unwrapToken(token));
 						}).catch(function () {
 							resolve('');
 						});
@@ -609,7 +640,7 @@
 						return;
 					}
 
-					resolve(typeof outcome === 'string' ? outcome : '');
+					resolve(unwrapToken(outcome));
 				};
 
 				if ('function' === typeof lib.ready) {
@@ -661,11 +692,25 @@
 			} else if ('arcaptcha' === this.conf.provider && window.arcaptcha) {
 				value = (window.arcaptcha.getArcToken && null !== this.widgetId)
 					? window.arcaptcha.getArcToken(this.widgetId) || ''
-					: (this.token || '');
+					: '';
 			} else if (window.grecaptcha && null !== this.widgetId) {
 				value = window.grecaptcha.getResponse(this.widgetId) || '';
 			}
 		} catch (error) {
+			value = '';
+		}
+
+		/*
+		 * ARCaptcha's own documentation promises two ways to the token: the
+		 * getter above, and a field the library writes into the surrounding
+		 * form (`arcaptcha-token`). Whichever the installed version of the
+		 * bundle supports, the token must not be lost between them — losing it
+		 * is exactly what "the captcha is solved and the server still says no
+		 * token" looks like from the visitor's side.
+		 */
+		value = unwrapToken(value) || this.fieldToken();
+
+		if (!value) {
 			value = this.token || '';
 		}
 
@@ -676,6 +721,28 @@
 		this.token = value || this.token;
 
 		return Promise.resolve(this.token);
+	};
+
+	/**
+	 * The hidden field ARCaptcha's widget writes on a solved challenge.
+	 *
+	 * Scoped to this form: a page can carry more than one widget, and picking up
+	 * another form's token would be worse than finding none.
+	 */
+	Captcha.prototype.fieldToken = function () {
+		var scope = null;
+
+		if (this.container) {
+			scope = this.container.closest ? this.container.closest('form') : null;
+		}
+
+		if (!scope) {
+			return '';
+		}
+
+		var field = scope.querySelector('input[name="arcaptcha-token"], textarea[name="arcaptcha-token"]');
+
+		return field && 'string' === typeof field.value ? field.value : '';
 	};
 
 	/**

@@ -60,6 +60,17 @@ function tisa_captcha_settings( array $extra = array() ): Settings {
 }
 
 /**
+ * A captcha manager over the given settings.
+ *
+ * @param array<string,mixed> $extra
+ */
+function tisa_captcha_manager( array $extra = array() ): Manager {
+	$settings = tisa_captcha_settings( $extra );
+
+	return new Manager( $settings, new Logger( $settings, new Redactor(), new LogStore( $settings ) ) );
+}
+
+/**
  * A guard wired to fresh settings, logs and throttle.
  *
  * @return array{0:CaptchaGuard,1:LogStore}
@@ -210,6 +221,60 @@ $urls = array_column( tisa_requests(), 'url' );
 tisa_check( 'the verification went to the provider, not around it', 1 === count( array_filter( $urls, function ( $url ) {
 	return false !== strpos( (string) $url, 'recaptcha' ) || false !== strpos( (string) $url, 'google' ) || false !== strpos( (string) $url, 'recaptcha.net' );
 } ) ) );
+
+/* -------------------------------------------------------------------------
+ * 4. ARCaptcha's contract, which this plugin has had wrong before
+ */
+
+tisa_start( 'ARCaptcha is offered every host the vendor documents' );
+
+/*
+ * The widget bundle has lived on three hosts over the years, and which one a
+ * visitor can reach depends on their network rather than on their browser. The
+ * browser walks the list in order until the library appears, so the list has to
+ * carry the host the vendor's current docs use — not only the one this plugin
+ * started with. The two kinds never cross: a v3 site key cannot render a v2
+ * widget.
+ */
+$widget = tisa_captcha_manager(
+	array(
+		'captcha_provider'     => 'arcaptcha',
+		'captcha_site_key'     => 'ARC-SITE',
+		'captcha_secret_key'   => 'ARC-SECRET',
+		'captcha_arcaptcha_v3' => '0',
+	)
+)->clientBundle();
+
+$widgetScripts = implode( "\n", (array) $widget['scripts'] );
+
+tisa_check( 'the host the current docs use is offered', false !== strpos( $widgetScripts, 'nwidget.arcaptcha.ir/1/api.js' ) );
+tisa_check( 'and the host this plugin used first is still offered', false !== strpos( $widgetScripts, 'widget.arcaptcha.ir/1/api.js' ) );
+tisa_check( 'and the outside-Iran mirror', false !== strpos( $widgetScripts, 'widget.arcaptcha.co/1/api.js' ) );
+tisa_check( 'a v2 key is never sent a v3 bundle', false === strpos( $widgetScripts, '/3/api.js' ) );
+tisa_check( 'the widget is asked for in Persian, right to left', 'fa' === $widget['config']['lang'] && 'rtl' === $widget['config']['dir'] );
+
+$score = tisa_captcha_manager(
+	array(
+		'captcha_provider'     => 'arcaptcha',
+		'captcha_site_key'     => 'ARC-SITE',
+		'captcha_secret_key'   => 'ARC-SECRET',
+		'captcha_arcaptcha_v3' => '1',
+	)
+)->clientBundle();
+
+$scoreScripts = implode( "\n", (array) $score['scripts'] );
+
+tisa_check( 'a v3 key gets the score bundle, with the key in the URL', false !== strpos( $scoreScripts, '/3/api.js?render=ARC-SITE' ) );
+tisa_check( 'and never the widget bundle', false === strpos( $scoreScripts, '/1/api.js' ) );
+tisa_check( 'the score kind travels with it', 'score' === $score['kind'] );
+
+$front = (string) file_get_contents( TISA_OTP_PATH . 'assets/js/front.js' );
+
+tisa_check( 'the token is read the way the library documents it', false !== strpos( $front, 'getArcToken' ) );
+tisa_check( 'the documented hidden field is read as well', false !== strpos( $front, 'arcaptcha-token' ) );
+tisa_check( 'and the object shape from the docs is unwrapped', false !== strpos( $front, 'arcaptcha_token' ) );
+
+$GLOBALS['tisa_options'] = array();
 
 /* -------------------------------------------------------------------------
  * 4. The words the administrator reads

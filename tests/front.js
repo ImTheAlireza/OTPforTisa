@@ -1491,6 +1491,145 @@ async function testStyleIsolation() {
 	check('while the demo form is isolated for real', /isolate: true/.test(index) && /css: '\/plugin-assets\/css\/front\.css'/.test(index));
 }
 
+	/*
+	 * ARCaptcha is the one provider whose client API this plugin once got
+	 * wrong: the widget was called through `arcaptcha.widget.*`, an object the
+	 * library never exposed, so the Iranian widget never appeared at all and
+	 * nothing caught it. These scenarios pin the four things that have to be
+	 * true for it to work: the widget renders through `arcaptcha.render`, the
+	 * token is read through `arcaptcha.getArcToken`, a token that arrives
+	 * wrapped in an object is unwrapped, and the hidden field their docs
+	 * promise is read when the getter is not there.
+	 */
+
+async function testArcaptchaWidget() {
+	scenario('ARCaptcha renders through the documented widget API');
+
+	const bundle = {
+		enabled: true,
+		provider: 'arcaptcha',
+		siteKey: 'arc-site-key',
+		kind: 'widget',
+		scripts: [],
+		failOpen: true,
+		config: { siteKey: 'arc-site-key', kind: 'widget', lang: 'fa', dir: 'rtl', theme: 'light' },
+	};
+
+	const ctx = boot({
+		config: { captcha: bundle },
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
+	});
+
+	const rendered = [];
+
+	// The library, as the vendor ships it: render() returns a widget id and
+	// getArcToken(id) hands back the solved token.
+	ctx.win.arcaptcha = {
+		render: (element, params) => {
+			rendered.push({ element, params });
+			return 7;
+		},
+		getArcToken: (id) => (7 === id ? 'ARC-TOKEN-123' : ''),
+	};
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	for (let i = 0; i < 10; i++) await tick();
+
+	check('the widget is rendered into the captcha container', rendered.length === 1 && !!rendered[0].element);
+	check(
+		'the site key travels under the name the library reads',
+		!!rendered[0] && 'arc-site-key' === rendered[0].params.site_key,
+		rendered[0] ? JSON.stringify(rendered[0].params) : 'never rendered'
+	);
+	check(
+		'the Persian widget is asked for in Persian, right to left',
+		!!rendered[0] && 'fa' === rendered[0].params.lang && 'rtl' === rendered[0].params.dir && 'light' === rendered[0].params.theme
+	);
+	check(
+		'the solved token reaches the server',
+		ctx.calls.some((call) => call.url.indexOf('/start') >= 0 && 'ARC-TOKEN-123' === call.body.captcha_token),
+		ctx.calls.map((call) => call.url + ' ' + JSON.stringify(call.body && call.body.captcha_token)).join(' | ')
+	);
+}
+
+async function testArcaptchaHiddenField() {
+	scenario('ARCaptcha: a token in the documented hidden field is found');
+
+	const bundle = {
+		enabled: true,
+		provider: 'arcaptcha',
+		siteKey: 'arc-site-key',
+		kind: 'widget',
+		scripts: [],
+		failOpen: false,
+		config: { siteKey: 'arc-site-key', kind: 'widget', lang: 'fa', dir: 'rtl', theme: 'light' },
+	};
+
+	const ctx = boot({
+		config: { captcha: bundle },
+		html: (source) => source.replace(
+			'<div class="tisa-captcha" data-tisa-captcha hidden></div>',
+			'<div class="tisa-captcha" data-tisa-captcha hidden></div>' +
+				'<input type="hidden" name="arcaptcha-token" value="FIELD-TOKEN-456">'
+		),
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
+	});
+
+	// An older bundle: it renders (or re-renders) but exposes no getter.
+	ctx.win.arcaptcha = { render: () => 7 };
+
+	check(
+		'the hidden field is inside the form, as the scenario assumes',
+		!!ctx.root.querySelector('input[name="arcaptcha-token"]')
+	);
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	for (let i = 0; i < 10; i++) await tick();
+
+	check(
+		'the field token is posted, not an empty string',
+		ctx.calls.some((call) => call.url.indexOf('/start') >= 0 && 'FIELD-TOKEN-456' === call.body.captcha_token),
+		ctx.calls.map((call) => JSON.stringify(call.body && call.body.captcha_token)).join(' | ')
+	);
+}
+
+async function testArcaptchaObjectToken() {
+	scenario('ARCaptcha: a token that arrives wrapped in an object is unwrapped');
+
+	const bundle = {
+		enabled: true,
+		provider: 'arcaptcha',
+		siteKey: 'arc-site-key',
+		kind: 'score',
+		scripts: [],
+		failOpen: false,
+		config: { siteKey: 'arc-site-key', kind: 'score', action: 'tisa_otp_send' },
+	};
+
+	const ctx = boot({
+		config: { captcha: bundle },
+		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
+	});
+
+	// The invisible flow their docs describe: execute() resolves an object.
+	ctx.win.arcaptcha = {
+		ready: (fn) => fn(),
+		execute: () => Promise.resolve({ arcaptcha_token: 'OBJECT-TOKEN-789' }),
+	};
+
+	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.form.act('start');
+	for (let i = 0; i < 12; i++) await tick();
+
+	check(
+		'the token inside the object is posted, not the object itself',
+		ctx.calls.some((call) => call.url.indexOf('/start') >= 0 && 'OBJECT-TOKEN-789' === call.body.captcha_token),
+		ctx.calls.map((call) => JSON.stringify(call.body && call.body.captcha_token)).join(' | ')
+	);
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -1511,6 +1650,9 @@ async function main() {
 	await testExpiry();
 	await testStaleNonceStillRecovers();
 	await testCaptchaFailureIsVisible();
+	await testArcaptchaWidget();
+	await testArcaptchaHiddenField();
+	await testArcaptchaObjectToken();
 	await testStaleFormTokenRecovers();
 	await testPasteFromSms();
 	await testPasteWithoutAClipboard();

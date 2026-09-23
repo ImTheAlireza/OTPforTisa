@@ -13,12 +13,12 @@
 		"assets/fonts/vazirmatn-latin-700-normal.woff2": "a1d13d1cf4cd1ec6af4623ccdacff9cc7beedd6d9cbc4944b56faf59da95478b",
 		"assets/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"assets/js/admin.js": "27738d599b32b68226f4facbcd4d104fdd652da197c614d5316abbcf97bf355d",
-		"assets/js/front.js": "a39c657beb19165af26f755a0e9374b6f9dca4e3075e7ad45971d0fc133617e6",
+		"assets/js/front.js": "de93d303c41405edc4aa56dd86c8fdb6f9c12dbc736890e535005b73024bd40e",
 		"assets/js/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"languages/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"languages/tisa-otp.pot": "d63ca9330e50436f6cb6231a27ff7ae481700819f34b4b596c3ce05e4f68c120",
-		"readme.txt": "be0d7cefc57a33fcf7e82a9b718ad660acaad6c8d7dd692145eeaa85cf58d419",
+		"readme.txt": "f88360d7a9e526cf92cbd334e49285d91240b9bb77f51460907fb483831ff3da",
 		"src/Access/EmergencyToken.php": "01371b95d3446a1db137a177276fca2746afc3fffadb7fef936e3e48b0af435e",
 		"src/Access/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"src/Admin/AccessScreen.php": "693f3fe6d37f7d83b352af43ec73111cc26c2d87b8282f9bf69132efaf754444",
@@ -37,7 +37,7 @@
 		"src/Blocklist/Trusted.php": "d8ccca0fa6d925a26b57ce4a658f0ba6eb75b1118ad0176979bec5d0e69a470b",
 		"src/Blocklist/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"src/Bootable.php": "c1ba54b806e0a49017f24aec831945526fcc014ec2d4524d86d8cd12bbe22252",
-		"src/Captcha/Arcaptcha.php": "17340ebf51aa2537433dca069d82caf93c89854db8707bc018017a35c4ce0b29",
+		"src/Captcha/Arcaptcha.php": "4fd69d3ea397c463bd3e34601a6a5bb1b8b9efcd719767099dde9a6ca1cfbb7e",
 		"src/Captcha/CaptchaProvider.php": "ce1b0e0c9d7e1884c35c13175ce9ca557ee8e843078a2bdcd789ecdc3885e2a8",
 		"src/Captcha/CaptchaResult.php": "fd5e0e4f4dfd40eeb4edc325609aaca0a7d7ade777f1765435e5e6df597890db",
 		"src/Captcha/Hcaptcha.php": "d103a964a2d28090da7b6e1885e88ccf652c1c7d2fe6cd70441d376c555f20f5",
@@ -158,9 +158,9 @@
 		"templates/partials/step-phone.php": "0f1e457b25ce2677e9c762436c44e04a0f26bce43885f205f78640d2275239b0",
 		"templates/woocommerce/form-login.php": "4f27a9bd1c028354ebe7064ae988b53ce6ebc8f689f41709808347de33d6ca8f",
 		"templates/woocommerce/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
-		"tisa-otp.php": "516874e8ece4c8ad203275c9b651d78dbc1adb82f6a7f4edc85301bbf29b70cb",
+		"tisa-otp.php": "a8d42a16728941baa2719d496a7b2bbdc4f6b2b2330fca5b6c65b0d802e7527d",
 		"uninstall.php": "3fcbce749114db89be338fbe85f861778c3865573e9c80a2375b4ca480c666f4"
 	},
 	"name": "tisa-otp",
-	"version": "1.7.0"
+	"version": "1.7.1"
 }

@@ -33,6 +33,18 @@ final class Arcaptcha implements CaptchaProvider, ScriptFallbacks {
 	const WIDGET_JS = 'https://widget.arcaptcha.ir/1/api.js';
 	const SCORE_JS  = 'https://widget.arcaptcha.ir/3/api.js';
 
+	/**
+	 * The host the vendor's current installation docs load the widget from.
+	 *
+	 * `widget.arcaptcha.ir` is what their own React and Vue packages still ship
+	 * as the default and what this plugin used first; `nwidget.arcaptcha.ir` is
+	 * what docs.arcaptcha.co hands out today. Both answer, but which one a given
+	 * visitor can reach depends on their network, so both are offered — the
+	 * browser walks the list until the library appears.
+	 */
+	const WIDGET_JS_NEW = 'https://nwidget.arcaptcha.ir/1/api.js';
+	const SCORE_JS_NEW  = 'https://nwidget.arcaptcha.ir/3/api.js';
+
 	/** @var Settings */
 	private $settings;
 
@@ -63,8 +75,12 @@ final class Arcaptcha implements CaptchaProvider, ScriptFallbacks {
 	}
 
 	/**
-	 * The `.ir` widget host is the one the vendor documents; `.co` answers the
-	 * same bundle from outside Iran and has saved more than one migration.
+	 * Every other host that serves the same bundle.
+	 *
+	 * `.ir` is the vendor's own host, `.co` answers from outside Iran and has
+	 * saved more than one migration. Each kind gets its own version path: a v3
+	 * site key cannot render a v2 widget, so crossing them would be worse than
+	 * failing.
 	 *
 	 * @return string[]
 	 */
@@ -75,9 +91,17 @@ final class Arcaptcha implements CaptchaProvider, ScriptFallbacks {
 			return array();
 		}
 
+		$key = rawurlencode( $key );
+
 		return $this->isScore()
-			? array( 'https://widget.arcaptcha.co/3/api.js?render=' . rawurlencode( $key ) )
-			: array( 'https://widget.arcaptcha.co/1/api.js' );
+			? array(
+				self::SCORE_JS_NEW . '?render=' . $key,
+				'https://widget.arcaptcha.co/3/api.js?render=' . $key,
+			)
+			: array(
+				self::WIDGET_JS_NEW,
+				'https://widget.arcaptcha.co/1/api.js',
+			);
 	}
 
 	public function clientConfig(): array {
