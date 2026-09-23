@@ -249,6 +249,25 @@
 	transform: translateX(50%) translateY(0);
 }
 
+/* WoodMart login sidebar ------------------------------------------------------
+ *
+ * The form is placed inside the theme's own sign-in panel, replacing its
+ * WooCommerce username/password form (see src/Integrations/WoodMart.php). The
+ * panel is a narrow drawer with its own padding, so the form only needs room.
+ *
+ * The selector targets the *host* element — the one the theme's markup
+ * contains — because the form renders in a shadow root: padding on the host
+ * still lays out the form inside it, and in the no-JavaScript case the same
+ * rule lands on the form itself. One rule, both paths.
+ */
+.login-form-side .tisa-otp {
+	padding: 0 20px 22px;
+}
+
+.login-form-side .tisa-otp__brand {
+	margin-bottom: var(--tisa-space-3);
+}
+
 /* Alignment ----------------------------------------------------------------- */
 
 .tisa-align-start {

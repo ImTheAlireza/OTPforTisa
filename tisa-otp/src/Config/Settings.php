@@ -196,6 +196,12 @@ final class Settings {
 			'username_from'          => 'phone',
 			'display_name_from'      => 'full_name',
 			'email_mode'             => 'optional',
+			// WoodMart: the header's sign-in panel. On by default because the panel
+			// only exists on a WoodMart site, and because it is the one place a
+			// WoodMart visitor tries to sign in.
+			'woodmart_sidebar'       => '1',
+			'woodmart_mode'          => 'replace',
+
 			'woo_account_form'       => '1',
 			'woo_checkout_gate'      => '0',
 			'woo_checkout_notice'    => 'برای ادامه خرید و مشاهده صفحه تسویه حساب، ابتدا وارد حساب کاربری شوید.',

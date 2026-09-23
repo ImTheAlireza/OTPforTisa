@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۵.۰)</title>
+<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۶.۰)</title>
 <!-- Same stylesheet the plugin loads in wp-admin. -->
 <link rel="stylesheet" href="/plugin-assets/css/admin.css">
 <style>
@@ -30,9 +30,9 @@
 <body>
 
 <div class="demo-bar">
-	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۵.۰)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
+	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۶.۰)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
 	داده‌ها از سرور آزمایشی همین پیش‌نمایش می‌آیند.
-	<a href="/">فرم ورود</a> · <a href="/account">پنل کاربری</a> · <a href="/admin">پیشخوان</a> · <a href="#reports">گزارش‌ها</a>
+	<a href="/">فرم ورود</a> · <a href="/account">پنل کاربری</a> · <a href="/woodmart">سایدبار وودمارت</a> · <a href="/admin">پیشخوان</a> · <a href="#reports">گزارش‌ها</a>
 </div>
 
 <div class="wrap tisa-wrap" dir="rtl">
@@ -40,11 +40,11 @@
 	<div class="tisa-header">
 		<div class="tisa-header__title">
 			<h1>ابزارها و وضعیت</h1>
-			<p class="tisa-note">نسخهٔ ۱.۵.۰ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
+			<p class="tisa-note">نسخهٔ ۱.۶.۰ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
 		</div>
 		<div class="tisa-header__meta">
 			<span class="tisa-badge is-on">فعال</span>
-			<span class="tisa-badge">نسخه 1.5.0</span>
+			<span class="tisa-badge">نسخه 1.6.0</span>
 		</div>
 	</div>
 
@@ -185,6 +185,39 @@
 				<input type="text" dir="ltr" value="captcha,throttle">
 				<p class="tisa-row__hint">نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود.</p>
 			</div>
+		</div>
+	</section>
+
+	<!-- storeSection(), the WoodMart card (SettingsScreen) ---------------- -->
+	<section class="tisa-panel tisa-card">
+		<h2>وودمارت</h2>
+		<p class="tisa-card__intro">
+			پنل ورود وودمارت همان کشوی حساب کاربری در هدر است. افزونه همان فراخوانی پوسته را قاب می‌گیرد و فقط
+			فرم نام کاربری/گذرواژهٔ داخل پنل را با فرم OTP عوض می‌کند؛ هیچ فایلی از قالب تغییر نمی‌کند.
+		</p>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">پوسته</div>
+			<div class="tisa-row__control"><span class="tisa-badge is-on">وودمارت شناسایی شد</span></div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">فرم در سایدبار ورود</div>
+			<div class="tisa-row__control">
+				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>فرم OTP در پنل ورود وودمارت رندر شود</span></label>
+			</div>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">فرم رمز عبور وودمارت</div>
+			<div class="tisa-row__control">
+				<select><option selected>جایگزین شود</option><option>بماند (فرم OTP زیرش بیاید)</option></select>
+			</div>
+			<p class="tisa-row__hint">هیچ فایلی از پوسته تغییر نمی‌کند؛ فرم در همان جای پنل جایگزین می‌شود.</p>
+		</div>
+
+		<div class="tisa-inline">
+			<a class="button" href="/woodmart">دیدن همین پنل در پیش‌نمایش</a>
 		</div>
 	</section>
 

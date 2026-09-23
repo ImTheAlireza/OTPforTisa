@@ -112,6 +112,7 @@ final class Plugin {
 			Front\Shortcodes::class,
 			Front\LoginBridge::class,
 			Woo\Bridge::class,
+			Integrations\WoodMart::class,
 			Elementor\Module::class,
 			Cron\Maintenance::class,
 			User\ProfileField::class,
@@ -369,6 +370,14 @@ final class Plugin {
 
 		$c->bind( Woo\Bridge::class, static function ( Container $c ) {
 			return new Woo\Bridge( $c->make( Config\Settings::class ), $c->make( Front\FormRenderer::class ) );
+		} );
+
+		$c->bind( Integrations\WoodMart::class, static function ( Container $c ) {
+			return new Integrations\WoodMart(
+				$c->make( Config\Settings::class ),
+				$c->make( Front\FormRenderer::class ),
+				$c->make( Front\Assets::class )
+			);
 		} );
 
 		$c->bind( Elementor\Module::class, static function ( Container $c ) {

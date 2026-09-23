@@ -2632,6 +2632,16 @@
 		mount();
 	}
 
+	/*
+	 * Once more when the page has finished loading.
+	 *
+	 * The WoodMart sign-in panel is printed in the footer, and a site that
+	 * defers or injects its footer after `DOMContentLoaded` would otherwise
+	 * leave that one form inert. `mount()` skips anything already mounted, so
+	 * this costs a `querySelectorAll` and nothing else.
+	 */
+	window.addEventListener('load', mount);
+
 	window.tisaOtpForms = {
 		config: cfg,
 		refresh: mount,

@@ -1038,6 +1038,39 @@ final class SettingsScreen {
 		}
 
 		$this->card(
+			__( 'وودمارت', 'tisa-otp' ),
+			function () use ( $c ) {
+				$detected = \TisaOtp\Integrations\WoodMart::detected();
+
+				$c->row(
+					__( 'پوسته', 'tisa-otp' ),
+					function () use ( $detected ) {
+						printf(
+							'<span class="tisa-badge %s">%s</span>',
+							$detected ? 'is-on' : 'is-off',
+							esc_html( $detected ? __( 'وودمارت شناسایی شد', 'tisa-otp' ) : __( 'وودمارت فعال نیست', 'tisa-otp' ) )
+						);
+					},
+					$detected ? '' : __( 'این تنظیمات فقط روی سایت‌های وودمارت اثر دارند.', 'tisa-otp' )
+				);
+
+				$c->row( __( 'فرم در سایدبار ورود', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'woodmart_sidebar', __( 'فرم OTP در پنل ورود وودمارت رندر شود', 'tisa-otp' ) );
+				}, __( 'پنل ورود همان کشوی حساب کاربری در هدر است؛ فرم داخل خودش، با همان AJAX و کپچا.', 'tisa-otp' ) );
+
+				$c->row( __( 'فرم رمز عبور وودمارت', 'tisa-otp' ), function () use ( $c ) {
+					$c->select(
+						'woodmart_mode',
+						array(
+							'replace' => __( 'جایگزین شود', 'tisa-otp' ),
+							'append'  => __( 'بماند (فرم OTP زیرش بیاید)', 'tisa-otp' ),
+						)
+					);
+				}, __( 'هیچ فایلی از پوسته تغییر نمی‌کند؛ فرم در همان جای پنل جایگزین می‌شود.', 'tisa-otp' ) );
+			}
+		);
+
+		$this->card(
 			__( 'ووکامرس', 'tisa-otp' ),
 			function () use ( $c ) {
 				$c->row( __( 'فرم حساب کاربری', 'tisa-otp' ), function () use ( $c ) {

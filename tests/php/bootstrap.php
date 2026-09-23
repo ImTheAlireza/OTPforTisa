@@ -323,13 +323,31 @@ class WP_Theme { // phpcs:ignore Squiz.Classes.ValidClassName.NotCamelCaps -- Wo
 	 * @return string
 	 */
 	public function get( $header ) {
-		return 'Name' === $header ? $this->name : '';
+		if ( 'Name' === $header ) {
+			return $this->name;
+		}
+
+		return 'Version' === $header ? '1.0.0' : '';
+	}
+
+	/**
+	 * The parent theme's directory name.
+	 */
+	public function get_template(): string {
+		return get_template();
 	}
 }
 
 /**
  * @return WP_Theme
  */
+/**
+ * The template (parent theme) directory name, as WordPress reports it.
+ */
+function get_template(): string {
+	return isset( $GLOBALS['tisa_template'] ) ? (string) $GLOBALS['tisa_template'] : 'tisa-test-theme';
+}
+
 function wp_get_theme( $stylesheet = '' ) {
 	unset( $stylesheet );
 
@@ -412,6 +430,13 @@ function wp_unslash( $value ) {
  * redirecting or by dying, and both are visible here.
  * ---------------------------------------------------------------------- */
 
+/**
+ * Is somebody signed in? Read from the same global the other stubs use.
+ */
+function is_user_logged_in(): bool {
+	return isset( $GLOBALS['tisa_current_user'] ) && (int) $GLOBALS['tisa_current_user'] > 0;
+}
+
 function get_current_user_id(): int {
 	return isset( $GLOBALS['tisa_current_user'] ) ? (int) $GLOBALS['tisa_current_user'] : 0;
 }
@@ -422,6 +447,12 @@ function current_user_can( $capability ): bool {
 
 function add_filter( $tag, $callback, $priority = 10, $accepted = 1 ) {
 	$GLOBALS['tisa_hooks'][ $tag ][] = $callback;
+
+	// Recorded alongside, so a test can ask *when* something runs.
+	$GLOBALS['tisa_hook_priorities'][ $tag ][] = array(
+		'priority' => (int) $priority,
+		'callback' => $callback,
+	);
 
 	return true;
 }
@@ -574,7 +605,8 @@ function tisa_forget_requests(): void {
  * Drop every filter a test registered, so one group cannot change the next.
  */
 function tisa_forget_filters(): void {
-	$GLOBALS['tisa_hooks'] = array();
+	$GLOBALS['tisa_hooks']           = array();
+	$GLOBALS['tisa_hook_priorities'] = array();
 }
 
 /**
@@ -842,6 +874,98 @@ function wp_parse_args( $args, $defaults = array() ): array {
 function wp_enqueue_script( ...$args ): void {}
 function wp_enqueue_style( ...$args ): void {}
 function wp_localize_script( ...$args ): void {}
+/**
+ * Late CSS, collected the way `wp_add_inline_style()` collects it.
+ */
+function wp_add_inline_style( $handle, $data ): bool {
+	$GLOBALS['tisa_inline_styles'][ $handle ][] = (string) $data;
+
+	return true;
+}
+
+/** Echoing translator, as templates use it. */
+function esc_html_e( $text, $domain = 'default' ) {
+	unset( $domain );
+
+	echo esc_html( $text );
+}
+
+/** No theme provides template overrides in these tests. */
+function locate_template( $templates, $load = false, $require_once = true ) {
+	unset( $templates, $load, $require_once );
+
+	return '';
+}
+
+/**
+ * A counter, as `wp_unique_id()` keeps one — enough to make ids unique per page.
+ */
+function wp_unique_id( $prefix = '' ) {
+	static $id = 0;
+
+	return (string) $prefix . ( ++$id );
+}
+
+/**
+ * The queried object, when a test sets one.
+ */
+function get_queried_object() {
+	return isset( $GLOBALS['tisa_queried_object'] ) ? $GLOBALS['tisa_queried_object'] : null;
+}
+
+/** Does the queried content contain a shortcode? */
+function has_shortcode( $content, $tag ) {
+	unset( $tag );
+
+	return is_string( $content ) && '' !== $content;
+}
+
+/** WooCommerce page checks — no WooCommerce pages exist in these tests. */
+function is_account_page(): bool {
+	return ! empty( $GLOBALS['tisa_is_account_page'] );
+}
+
+function is_checkout(): bool {
+	return ! empty( $GLOBALS['tisa_is_checkout'] );
+}
+
+/** A signed-in user, as far as templates are concerned. */
+function wp_get_current_user() {
+	$user = new \stdClass();
+	$user->ID         = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+	$user->display_name = 'Test User';
+
+	return $user;
+}
+
+/** `wp_validate_redirect()` — the same host only, as WordPress does it. */
+function wp_validate_redirect( $location, $fallback = '' ) {
+	if ( ! is_string( $location ) || '' === $location ) {
+		return $fallback;
+	}
+
+	return 0 === strpos( $location, 'https://example.test' ) ? $location : $fallback;
+}
+
+/** Media modal: not opened in any request these tests model. */
+function wp_enqueue_media( $args = array() ) {
+	unset( $args );
+}
+
+/**
+ * `sanitize_html_class()` — enough of it for class names built from settings.
+ */
+function sanitize_html_class( $class, $fallback = '' ) {
+	$class = preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $class );
+
+	return '' === $class ? (string) $fallback : $class;
+}
+
+/** Is this an admin request? Nothing in these tests is. */
+function is_admin(): bool {
+	return ! empty( $GLOBALS['tisa_admin_screen'] );
+}
+
 function wp_add_inline_script( ...$args ): void {}
 
 function get_current_screen() {

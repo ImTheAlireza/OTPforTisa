@@ -121,6 +121,8 @@ final class Sanitizer {
 			'woo_checkout_gate'    => array( 'type' => 'bool' ),
 			'woo_checkout_notice'  => array( 'type' => 'textarea' ),
 			'woo_checkout_page'    => array( 'type' => 'url' ),
+			'woodmart_sidebar'     => array( 'type' => 'bool' ),
+			'woodmart_mode'        => array( 'type' => 'enum', 'choices' => array( 'replace', 'append' ) ),
 			'sync_billing_phone'   => array( 'type' => 'bool' ),
 			'link_guest_orders'    => array( 'type' => 'bool' ),
 			'send_welcome_email'   => array( 'type' => 'bool' ),

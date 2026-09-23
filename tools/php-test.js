@@ -97,6 +97,11 @@ async function put(php, files) {
 async function main() {
 	const args = process.argv.slice(2);
 	const lint = args.includes('--lint');
+	/*
+	 * `--quiet` drops the banner, so a tool that prints something — the preview
+	 * page generator — can be redirected straight into a file.
+	 */
+	const quiet = args.includes('--quiet');
 	const scripts = args.filter((arg) => !arg.startsWith('--'));
 
 	const { loadNodeRuntime } = await loadModule('@php-wasm/node');
@@ -115,6 +120,8 @@ async function main() {
 		 * stylesheet as missing.
 		 */
 		...collect(path.join(ROOT, 'tisa-otp'), '/tisa-otp'),
+		// The tools, so a generator can be run here too.
+		...collect(path.join(ROOT, 'tools'), '/tools', (file) => file.endsWith('.php')),
 	];
 
 	await put(php, files);
@@ -161,10 +168,14 @@ async function main() {
 
 	let failed = 0;
 
-	console.log('PHP ' + VERSION + ' via WebAssembly\n');
+	if (!quiet) {
+		console.log('PHP ' + VERSION + ' via WebAssembly\n');
+	}
 
 	for (const script of scripts) {
-		const result = await php.run({ scriptPath: '/tests/php/' + script });
+		// `tests/php/foo-test.php`, `tools/thing.php`, or a bare test name.
+		const vfsPath = script.includes('/') ? '/' + script : '/tests/php/' + script;
+		const result = await php.run({ scriptPath: vfsPath });
 
 		process.stdout.write(result.text);
 

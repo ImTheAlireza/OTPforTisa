@@ -709,6 +709,12 @@ const server = http.createServer(async (req, res) => {
 		return;
 	}
 
+	/* The OTP form inside WoodMart's sign-in drawer, built from real output. */
+	if (pathname === '/woodmart' || pathname === '/woodmart.html') {
+		serveStatic(res, path.join(PUBLIC_DIR, 'woodmart.html'));
+		return;
+	}
+
 	const target = path.join(PUBLIC_DIR, pathname);
 	if (target.startsWith(PUBLIC_DIR) && fs.existsSync(target) && fs.statSync(target).isFile()) {
 		serveStatic(res, target);
@@ -723,6 +729,7 @@ server.listen(PORT, HOST, () => {
 	console.log('  /                     front-end form demo');
 	console.log('  /admin                admin screens demo');
 	console.log('  /account              signed-in account panel demo');
+	console.log('  /woodmart             the OTP form inside WoodMart\'s sign-in drawer');
 	console.log('  /download/tisa-otp.zip  installable package (built on demand)');
 	console.log('  plugin assets served from ' + PLUGIN_ASSETS);
 });

@@ -1223,6 +1223,26 @@ final class SelfTest {
 	 * @return array<string,mixed>
 	 */
 	/**
+	 * The active theme's version, as WordPress reports it.
+	 */
+	private function themeVersion(): string {
+		$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme() : null;
+
+		if ( ! is_object( $theme ) || ! method_exists( $theme, 'get' ) ) {
+			return __( 'فعال', 'tisa-otp' );
+		}
+
+		$name    = (string) $theme->get( 'Name' );
+		$version = (string) $theme->get( 'Version' );
+
+		if ( '' === $name ) {
+			return __( 'فعال', 'tisa-otp' );
+		}
+
+		return '' === $version ? $name : $name . ' ' . $version;
+	}
+
+	/**
 	 * Which font the form prints with, in one word.
 	 */
 	private function fontLabel(): string {
@@ -1291,6 +1311,42 @@ final class SelfTest {
 				$this->hasBillingPhone() ? 'ok' : 'warn',
 				$this->hasBillingPhone() ? '' : __( 'هیچ کاربری کلید billing_phone ندارد؛ اگر ووکامرس تازه نصب شده این طبیعی است.', 'tisa-otp' )
 			);
+		}
+
+		/*
+		 * The WoodMart login panel: the theme prints it on its own hook, and the
+		 * plugin wraps that hook. Whether the theme is here at all, and whether the
+		 * form is meant to go into it, are the two facts an owner needs — the
+		 * rest is visible on the site by opening the header's account dropdown.
+		 */
+		if ( \TisaOtp\Integrations\WoodMart::detected() ) {
+			$enabled = $this->settings->bool( 'woodmart_sidebar', true );
+
+			$rows[] = $this->row(
+				__( 'وودمارت', 'tisa-otp' ),
+				$this->themeVersion(),
+				'ok'
+			);
+
+			$rows[] = $this->row(
+				__( 'سایدبار ورود وودمارت', 'tisa-otp' ),
+				$enabled ? __( 'روشن', 'tisa-otp' ) : __( 'خاموش', 'tisa-otp' ),
+				$enabled ? 'ok' : 'info',
+				$enabled
+					? __( 'فرم OTP داخل پنل ورود هدر رندر می‌شود؛ هیچ فایلی از پوسته تغییر نمی‌کند.', 'tisa-otp' )
+					: __( 'پنل ورود وودمارت دست‌نخورده می‌ماند.', 'tisa-otp' )
+			);
+
+			if ( $enabled ) {
+				$rows[] = $this->row(
+					__( 'فرم رمز عبور وودمارت', 'tisa-otp' ),
+					'replace' === $this->settings->str( 'woodmart_mode', 'replace' ) ? __( 'جایگزین می‌شود', 'tisa-otp' ) : __( 'می‌ماند', 'tisa-otp' ),
+					'info',
+					'replace' === $this->settings->str( 'woodmart_mode', 'replace' )
+						? __( 'کاربر در پنل فقط شماره موبایل و کد را می‌بیند.', 'tisa-otp' )
+						: __( 'ورود با رمز عبور هم در دسترس می‌ماند و فرم OTP زیرش می‌آید.', 'tisa-otp' )
+				);
+			}
 		}
 
 		return $this->result(
