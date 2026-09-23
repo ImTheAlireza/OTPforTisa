@@ -311,6 +311,50 @@ final class LogStore {
 	}
 
 	/**
+	 * Keep the event table under a hard row ceiling.
+	 *
+	 * Retention by age is the polite rule, and it is the one that fails exactly
+	 * when it matters: a site under a flood logs a hundred thousand rows a day
+	 * and seven days of "keep" is seven hundred thousand rows — the table that
+	 * was going to tell the owner what happened becomes the thing that fills
+	 * the disk. This is the ceiling underneath the retention rule. The oldest
+	 * rows go first, in batches, so the delete never holds a long lock.
+	 *
+	 * @param int $maxRows Ceiling; 0 disables the cap.
+	 * @return int Rows removed.
+	 */
+	public function cap( int $maxRows ): int {
+		global $wpdb;
+
+		$maxRows = (int) $maxRows;
+
+		if ( $maxRows <= 0 ) {
+			return 0;
+		}
+
+		$total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $this->table() ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+
+		if ( $total <= $maxRows ) {
+			return 0;
+		}
+
+		$table = $this->table();
+		$cut   = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare( 'SELECT id FROM ' . $table . ' ORDER BY id DESC LIMIT 1 OFFSET %d', $maxRows ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		);
+
+		if ( $cut <= 0 ) {
+			return 0;
+		}
+
+		$removed = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare( 'DELETE FROM ' . $table . ' WHERE id <= %d LIMIT 5000', $cut ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		);
+
+		return max( 0, (int) $removed );
+	}
+
+	/**
 	 * @return string[] Distinct event names seen so far.
 	 */
 	public function events(): array {

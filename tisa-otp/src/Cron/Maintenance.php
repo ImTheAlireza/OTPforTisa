@@ -54,6 +54,7 @@ final class Maintenance implements Bootable {
 			'codes' => (int) $this->codes->purge(),
 			'state' => (int) $this->state->prune(),
 			'logs'  => (int) $this->logs->purge( $this->settings->int( 'logs_keep_days', 7 ) ),
+			'capped' => (int) $this->logs->cap( $this->settings->int( 'logs_max_rows', 200000 ) ),
 		);
 
 		/**

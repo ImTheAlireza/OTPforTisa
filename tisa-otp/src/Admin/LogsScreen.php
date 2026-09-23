@@ -10,6 +10,7 @@ namespace TisaOtp\Admin;
 use TisaOtp\Bootable;
 use TisaOtp\Config\Settings;
 use TisaOtp\Log\LogStore;
+use TisaOtp\Log\Report;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -213,12 +214,12 @@ final class LogsScreen implements Bootable {
 		$out = fopen( 'php://output', 'w' );
 
 		fwrite( $out, "\xEF\xBB\xBF" ); // UTF-8 BOM so Excel reads Persian correctly.
-		fputcsv( $out, array( 'created_at', 'severity', 'event', 'channel', 'gateway', 'error_code', 'phone_mask', 'user_id', 'message' ) );
+		fputcsv( $out, Report::row( array( 'created_at', 'severity', 'event', 'channel', 'gateway', 'error_code', 'phone_mask', 'user_id', 'message' ) ) );
 
 		foreach ( $rows as $row ) {
 			fputcsv(
 				$out,
-				array(
+				Report::row( array(
 					$row->created_at,
 					$row->severity,
 					$row->event,
@@ -228,7 +229,7 @@ final class LogsScreen implements Bootable {
 					$row->phone_mask,
 					$row->user_id,
 					$row->message,
-				)
+				) )
 			);
 		}
 

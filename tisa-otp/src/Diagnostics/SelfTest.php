@@ -691,6 +691,7 @@ final class SelfTest {
 	private function security(): array {
 		$rows     = array();
 		$captcha  = $this->captcha->diagnostics();
+		$maxRows  = $this->settings->int( 'logs_max_rows', 200000 );
 		$key      = $this->settings->str( 'captcha_site_key' );
 		$secret   = $this->settings->str( 'captcha_secret_key' );
 
@@ -720,6 +721,45 @@ final class SelfTest {
 		if ( $captcha['halfConfigured'] ) {
 			$rows[] = $this->row( __( 'پیکربندی نیمه‌کاره', 'tisa-otp' ), __( 'بله', 'tisa-otp' ), 'fail', __( 'تنها یکی از دو کلید پر شده است؛ ویجت و تأیید سروری هر دو می‌شکنند.', 'tisa-otp' ) );
 		}
+
+		/*
+		 * The two doors into an account, and how the site decided each one
+		 * opens. Both are settings a security review asks about first, and both
+		 * were previously invisible from inside the panel.
+		 */
+		$passwordOff = $this->settings->bool( 'password_login_off', false );
+		$remember    = $this->settings->bool( 'remember_login', true );
+
+		$rows[] = $this->row(
+			__( 'ورود با گذرواژه', 'tisa-otp' ),
+			$passwordOff ? __( 'بسته', 'tisa-otp' ) : __( 'باز', 'tisa-otp' ),
+			$passwordOff ? 'ok' : 'info',
+			$passwordOff
+				? __( 'گذرواژه از wp-login.php پذیرفته نمی‌شود؛ گذرواژهٔ برنامه و REST کار می‌کنند. راه بازگشت: کد اضطراری.', 'tisa-otp' )
+				: __( 'ورود با گذرواژه باز است. اگر می‌خواهید فقط با کد وارد شوند، کلید «ورود فقط با کد» را روشن کنید.', 'tisa-otp' )
+		);
+
+		$rows[] = $this->row(
+			__( 'مدت نشست', 'tisa-otp' ),
+			$remember ? __( '۱۴ روز', 'tisa-otp' ) : __( 'تا بسته شدن مرورگر', 'tisa-otp' ),
+			'info'
+		);
+
+		$siteLimit = $this->settings->int( 'limit_per_site_daily', 300 );
+
+		$rows[] = $this->row(
+			__( 'سقف روزانهٔ کل سایت', 'tisa-otp' ),
+			$siteLimit > 0 ? number_format_i18n( $siteLimit ) . ' ' . __( 'ارسال', 'tisa-otp' ) : __( 'بی‌سقف', 'tisa-otp' ),
+			$siteLimit > 0 ? 'ok' : 'warn',
+			$siteLimit > 0 ? '' : __( 'بدون این سقف، حمله از هزاران آدرس می‌تواند اعتبار پیامک را در یک روز مصرف کند.', 'tisa-otp' )
+		);
+
+		$rows[] = $this->row(
+			__( 'سقف ردیف‌های رویدادها', 'tisa-otp' ),
+			$maxRows > 0 ? number_format_i18n( $maxRows ) . ' ' . __( 'ردیف', 'tisa-otp' ) : __( 'بی‌سقف', 'tisa-otp' ),
+			$maxRows > 0 ? 'ok' : 'warn',
+			$maxRows > 0 ? __( 'قدیمی‌ترین ردیف‌ها حذف می‌شوند تا جدول دیسک را پر نکند.', 'tisa-otp' ) : __( 'بدون سقف، جدول رویدادها می‌تواند میلیون‌ها ردیف شود.', 'tisa-otp' )
+		);
 
 		$rows[] = $this->row(
 			__( 'زمان نمایش', 'tisa-otp' ),

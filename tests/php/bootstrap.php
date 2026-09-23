@@ -110,6 +110,27 @@ class Tisa_Wpdb_Stub {
 	/** @var array<int,array<string,mixed>> */
 	public $writes = array();
 
+	/** @var string[] Every statement that reached the database, in order. */
+	public $sql = array();
+
+	/**
+	 * Counters the stub keeps for `StateStore::bump()`.
+	 *
+	 * The throttle's numbers live in a table and come back through a second
+	 * query, so a test that wants to see "the fourth send is refused" needs the
+	 * two statements to agree with each other. This is that agreement, and
+	 * nothing else: the INSERT adds one, the SELECT reads the total.
+	 *
+	 * @var array<string,int>
+	 */
+	public $counters = array();
+
+	/** @var array<int,mixed> Answers for get_var(), in order. */
+	public $varQueue = array();
+
+	/** @var int What query() reports as "rows affected". */
+	public $queryReturn = 0;
+
 	public function prepare( $query, ...$args ) {
 		// WordPress accepts both `prepare( $sql, $a, $b )` and the single
 		// array form `prepare( $sql, array( $a, $b ) )`; the log store uses both.
@@ -133,11 +154,57 @@ class Tisa_Wpdb_Stub {
 	}
 
 	public function get_var( $query = '' ) {
+		$this->sql[] = (string) $query;
+
+		if ( array() !== $this->varQueue ) {
+			return array_shift( $this->varQueue );
+		}
+
+		$key = $this->stateKey( (string) $query );
+
+		if ( '' !== $key && false !== strpos( $query, 'SELECT hits FROM' ) ) {
+			return isset( $this->counters[ $key ] ) ? $this->counters[ $key ] : 0;
+		}
+
 		return 0;
 	}
 
 	public function query( $query = '' ) {
-		return 0;
+		$this->sql[] = (string) $query;
+
+		// The one statement whose effect a test needs to see: a counter going up.
+		if ( false !== strpos( (string) $query, 'ON DUPLICATE KEY UPDATE' ) && false !== strpos( (string) $query, 'hits = IF(' ) ) {
+			$key = $this->stateKey( (string) $query );
+
+			if ( '' !== $key ) {
+				$this->counters[ $key ] = ( isset( $this->counters[ $key ] ) ? (int) $this->counters[ $key ] : 0 ) + 1;
+			}
+		}
+
+		return $this->queryReturn;
+	}
+
+	/**
+	 * The `state_key` value a statement carries, if it carries one.
+	 */
+	private function stateKey( string $query ): string {
+		if ( false === strpos( $query, 'tisa_otp_state' ) ) {
+			return '';
+		}
+
+		$key = '';
+
+		if ( preg_match( "/state_key = '([^']*)'/", $query, $found ) ) {
+			$key = $found[1];
+		} elseif ( preg_match( "/state_key = ([^\\s']+)/", $query, $found ) ) {
+			// `prepare()` leaves an unquoted placeholder alone; WordPress adds
+			// the quotes, this stub does not.
+			$key = trim( $found[1], "'" );
+		} elseif ( preg_match( '/VALUES \\(\\s*([^\\s,]+)/', $query, $found ) ) {
+			$key = trim( $found[1], "'" );
+		}
+
+		return $key;
 	}
 
 	public function insert( $table, $data ) {

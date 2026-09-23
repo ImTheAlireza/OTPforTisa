@@ -87,10 +87,21 @@ final class BotGuard implements Guard {
 
 	/**
 	 * Legacy path, for cached markup that predates the signed token.
+	 *
+	 * A form rendered by this plugin always carries one of the two: the signed
+	 * token, or the hidden timestamp the previous versions printed. A request
+	 * with neither did not come from our form — most often because somebody
+	 * posted the endpoint directly — so it is refused, and `stale_form` is the
+	 * refusal the client already knows how to recover from: it fetches a fresh
+	 * config and posts once more. A real visitor on a cached page never sees it.
 	 */
 	private function inspectTimestamp( int $rendered ): void {
 		if ( $rendered <= 0 ) {
-			return;
+			throw Rejection::make(
+				'stale_form',
+				__( 'نشست فرم منقضی شده است. لطفاً دوباره تلاش کنید.', 'tisa-otp' ),
+				array( 'recoverable' => true, 'reason' => 'no_token' )
+			);
 		}
 
 		$age = time() - $rendered;

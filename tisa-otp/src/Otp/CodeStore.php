@@ -35,6 +35,21 @@ interface CodeStore {
 	public function consume( CodeRecord $record ): void;
 
 	/**
+	 * Claim a record for this request, atomically.
+	 *
+	 * `consume()` is unconditional, which is right for a record whose code was
+	 * wrong, expired or out of attempts. A *correct* code is different: two
+	 * requests can arrive in the same second with the same code — a double-click,
+	 * a retry, or two tabs — and if both read the record before either marks it
+	 * used, both are accepted and the code is spent twice. This asks the storage
+	 * layer to flip the flag and report whether *this* request is the one that
+	 * flipped it. Exactly one caller can win.
+	 *
+	 * @return bool True when this request claimed a still-unused record.
+	 */
+	public function claim( CodeRecord $record ): bool;
+
+	/**
 	 * Drop every outstanding code for a phone fingerprint.
 	 */
 	public function revoke( string $fingerprint ): void;

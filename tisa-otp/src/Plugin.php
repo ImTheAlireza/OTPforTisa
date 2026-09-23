@@ -235,6 +235,7 @@ final class Plugin {
 		$c->bind( User\Session::class, static function ( Container $c ) {
 			return new User\Session(
 				$c->make( User\RedirectResolver::class ),
+				$c->make( Config\Settings::class ),
 				$c->make( Log\Logger::class )
 			);
 		} );

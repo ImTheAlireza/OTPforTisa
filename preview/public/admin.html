@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۶.۱)</title>
+<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۷.۰)</title>
 <!-- Same stylesheet the plugin loads in wp-admin. -->
 <link rel="stylesheet" href="/plugin-assets/css/admin.css">
 <style>
@@ -30,7 +30,7 @@
 <body>
 
 <div class="demo-bar">
-	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۶.۱)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
+	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۷.۰)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
 	داده‌ها از سرور آزمایشی همین پیش‌نمایش می‌آیند.
 	<a href="/">فرم ورود</a> · <a href="/account">پنل کاربری</a> · <a href="/woodmart">سایدبار وودمارت</a> · <a href="/admin">پیشخوان</a> · <a href="#reports">گزارش‌ها</a>
 </div>
@@ -40,11 +40,11 @@
 	<div class="tisa-header">
 		<div class="tisa-header__title">
 			<h1>ابزارها و وضعیت</h1>
-			<p class="tisa-note">نسخهٔ ۱.۶.۱ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
+			<p class="tisa-note">نسخهٔ ۱.۷.۰ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
 		</div>
 		<div class="tisa-header__meta">
 			<span class="tisa-badge is-on">فعال</span>
-			<span class="tisa-badge">نسخه 1.6.1</span>
+			<span class="tisa-badge">نسخه 1.7.0</span>
 		</div>
 	</div>
 
@@ -186,6 +186,68 @@
 				<p class="tisa-row__hint">نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود.</p>
 			</div>
 		</div>
+	</section>
+
+	<!-- the 1.7.0 hardening rows (settings › security, and data › events) -->
+	<section class="tisa-panel tisa-card" id="hardening">
+		<h2>ضد ضربه</h2>
+		<p class="tisa-card__intro">چهار کنترل تازه که هر کدام یک راه نفوذ یا یک راه اتلاف را می‌بندد. هیچ‌کدام پیش‌فرض سایت را قفل نمی‌کند.</p>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">ورود فقط با کد</div>
+			<div class="tisa-row__control">
+				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>ورود با نام کاربری و گذرواژه بسته شود</span></label>
+			</div>
+			<p class="tisa-row__hint">جلوی ارسال گذرواژه به wp-login.php را می‌گیرد، نه فقط پنهان‌کردن فرم. راه بازگشت: کد اضطراری.</p>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">ماندن در حساب</div>
+			<div class="tisa-row__control">
+				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>کاربر بعد از ورود، در حساب بماند</span></label>
+			</div>
+			<p class="tisa-row__hint">خاموش یعنی نشست تا بسته شدن مرورگر. ورود با کد رویداد wp_login را هم صدا می‌زند، پس افزونه‌های دیگر آن را می‌بینند.</p>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">سقف روزانهٔ کل سایت</div>
+			<div class="tisa-row__control">
+				<span class="tisa-number"><input class="small-text tisa-input" type="number" value="300" min="0" max="100000" dir="ltr"><em>ارسال در روز</em></span>
+			</div>
+			<p class="tisa-row__hint">سقف‌های بالا برای هر شماره و هر IP است؛ این یکی برای خود سایت است. صفر = بی‌سقف.</p>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">سقف تعداد ردیف‌ها</div>
+			<div class="tisa-row__control">
+				<span class="tisa-number"><input class="small-text tisa-input" type="number" value="200000" min="0" max="5000000" dir="ltr"><em>ردیف</em></span>
+			</div>
+			<p class="tisa-row__hint">نگهداری «هفت روز» زیر حمله می‌تواند میلیون‌ها ردیف شود. این سقف قدیمی‌ترین‌ها را حذف می‌کند. صفر = بی‌سقف.</p>
+		</div>
+	</section>
+
+	<!-- what the security self-test now reports ---------------------------- -->
+	<section class="tisa-panel tisa-card">
+		<h2>آزمایش امنیت، چهار ردیف تازه</h2>
+		<div class="tisa-doctor">
+			<div class="tisa-doctor__row is-good">
+				<p class="tisa-doctor__title">ورود با گذرواژه: بسته</p>
+				<p class="tisa-doctor__line">گذرواژه از wp-login.php پذیرفته نمی‌شود؛ گذرواژهٔ برنامه و REST کار می‌کنند. راه بازگشت: کد اضطراری.</p>
+			</div>
+			<div class="tisa-doctor__row is-good">
+				<p class="tisa-doctor__title">مدت نشست: ۱۴ روز</p>
+				<p class="tisa-doctor__line">با خاموش شدن کلید «ماندن در حساب»، نشست تا بسته شدن مرورگر می‌ماند.</p>
+			</div>
+			<div class="tisa-doctor__row is-good">
+				<p class="tisa-doctor__title">سقف روزانهٔ کل سایت: ۳۰۰ ارسال</p>
+				<p class="tisa-doctor__line">بی‌سقف بودن هشدار می‌گیرد، چون حمله از هزاران آدرس آن‌وقت بی‌مانع است.</p>
+			</div>
+			<div class="tisa-doctor__row is-good">
+				<p class="tisa-doctor__title">سقف ردیف‌های رویدادها: ۲۰۰٬۰۰۰</p>
+				<p class="tisa-doctor__line">خانه‌تکانی قدیمی‌ترین ردیف‌ها را در بسته‌های ۵۰۰۰ تایی حذف می‌کند.</p>
+			</div>
+		</div>
+		<p class="tisa-row__hint">هر چهار ردیف در تب «ابزارها» کنار بقیهٔ ردیف‌های امنیتی می‌آیند و سبز/زرد/قرمز می‌شوند.</p>
 	</section>
 
 	<!-- storeSection(), the WoodMart card (SettingsScreen) ---------------- -->

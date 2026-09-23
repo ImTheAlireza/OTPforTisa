@@ -272,24 +272,26 @@ final class ReportScreen implements Bootable {
 		// Excel needs the BOM to read Persian headers as UTF-8.
 		fwrite( $out, "\xEF\xBB\xBF" );
 
-		fputcsv( $out, array( __( 'روز', 'tisa-otp' ), __( 'ارسال‌شده', 'tisa-otp' ), __( 'ناموفق', 'tisa-otp' ) ) );
+		fputcsv( $out, Report::row( array( __( 'روز', 'tisa-otp' ), __( 'ارسال‌شده', 'tisa-otp' ), __( 'ناموفق', 'tisa-otp' ) ) ) );
 
 		foreach ( $data['series'] as $day => $counts ) {
 			fputcsv(
 				$out,
-				array(
-					$day,
-					isset( $counts[ Report::SENT ] ) ? (int) $counts[ Report::SENT ] : 0,
-					isset( $counts[ Report::FAILED ] ) ? (int) $counts[ Report::FAILED ] : 0,
+				Report::row(
+					array(
+						$day,
+						isset( $counts[ Report::SENT ] ) ? (int) $counts[ Report::SENT ] : 0,
+						isset( $counts[ Report::FAILED ] ) ? (int) $counts[ Report::FAILED ] : 0,
+					)
 				)
 			);
 		}
 
 		fputcsv( $out, array() );
-		fputcsv( $out, array( __( 'دلیل', 'tisa-otp' ), __( 'کد خطا', 'tisa-otp' ), __( 'تعداد', 'tisa-otp' ) ) );
+		fputcsv( $out, Report::row( array( __( 'دلیل', 'tisa-otp' ), __( 'کد خطا', 'tisa-otp' ), __( 'تعداد', 'tisa-otp' ) ) ) );
 
 		foreach ( $data['failures'] as $row ) {
-			fputcsv( $out, array( Report::label( (string) $row['event'] ), (string) $row['error_code'], (int) $row['total'] ) );
+			fputcsv( $out, Report::row( array( Report::label( (string) $row['event'] ), (string) $row['error_code'], (int) $row['total'] ) ) );
 		}
 
 		fclose( $out );

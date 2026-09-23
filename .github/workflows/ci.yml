@@ -38,6 +38,7 @@ jobs:
           php tests/php/app-mode-test.php
           php tests/php/wiring-test.php
           php tests/php/woodmart-test.php
+          php tests/php/hardening-test.php
           php tests/php/package-test.php
       - name: The WoodMart preview page is the plugin's current output
         # The page at preview/public/woodmart.html is generated, not drawn: if

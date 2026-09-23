@@ -15,6 +15,43 @@ defined( 'ABSPATH' ) || exit;
 
 final class Report {
 
+	/**
+	 * Make a cell safe for a spreadsheet.
+	 *
+	 * A log message can start with `=`, `+`, `-` or `@` — a gateway's error
+	 * text, a user agent, something a visitor typed. Excel, LibreOffice and
+	 * Sheets treat such a cell as a formula and will happily run `=HYPERLINK`,
+	 * `=cmd|…` or a DDE call when the owner opens the export. The file leaves
+	 * *our* server and executes on *their* machine, so this is the one place
+	 * where escaping still matters after the data has left us. Prefixing an
+	 * apostrophe is what every spreadsheet reads as "this is text".
+	 *
+	 * @param mixed $value Cell value.
+	 */
+	public static function cell( $value ): string {
+		$text = (string) $value;
+
+		if ( '' === $text ) {
+			return $text;
+		}
+
+		if ( false !== strpos( "=+-@\t\r", $text[0] ) ) {
+			return "'" . $text;
+		}
+
+		return $text;
+	}
+
+	/**
+	 * One row, every cell made safe for a spreadsheet.
+	 *
+	 * @param array<int,mixed> $cells Row values.
+	 * @return array<int,string>
+	 */
+	public static function row( array $cells ): array {
+		return array_map( array( self::class, 'cell' ), $cells );
+	}
+
 	/** A code left the building. */
 	const SENT = 'code.sent';
 

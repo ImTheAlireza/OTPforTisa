@@ -20,6 +20,7 @@ final class Throttle {
 	const PREFIX_SEND_PHONE = 'quota:send:phone:';
 	const PREFIX_SEND_IP    = 'quota:send:ip:';
 	const PREFIX_SEND_DAY   = 'quota:send:day:';
+	const PREFIX_SEND_SITE  = 'quota:send:site:';
 	const PREFIX_VERIFY_IP  = 'quota:verify:ip:';
 	const PREFIX_CHALLENGE  = 'quota:challenge:ip:';
 	const PREFIX_COOLDOWN   = 'cooldown:';
@@ -57,10 +58,29 @@ final class Throttle {
 		$perPhone = $this->state->bump( self::PREFIX_SEND_PHONE . Phone::fingerprint( $phone ), $window );
 		$perIp    = $this->state->bump( self::PREFIX_SEND_IP . ClientIp::fingerprint( $ip ), $window );
 		$perDay   = $this->state->bump( self::PREFIX_SEND_DAY . ClientIp::fingerprint( $ip ), DAY_IN_SECONDS );
+		$perSite  = $this->state->bump( self::PREFIX_SEND_SITE . gmdate( 'Y-m-d' ), DAY_IN_SECONDS );
 
 		$phoneLimit = max( 1, $this->settings->int( 'limit_per_phone', 5 ) );
 		$ipLimit    = max( 1, $this->settings->int( 'limit_per_ip', 12 ) );
 		$dayLimit   = max( $ipLimit, $this->settings->int( 'limit_per_ip_daily', 60 ) );
+		$siteLimit  = $this->settings->int( 'limit_per_site_daily', 300 );
+
+		/*
+		 * The per-address quotas above are defeated by a botnet: a thousand
+		 * addresses each sending twelve codes is a thousand addresses inside
+		 * every limit. This one counter is not about abuse on a single address,
+		 * it is the site's own ceiling — the day the number of codes the whole
+		 * site sent crosses it, sending stops and says so. It protects the
+		 * owner's credit line, which is the only thing a distributed flood
+		 * actually spends.
+		 */
+		if ( $siteLimit > 0 && $perSite > $siteLimit ) {
+			throw Rejection::make(
+				'site_daily_limit',
+				__( 'سقف ارسال روزانهٔ این سایت تکمیل شده است. فردا دوباره تلاش کنید یا با مدیریت سایت تماس بگیرید.', 'tisa-otp' ),
+				array( 'retry_after' => DAY_IN_SECONDS )
+			);
+		}
 
 		if ( $perPhone > $phoneLimit ) {
 			throw Rejection::make(

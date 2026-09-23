@@ -124,6 +124,11 @@ final class Settings {
 			'code_length'            => '5',
 			'code_ttl'               => '120',
 			'code_store'             => 'database',
+			// A 14-day cookie behind a one-time code: the site chooses, and the
+			// default keeps behaving the way every earlier version did.
+			'remember_login'         => '1',
+			'password_login_off'     => '0',
+
 			'verify_attempts'        => '5',
 			'resend_delay'           => '60',
 			'auto_verify'            => '1',
@@ -168,6 +173,9 @@ final class Settings {
 			'limit_per_phone'        => '5',
 			'limit_per_ip'           => '12',
 			'limit_per_ip_daily'     => '60',
+			// The site's own ceiling, so a distributed flood cannot spend the
+			// whole credit line before anyone notices. 0 turns it off.
+			'limit_per_site_daily'   => '300',
 			'limit_verify_per_ip'    => '25',
 			'proxy_mode'             => 'none',
 			'trusted_proxies'        => '',
@@ -248,6 +256,7 @@ final class Settings {
 			// Data, logs & housekeeping.
 			'logs_enabled'           => '1',
 			'logs_keep_days'         => '7',
+			'logs_max_rows'          => '200000',
 			'debug'                  => '0',
 			'phone_meta_key'         => 'tisa_phone',
 			'lookup_meta_keys'       => 'billing_phone,digits_phone,digits_phone_no',

@@ -27,6 +27,7 @@ require __DIR__ . '/bootstrap.php';
 use TisaOtp\Captcha\Manager;
 use TisaOtp\Config\Settings;
 use TisaOtp\Blocklist\Blocklist;
+use TisaOtp\Guard\BotGuard;
 use TisaOtp\Guard\CaptchaGuard;
 use TisaOtp\Guard\Pipeline;
 use TisaOtp\Http\Request;
@@ -85,6 +86,17 @@ function tisa_captcha_guard( array $extra = array() ): array {
 function tisa_captcha_request( array $body, string $ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1' ): Request {
 	$_SERVER['REMOTE_ADDR']     = '203.0.113.9';
 	$_SERVER['HTTP_USER_AGENT'] = $ua;
+
+	/*
+	 * The marks a real form sends. Without them the bot guard refuses the
+	 * request before the captcha is ever consulted — which is the behaviour of
+	 * `hardening-test.php`, not the subject here. The unsigned timestamp is the
+	 * right one for a fixture: it needs no waiting, while a signed token has a
+	 * deliberate minimum age of one second.
+	 */
+	if ( ! isset( $body[ BotGuard::TIMESTAMP ] ) ) {
+		$body[ BotGuard::TIMESTAMP ] = time() - 5;
+	}
 
 	return Request::make( '09121234567', '203.0.113.9', $body, null, $ua );
 }

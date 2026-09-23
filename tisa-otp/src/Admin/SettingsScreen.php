@@ -286,6 +286,22 @@ final class SettingsScreen {
 					$c->toggle( 'replace_wp_login', __( 'فرم OTP روی wp-login.php نمایش داده شود', 'tisa-otp' ), __( 'فرم کلاسیک وردپرس پنهان می‌شود.', 'tisa-otp' ) );
 				} );
 
+				$c->row(
+					__( 'ورود فقط با کد', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->toggle( 'password_login_off', __( 'ورود با نام کاربری و گذرواژه بسته شود', 'tisa-otp' ) );
+					},
+					__( 'جلوی ارسال گذرواژه به wp-login.php را می‌گیرد، نه فقط پنهان‌کردن فرم. راه بازگشت: کد اضطراری.', 'tisa-otp' )
+				);
+
+				$c->row(
+					__( 'ماندن در حساب', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->toggle( 'remember_login', __( 'کاربر ۱۴ روز وارد بماند', 'tisa-otp' ) );
+					},
+					__( 'اگر خاموش باشد، نشست با بسته‌شدن مرورگر تمام می‌شود.', 'tisa-otp' )
+				);
+
 				$c->row( __( 'پنهان‌سازی وجود حساب', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'prevent_enumeration', __( 'پیام‌ها یکسان باشند', 'tisa-otp' ), __( 'هیچ‌کس نمی‌فهمد شماره‌اش قبلاً ثبت شده یا نه.', 'tisa-otp' ) );
 				} );
@@ -563,6 +579,14 @@ final class SettingsScreen {
 				$c->row( __( 'سقف تأیید کد هر IP', 'tisa-otp' ), function () use ( $c ) {
 					$c->number( 'limit_verify_per_ip', 5, 1000, __( 'تلاش در بازه', 'tisa-otp' ) );
 				} );
+
+				$c->row(
+					__( 'سقف روزانهٔ کل سایت', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->number( 'limit_per_site_daily', 0, 100000, __( 'ارسال در روز', 'tisa-otp' ) );
+					},
+					__( 'سقف‌های بالا برای هر شماره و هر IP است؛ این یکی برای خود سایت است. صفر = بی‌سقف.', 'tisa-otp' )
+				);
 			}
 		);
 
@@ -1243,6 +1267,14 @@ final class SettingsScreen {
 				$c->row( __( 'نگهداری', 'tisa-otp' ), function () use ( $c ) {
 					$c->number( 'logs_keep_days', 1, 90, __( 'روز', 'tisa-otp' ) );
 				} );
+
+				$c->row(
+					__( 'سقف تعداد ردیف‌ها', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->number( 'logs_max_rows', 0, 5000000, __( 'ردیف', 'tisa-otp' ) );
+					},
+					__( 'نگهداری «هفت روز» زیر حمله می‌تواند میلیون‌ها ردیف شود. این سقف قدیمی‌ترین‌ها را حذف می‌کند. صفر = بی‌سقف.', 'tisa-otp' )
+				);
 
 				$c->row( __( 'حالت اشکال‌زدایی', 'tisa-otp' ), function () use ( $c ) {
 					$c->toggle( 'debug', __( 'رویدادها در error_log هم نوشته شوند', 'tisa-otp' ), __( 'فقط وقتی WP_DEBUG فعال است.', 'tisa-otp' ) );
