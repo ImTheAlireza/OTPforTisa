@@ -144,7 +144,11 @@ final class Transport {
 				return __( 'پاسخ سامانه پیامکی در مهلت مقرر نرسید. یا سامانه کند است یا مسیر خروجی این سرور بسته است؛ چند دقیقه دیگر دوباره آزمایش کنید و اگر تکرار شد با هاست تماس بگیرید.', 'tisa-otp' );
 
 			case self::BLOCKED:
-				return __( 'خود وردپرس اجازهٔ این درخواست را نمی‌دهد: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و دامنهٔ سامانهٔ پیامکی در WP_ACCESSIBLE_HOSTS نیست. یا آن گزینه را بردارید (define( \'WP_HTTP_BLOCK_EXTERNAL\', false );) یا دامنه را به فهرست اضافه کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'api.sms.ir\' );', 'tisa-otp' );
+				return sprintf(
+					/* translators: %s: the host that was refused, or the words «دامنهٔ سامانهٔ پیامکی» when the message did not name one */
+					__( 'خودِ وردپرس این درخواست را رد کرد، نه فایروال هاست: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و %s در WP_ACCESSIBLE_HOSTS نیست. یکی از این دو کار را بکنید — ۱) همان خط را false کنید: define( \'WP_HTTP_BLOCK_EXTERNAL\', false ); ۲) یا دامنه را مجاز کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'%1$s\' );', 'tisa-otp' ),
+					self::host( $message )
+				);
 
 			default:
 				return sprintf(
@@ -153,6 +157,25 @@ final class Transport {
 					'' !== $code ? $code : __( 'نامشخص', 'tisa-otp' )
 				);
 		}
+	}
+
+	/**
+	 * The host a transport sentence names, when it names one.
+	 *
+	 * Our own block message carries the host ("… api.sms.ir is not in
+	 * WP_ACCESSIBLE_HOSTS"), which is what lets the advice print the exact
+	 * `define()` line instead of a general instruction. Core's own sentence
+	 * («کاربر درخواست HTTP را بوکله نمود.») names nobody, so the instruction
+	 * falls back to a placeholder the owner replaces.
+	 *
+	 * @param string $message WP_Error message.
+	 */
+	public static function host( string $message ): string {
+		if ( preg_match( '/\b((?:[a-z0-9-]+\.)+[a-z]{2,})\b/i', $message, $matches ) ) {
+			return strtolower( $matches[1] );
+		}
+
+		return __( 'دامنهٔ سامانهٔ پیامکی', 'tisa-otp' );
 	}
 
 	/**
@@ -203,13 +226,16 @@ final class Transport {
 			/*
 			 * `*.sms.ir` and `.sms.ir` mean the domain and its subdomains.
 			 *
-			 * Core is stricter about the bare domain (it matches the suffix
-			 * with its dot, so `api.sms.ir` matches and `sms.ir` does not).
-			 * Being forgiving on this side is the safe direction: the worst
-			 * case is that we make a request core then refuses, and that
-			 * refusal is classified as a block anyway. The other direction —
-			 * refusing a request that would have worked — is the one that
-			 * would turn a working panel into a false alarm.
+			 * Core's own rule, read from `WP_Http::block_request()`: a list
+			 * that contains a `*` anywhere is turned into one regex with
+			 * `*` → `.+`, so `*.sms.ir` matches `api.sms.ir` but not `sms.ir`
+			 * itself; a list without a `*` is compared with `in_array()`, so
+			 * its entries match the host exactly. This side reads both
+			 * wildcard forms as "the domain and its subdomains", one step more
+			 * forgiving than core. The cost of that step is a request core
+			 * then refuses — and that refusal is classified as a block anyway.
+			 * The other direction, calling a working panel blocked, is what
+			 * turns a good install into a false alarm.
 			 */
 			if ( '*.' === substr( $rule, 0, 2 ) || '.' === substr( $rule, 0, 1 ) ) {
 				$suffix = ltrim( $rule, '.*' );

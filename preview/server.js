@@ -477,7 +477,9 @@ function handleRest(route, body, headers) {
 				via: 'smsir',
 				channel: body.channel || 'sms',
 				carrier: 'email',
+				carrier_label: 'ایمیل',
 				direct: false,
+				fix: 'در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید.',
 				masked: mask(phone),
 				trace: [
 					{ gateway: 'smsir', sent: false, error_code: 'transport', status: 0, message: 'خود وردپرس اجازهٔ این درخواست را نمی‌دهد: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و دامنهٔ سامانهٔ پیامکی در WP_ACCESSIBLE_HOSTS نیست. یا آن گزینه را بردارید یا دامنه را به فهرست اضافه کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'api.sms.ir\' );', reason: 'BLOCKED: http_request_not_executed — WordPress blocks outbound HTTP: api.sms.ir is not in WP_ACCESSIBLE_HOSTS.' },

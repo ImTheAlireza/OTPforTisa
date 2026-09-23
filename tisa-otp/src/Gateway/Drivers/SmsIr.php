@@ -401,7 +401,7 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 	 * @return array{ok:bool,code:string,message:string,reason:string,data:mixed}
 	 */
 	private function read( string $url, string $apiKey ): array {
-		$response = wp_remote_get(
+		$response = $this->get(
 			$url,
 			array(
 				'timeout'     => (int) apply_filters( 'tisa_otp_probe_timeout', 8 ),

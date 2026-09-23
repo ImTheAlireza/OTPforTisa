@@ -1157,13 +1157,74 @@ function testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess() {
 
 	// The modal: which channel actually carried the code.
 	check('the send test reports the channel that carried the code', /'carrier' => \$carrier/.test(controller) && /'direct'\s*=> \$direct/.test(controller));
-	check('and stops calling an email a sent SMS', controller.indexOf('پیامک ارسال نشد؛ کد آزمایشی از راه %s رفت') >= 0);
+	// The label of that row already says «پیامک ارسال نشد»; the sentence says where the code went.
+	check('and stops calling an email a sent SMS', /'smsNotSent'\s*=>/.test(assets) && controller.indexOf('کد آزمایشی از راه %s رفت') >= 0);
 	check('the script shows a warning instead of a tick', /false === data\.direct \? 'warn' : 'ok'/.test(adminJs));
 	check('with the word for it localised', /'smsNotSent'\s*=>/.test(assets) && /i18n\.smsNotSent/.test(adminJs));
 	check('and the demo shows that same case', /carrier: 'email'/.test(server) && /direct: false/.test(server));
 
 	// And the whole thing is a test in the PHP suite, not a claim.
 	check('the PHP suite feeds it the real sentences', transportTest.indexOf("'User has blocked requests through HTTP.'") >= 0 && transportTest.indexOf('WP_ACCESSIBLE_HOSTS') >= 0);
+}
+
+/*
+ * Round 10: «راه حلش چیه» — the owner asked it about the screenshot, and the
+ * panel has to be able to answer it too. Three answers, each where the owner
+ * is already looking: the failure names the wp-config line, the plan card
+ * carries the block instead of blaming an unknown gateway, and the plugin
+ * offers its own switch for a site whose wp-config.php cannot be edited.
+ */
+function testTheBlockHasAnAnswer() {
+	scenario('a blocked site is given the answers it can act on');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const transport = read('tisa-otp', 'src', 'Support', 'Transport.php');
+	const gateway = read('tisa-otp', 'src', 'Gateway', 'HttpGateway.php');
+	const registry = read('tisa-otp', 'src', 'Gateway', 'Registry.php');
+	const controller = read('tisa-otp', 'src', 'Http', 'AdminController.php');
+	const adminJs = read('tisa-otp', 'assets', 'js', 'admin.js');
+	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
+	const css = read('tisa-otp', 'assets', 'css', 'admin.css');
+	const settingsScreen = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
+	const settings = read('tisa-otp', 'src', 'Config', 'Settings.php');
+	const sanitizer = read('tisa-otp', 'src', 'Config', 'Sanitizer.php');
+	const server = read('preview', 'server.js');
+	const adminHtml = read('preview', 'public', 'admin.html');
+	const ci = read('.github', 'workflows', 'ci.yml');
+
+	// 1. The failure itself: two numbered answers and the host to put in them.
+	check('the two wp-config answers are numbered, not run together', /۱\)/.test(transport) && /۲\)/.test(transport));
+	check('and the sentence carries the host that was refused', /function host\(/.test(transport) && /\$host/.test(transport));
+	check('the host is only claimed when the message names one', /if \( preg_match/.test(transport) && /دامنهٔ سامانهٔ پیامکی/.test(transport));
+
+	// 2. The plugin's own answer for a wp-config nobody can edit.
+	check('the plugin can send the request itself', /function direct\( string \$url/.test(gateway) && gateway.indexOf('curl_init') >= 0);
+	check('it is off by default', /'direct_send'\s*=> '0'/.test(settings) && /'direct_send'\s*=> array\( 'type' => 'bool' \)/.test(sanitizer));
+	check('and the switch says what it bypasses', /ارسال مستقیم/.test(settingsScreen) && /WP_HTTP_BLOCK_EXTERNAL/.test(settingsScreen));
+	check('the direct path keeps TLS checked', /CURLOPT_SSL_VERIFYPEER => true/.test(gateway) && /CURLOPT_SSL_VERIFYHOST => 2/.test(gateway));
+	check('and it fails in the shape the drivers already read', /'response' => array\( 'code' => \$status/.test(gateway));
+	check('the self-test stops predicting the block once the switch is on', /\$this->settings->bool\( 'direct_send', false \) \? null : Transport::blockFailure/.test(read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php')));
+
+	// 3. The plan card: about the SMS gateway, and about this installation.
+	check('the plan card reports the block as a configuration problem', /Transport::egressBlocked\( \$host \)/.test(registry));
+	check('and never calls the gateway unknown when it is not', registry.indexOf('سامانه پیامکی انتخاب‌شده شناخته نشده است') < 0);
+	check('an unknown gateway is named by its id', /سامانهٔ «%s» در فهرست/.test(registry));
+
+	// 4. The modal: what the owner reads.
+	check('the channel is named in Persian, not by its id', /'carrier_label' =>/.test(controller) && /data\.carrier_label/.test(adminJs));
+	check('the plan belongs to the SMS gateway, not to the channel that rescued it', /function smsPlan\(/.test(controller) && /'plan'\s*=> \$this->smsPlan\(\)/.test(controller));
+	check('a fix is offered when the plugin has one', /private function fixFor/.test(controller) && /'fix'\s*=> \$this->fixFor/.test(controller));
+	check('and it is the plugin’s own switch, not a homework assignment', /ارسال مستقیم/.test(controller) && controller.indexOf('لازم نیست wp-config.php را عوض کنید') >= 0);
+	check('the modal prints the server sentence on its own line', /tisa-test-row__why/.test(adminJs) && /\.tisa-test-row__why \{/.test(css));
+	check('and that line is a left-to-right one', /why\.dir = 'ltr'/.test(adminJs) && /direction: ltr/.test(css));
+	check('the fix row has a word for itself', /'fix'\s*=> __\(/.test(assets) && /i18n\.fix/.test(adminJs));
+	check('the hint sentence that explained the modal is gone', adminJs.indexOf('smsHint') < 0 && assets.indexOf('smsHint') < 0);
+
+	// 5. The demo promises the same thing, and CI runs the suite that proves it.
+	check('the demo has the switch and the fix', /ارسال مستقیم/.test(adminHtml) && /fix: 'راه‌حل'/.test(adminHtml));
+	check('and its mock answers with the Persian channel label', /carrier_label: 'ایمیل'/.test(server) && /fix: '/.test(server));
+	check('the blocked-site suite runs in CI', /php tests\/php\/direct-send-test\.php/.test(ci));
+	check('and is documented in the test README', /direct-send-test\.php/.test(read('tests', 'README.md')));
 }
 
 async function main() {
@@ -1176,6 +1237,7 @@ async function main() {
 	await testThePanelKeepsItsOwnPromises();
 	await testSmsIrAgainstItsDocumentation();
 	await testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess();
+	await testTheBlockHasAnAnswer();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

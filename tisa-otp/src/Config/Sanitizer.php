@@ -68,6 +68,7 @@ final class Sanitizer {
 			'email_body'           => array( 'type' => 'textarea' ),
 			'email_from'           => array( 'type' => 'email' ),
 
+			'direct_send'          => array( 'type' => 'bool' ),
 			'sms_gateway'          => array( 'type' => 'key' ),
 			'sms_backup_gateway'   => array( 'type' => 'key' ),
 			'smsir_api_key'        => array( 'type' => 'secret' ),

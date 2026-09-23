@@ -153,12 +153,14 @@ final class FarazSms extends HttpGateway {
 			self::PATTERN_ENDPOINT
 		);
 
-		$response = wp_remote_post(
+		$response = $this->post(
 			$url,
 			array(
 				'timeout'     => 12,
 				'redirection' => 0,
 				'body'        => $payload,
+				// The panel wants the payload as it is, with no JSON header.
+				'headers'     => array(),
 			)
 		);
 
@@ -171,7 +173,7 @@ final class FarazSms extends HttpGateway {
 	private function sendText( DeliveryRequest $request, string $username, string $password, string $sender ): GatewayResult {
 		$message = $request->render( $this->settings->str( 'sms_template' ), $this->settings->int( 'code_ttl', 120 ) );
 
-		$response = wp_remote_get(
+		$response = $this->get(
 			add_query_arg(
 				array(
 					'from'  => rawurlencode( $sender ),

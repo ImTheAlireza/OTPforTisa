@@ -141,6 +141,9 @@ final class Settings {
 
 			// Gateways.
 			'sms_gateway'            => 'smsir',
+			// Off by default: it bypasses the site's own outbound block, so it
+			// is the owner's decision to make, not ours.
+			'direct_send'            => '0',
 			'sms_backup_gateway'     => '',
 			'smsir_api_key'          => '',
 			'smsir_template_id'      => '',

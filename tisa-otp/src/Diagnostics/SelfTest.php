@@ -506,14 +506,19 @@ final class SelfTest {
 		}
 
 		$host  = (string) wp_parse_url( $target, PHP_URL_HOST );
-		$block = Transport::blockFailure( $host );
+		$block = $this->settings->bool( 'direct_send', false ) ? null : Transport::blockFailure( $host );
 
 		if ( null !== $block ) {
 			return $this->row(
 				__( 'دسترسی این سرور به سامانه', 'tisa-otp' ),
 				__( 'بسته است', 'tisa-otp' ),
 				'fail',
-				$host . ' — ' . $block['message']
+				sprintf(
+					/* translators: 1: gateway host, 2: what WordPress answered */
+					__( '%1$s — %2$s', 'tisa-otp' ),
+					$host,
+					$block['message']
+				) . ' ' . __( 'یا در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید.', 'tisa-otp' )
 			);
 		}
 

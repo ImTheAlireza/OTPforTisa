@@ -8,6 +8,7 @@
 namespace TisaOtp\Gateway;
 
 use TisaOtp\Config\Settings;
+use TisaOtp\Support\Transport;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -127,12 +128,37 @@ final class Registry {
 		);
 
 		if ( null === $driver ) {
-			$empty['issues'][] = __( 'سامانه پیامکی انتخاب‌شده شناخته نشده است.', 'tisa-otp' );
+			$empty['issues'][] = sprintf(
+				/* translators: %s: gateway id read from the settings */
+				__( 'سامانهٔ «%s» در فهرست سامانه‌ها نیست؛ از تنظیمات › سامانه‌های پیامکی یکی از سامانه‌های موجود را انتخاب کنید.', 'tisa-otp' ),
+				$id
+			);
 
 			return $empty;
 		}
 
-		return $driver->plan();
+		$plan = $driver->plan();
+
+		/*
+		 * The site's own outbound block is a problem of this installation, not
+		 * of the gateway's credentials — and it belongs in this card, which in
+		 * the screenshot that started round 10 said «سامانه پیامکی انتخاب‌شده
+		 * شناخته نشده است» under a failed SMS test. The card answers «راه حلش
+		 * چیه»: turn the plugin's own switch on, or open wp-config.php.
+		 */
+		if ( ! empty( $plan['endpoint'] ) && ! $this->settings->bool( 'direct_send', false ) ) {
+			$host = (string) wp_parse_url( (string) $plan['endpoint'], PHP_URL_HOST );
+
+			if ( '' !== $host && Transport::egressBlocked( $host ) ) {
+				$plan['issues'][] = sprintf(
+					/* translators: %s: gateway host */
+					__( 'وردپرس درخواست‌های خروجی به %s را بسته است؛ در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید.', 'tisa-otp' ),
+					$host
+				);
+			}
+		}
+
+		return $plan;
 	}
 
 	/**

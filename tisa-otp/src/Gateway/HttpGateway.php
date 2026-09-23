@@ -102,29 +102,58 @@ abstract class HttpGateway implements SmsGateway {
 	 * @return array|\WP_Error
 	 */
 	protected function post( string $url, array $args = array(), int $retries = 1 ) {
+		return $this->send( 'POST', $url, $args, $retries );
+	}
+
+	/**
+	 * GET through the same door: same block check, same direct option, same
+	 * retries. A driver that reached for `wp_remote_get()` itself would be the
+	 * one gateway the «ارسال مستقیم» switch silently did not cover.
+	 *
+	 * @return array|\WP_Error
+	 */
+	protected function get( string $url, array $args = array(), int $retries = 1 ) {
+		return $this->send( 'GET', $url, $args, $retries );
+	}
+
+	/**
+	 * @return array|\WP_Error
+	 */
+	private function send( string $method, string $url, array $args, int $retries ) {
 		$defaults = array(
 			'timeout'     => (int) apply_filters( 'tisa_otp_http_timeout', 12 ),
 			'redirection' => 0,
-			'headers'     => array( 'Content-Type' => 'application/json' ),
+			'method'      => $method,
+			'headers'     => 'GET' === $method ? array() : array( 'Content-Type' => 'application/json' ),
 		);
 
 		$args  = array_merge( $defaults, $args );
 		$tries = max( 0, $retries );
+		$host  = (string) wp_parse_url( $url, PHP_URL_HOST );
 
 		/*
-		 * A site that blocked outbound HTTP gets no further than this line. The
-		 * failure is the same one WordPress would return, built here so the
-		 * reason names the constant instead of leaving the owner with a cURL
-		 * sentence that never existed (the request never reached cURL).
+		 * A site that blocked outbound HTTP gets no further than this line.
+		 *
+		 * WordPress refuses the request before cURL is reached, so there is no
+		 * cURL sentence to classify and the owner used to read «نامشخص» with
+		 * advice about DNS. Two answers, in this order: if the owner turned on
+		 * «ارسال مستقیم» the plugin sends the request itself (their site, their
+		 * gateway, their decision — the switch says what it does); otherwise
+		 * the failure is built here so the reason names the constant and the
+		 * exact line that fixes it.
 		 */
-		$blocked = Transport::blockFailure( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		if ( Transport::egressBlocked( $host ) ) {
+			if ( ! $this->settings->bool( 'direct_send', false ) ) {
+				$blocked = Transport::blockFailure( $host );
 
-		if ( null !== $blocked ) {
-			return new \WP_Error( 'http_request_not_executed', $blocked['reason'] );
+				return new \WP_Error( 'http_request_not_executed', (string) $blocked['reason'] );
+			}
+
+			return $this->direct( $url, $args, $tries );
 		}
 
 		for ( $attempt = 0; $attempt <= $tries; $attempt++ ) {
-			$response = wp_remote_post( $url, $args );
+			$response = 'GET' === $method ? wp_remote_get( $url, $args ) : wp_remote_post( $url, $args );
 
 			if ( ! is_wp_error( $response ) ) {
 				return $response;
@@ -142,6 +171,95 @@ abstract class HttpGateway implements SmsGateway {
 
 	protected function retryable( \WP_Error $error ): bool {
 		return in_array( $error->get_error_code(), array( 'http_request_failed', 'timeout' ), true );
+	}
+
+	/**
+	 * The request WordPress refuses to make, made by the plugin instead.
+	 *
+	 * Only reached when the owner turned «ارسال مستقیم» on — which is why that
+	 * switch has to say what it does. It bypasses `WP_HTTP_BLOCK_EXTERNAL`, and
+	 * it is off by default: the honest order is wp-config.php first, because
+	 * every other plugin on the site needs that line changed too.
+	 *
+	 * The answer is shaped like a WP_HTTP response, so `wp_remote_retrieve_*`
+	 * and every driver above this line keep working without knowing.
+	 *
+	 * @param string              $url    Request URL.
+	 * @param array<string,mixed> $args   WP_HTTP style arguments.
+	 * @param int                 $tries  Extra attempts for transport failures.
+	 * @return array|\WP_Error
+	 */
+	protected function direct( string $url, array $args, int $tries ) {
+		if ( ! function_exists( 'curl_init' ) ) {
+			return new \WP_Error(
+				'http_request_failed',
+				__( 'cURL روی این سرور فعال نیست. «ارسال مستقیم» را خاموش کنید و در wp-config.php دامنهٔ سامانه را در WP_ACCESSIBLE_HOSTS مجاز کنید.', 'tisa-otp' )
+			);
+		}
+
+		$timeout = isset( $args['timeout'] ) ? max( 1, (int) $args['timeout'] ) : 12;
+		$method  = isset( $args['method'] ) ? strtoupper( (string) $args['method'] ) : 'POST';
+		$headers = array();
+
+		foreach ( (array) ( isset( $args['headers'] ) ? $args['headers'] : array() ) as $name => $value ) {
+			if ( is_scalar( $value ) ) {
+				$headers[] = $name . ': ' . $value;
+			}
+		}
+
+		for ( $attempt = 0; $attempt <= $tries; $attempt++ ) {
+			$handle = curl_init();
+
+			curl_setopt_array(
+				$handle,
+				array(
+					CURLOPT_URL            => $url,
+					CURLOPT_RETURNTRANSFER => true,
+					CURLOPT_CUSTOMREQUEST  => $method,
+					CURLOPT_POSTFIELDS     => isset( $args['body'] ) && is_scalar( $args['body'] ) ? (string) $args['body'] : '',
+					CURLOPT_HTTPHEADER     => $headers,
+					CURLOPT_CONNECTTIMEOUT => min( 5, $timeout ),
+					CURLOPT_TIMEOUT        => $timeout,
+					CURLOPT_FOLLOWLOCATION => false,
+					CURLOPT_SSL_VERIFYPEER => true,
+					CURLOPT_SSL_VERIFYHOST => 2,
+					CURLOPT_USERAGENT      => 'TisaOTP/' . TISA_OTP_VERSION . '; ' . home_url( '/' ),
+				)
+			);
+
+			$body    = curl_exec( $handle );
+			$errno   = (int) curl_errno( $handle );
+			$error   = (string) curl_error( $handle );
+			$status  = (int) curl_getinfo( $handle, CURLINFO_RESPONSE_CODE );
+			$type    = (string) curl_getinfo( $handle, CURLINFO_CONTENT_TYPE );
+
+			curl_close( $handle );
+
+			if ( 0 === $errno && false !== $body ) {
+				return array(
+					'headers'  => array( 'content-type' => $type ),
+					'body'     => (string) $body,
+					'response' => array( 'code' => $status, 'message' => '' ),
+					'cookies'  => array(),
+					'filename' => null,
+				);
+			}
+
+			/*
+			 * The same sentence WP_HTTP would have produced, so a failure that
+			 * happens this way is classified and explained exactly like one that
+			 * happened through WordPress.
+			 */
+			$failure = new \WP_Error( 'http_request_failed', sprintf( 'cURL error %1$d: %2$s', $errno, $error ) );
+
+			if ( ! $this->retryable( $failure ) || $attempt === $tries ) {
+				return $failure;
+			}
+
+			usleep( (int) apply_filters( 'tisa_otp_http_retry_delay', 250000 ) );
+		}
+
+		return new \WP_Error( 'http_request_failed', 'cURL error: the request was not executed.' );
 	}
 
 	/**

@@ -155,7 +155,8 @@ final class AdminController {
 					'reason'     => isset( $meta['reason'] ) ? (string) $meta['reason'] : '',
 					'status'     => $result->httpStatus(),
 					'trace'      => $this->dispatcher->trace(),
-					'plan'       => $this->gateways->planFor( $result->gateway() ),
+					'plan'       => $this->smsPlan(),
+					'fix'        => $this->fixFor( (string) ( $meta['reason'] ?? '' ) ),
 				)
 			);
 		}
@@ -165,18 +166,68 @@ final class AdminController {
 			'via'     => $result->gateway(),
 			'channel' => $channel,
 			'carrier' => $carrier,
+			'carrier_label' => $this->channelLabel( $carrier ),
 			'direct'  => $direct,
 			'masked'  => Phone::mask( $phone ),
 			'trace'   => $this->dispatcher->trace(),
-			'plan'    => $this->gateways->planFor( $result->gateway() ),
+			'plan'    => $this->smsPlan(),
+			'fix'     => $this->fixFor( $this->blockedReason() ),
 			'message' => $direct
 				? __( 'کد آزمایشی ارسال شد. اگر نرسید، رویدادها را ببینید.', 'tisa-otp' )
 				: sprintf(
 					/* translators: %s: the channel that carried the code instead */
-					__( 'پیامک ارسال نشد؛ کد آزمایشی از راه %s رفت. علت شکست پیامک در همین پنجره آمده است.', 'tisa-otp' ),
+					__( 'کد آزمایشی از راه %s رفت؛ علت شکست پیامک در همین پنجره آمده است.', 'tisa-otp' ),
 					$this->channelLabel( $carrier )
 				),
 		);
+	}
+
+	/**
+	 * The configuration card belongs to the SMS gateway, not to whichever
+	 * channel ended up carrying the code.
+	 *
+	 * The screenshot that started round 10 showed a failed SMS test whose code
+	 * had left by email; the modal asked the plan of `email`, got no driver,
+	 * and answered «سامانه پیامکی انتخاب‌شده شناخته نشده است» — a true sentence
+	 * about the wrong subject, sitting under a failed SMS.
+	 */
+	private function smsPlan(): array {
+		$order = $this->gateways->deliveryOrder();
+		$id    = isset( $order[0] ) ? (string) $order[0] : (string) $this->settings->str( 'sms_gateway', 'smsir' );
+
+		return $this->gateways->planFor( $id );
+	}
+
+	/**
+	 * The reason of the first attempt that failed, when the trace has one.
+	 */
+	private function blockedReason(): string {
+		foreach ( $this->dispatcher->trace() as $step ) {
+			$reason = isset( $step['reason'] ) ? (string) $step['reason'] : '';
+
+			if ( '' !== $reason && false === (bool) ( $step['sent'] ?? false ) ) {
+				return $reason;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * One sentence that fixes what just failed — shown as «راه‌حل», because that
+	 * is the next question an owner asks, and it is the plugin's own switch
+	 * rather than an edit they may not be able to make.
+	 */
+	private function fixFor( string $reason ): string {
+		if ( '' === $reason || Transport::BLOCKED !== Transport::classify( '', $reason ) ) {
+			return '';
+		}
+
+		if ( $this->settings->bool( 'direct_send', false ) ) {
+			return '';
+		}
+
+		return __( 'در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید.', 'tisa-otp' );
 	}
 
 	/**

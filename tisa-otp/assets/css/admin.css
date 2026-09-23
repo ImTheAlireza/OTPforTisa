@@ -321,6 +321,19 @@
 	line-height: 1.9;
 }
 
+/* The server's own sentence: English, machine-shaped, and better read apart. */
+.tisa-test-row__why {
+	margin: 2px 0 0;
+	color: var(--tisa-muted);
+	font-family: Consolas, Monaco, "Courier New", monospace;
+	font-size: 12px;
+	line-height: 1.7;
+	direction: ltr;
+	text-align: left;
+	unicode-bidi: isolate;
+	word-break: break-word;
+}
+
 /* The reports tab is a page, not a card: the panels inside it draw themselves. */
 .tisa-tabbody {
 	min-width: 0;

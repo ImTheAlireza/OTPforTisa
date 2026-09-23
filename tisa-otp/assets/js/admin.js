@@ -216,6 +216,14 @@
 			text.appendChild(note);
 		}
 
+		if (row.why) {
+			var why = document.createElement('p');
+			why.className = 'tisa-test-row__why';
+			why.dir = 'ltr';
+			why.textContent = row.why;
+			text.appendChild(why);
+		}
+
 		item.appendChild(dot);
 		item.appendChild(text);
 
@@ -352,10 +360,10 @@
 					label: false === data.direct ? (i18n.smsNotSent || '') : (i18n.smsSent || ''),
 					value: data.masked || number,
 					status: false === data.direct ? 'warn' : 'ok',
-					note: (data.via ? (i18n.smsVia || '') + ' ' + data.via : '') + (data.message ? ' — ' + data.message : '')
+					note: (data.via ? (i18n.smsVia || '') + ' ' + (data.carrier_label || data.carrier || data.via) : '') + (data.message ? ' — ' + data.message : '')
 				}));
 
-				traceRows(list, data.trace, data.plan);
+				traceRows(list, data.trace, data.plan, data.fix);
 			}).catch(function (error) {
 				busy(send, false);
 
@@ -365,10 +373,10 @@
 					label: i18n.failed || '',
 					value: error.message,
 					status: 'fail',
-					note: [data.reason || '', i18n.smsHint || ''].filter(Boolean).join(' — ')
+					note: data.reason || ''
 				}));
 
-				traceRows(list, data.trace, data.plan);
+				traceRows(list, data.trace, data.plan, data.fix);
 			});
 		});
 
@@ -385,25 +393,22 @@
 	/**
 	 * Every gateway that was tried, in order, with what it answered.
 	 */
-	function traceRows(list, trace, plan) {
+	function traceRows(list, trace, plan, fix) {
 		(trace || []).forEach(function (step) {
-			var note = step.message || '';
-
 			/*
 			 * The Persian sentence says what to do; the reason is the sentence
 			 * from the server that says what happened ("DNS: could not resolve
 			 * host api.sms.ir"). Both belong here — "transport" alone is what
-			 * this project was told off for.
+			 * this project was told off for — but the server's sentence is
+			 * English and machine-shaped, so it gets its own quiet line
+			 * underneath instead of being run into the Persian one.
 			 */
-			if (step.reason) {
-				note = note ? note + ' — ' + step.reason : step.reason;
-			}
-
 			list.appendChild(checkRow({
 				label: (step.gateway || '') + (step.sent ? ' (' + (i18n.traceSent || '') + ')' : ''),
 				value: step.error_code || step.status || '',
 				status: step.sent ? 'ok' : 'fail',
-				note: note
+				note: step.message || '',
+				why: step.reason || ''
 			}));
 		});
 
@@ -413,6 +418,15 @@
 				value: '',
 				status: 'warn',
 				note: plan.issues.join(' · ')
+			}));
+		}
+
+		if (fix) {
+			list.appendChild(checkRow({
+				label: i18n.fix || '',
+				value: '',
+				status: 'info',
+				note: fix
 			}));
 		}
 	}

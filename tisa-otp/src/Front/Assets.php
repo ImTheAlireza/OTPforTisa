@@ -136,7 +136,7 @@ final class Assets implements Bootable {
 					'smsVia'        => __( 'از طریق', 'tisa-otp' ),
 					'smsChannel'    => __( 'پیامک', 'tisa-otp' ),
 					'emailChannel'  => __( 'ایمیل', 'tisa-otp' ),
-					'smsHint'       => __( 'اگر ارسال ناموفق بود، ردیف‌های پایین نشان می‌دهند کدام سامانه چه پاسخی داد.', 'tisa-otp' ),
+					'fix'           => __( 'راه‌حل', 'tisa-otp' ),
 					'planIssues'    => __( 'ایرادهای پیکربندی این سامانه', 'tisa-otp' ),
 				),
 				'myPhone' => $this->ownPhone(),

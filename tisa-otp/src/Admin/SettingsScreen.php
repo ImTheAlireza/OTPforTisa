@@ -461,6 +461,17 @@ final class SettingsScreen {
 				$c->row( __( 'سامانه پشتیبان', 'tisa-otp' ), function () use ( $c, $options ) {
 					$c->select( 'sms_backup_gateway', array( '' => __( 'بدون پشتیبان', 'tisa-otp' ) ) + $options );
 				}, __( 'فقط برای خطاهای موقت (تایم‌اوت، خطای ۵xx، اتمام اعتبار) استفاده می‌شود.', 'tisa-otp' ) );
+
+				/*
+				 * The switch that answers «راه حلش چیه» for a site whose own
+				 * wp-config.php blocks outbound HTTP. It is labelled with what
+				 * it bypasses, and the note says which of the two answers is
+				 * better — a plugin that quietly walked around the site's
+				 * setting would be worse than the problem it solves.
+				 */
+				$c->row( __( 'ارسال مستقیم', 'tisa-otp' ), function () use ( $c ) {
+					$c->toggle( 'direct_send', __( 'نادیده گرفتن WP_HTTP_BLOCK_EXTERNAL برای پیامک', 'tisa-otp' ) );
+				}, __( 'افزونه درخواست را با cURL مستقیم می‌فرستد؛ فقط اگر به wp-config.php دسترسی ندارید.', 'tisa-otp' ) );
 			}
 		);
 
