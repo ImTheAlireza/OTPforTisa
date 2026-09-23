@@ -339,4 +339,283 @@ $markup = (string) ob_get_clean();
 tisa_check( 'and the administrator sees which service did not start', false !== strpos( $markup, 'AdminController' ) );
 tisa_check( 'with the way out of it', false !== strpos( $markup, 'جایگزینی با نسخهٔ بارگذاری‌شده' ) );
 
+/* -------------------------------------------------------------------------
+ * The same accident, one size smaller
+ *
+ * 1.3.2 died because a constructor grew an argument and its call site did not.
+ * The container is guarded by reflection now, but a call *inside* the plugin —
+ * `$this->card( $title, $body )` after `card()` grew a third parameter — has no
+ * such net: PHP only complains when that line actually runs, which on a settings
+ * screen is when an administrator opens that tab.
+ *
+ * This walks every plugin file, finds calls to a method of the same class, and
+ * counts the arguments against the signature. It reads the source with the
+ * tokenizer, so it sees the real calls and not a comment about them.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * The token kinds that can spell a name, on PHP 7 and on PHP 8.
+ *
+ * @return int[]
+ */
+function tisa_name_tokens(): array {
+	$kinds = array( T_STRING );
+
+	if ( defined( 'T_NAME_QUALIFIED' ) ) {
+		$kinds[] = T_NAME_QUALIFIED;
+	}
+
+	return $kinds;
+}
+
+/**
+ * Every PHP file of the plugin, keyed by its path inside the plugin directory.
+ *
+ * @return array<string,string>
+ */
+function tisa_plugin_sources(): array {
+	$root    = rtrim( TISA_OTP_PATH, '/' ) . '/src';
+	$files   = tisa_php_files( $root, 2 );
+	$sources = array();
+
+	foreach ( $files as $file ) {
+		$sources[ ltrim( str_replace( $root, 'src', $file ), '/' ) ] = (string) file_get_contents( $file );
+	}
+
+	ksort( $sources );
+
+	return $sources;
+}
+
+/**
+ * PHP files under a directory, two levels deep — which is every level the
+ * plugin uses (`src/Gateway/Drivers/`). `glob()` rather than
+ * `RecursiveDirectoryIterator`, because the test runner's filesystem answers
+ * `glob()` and not every iterator it is handed.
+ *
+ * @return string[]
+ */
+function tisa_php_files( string $dir, int $depth ): array {
+	$found = array();
+
+	foreach ( (array) glob( rtrim( $dir, '/' ) . '/*.php' ) as $file ) {
+		$found[] = $file;
+	}
+
+	if ( $depth > 0 ) {
+		foreach ( (array) glob( rtrim( $dir, '/' ) . '/*', GLOB_ONLYDIR ) as $sub ) {
+			$found = array_merge( $found, tisa_php_files( (string) $sub, $depth - 1 ) );
+		}
+	}
+
+	return $found;
+}
+
+/**
+ * Class names declared in a file, and the methods they call on themselves.
+ *
+ * @return array{classes:string[],calls:array<int,array{method:string,args:int,line:int}>}
+ */
+function tisa_self_calls( string $source ): array {
+	$tokens = token_get_all( $source );
+	$count  = count( $tokens );
+	$namespace = '';
+	$classes   = array();
+	$calls     = array();
+	$class     = '';
+
+	for ( $i = 0; $i < $count; $i++ ) {
+		$token = $tokens[ $i ];
+
+		if ( is_array( $token ) && T_NAMESPACE === $token[0] ) {
+			$namespace = '';
+
+			for ( $j = $i + 1; $j < $count; $j++ ) {
+				if ( is_array( $tokens[ $j ] ) && T_WHITESPACE === $tokens[ $j ][0] ) {
+					continue;
+				}
+
+				if ( is_array( $tokens[ $j ] ) && in_array( $tokens[ $j ][0], tisa_name_tokens(), true ) ) {
+					$namespace .= $tokens[ $j ][1];
+					continue;
+				}
+				if ( is_array( $tokens[ $j ] ) && T_NS_SEPARATOR === $tokens[ $j ][0] ) {
+					$namespace .= '\\';
+					continue;
+				}
+				break;
+			}
+		}
+
+		if ( is_array( $token ) && T_CLASS === $token[0] ) {
+			for ( $j = $i + 1; $j < $count; $j++ ) {
+				if ( is_array( $tokens[ $j ] ) && T_STRING === $tokens[ $j ][0] ) {
+					$class     = $namespace . '\\' . $tokens[ $j ][1];
+					$classes[] = $class;
+					break;
+				}
+				if ( ! is_array( $tokens[ $j ] ) || T_WHITESPACE !== $tokens[ $j ][0] ) {
+					break;
+				}
+			}
+		}
+
+		/*
+		 * `$this->method(` and `self::method(` — the shape a call takes when the
+		 * callee is in the same class. A second `->` (a service on a property)
+		 * is skipped, because that method is not ours.
+		 */
+		// `parent::__construct()` is a call to another class' method, not ours.
+		$is_this = is_array( $token ) && T_VARIABLE === $token[0] && '$this' === $token[1];
+		$is_self = is_array( $token ) && T_STRING === $token[0] && in_array( $token[1], array( 'self', 'static' ), true );
+
+		if ( ! $is_this && ! $is_self ) {
+			continue;
+		}
+
+		$k = $i + 1;
+
+		while ( $k < $count && is_array( $tokens[ $k ] ) && T_WHITESPACE === $tokens[ $k ][0] ) {
+			$k++;
+		}
+
+		$operator = $is_this ? T_OBJECT_OPERATOR : T_DOUBLE_COLON;
+
+
+		if ( ! isset( $tokens[ $k ] ) || ! is_array( $tokens[ $k ] ) || $operator !== $tokens[ $k ][0] ) {
+			continue;
+		}
+
+		$k++;
+
+		while ( $k < $count && is_array( $tokens[ $k ] ) && T_WHITESPACE === $tokens[ $k ][0] ) {
+			$k++;
+		}
+
+		if ( ! isset( $tokens[ $k ] ) || ! is_array( $tokens[ $k ] ) || T_STRING !== $tokens[ $k ][0] ) {
+			continue;
+		}
+
+		$method = $tokens[ $k ][1];
+		$line   = $tokens[ $k ][2];
+		$k++;
+
+		while ( $k < $count && is_array( $tokens[ $k ] ) && T_WHITESPACE === $tokens[ $k ][0] ) {
+			$k++;
+		}
+
+		if ( ! isset( $tokens[ $k ] ) || '(' !== $tokens[ $k ] ) {
+			continue;
+		}
+
+		// Count the arguments at depth one.
+		$depth    = 0;
+		$args     = 0;
+		$hasToken = false;
+
+		for ( $m = $k; $m < $count; $m++ ) {
+			$current = $tokens[ $m ];
+
+			if ( ! is_array( $current ) ) {
+				if ( in_array( $current, array( '(', '[', '{' ), true ) ) {
+					$depth++;
+					if ( $depth > 1 ) {
+						$hasToken = true;
+					}
+					continue;
+				}
+
+				if ( in_array( $current, array( ')', ']', '}' ), true ) ) {
+					$depth--;
+					if ( 0 === $depth ) {
+						break;
+					}
+					continue;
+				}
+
+				if ( ',' === $current && 1 === $depth ) {
+					$args++;
+					continue;
+				}
+			}
+
+			if ( 1 === $depth ) {
+				if ( is_array( $current ) && T_WHITESPACE === $current[0] ) {
+					continue;
+				}
+				if ( is_array( $current ) && in_array( $current[0], array( T_COMMENT, T_DOC_COMMENT ), true ) ) {
+					continue;
+				}
+				$hasToken = true;
+			}
+		}
+
+		$calls[] = array(
+			'method' => $method,
+			'args'   => $hasToken ? $args + 1 : 0,
+			'line'   => $line,
+		);
+	}
+
+	return array( 'classes' => $classes, 'calls' => $calls );
+}
+
+tisa_start( 'no call inside the plugin passes fewer arguments than the method requires' );
+
+$thin = array();
+$checked = 0;
+
+foreach ( tisa_plugin_sources() as $relative => $source ) {
+	$parsed = tisa_self_calls( $source );
+
+	foreach ( $parsed['calls'] as $call ) {
+		foreach ( $parsed['classes'] as $candidate ) {
+			if ( ! class_exists( $candidate ) && ! interface_exists( $candidate ) && ! trait_exists( $candidate ) ) {
+				continue;
+			}
+
+			$reflection = new ReflectionClass( $candidate );
+
+			if ( ! $reflection->hasMethod( $call['method'] ) ) {
+				continue;
+			}
+
+			$method = $reflection->getMethod( $call['method'] );
+
+			$checked++;
+
+			if ( $call['args'] < $method->getNumberOfRequiredParameters() ) {
+				$thin[] = $candidate . '::' . $call['method'] . ' (' . $relative . ':' . $call['line'] . ') '
+					. $call['args'] . ' arguments where ' . $method->getNumberOfRequiredParameters() . ' are required';
+			}
+
+			break;
+		}
+	}
+}
+
+/*
+ * A walk that finds nothing because it cannot see anything is worse than no
+ * walk: it turns a green gate into a false promise. So the counter is checked
+ * against a call that is deliberately one argument short.
+ */
+$control = "<?php\nnamespace TisaOtp\\Probe;\n\nclass Sample {\n\tprivate function needs_two( string $a, string $b ): void {}\n\tpublic function run(): void {\n\t\t\$this->needs_two( 'one' );\n\t\t\$this->needs_two( 'one', 'two' );\n\t}\n}\n";
+$seen    = tisa_self_calls( $control );
+$counts  = array();
+
+foreach ( $seen['calls'] as $call ) {
+	if ( 'needs_two' === $call['method'] ) {
+		$counts[] = $call['args'];
+	}
+}
+
+tisa_same( 'the walk counts the arguments of a call, including the short one', array( 1, 2 ), $counts );
+
+tisa_check( 'the walk found calls to check', $checked > 100, 'checked ' . $checked . ' calls in ' . count( tisa_plugin_sources() ) . ' files' );
+foreach ( array_slice( $thin, 0, 8 ) as $short ) {
+	echo '        short: ' . $short . "\n";
+}
+
+tisa_check( 'and none of them is short of an argument', array() === $thin, implode( '; ', array_slice( $thin, 0, 4 ) ) );
+
 tisa_finish();

@@ -22,6 +22,7 @@ namespace TisaOtp\Diagnostics;
 use TisaOtp\Captcha\Manager as CaptchaManager;
 use TisaOtp\Config\Settings;
 use TisaOtp\Cron\Maintenance;
+use TisaOtp\Gateway\AccountProbe;
 use TisaOtp\Gateway\Registry;
 use TisaOtp\Install\Guard;
 use TisaOtp\Install\Package;
@@ -241,7 +242,7 @@ final class SelfTest {
 			__( 'زمان‌بند پاک‌سازی', 'tisa-otp' ),
 			$cron ? wp_date( 'Y-m-d H:i', (int) $cron ) : __( 'ثبت نشده', 'tisa-otp' ),
 			$cron ? 'ok' : 'warn',
-			$cron ? '' : __( 'کدهای منقضی و رویدادهای قدیمی پاک نمی‌شوند تا صفحه‌ای باز شود که دوباره ثبتش کند.', 'tisa-otp' )
+			$cron ? '' : __( 'پاک‌سازی کدهای منقضی و رویدادهای قدیمی هنوز اجرا نشده است.', 'tisa-otp' )
 		);
 
 		$enabled = $this->settings->bool( 'enabled', true );
@@ -276,7 +277,7 @@ final class SelfTest {
 
 		return $this->result(
 			__( 'آزمایش عمومی', 'tisa-otp' ),
-			__( 'پایه‌هایی که همهٔ بخش‌های دیگر روی آن‌ها می‌ایستند: نسخه‌ها، جدول‌ها و زمان‌بند.', 'tisa-otp' ),
+			__( 'نسخه‌ها، جدول‌ها و زمان‌بند.', 'tisa-otp' ),
 			$rows
 		);
 	}
@@ -337,7 +338,7 @@ final class SelfTest {
 
 		return $this->result(
 			__( 'آزمایش کد یکبارمصرف', 'tisa-otp' ),
-			__( 'یک کد واقعی برای یک شمارهٔ ساختگی ساخته، ذخیره و باطل می‌شود. هیچ پیامکی ارسال نمی‌شود.', 'tisa-otp' ),
+			__( 'هیچ پیامکی ارسال نمی‌شود.', 'tisa-otp' ),
 			$rows
 		);
 	}
@@ -449,21 +450,25 @@ final class SelfTest {
 			'sms' === $channel ? 'ok' : 'warn',
 			'sms' === $channel
 				? ''
-				: __( 'این سایت الان کدها را با ایمیل می‌فرستد، نه پیامک. اگر انتظار پیامک دارید، کانال پیش‌فرض را در بخش «کد و کانال‌ها» روی پیامک بگذارید.', 'tisa-otp' )
+				: __( 'کدها با ایمیل فرستاده می‌شوند؛ در بخش «کد و کانال‌ها» عوض می‌شود.', 'tisa-otp' )
 		);
 
 		$rows[] = $this->reachability( $chain );
+
+		foreach ( $this->account( $chain ) as $account_row ) {
+			$rows[] = $account_row;
+		}
 
 		$rows[] = $this->row(
 			__( 'ارسال واقعی', 'tisa-otp' ),
 			__( 'آزمایش جدا', 'tisa-otp' ),
 			'info',
-			__( 'این آزمایش چیزی ارسال نمی‌کند. برای ارسال یک کد واقعی از دکمهٔ «ارسال پیامک آزمایشی» استفاده کنید.', 'tisa-otp' )
+			__( 'برای ارسال واقعی، دکمهٔ «ارسال پیامک آزمایشی».', 'tisa-otp' )
 		);
 
 		return $this->result(
 			__( 'آزمایش سامانه‌های پیامکی', 'tisa-otp' ),
-			__( 'هر سامانه: آماده است یا چه چیزی کم دارد، و ترتیب تلاش در ارسال واقعی.', 'tisa-otp' ),
+			__( 'آماده / ناقص / خطای واقعی.', 'tisa-otp' ),
 			$rows
 		);
 	}
@@ -554,11 +559,116 @@ final class SelfTest {
 			$status > 0 ? 'ok' : 'warn',
 			sprintf(
 				/* translators: 1: milliseconds, 2: HTTP status */
-				__( '%1$d میلی‌ثانیه · پاسخ HTTP %2$d. این سرور می‌تواند به سامانه وصل شود؛ اگر پیامک نمی‌رسد، مشکل از کلید، اعتبار یا الگوی سامانه است.', 'tisa-otp' ),
+				__( '%1$d میلی‌ثانیه · پاسخ HTTP %2$d.', 'tisa-otp' ),
 				$ms,
 				$status
 			)
 		);
+	}
+
+	/**
+	 * Ask the panel about the account rather than about a message.
+	 *
+	 * The reachability row above proves the network; this one proves the
+	 * credentials, the credit and the line — read-only, no message, no charge.
+	 * A driver answers it only if it implements AccountProbe, so a third-party
+	 * driver written before this existed keeps working and simply reports that
+	 * it cannot be asked.
+	 *
+	 * @param string[] $chain Delivery order.
+	 * @return array<int,array<string,string>>
+	 */
+	private function account( array $chain ): array {
+		$driver = null;
+
+		foreach ( $chain as $id ) {
+			$candidate = $this->gateways->find( $id );
+
+			if ( $candidate instanceof AccountProbe ) {
+				$driver = $candidate;
+				break;
+			}
+		}
+
+		if ( null === $driver ) {
+			return array(
+				$this->row(
+					__( 'کلید API و اعتبار', 'tisa-otp' ),
+					__( 'بررسی نشد', 'tisa-otp' ),
+					'info',
+					__( 'این سامانه امکان بررسی حساب را ندارد.', 'tisa-otp' )
+				),
+			);
+		}
+
+		$probe = $driver->probe();
+
+		if ( ! empty( $probe['error_code'] ) && 'rejected' !== $probe['error_code'] ) {
+			$labels = array(
+				'not_configured' => __( 'تنظیم نشده', 'tisa-otp' ),
+				'unauthorized'   => __( 'رد شد', 'tisa-otp' ),
+				'no_credit'      => __( 'اعتبار تمام', 'tisa-otp' ),
+				'rate_limited'   => __( 'محدود شده', 'tisa-otp' ),
+				'transport'      => __( 'وصل نشد', 'tisa-otp' ),
+			);
+
+			return array(
+				$this->row(
+					__( 'کلید API و اعتبار', 'tisa-otp' ),
+					isset( $labels[ $probe['error_code'] ] ) ? $labels[ $probe['error_code'] ] : __( 'بررسی نشد', 'tisa-otp' ),
+					'not_configured' === $probe['error_code'] ? 'warn' : 'fail',
+					trim( (string) $probe['reason'] . ' — ' . (string) $probe['message'], ' —' )
+				),
+			);
+		}
+
+		$rows = array();
+		$rows[] = $this->row(
+			__( 'کلید API و اعتبار', 'tisa-otp' ),
+			null === $probe['credit']
+				? __( 'پذیرفته شد', 'tisa-otp' )
+				: sprintf( /* translators: %s: account credit */ __( 'پذیرفته شد · اعتبار %s', 'tisa-otp' ), self::amount( (float) $probe['credit'] ) ),
+			'ok',
+			(string) $probe['reason']
+		);
+
+		$sender = (string) $probe['sender'];
+
+		if ( '' === $sender ) {
+			$rows[] = $this->row(
+				__( 'شماره خط', 'tisa-otp' ),
+				__( 'تنظیم نشده', 'tisa-otp' ),
+				'info',
+				__( 'ارسال با الگو به شماره خط نیاز ندارد.', 'tisa-otp' )
+			);
+
+			return $rows;
+		}
+
+		$known = $probe['sender_ok'];
+		$lines = is_array( $probe['lines'] ) ? implode( ' · ', array_map( 'strval', $probe['lines'] ) ) : '';
+		$note  = '' !== $lines
+			? sprintf( /* translators: %s: line numbers of the account */ __( 'خط‌های این حساب: %s', 'tisa-otp' ), $lines )
+			: (string) $probe['message'];
+
+		$rows[] = $this->row(
+			__( 'شماره خط', 'tisa-otp' ),
+			$sender,
+			true === $known ? 'ok' : ( false === $known ? 'warn' : 'info' ),
+			trim( ( false === $known ? (string) $probe['message'] . ' ' : '' ) . $note )
+		);
+
+		return $rows;
+	}
+
+	/**
+	 * `165.3` rather than `165.30`, with a thousands separator an Iranian owner
+	 * reads without stopping.
+	 */
+	private static function amount( float $value ): string {
+		$text = number_format( $value, 2, '.', '٬' );
+
+		return rtrim( rtrim( $text, '0' ), '.' );
 	}
 
 	/* ---------------------------------------------------------------------
@@ -598,7 +708,7 @@ final class SelfTest {
 		}
 
 		if ( $captcha['halfConfigured'] ) {
-			$rows[] = $this->row( __( 'پیکربندی نیمه‌کاره', 'tisa-otp' ), __( 'بله', 'tisa-otp' ), 'fail', __( 'تنها یکی از دو کلید پر شده است؛ این حالت هم ویجت را می‌شکند و هم تأیید سروری را.', 'tisa-otp' ) );
+			$rows[] = $this->row( __( 'پیکربندی نیمه‌کاره', 'tisa-otp' ), __( 'بله', 'tisa-otp' ), 'fail', __( 'تنها یکی از دو کلید پر شده است؛ ویجت و تأیید سروری هر دو می‌شکنند.', 'tisa-otp' ) );
 		}
 
 		$rows[] = $this->row(
@@ -649,7 +759,7 @@ final class SelfTest {
 				$rejected['captcha'] > 0
 					? sprintf(
 						/* translators: %d: number of requests */
-						__( '%d درخواست بدون توکن کپچا رسیده است؛ یعنی ویجت روی مرورگر کاربران بارگذاری نشده. اگر ردیف «نمایش در این مرورگر» هم قرمز است، نشانی جایگزین اسکریپت را پر کنید یا کپچا را موقتاً خاموش کنید تا کاربران پشت در نمانند.', 'tisa-otp' ),
+						__( '%d درخواست بدون توکن کپچا رسیده است؛ ویجت در مرورگر کاربران بارگذاری نشده. جایگزین: نشانی اسکریپت یا خاموش کردن کپچا.', 'tisa-otp' ),
 						$rejected['captcha']
 					)
 					: __( 'هیچ‌کدام به‌خاطر نبود توکن کپچا نبوده؛ محدودیت‌های دیگر کاربران را رد کرده‌اند.', 'tisa-otp' )
@@ -660,12 +770,12 @@ final class SelfTest {
 			__( 'نمایش در این مرورگر', 'tisa-otp' ),
 			__( 'در همین پنجره ادامه دارد…', 'tisa-otp' ),
 			'info',
-			__( 'پس از این چند خط، همان اسکریپت‌ها در مرورگر شما یکی‌یکی امتحان می‌شوند.', 'tisa-otp' )
+			__( 'ادامه در همین پنجره و در مرورگر شما.', 'tisa-otp' )
 		);
 
 		return $this->result(
 			__( 'آزمایش امنیت و کپچا', 'tisa-otp' ),
-			__( 'تنظیمات کپچا از سمت سرور بررسی می‌شود و سپس در همین پنجره، در مرورگر شما امتحان می‌شود.', 'tisa-otp' ),
+			__( 'از سمت سرور و در همین مرورگر.', 'tisa-otp' ),
 			$rows
 		);
 	}
@@ -809,12 +919,12 @@ final class SelfTest {
 			__( 'نام کاربری', 'tisa-otp' ),
 			$this->settings->str( 'username_from', 'phone' ),
 			'info',
-			__( 'اگر ایمیل هم فعال باشد، از آن به‌عنوان نام کاربری یا برای بازیابی استفاده می‌شود.', 'tisa-otp' )
+			__( 'ایمیل به‌عنوان نام کاربری یا برای بازیابی استفاده می‌شود.', 'tisa-otp' )
 		);
 
 		return $this->result(
 			__( 'آزمایش فرم عضویت', 'tisa-otp' ),
-			__( 'گام‌ها، فیلدهای فعال و جایی که هر مقدار ذخیره می‌شود.', 'tisa-otp' ),
+			__( 'گام‌ها، فیلدها و مقصد ذخیره.', 'tisa-otp' ),
 			$rows
 		);
 	}
@@ -879,7 +989,7 @@ final class SelfTest {
 
 		return $this->result(
 			__( 'آزمایش ظاهر فرم', 'tisa-otp' ),
-			__( 'همان رنگ‌هایی که کاربر می‌بیند، با نسبت کنتراست واقعی‌شان.', 'tisa-otp' ),
+			__( 'رنگ‌های واقعی فرم و نسبت کنتراست.', 'tisa-otp' ),
 			$rows
 		);
 	}
@@ -920,7 +1030,7 @@ final class SelfTest {
 				__( 'همگام‌سازی شماره صورتحساب', 'tisa-otp' ),
 				$this->settings->bool( 'sync_billing_phone', true ) ? __( 'روشن', 'tisa-otp' ) : __( 'خاموش', 'tisa-otp' ),
 				$this->settings->bool( 'sync_billing_phone', true ) ? 'ok' : 'info',
-				$this->settings->bool( 'sync_billing_phone', true ) ? __( 'شمارهٔ تأییدشده در کلید billing_phone هم نوشته می‌شود تا ابزارهای صورتحساب آن را ببینند.', 'tisa-otp' ) : ''
+				$this->settings->bool( 'sync_billing_phone', true ) ? __( 'شمارهٔ تأییدشده در billing_phone هم نوشته می‌شود.', 'tisa-otp' ) : ''
 			);
 
 			$rows[] = $this->row(
@@ -940,7 +1050,7 @@ final class SelfTest {
 
 		return $this->result(
 			__( 'آزمایش فروشگاه', 'tisa-otp' ),
-			__( 'وضعیت ووکامرس و اینکه تنظیمات این صفحه روی چه چیزی اثر می‌گذارند.', 'tisa-otp' ),
+			__( 'وضعیت ووکامرس و اثر تنظیمات.', 'tisa-otp' ),
 			$rows
 		);
 	}
@@ -1021,7 +1131,7 @@ final class SelfTest {
 
 		return $this->result(
 			__( 'آزمایش داده و رویدادها', 'tisa-otp' ),
-			__( 'یک رویداد واقعی نوشته و خوانده می‌شود تا معلوم شود گزارش‌ها روی چه چیزی حساب می‌کنند.', 'tisa-otp' ),
+			__( 'یک رویداد نوشته و بلافاصله خوانده می‌شود.', 'tisa-otp' ),
 			$rows
 		);
 	}

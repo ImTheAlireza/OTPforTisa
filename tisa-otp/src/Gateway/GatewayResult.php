@@ -100,10 +100,22 @@ final class GatewayResult {
 	/**
 	 * Configuration or credential problems must never trigger a failover,
 	 * otherwise a typo silently burns the backup gateway's quota.
+	 *
+	 * A transient failure is never a configuration problem, even when the panel
+	 * chooses to report it with a 4xx status: an empty account (402/400 "no
+	 * credit") or a rate limit (429) is exactly the case the backup gateway
+	 * exists for, and the status range used to swallow both.
 	 */
 	public function isConfigurationProblem(): bool {
-		return in_array( $this->errorCode, array( 'not_configured', 'unauthorized', 'forbidden', 'bad_credentials' ), true )
-			|| ( $this->httpStatus >= 400 && $this->httpStatus <= 499 );
+		if ( in_array( $this->errorCode, array( 'not_configured', 'unauthorized', 'forbidden', 'bad_credentials' ), true ) ) {
+			return true;
+		}
+
+		if ( '' !== $this->errorCode && $this->isTransient() ) {
+			return false;
+		}
+
+		return $this->httpStatus >= 400 && $this->httpStatus <= 499;
 	}
 
 	public function toWpError(): \WP_Error {

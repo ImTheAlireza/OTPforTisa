@@ -898,13 +898,22 @@ function testThePanelKeepsItsOwnPromises() {
 
 	// --- "did my update actually land?" --------------------------------------
 	// Twice now the answer to "where is it?" was "the installed package is older
-	// than the one you were told about". The panel has to be able to say which
-	// build is running, in a place an administrator already looks.
-	check('the first tab opens with what this build added', /private function generalSection\(\): void \{\s*\n\s*\$c = \$this->controls;\s*\n\s*\$this->whatsNew\(\);/.test(settings));
-	check('and the card names the running version', /private function whatsNew\(\)/.test(settings) && /تازه در نسخهٔ %s/.test(settings) && /TISA_OTP_VERSION/.test(settings));
-	const releaseCard = settings.slice(settings.indexOf('private function whatsNew()'), settings.indexOf('private function testCard('));
-	check('it points at the reports tab, not at a second page', /self::tabUrl\( 'reports' \)/.test(releaseCard));
-	check('and it tells the reader what to do when the number looks wrong', /فایل‌های افزونه به‌روز نشده‌اند/.test(settings));
+	// than the one you were told about". The number is printed in the header of
+	// every tab, so it is on screen before a single setting is read — and it is
+	// the only place a release is described: a card of release notes in front of
+	// the settings was prose the owner did not ask for.
+	check('the running version is printed in the header of every tab', /tisa-header__meta/.test(settings) && /نسخه %s/.test(settings) && /TISA_OTP_VERSION/.test(settings));
+	check('and no card of release notes stands in front of the settings', settings.indexOf('whatsNew') < 0 && settings.indexOf('تازه در نسخهٔ') < 0 && settings.indexOf('tisa-bullets') < 0);
+
+	// --- the text diet -------------------------------------------------------
+	// The request was literal: "توضیحات اضافه رو از پلاگین حذف کن". A sentence an
+	// administrator has to read before touching a control is prose unless it
+	// says what a field accepts or what happens if it is set that way.
+	const sentences = (source) => (source.match(/__\(\s*'[^']{120,}'/g) || []);
+	const longOnes = sentences(settings).concat(sentences(selfTest));
+	check('no sentence in the admin screens runs past 120 characters', longOnes.length === 0, longOnes.slice(0, 2).join(' | '));
+	check('the release-notes card is gone from the panel', settings.indexOf('private function whatsNew') < 0);
+	check('and the settings tab starts with settings', /private function generalSection\(\): void \{\s*\n\s*\$c = \$this->controls;\s*\n\s*\$this->card\(/.test(settings));
 
 	const version = (bootstrap.match(/define\( 'TISA_OTP_VERSION', '([0-9.]+)' \)/) || [])[1];
 	// Persian digits, for the places a release is named to a person.
@@ -913,8 +922,8 @@ function testThePanelKeepsItsOwnPromises() {
 	check('the readme ships that same version as its stable tag', !!version && readme.indexOf('Stable tag: ' + version) >= 0);
 	check('and the readme explains what changed in it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
 	check('the preview says which version it is showing', admin.indexOf(version) >= 0);
-	check('the preview shows the release card too', admin.indexOf('تازه در نسخهٔ ' + faVersion) >= 0 && /class="tisa-bullets"/.test(admin));
-	check('and a link from it into the reports section', /class="button" href="#reports"/.test(admin));
+	check('and the preview shows no release-notes card either', admin.indexOf('تازه در نسخهٔ ' + faVersion) < 0 && admin.indexOf('tisa-bullets') < 0);
+	check('but it still leads into the reports section', /class="button" href="#reports"/.test(admin) || admin.indexOf('#reports') >= 0);
 
 	// --- a broken install must not take the site down -----------------------
 	// 1.3.2 shipped a constructor that had grown a tenth argument while the
@@ -1035,6 +1044,79 @@ function testThePanelKeepsItsOwnPromises() {
 	check('with a failing row in it, so the modal is seen doing its job', /status: 'warn'/.test(server) || /status: 'fail'/.test(server));
 }
 
+/*
+ * "یکم سرچ بزن، ببین مستندات sms.ir چیه" — the panel documents two send
+ * endpoints, a `status` field in every answer and a table of refusal numbers,
+ * and an owner who is told "the code was not sent" needs the number.
+ *
+ * These checks hold the driver to that document: the request it builds, the
+ * refusal it recognises, and the account it can ask about without sending
+ * anything. They also hold the chain to the rule that an empty account is worth
+ * retrying somewhere else while a wrong key is not.
+ */
+function testSmsIrAgainstItsDocumentation() {
+	scenario('sms.ir is read the way sms.ir documents itself');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const smsIr = read('tisa-otp', 'src', 'Gateway', 'Drivers', 'SmsIr.php');
+	const probeInterface = read('tisa-otp', 'src', 'Gateway', 'AccountProbe.php');
+	const result = read('tisa-otp', 'src', 'Gateway', 'GatewayResult.php');
+	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
+	const suite = read('tests', 'php', 'smsir-test.php');
+	const ci = read('.github', 'workflows', 'ci.yml');
+	const admin = read('preview', 'public', 'admin.html');
+	const server = read('preview', 'server.js');
+
+	// The two documented endpoints, and the two documented ways to authenticate.
+	check('the verify endpoint is the documented one', smsIr.indexOf('https://api.sms.ir/v1/send/verify') >= 0);
+	check('and so is the free-text one', smsIr.indexOf('https://api.sms.ir/v1/send/bulk') >= 0);
+	check('the key travels in the documented header', /'X-API-KEY'\s*=>\s*\$apiKey/.test(smsIr));
+	check('the template body is mobile / templateId / parameters', /'mobile'\s*=> \$request->phone\(\)/.test(smsIr) && /'templateId' => \(int\) \$this->template\(\)/.test(smsIr) && /'name'\s*=> \$name/.test(smsIr));
+
+	// A line number is a number on the wire, and a 14-digit one must not be cast.
+	check('the line number leaves as a JSON number', smsIr.indexOf("'{\"lineNumber\":' . $sender") >= 0);
+	check('and never through an int cast, which saturates on 32-bit PHP', smsIr.indexOf('(int) $sender') < 0 && /32-bit PHP/.test(smsIr));
+
+	// The refusal table, in the driver, with our own codes attached.
+	for (const [code, ours, word] of [
+		['10', 'unauthorized', 'کلید API نامعتبر'],
+		['12', 'unauthorized', 'IP'],
+		['20', 'rate_limited', 'سقف'],
+		['101', 'rejected', 'شماره خط نامعتبر'],
+		['102', 'no_credit', 'اعتبار'],
+		['113', 'rejected', 'الگو'],
+		['114', 'rejected', '۲۵'],
+		['115', 'rejected', 'لیست سیاه'],
+		['117', 'rejected', 'تأیید نشده'],
+		['119', 'rejected', 'پلن'],
+		['123', 'rejected', 'فعال نشده'],
+	]) {
+		check('refusal ' + code + ' is ' + ours + ' with a sentence about it', new RegExp('\\b' + code + '\\s*=>\\s*array\\(\\s*\'' + ours + '\'').test(smsIr) && smsIr.indexOf(word) >= 0);
+	}
+
+	check('the panel sentence is kept as the reason, with the number in front', /'SMS\.ir ' \. \$api \. ': ' \. \( '' !== \$sentence/.test(smsIr));
+	check('a refusal hidden behind HTTP 200 is still read from the body', /null !== \$api && isset\( self::\$statuses\[ \$api \] \)/.test(smsIr));
+
+	// Asking the account, not a message.
+	check('a driver may be asked about its account, without sending anything', /interface AccountProbe/.test(probeInterface) && /probe\(\): array/.test(probeInterface));
+	check('sms.ir answers with credit and lines, and nothing else', /CREDIT_ENDPOINT/.test(smsIr) && /LINE_ENDPOINT/.test(smsIr) && /function probe\(\): array/.test(smsIr) && smsIr.indexOf('wp_remote_post') < 0);
+	check('the self-test shows that as its own row', /کلید API و اعتبار/.test(selfTest) && /شماره خط/.test(selfTest));
+	check('and the driver interface stays optional for other drivers', !/interface SmsGateway[\s\S]{0,400}probe\(/.test(read('tisa-otp', 'src', 'Gateway', 'SmsGateway.php')));
+
+	// Who is allowed to fail over.
+	check('an empty account is a transient failure, not a configuration one', /if \( '' !== \$this->errorCode && \$this->isTransient\(\) \) \{\s*\n\s*return false;/.test(result));
+	check('a wrong key still stops the chain', /'not_configured', 'unauthorized', 'forbidden', 'bad_credentials'/.test(result));
+
+	// And it is a test in CI, not a claim in a comment.
+	check('the suite feeds the driver real panel answers', suite.indexOf('every documented refusal arrives as its own cause') >= 0 && suite.indexOf('the line number leaves as a JSON number') >= 0);
+	check('and CI runs it', /smsir-test\.php/.test(ci));
+
+	// The demo can be clicked through to the same rows.
+	check('the demo answers the gateways test with the two new rows', server.indexOf('کلید API و اعتبار') >= 0 && server.indexOf('شماره خط') >= 0);
+	check('and with a reachability row that carries a cause', server.indexOf('دسترسی این سرور به سامانه') >= 0 && server.indexOf('CONNECT') >= 0);
+	check('the demo version follows the plugin', admin.indexOf('(۱.۳.۵)') >= 0 || /۱\.۳\.\d/.test(admin));
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -1043,6 +1125,7 @@ async function main() {
 	await testRescuePanel();
 	await testEveryScreenIsReachable();
 	await testThePanelKeepsItsOwnPromises();
+	await testSmsIrAgainstItsDocumentation();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

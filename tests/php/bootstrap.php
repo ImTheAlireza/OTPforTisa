@@ -134,6 +134,16 @@ function esc_attr__( $text, $domain = null ) {
 }
 
 function apply_filters( $tag, $value ) {
+	$extra = array_slice( func_get_args(), 2 );
+
+	if ( empty( $GLOBALS['tisa_hooks'][ $tag ] ) ) {
+		return $value;
+	}
+
+	foreach ( (array) $GLOBALS['tisa_hooks'][ $tag ] as $callback ) {
+		$value = call_user_func_array( $callback, array_merge( array( $value ), $extra ) );
+	}
+
 	return $value;
 }
 
@@ -348,6 +358,188 @@ function wp_nonce_field( $action = -1, $name = '_wpnonce', $referer = true, $dis
 	}
 
 	return $html;
+}
+
+/* -------------------------------------------------------------------------
+ * Outbound HTTP, recorded instead of performed
+ *
+ * Gateway drivers are half decision-making and half plumbing, and the decisions
+ * are the half that costs money when it is wrong. These stand-ins let a test
+ * answer as a panel would — a status code, a body, or a WP_Error — and then
+ * look at exactly what the driver sent.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * @param string $code
+ * @param string $message
+ * @param mixed  $data
+ */
+class WP_Error { // phpcs:ignore Squiz.Classes.ValidClassName.NotCamelCaps -- WordPress class.
+	/** @var string */
+	private $code;
+	/** @var string */
+	private $message;
+	/** @var mixed */
+	private $data;
+
+	public function __construct( $code = '', $message = '', $data = '' ) {
+		$this->code    = (string) $code;
+		$this->message = (string) $message;
+		$this->data    = $data;
+	}
+
+	public function get_error_code(): string {
+		return $this->code;
+	}
+
+	public function get_error_message(): string {
+		return $this->message;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function get_error_data() {
+		return $this->data;
+	}
+}
+
+/**
+ * @param mixed $thing
+ */
+function is_wp_error( $thing ): bool {
+	return $thing instanceof WP_Error;
+}
+
+$GLOBALS['tisa_http_requests'] = array();
+$GLOBALS['tisa_http_reply']    = null;
+
+/**
+ * The next answer any wp_remote_* call will get.
+ *
+ * @param mixed $reply Array with 'response' => array( 'code' => int ), 'body' => string, or a WP_Error.
+ */
+function tisa_reply( $reply ): void {
+	$GLOBALS['tisa_http_reply'] = $reply;
+}
+
+/**
+ * @return array<int,array{method:string,url:string,args:array<string,mixed>}>
+ */
+function tisa_requests(): array {
+	return $GLOBALS['tisa_http_requests'];
+}
+
+function tisa_forget_requests(): void {
+	$GLOBALS['tisa_http_requests'] = array();
+}
+
+/**
+ * Drop every filter a test registered, so one group cannot change the next.
+ */
+function tisa_forget_filters(): void {
+	$GLOBALS['tisa_hooks'] = array();
+}
+
+/**
+ * @param mixed $reply
+ * @return array|WP_Error
+ */
+function tisa_http( string $method, string $url, array $args = array() ) {
+	$GLOBALS['tisa_http_requests'][] = array(
+		'method' => $method,
+		'url'    => $url,
+		'args'   => $args,
+	);
+
+	$reply = $GLOBALS['tisa_http_reply'];
+
+	if ( $reply instanceof WP_Error ) {
+		return $reply;
+	}
+
+	if ( ! is_array( $reply ) ) {
+		return new WP_Error( 'http_request_failed', 'cURL error 6: Could not resolve host: api.sms.ir' );
+	}
+
+	$code = isset( $reply['code'] ) ? (int) $reply['code'] : 200;
+
+	return array(
+		'headers'  => array(),
+		'body'     => isset( $reply['body'] ) ? (string) $reply['body'] : '',
+		'response' => array(
+			'code'    => $code,
+			'message' => isset( $reply['message'] ) ? (string) $reply['message'] : 'OK',
+		),
+		'cookies'  => array(),
+		'filename' => null,
+	);
+}
+
+/**
+ * @return array|WP_Error
+ */
+function wp_remote_post( string $url, array $args = array() ) {
+	return tisa_http( 'POST', $url, $args );
+}
+
+/**
+ * @return array|WP_Error
+ */
+function wp_remote_get( string $url, array $args = array() ) {
+	return tisa_http( 'GET', $url, $args );
+}
+
+/**
+ * @param array|WP_Error $response
+ */
+function wp_remote_retrieve_response_code( $response ): int {
+	if ( is_wp_error( $response ) ) {
+		return 0;
+	}
+
+	return isset( $response['response']['code'] ) ? (int) $response['response']['code'] : 0;
+}
+
+/**
+ * @param array|WP_Error $response
+ */
+function wp_remote_retrieve_body( $response ): string {
+	if ( is_wp_error( $response ) ) {
+		return '';
+	}
+
+	return isset( $response['body'] ) ? (string) $response['body'] : '';
+}
+
+/**
+ * @param mixed $data
+ */
+function wp_json_encode( $data, int $options = 0, int $depth = 512 ) {
+	return (string) json_encode( $data, $options, $depth );
+}
+
+function get_bloginfo( $show = 'name' ): string {
+	return 'name' === $show ? 'نمونه سایت' : '';
+}
+
+function wp_specialchars_decode( $text, $quote_style = ENT_NOQUOTES ): string {
+	return htmlspecialchars_decode( (string) $text, $quote_style === ENT_QUOTES ? ENT_QUOTES : ENT_NOQUOTES );
+}
+
+/**
+ * @return mixed
+ */
+function wp_parse_url( string $url, int $component = -1 ) {
+	return -1 === $component ? parse_url( $url ) : parse_url( $url, $component );
+}
+
+function home_url( string $path = '' ): string {
+	return 'https://example.test' . $path;
+}
+
+function get_locale(): string {
+	return 'fa_IR';
 }
 
 /* -------------------------------------------------------------------------
