@@ -906,6 +906,22 @@ final class SettingsScreen {
 					$c->number( 'width', 280, 900, 'px' );
 				} );
 
+				$c->row(
+					__( 'فونت فرم', 'tisa-otp' ),
+					function () use ( $c ) {
+						$c->select(
+							'form_font',
+							array(
+								'vazirmatn' => __( 'وزیرمتن (همراه افزونه)', 'tisa-otp' ),
+								'theme'     => __( 'فونت پوسته', 'tisa-otp' ),
+								'custom'    => __( 'فونت دلخواه', 'tisa-otp' ),
+							)
+						);
+						$c->text( 'form_font_custom', 'Vazirmatn, Tahoma, sans-serif' );
+					},
+					__( '«وزیرمتن» همان فونت پیش‌نمایش است و همراه افزونه می‌آید.', 'tisa-otp' )
+				);
+
 				$c->row( __( 'چینش', 'tisa-otp' ), function () use ( $c ) {
 					$c->select(
 						'align',

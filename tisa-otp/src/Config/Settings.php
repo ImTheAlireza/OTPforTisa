@@ -210,6 +210,11 @@ final class Settings {
 
 			// Appearance.
 			'skin'                   => 'line',
+			// The form ships with its own Persian font (assets/fonts, OFL). A theme
+			// whose font has no Persian glyphs otherwise decides how the form looks,
+			// which is how "your plugin looks different from your preview" happens.
+			'form_font'              => 'vazirmatn',
+			'form_font_custom'       => '',
 			'accent'                 => '#0f766e',
 			'surface'                => '#ffffff',
 			'radius'                 => '14',

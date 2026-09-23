@@ -1295,6 +1295,68 @@ function testTheCaptchaKnowsWhoItIsTalkingTo() {
 	check('and is documented', /captcha-test\.php/.test(readme));
 }
 
+/*
+ * Round 13: «ظاهر فرمم با پیش‌نمایش فرق داره … وردپرس چیزیو سرخود عوض می‌کنه؟»
+ * — no. Two other things did: the preview borrowed Vazirmatn from a CDN while
+ * the form said `--tisa-font: inherit`, and a theme's own selectors outrank a
+ * stylesheet that names one class each. The captcha question has its own
+ * answer, and it belongs in the panel rather than in a reply.
+ */
+function testTheFormLooksLikeItself() {
+	scenario('the form brings its own font, and the panel answers the captcha question');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const css = read('tisa-otp', 'assets', 'css', 'front.css');
+	const renderer = read('tisa-otp', 'src', 'Front', 'FormRenderer.php');
+	const sanitizer = read('tisa-otp', 'src', 'Config', 'Sanitizer.php');
+	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
+	const settings = read('tisa-otp', 'src', 'Config', 'Settings.php');
+	const screen = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
+	const index = read('preview', 'public', 'index.html');
+	const server = read('preview', 'server.js');
+	const ci = read('.github', 'workflows', 'ci.yml');
+
+	// 1. The font travels with the plugin, and both subsets survive.
+	const faces = css.match(/@font-face/g) || [];
+	check('six faces: two subsets for three weights', faces.length === 6);
+	check('each one claims its own codepoints', (css.match(/unicode-range:/g) || []).length === 6);
+	check('the Persian digits come from the Arabic file', /arabic-400-normal\.woff2\)[^}]*U\+06F0-06F9/s.test(css));
+	check('and ASCII from the Latin one', /latin-400-normal\.woff2\)[^}]*U\+0020-007E/s.test(css));
+	check('the two files are really in the package', ['arabic', 'latin'].every((s) => [400, 600, 700].every((w) => fs.existsSync(path.join(REPO, 'tisa-otp', 'assets', 'fonts', `vazirmatn-${s}-${w}-normal.woff2`)))));
+	check('with the licence that allows it', fs.existsSync(path.join(REPO, 'tisa-otp', 'assets', 'fonts', 'OFL.txt')));
+	check('the default font is the shipped one', /--tisa-font: 'Vazirmatn'/.test(css));
+
+	// 2. The preview stops borrowing the font it now ships.
+	check('the preview no longer calls a font CDN', !/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(index));
+	check('and serves woff2 as a font', /'\.woff2': 'font\/woff2'/.test(server));
+
+	// 3. A theme cannot take the form over.
+	check('controls are declared again with the form in front', /\.tisa-otp \.tisa-field__input,/.test(css) && /\.tisa-otp \.tisa-btn \{/.test(css));
+	check('the font of a control is not the theme\'s to choose', /\.tisa-otp \.tisa-btn \{\s*font-family: inherit;/.test(css));
+	check('and the digits-only field keeps its tracking', css.indexOf('.tisa-code-single .tisa-code__bulk') > css.indexOf('.tisa-otp .tisa-code__box,'));
+
+	// 4. The setting exists end to end.
+	check('the setting has a default', /'form_font'\s*=> 'vazirmatn'/.test(settings));
+	check('it is sanitised as a font, not as text', /'form_font_custom'\s*=> array\( 'type' => 'font' \)/.test(read('tisa-otp', 'src', 'Config', 'Sanitizer.php')));
+	check('and a font value cannot end its own declaration', /function fontFamily/.test(sanitizer) && /preg_replace\( '\/\[\^A-Za-z0-9 ,/.test(sanitizer));
+	check('the form prints it on the element', /--tisa-font:' \. \$font/.test(renderer));
+	check('and the surface colour too, which used to be printed where nothing read it', /--tisa-surface:' \. \$surface/.test(renderer));
+	check('the settings screen offers it', /'form_font',/.test(screen) && /form_font_custom/.test(screen));
+
+	// 5. The two questions the owner actually asked get answers in the panel.
+	check('the panel says when the challenge is invisible', /چالش دیدنی است؟/.test(selfTest) && /کاربر چالش را می‌بیند/.test(selfTest));
+	check('and what to choose instead of v3', /ARCaptcha یا hCaptcha/.test(selfTest));
+	check('an exempt number is named, masked, as a warning', /function trustedRow/.test(selfTest) && /شمارهٔ خودتان/.test(selfTest) && /function ownPhone/.test(selfTest));
+	check('the row does not print the number in full', !/trustedRow[\s\S]{0,900}\$own \.[^)]*\$own/.test(selfTest));
+	check('after_limit says the first attempts pass unchallenged', /بدون چالش رد می‌شوند/.test(selfTest));
+	check('the appearance test names the font', /فونت فرم/.test(selfTest) && /function fontLabel/.test(selfTest));
+	check('and says it is the preview\'s font', /همان فونتی که پیش‌نمایش/.test(selfTest));
+
+	// 6. It is a test in CI, not a paragraph.
+	check('the appearance suite runs in CI', /php tests\/php\/appearance-test\.php/.test(ci));
+	check('and the demo shows the new rows', /چالش دیدنی است؟/.test(server) && /فونت فرم/.test(server));
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -1307,6 +1369,7 @@ async function main() {
 	await testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess();
 	await testTheBlockHasAnAnswer();
 	await testTheCaptchaKnowsWhoItIsTalkingTo();
+	await testTheFormLooksLikeItself();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

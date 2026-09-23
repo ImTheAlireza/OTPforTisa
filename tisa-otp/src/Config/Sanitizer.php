@@ -130,6 +130,8 @@ final class Sanitizer {
 			'register_subheading'  => array( 'type' => 'textarea' ),
 
 			'skin'                 => array( 'type' => 'enum', 'choices' => array( 'line', 'card', 'glass', 'slate', 'pill' ) ),
+			'form_font'            => array( 'type' => 'enum', 'choices' => array( 'vazirmatn', 'theme', 'custom' ) ),
+			'form_font_custom'     => array( 'type' => 'font' ),
 			'accent'               => array( 'type' => 'color' ),
 			'surface'              => array( 'type' => 'color' ),
 			'radius'               => array( 'type' => 'int', 'min' => 0, 'max' => 40 ),
@@ -262,10 +264,31 @@ final class Sanitizer {
 			case 'fields':
 				return is_array( $value ) ? self::sanitizeFields( $value ) : (array) $fallback;
 
+			case 'font':
+				return self::fontFamily( $value );
+
 			case 'text':
 			default:
 				return sanitize_text_field( (string) $value );
 		}
+	}
+
+	/**
+	 * A CSS `font-family` list, and nothing else.
+	 *
+	 * The value is printed inside a `style` attribute, so the whole grammar is
+	 * kept to what a font list can contain: family names, quotes, commas and
+	 * spaces. Braces, semicolons and angle brackets — the characters that would
+	 * let one setting escape its declaration and rewrite the rest of the page —
+	 * are dropped rather than escaped, and an empty result falls back to the
+	 * default font.
+	 */
+	public static function fontFamily( $value ): string {
+		$value = wp_strip_all_tags( (string) $value );
+		$value = preg_replace( '/[^A-Za-z0-9 ,\'"\-_\.]/', '', $value );
+		$value = trim( (string) $value, " \t\n\r\0\x0B," );
+
+		return substr( $value, 0, 180 );
 	}
 
 	/**

@@ -31,6 +31,7 @@ jobs:
           php tests/php/colour-test.php
           php tests/php/transport-test.php
           php tests/php/captcha-test.php
+          php tests/php/appearance-test.php
           php tests/php/smsir-test.php
           php tests/php/direct-send-test.php
           php tests/php/settings-render-test.php

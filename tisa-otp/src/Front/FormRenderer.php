@@ -11,6 +11,7 @@
 namespace TisaOtp\Front;
 
 use TisaOtp\Captcha\Manager;
+use TisaOtp\Config\Sanitizer;
 use TisaOtp\Config\Settings;
 use TisaOtp\Registration\FieldSchema;
 use TisaOtp\Support\View;
@@ -18,6 +19,16 @@ use TisaOtp\Support\View;
 defined( 'ABSPATH' ) || exit;
 
 final class FormRenderer {
+
+	/**
+	 * The font the form was designed in, shipped with the plugin.
+	 *
+	 * Vazirmatn (SIL OFL, see assets/fonts/OFL.txt) is a Persian-first family,
+	 * so a form inside a theme with no Persian glyphs stops falling back to
+	 * whatever the operating system has lying around. The names after it are
+	 * only there for the case where a site already loads its own copy.
+	 */
+	const FONT_STACK = "'Vazirmatn','Vazir','IRANSans','Iranian Sans',Tahoma,sans-serif";
 
 	/** @var Settings */
 	private $settings;
@@ -271,6 +282,24 @@ final class FormRenderer {
 		if ( $accent ) {
 			$parts[] = '--tisa-accent:' . $accent;
 		}
+
+		/*
+		 * The surface and the font are set here rather than on `:root`, because a
+		 * variable declared on `.tisa-otp` in the stylesheet beats one inherited
+		 * from `:root` — the settings used to be emitted per request and silently
+		 * lose to the stylesheet's own defaults.
+		 */
+		$surface = sanitize_hex_color( (string) $this->pick( $args, 'surface', $this->settings->str( 'surface', '#ffffff' ), array() ) );
+
+		if ( $surface ) {
+			$parts[] = '--tisa-surface:' . $surface;
+		}
+
+		$font = $this->fontFamily();
+
+		if ( '' !== $font ) {
+			$parts[] = '--tisa-font:' . $font;
+		}
 		if ( $width >= 280 && $width <= 900 ) {
 			$parts[] = '--tisa-width:' . $width . 'px';
 		}
@@ -279,6 +308,32 @@ final class FormRenderer {
 		}
 
 		return implode( ';', $parts );
+	}
+
+	/**
+	 * The font stack the form prints with.
+	 *
+	 * `theme` keeps the old behaviour (`inherit`), which is also the honest name
+	 * for it: the form then looks like whatever the site's theme uses, Persian
+	 * glyphs or not. The default is the font shipped in `assets/fonts`, which is
+	 * the same one the packaged preview renders with.
+	 */
+	private function fontFamily(): string {
+		$choice = $this->settings->str( 'form_font', 'vazirmatn' );
+
+		if ( 'theme' === $choice ) {
+			return 'inherit';
+		}
+
+		if ( 'custom' === $choice ) {
+			$custom = Sanitizer::fontFamily( $this->settings->str( 'form_font_custom' ) );
+
+			if ( '' !== $custom ) {
+				return $custom;
+			}
+		}
+
+		return self::FONT_STACK;
 	}
 
 	/**

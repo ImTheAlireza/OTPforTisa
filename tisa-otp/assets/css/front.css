@@ -25,6 +25,71 @@
  * `node tests/contrast.js` and docs/UI-PLAN.fa.md §3.
  */
 
+/* The font the form is designed in -----------------------------------------
+ *
+ * Vazirmatn (SIL OFL 1.1, assets/fonts/OFL.txt) ships with the plugin, so the
+ * form does not depend on a theme that may have no Persian glyphs at all, on a
+ * CDN that is blocked from Iran, or on the reader's operating system. Two
+ * subsets per weight: the Arabic one carries the Persian letters and digits,
+ * the Latin one carries ASCII (the phone and code fields are `dir=ltr`) and
+ * the punctuation. `unicode-range` is what lets both live under the same
+ * family name — without it the second block simply replaces the first.
+ * The ranges below were read out of the font files themselves.
+ */
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-400-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-400-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-600-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-600-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-700-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-700-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
 .tisa-otp {
 	/* Colour ------------------------------------------------------------- */
 	--tisa-accent: #0f766e;
@@ -80,7 +145,7 @@
 
 	/* Type ---------------------------------------------------------------- */
 	--tisa-width: 420px;
-	--tisa-font: inherit;
+	--tisa-font: 'Vazirmatn', 'Vazir', 'IRANSans', 'Iranian Sans', Tahoma, sans-serif;
 
 	position: relative;
 	box-sizing: border-box;
@@ -489,6 +554,36 @@
 	line-height: 1.6;
 	transition: border-color var(--tisa-dur-fast) var(--tisa-ease-out), box-shadow var(--tisa-dur-fast) var(--tisa-ease-out), background-color var(--tisa-dur-fast) var(--tisa-ease-out);
 	appearance: none;
+}
+
+/* Theme-proofing -------------------------------------------------------------
+ *
+ * Every rule above names one class, so a theme that styles its own content —
+ * `.entry-content input`, `.wp-block-group button`, `#main .searchform input` —
+ * outranks them and the form starts looking like the theme instead of like
+ * this design. That is the whole of the honest answer to "your preview does
+ * not match my site": WordPress never rewrites the markup, the theme's
+ * stylesheet simply wins the cascade.
+ *
+ * These declarations re-assert the parts a theme is most likely to set and
+ * that this design never wants from it. They are written *before* the skins on
+ * purpose: a later rule at the same specificity still wins, so no skin loses
+ * its look, and `letter-spacing`/`text-indent` stay available to the single
+ * code field, which uses both to keep digits centred.
+ */
+.tisa-otp .tisa-field__input,
+.tisa-otp .tisa-field__select,
+.tisa-otp .tisa-phone__input,
+.tisa-otp .tisa-code__bulk,
+.tisa-otp .tisa-code__box,
+.tisa-otp .tisa-btn {
+	font-family: inherit;
+	letter-spacing: normal;
+	text-transform: none;
+	text-shadow: none;
+	text-indent: 0;
+	appearance: none;
+	-webkit-appearance: none;
 }
 
 .tisa-field__input::placeholder,

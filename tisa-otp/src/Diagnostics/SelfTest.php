@@ -19,7 +19,9 @@
 
 namespace TisaOtp\Diagnostics;
 
+use TisaOtp\Blocklist\Trusted;
 use TisaOtp\Captcha\Manager as CaptchaManager;
+use TisaOtp\Config\Sanitizer;
 use TisaOtp\Config\Settings;
 use TisaOtp\Cron\Maintenance;
 use TisaOtp\Gateway\AccountProbe;
@@ -722,9 +724,28 @@ final class SelfTest {
 		$rows[] = $this->row(
 			__( 'زمان نمایش', 'tisa-otp' ),
 			$this->triggerLabel( $captcha['trigger'] ),
-			'info',
-			__( 'کپچا می‌تواند از همان اول دیده شود یا بعد از چند تلاش مشکوک.', 'tisa-otp' )
+			'after_limit' === $captcha['trigger'] ? 'warn' : 'info',
+			'after_limit' === $captcha['trigger']
+				? __( 'در این حالت دو تلاش اول هر شماره و سه تلاش اول هر IP بدون چالش رد می‌شوند؛ اگر همان لحظه چیزی ندیدید، علتش همین است.', 'tisa-otp' )
+				: __( 'چالش از همان اولین درخواست خواسته می‌شود.', 'tisa-otp' )
 		);
+
+		/*
+		 * "Why did it not ask me for a captcha?" has three answers that look
+		 * identical from the outside: the challenge is invisible by design, the
+		 * number is on the exempt list, or there is no captcha at all. The rows
+		 * below name which one is true instead of leaving it to be guessed at.
+		 */
+		$rows[] = $this->row(
+			__( 'چالش دیدنی است؟', 'tisa-otp' ),
+			'score' === $captcha['kind'] ? __( 'نه — بی‌صدا', 'tisa-otp' ) : __( 'بله', 'tisa-otp' ),
+			'score' === $captcha['kind'] ? 'info' : 'ok',
+			'score' === $captcha['kind']
+				? __( 'نسخهٔ ۳ بی‌صدا است و هیچ ویجتی نشان نمی‌دهد. برای چالشی که دیده شود، ARCaptcha یا hCaptcha را انتخاب کنید.', 'tisa-otp' )
+				: __( 'کاربر چالش را می‌بیند و باید کاملش کند.', 'tisa-otp' )
+		);
+
+		$rows[] = $this->trustedRow();
 
 		$override = trim( $this->settings->str( 'captcha_script_override' ) );
 
@@ -786,6 +807,59 @@ final class SelfTest {
 			__( 'از سمت سرور و در همین مرورگر.', 'tisa-otp' ),
 			$rows
 		);
+	}
+
+	/**
+	 * Who the guards are told to leave alone.
+	 *
+	 * A trusted number skips the captcha *by design* (admin settings ›
+	 * امنیت › فهرست معاف), and the site owner's own number is the first one
+	 * anyone puts there — usually while testing, and then it is forgotten. From
+	 * the visitor's side that is indistinguishable from a captcha that is off,
+	 * so the row says it out loud, with the number of the person reading it.
+	 */
+	private function trustedRow(): array {
+		$trusted = new Trusted( $this->settings );
+
+		if ( ! $trusted->enabled() ) {
+			return $this->row(
+				__( 'فهرست معاف', 'tisa-otp' ),
+				__( 'خاموش', 'tisa-otp' ),
+				'info',
+				__( 'هیچ شماره‌ای از کپچا معاف نیست.', 'tisa-otp' )
+			);
+		}
+
+		$count   = count( $trusted->rules() );
+		$own     = $this->ownPhone();
+		$exempt  = '' !== $own && $trusted->matches( $own );
+
+		return $this->row(
+			__( 'فهرست معاف', 'tisa-otp' ),
+			number_format_i18n( $count ) . ' ' . __( 'شماره', 'tisa-otp' ),
+			$exempt ? 'warn' : 'info',
+			$exempt
+				? sprintf(
+					/* translators: %s: the administrator's own masked phone number */
+					__( 'شمارهٔ خودتان (%s) در این فهرست است؛ به همین دلیل کپچا از شما پرسیده نشد. برای آزمایش واقعی برداریدش.', 'tisa-otp' ),
+					$this->mask( $own )
+				)
+				: __( 'شماره‌های این فهرست بدون کپچا و بدون محدودیت رد می‌شوند؛ بقیه نه.', 'tisa-otp' )
+		);
+	}
+
+	/**
+	 * The administrator's own number, read from the same profile key the form
+	 * writes to, so the row above can name it.
+	 */
+	private function ownPhone(): string {
+		$user = get_current_user_id();
+
+		if ( ! $user ) {
+			return '';
+		}
+
+		return trim( (string) get_user_meta( $user, $this->settings->str( 'phone_meta_key', 'tisa_phone' ), true ) );
 	}
 
 	/**
@@ -1109,6 +1183,22 @@ final class SelfTest {
 		$rows[] = $this->row( __( 'گردی گوشه‌ها', 'tisa-otp' ), number_format_i18n( $this->settings->int( 'radius', 14 ) ) . ' px', 'info' );
 		$rows[] = $this->row( __( 'عرض فرم', 'tisa-otp' ), number_format_i18n( $this->settings->int( 'width', 420 ) ) . ' px', 'info' );
 
+		/*
+		 * "Your form does not look like your preview" is a font question more
+		 * often than a colour one: a theme with no Persian glyphs decides how the
+		 * form reads, unless the form brings its own font — which it does now.
+		 */
+		$font = $this->settings->str( 'form_font', 'vazirmatn' );
+
+		$rows[] = $this->row(
+			__( 'فونت فرم', 'tisa-otp' ),
+			$this->fontLabel(),
+			'theme' === $font ? 'info' : 'ok',
+			'theme' === $font
+				? __( 'فرم فونت پوسته را به ارث می‌برد؛ اگر پوسته فونت فارسی نداشته باشد، شکل فرم فرق می‌کند.', 'tisa-otp' )
+				: __( 'همان فونتی که پیش‌نمایش با آن ساخته شده، همراه افزونه روی همین سایت سرو می‌شود.', 'tisa-otp' )
+		);
+
 		return $this->result(
 			__( 'آزمایش ظاهر فرم', 'tisa-otp' ),
 			__( 'رنگ‌های واقعی فرم و نسبت کنتراست.', 'tisa-otp' ),
@@ -1123,6 +1213,30 @@ final class SelfTest {
 	/**
 	 * @return array<string,mixed>
 	 */
+	/**
+	 * Which font the form prints with, in one word.
+	 */
+	private function fontLabel(): string {
+		$choice = $this->settings->str( 'form_font', 'vazirmatn' );
+
+		if ( 'theme' === $choice ) {
+			$theme = wp_get_theme();
+			$name  = $theme instanceof \WP_Theme ? $theme->get( 'Name' ) : '';
+
+			return '' !== (string) $name
+				? sprintf( /* translators: %s: theme name */ __( 'پوسته: %s', 'tisa-otp' ), (string) $name )
+				: __( 'پوسته', 'tisa-otp' );
+		}
+
+		if ( 'custom' === $choice ) {
+			$custom = Sanitizer::fontFamily( $this->settings->str( 'form_font_custom' ) );
+
+			return '' !== $custom ? $custom : __( 'وزیرمتن (خط دلخواه خالی است)', 'tisa-otp' );
+		}
+
+		return __( 'وزیرمتن (همراه افزونه)', 'tisa-otp' );
+	}
+
 	private function store(): array {
 		$rows = array();
 		$woo  = class_exists( 'WooCommerce' );

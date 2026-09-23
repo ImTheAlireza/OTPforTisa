@@ -275,6 +275,66 @@ function sanitize_key( $key ) {
 }
 
 /**
+ * The two WordPress cleaners the settings sanitizer leans on.
+ *
+ * They are stubbed rather than approximated because a test about a *font*
+ * value is really a test about what that cleaner lets through: `wp_strip_all_tags()`
+ * removing a `<script>` tag is the security property, and `sanitize_hex_color()`
+ * refusing "red" is why the surface colour has a fallback at all.
+ */
+function wp_strip_all_tags( $string, $remove_breaks = false ) {
+	$string = strip_tags( (string) $string );
+
+	if ( $remove_breaks ) {
+		$string = preg_replace( '/[\r\n\t ]+/', ' ', $string );
+	}
+
+	return trim( (string) $string );
+}
+
+/**
+ * @param string $color
+ * @return string|null
+ */
+function sanitize_hex_color( $color ) {
+	if ( ! is_string( $color ) ) {
+		return null;
+	}
+
+	return preg_match( '/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $color ) ? $color : null;
+}
+
+/**
+ * The active theme, as far as the diagnostics are concerned.
+ */
+class WP_Theme { // phpcs:ignore Squiz.Classes.ValidClassName.NotCamelCaps -- WordPress class.
+
+	/** @var string */
+	private $name;
+
+	public function __construct( string $name = 'Tisa Test Theme' ) {
+		$this->name = $name;
+	}
+
+	/**
+	 * @param string $header
+	 * @return string
+	 */
+	public function get( $header ) {
+		return 'Name' === $header ? $this->name : '';
+	}
+}
+
+/**
+ * @return WP_Theme
+ */
+function wp_get_theme( $stylesheet = '' ) {
+	unset( $stylesheet );
+
+	return new WP_Theme();
+}
+
+/**
  * @param string $text
  * @return string
  */
