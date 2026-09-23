@@ -54,6 +54,43 @@ final class LogStore {
 	}
 
 	/**
+	 * One value out of a row's `meta` column.
+	 *
+	 * Everything a record wants to keep that has no column of its own — the
+	 * user agent of a rejected request, the reason a fail-open happened — is
+	 * stored as JSON here. Reading it with `$row->ua` returns null forever and
+	 * looks like "there is no evidence", which is how a diagnosis turns into a
+	 * guess without anyone noticing.
+	 *
+	 * @param object|array<string,mixed> $row   Row from query().
+	 * @param string                     $key   Meta key.
+	 * @param string                     $default Value when absent.
+	 */
+	public static function metaOf( $row, string $key, string $default = '' ): string {
+		$meta = '';
+
+		if ( is_object( $row ) && isset( $row->meta ) ) {
+			$meta = (string) $row->meta;
+		} elseif ( is_array( $row ) && isset( $row['meta'] ) ) {
+			$meta = (string) $row['meta'];
+		}
+
+		if ( '' === $meta ) {
+			return $default;
+		}
+
+		$decoded = json_decode( $meta, true );
+
+		if ( ! is_array( $decoded ) || ! array_key_exists( $key, $decoded ) ) {
+			return $default;
+		}
+
+		$value = $decoded[ $key ];
+
+		return is_scalar( $value ) ? (string) $value : $default;
+	}
+
+	/**
 	 * @return object[]
 	 */
 	public function query( array $args = array() ): array {

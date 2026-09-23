@@ -760,17 +760,17 @@ final class SelfTest {
 		$rejected = $this->captchaRejects( 7 );
 
 		if ( $rejected['total'] > 0 ) {
+			$rows[] = $this->captchaRejectRow( $rejected );
+		}
+
+		if ( $rejected['failOpen'] > 0 ) {
 			$rows[] = $this->row(
-				__( 'ردشدن به‌خاطر کپچا (۷ روز)', 'tisa-otp' ),
-				number_format_i18n( $rejected['total'] ) . ' ' . __( 'درخواست', 'tisa-otp' ),
-				$rejected['captcha'] > 0 ? 'fail' : 'warn',
-				$rejected['captcha'] > 0
-					? sprintf(
-						/* translators: %d: number of requests */
-						__( '%d درخواست بدون توکن کپچا رسیده است؛ ویجت در مرورگر کاربران بارگذاری نشده. جایگزین: نشانی اسکریپت یا خاموش کردن کپچا.', 'tisa-otp' ),
-						$rejected['captcha']
-					)
-					: __( 'هیچ‌کدام به‌خاطر نبود توکن کپچا نبوده؛ محدودیت‌های دیگر کاربران را رد کرده‌اند.', 'tisa-otp' )
+				__( 'عبور بدون کپچا (۷ روز)', 'tisa-otp' ),
+				number_format_i18n( $rejected['failOpen'] ) . ' ' . __( 'درخواست', 'tisa-otp' ),
+				'success' === $rejected['failOpenReason'] ? 'warn' : 'info',
+				'success' === $rejected['failOpenReason']
+					? __( 'سرویس کپچا از سمت سرور پاسخ نداد و «باز ماندن ورود» روشن است؛ هانی‌پات و سقف ارسال همچنان اعمال شدند.', 'tisa-otp' )
+					: __( 'مرورگر این کاربران نتوانست کپچا را بیاورد و «باز ماندن ورود» روشن است؛ هانی‌پات و سقف ارسال همچنان اعمال شدند.', 'tisa-otp' )
 			);
 		}
 
@@ -789,21 +789,35 @@ final class SelfTest {
 	}
 
 	/**
-	 * How many requests the guard turned away, and how many of them because the
-	 * captcha token was never there.
+	 * How many requests the guard turned away — and, for the ones without a
+	 * captcha token, who was on the other end.
+	 *
+	 * The old row counted `captcha_missing` and then said the widget had not
+	 * loaded in users' browsers. That was a guess, it was often wrong (a script
+	 * posting to the endpoint has no browser at all), and it contradicted the
+	 * green «بارگذاری در مرورگر» row three lines above it in the same window.
+	 * The user agent is recorded with each rejection now, so the sentence can be
+	 * about what actually happened.
 	 *
 	 * @param int $days Window.
-	 * @return array{total:int,captcha:int}
+	 * @return array{total:int,captcha:int,browser:int,script:int,refused:int,failOpen:int,failOpenReason:string}
 	 */
 	private function captchaRejects( int $days ): array {
+		$out = array(
+			'total'          => 0,
+			'captcha'        => 0,
+			'browser'        => 0,
+			'script'         => 0,
+			'refused'        => 0,
+			'failOpen'       => 0,
+			'failOpenReason' => '',
+		);
+
 		$tally = $this->logs->tally( 'guard.rejected', $days );
-		$total = 0;
 
 		foreach ( (array) $tally as $count ) {
-			$total += (int) $count;
+			$out['total'] += (int) $count;
 		}
-
-		$captcha = 0;
 
 		foreach ( $this->logs->query(
 			array(
@@ -812,14 +826,114 @@ final class SelfTest {
 				'limit' => 500,
 			)
 		) as $row ) {
-			if ( isset( $row->error_code ) && 'captcha_missing' === $row->error_code ) {
-				$captcha++;
+			$code = isset( $row->error_code ) ? (string) $row->error_code : '';
+
+			if ( 'captcha_missing' === $code ) {
+				$out['captcha']++;
+
+				if ( $this->looksLikeBrowser( LogStore::metaOf( $row, 'ua' ) ) ) {
+					$out['browser']++;
+				} else {
+					$out['script']++;
+				}
+
+				continue;
+			}
+
+			if ( 0 === strpos( $code, 'captcha_' ) ) {
+				$out['refused']++;
 			}
 		}
 
-		return array(
-			'total'   => $total,
-			'captcha' => $captcha,
+		foreach ( $this->logs->query(
+			array(
+				'event' => 'captcha.fail_open',
+				'hours' => $days * 24,
+				'limit' => 500,
+			)
+		) as $row ) {
+			$out['failOpen']++;
+
+			$reason = LogStore::metaOf( $row, 'reason' );
+			$out['failOpenReason'] = '' !== $reason ? $reason : ( isset( $row->error_code ) ? (string) $row->error_code : '' );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Did this rejection come from a browser, or from something holding a script?
+	 *
+	 * It is a heuristic and it is labelled as one: every browser sends a user
+	 * agent, and a bot hitting the endpoint directly usually sends `curl`, a
+	 * library name, or nothing at all. The point is not to be certain — it is to
+	 * stop telling the administrator something about their visitors that the
+	 * evidence does not support.
+	 */
+	private function looksLikeBrowser( string $ua ): bool {
+		$ua = strtolower( trim( $ua ) );
+
+		if ( '' === $ua ) {
+			return false;
+		}
+
+		foreach ( array( 'curl', 'wget', 'python', 'java/', 'go-http', 'okhttp', 'axios', 'node-fetch', 'postman', 'guzzle', 'libwww', 'httpclient' ) as $library ) {
+			if ( false !== strpos( $ua, $library ) ) {
+				return false;
+			}
+		}
+
+		return false !== strpos( $ua, 'mozilla' );
+	}
+
+	/**
+	 * The row, in the words its own evidence supports.
+	 *
+	 * @param array<string,mixed> $rejected Counts from captchaRejects().
+	 */
+	private function captchaRejectRow( array $rejected ): array {
+		$total   = (int) $rejected['total'];
+		$missing = (int) $rejected['captcha'];
+		$browser = (int) $rejected['browser'];
+		$script  = (int) $rejected['script'];
+		$refused = (int) $rejected['refused'];
+
+		if ( 0 === $missing ) {
+			return $this->row(
+				__( 'ردشدن به‌خاطر کپچا (۷ روز)', 'tisa-otp' ),
+				number_format_i18n( $total ) . ' ' . __( 'درخواست', 'tisa-otp' ),
+				'info',
+				sprintf(
+					/* translators: %d: number of requests whose token the provider refused */
+					__( 'کپچا نبود؛ %d درخواست توکن داشت و سرویس ردش کرد (امتیاز پایین یا توکن تکراری).', 'tisa-otp' ),
+					$refused
+				)
+			);
+		}
+
+		$status = $browser > 0 ? 'fail' : 'ok';
+
+		$note = $script > 0
+			? sprintf(
+				/* translators: %d: number of requests that carried no user agent of a browser */
+				__( '%d درخواست از ربات یا اسکریپت بود (بدون مرورگر)؛ کپچا کار خودش را کرد.', 'tisa-otp' ),
+				$script
+			)
+			: '';
+
+		if ( $browser > 0 ) {
+			$note .= ( '' !== $note ? ' ' : '' ) . sprintf(
+				/* translators: %d: number of requests that came from a real browser without a token */
+				__( '%d درخواست از مرورگر واقعی بود و توکن نرسید؛ اگر تکرار شد «باز ماندن ورود» یا نشانی جایگزین اسکریپت را ببینید.', 'tisa-otp' ),
+				$browser
+			);
+		}
+
+		return $this->row(
+			__( 'ردشدن به‌خاطر کپچا (۷ روز)', 'tisa-otp' ),
+			number_format_i18n( $total ) . ' ' . __( 'درخواست', 'tisa-otp' ),
+			$status,
+			$note
 		);
 	}
 

@@ -975,7 +975,8 @@ function testThePanelKeepsItsOwnPromises() {
 	check('and it respects the site that blocked outbound HTTP', /Transport::blockFailure\( \$host \)/.test(selfTest) && /WP_HTTP_BLOCK_EXTERNAL/.test(transport));
 	check('the self-test says which channel the site sends with', /کانال ارسال کد/.test(selfTest));
 	check('a gateway whose last send failed is not called ready', /\$status = 'fail';/.test(selfTest) && /\$health && empty\( \$health\['ok'\] \)/.test(selfTest));
-	check('the captcha rejects are counted, not guessed', /private function captchaRejects\( int \$days \)/.test(selfTest) && /'captcha_missing' === \$row->error_code/.test(selfTest));
+	check('the captcha rejects are counted, and split by who sent them', /private function captchaRejects\( int \$days \)/.test(selfTest) && /function looksLikeBrowser/.test(selfTest) && /'captcha_missing' === \$code/.test(selfTest));
+	check('so the row can no longer blame the visitors’ browsers', /private function captchaRejectRow/.test(selfTest) && selfTest.indexOf('ویجت در مرورگر کاربران بارگذاری نشده') < 0);
 
 	check('the browser test has a suite of its own, in CI', /php tests\/php\/transport-test\.php/.test(read('.github', 'workflows', 'ci.yml')));
 	check('and that suite covers the sentences hosts really produce', transportTest.indexOf('Could not resolve host') >= 0 && transportTest.indexOf('Connection refused') >= 0 && transportTest.indexOf('SSL certificate problem') >= 0);
@@ -1249,6 +1250,51 @@ function testTheBlockHasAnAnswer() {
 	check('and is documented in the test README', /direct-send-test\.php/.test(read('tests', 'README.md')));
 }
 
+/*
+ * Round 12: the owner's security modal said «۲ درخواست بدون توکن کپچا … ویجت
+ * در مرورگر کاربران بارگذاری نشده» three lines under a green «کپچا درست
+ * بارگذاری شد». The count was real, the sentence was a guess, and the client
+ * was feeding it: an empty token was posted as if it were a token, so the
+ * server had no way to tell an outage from a robot.
+ */
+function testTheCaptchaKnowsWhoItIsTalkingTo() {
+	scenario('a captcha that cannot load is not the visitor’s fault');
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const front = read('tisa-otp', 'assets', 'js', 'front.js');
+	const guard = read('tisa-otp', 'src', 'Guard', 'CaptchaGuard.php');
+	const pipeline = read('tisa-otp', 'src', 'Guard', 'Pipeline.php');
+	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
+	const store = read('tisa-otp', 'src', 'Log', 'LogStore.php');
+	const ci = read('.github', 'workflows', 'ci.yml');
+	const readme = read('tests', 'README.md');
+
+	// 1. The client: a token, or an honest failure — never '' dressed as one.
+	check('a v3 token that never arrives is retried once', /self\.pause\(600\)\.then\(once\)/.test(front));
+	check('and then reported as an outage instead of sent as empty', /Captcha\.prototype\.missing = function/.test(front) && /this\.state = 'unavailable'/.test(front));
+	check('the state travels with the request', /body\.captcha_state = self\.captcha\.state/.test(front));
+	check('and is cleared on the retry, so a stale claim cannot ride along', /delete body\.captcha_state;/.test(front));
+	check('with fail-open off, nothing is sent at all', /if \(!this\.conf\.failOpen\) \{\s*return Promise\.reject\(this\.error\(\)\);/.test(front));
+
+	// 2. The server: the claim is worth exactly what the admin's setting grants.
+	check('the guard reads the browser’s state', /const STATE_UNAVAILABLE = 'unavailable'/.test(guard) && /function browserOutage/.test(guard));
+	check('it refuses the claim while fail-open is off', /if \( ! \$this\->captcha\->failOpen\(\) \) \{\s*return false;/.test(guard));
+	check('an accepted outage is logged as a fail-open with its own reason', /'reason'\s*=> 'browser_unavailable'/.test(guard));
+	check('and the guard still asks the provider for a real token', /return \$provider->verify\( \$token, \$ip \)/.test(read('tisa-otp', 'src', 'Captcha', 'Manager.php')));
+
+	// 3. The evidence the diagnosis needs.
+	check('rejections record the user agent', /'ua'\s*=> substr\( trim\( \$request->userAgent\(\) \), 0, 200 \)/.test(pipeline));
+	check('and the reader goes through the meta column, not a property that never exists', /public static function metaOf/.test(store) && /LogStore::metaOf\( \$row, 'ua' \)/.test(selfTest));
+	check('the row is split by who sent the request', /function looksLikeBrowser/.test(selfTest) && /function captchaRejectRow/.test(selfTest));
+	check('and the old sentence that blamed the visitors is gone', selfTest.indexOf('ویجت در مرورگر کاربران بارگذاری نشده') < 0);
+	check('bots are reported as the captcha working', /از ربات یا اسکریپت بود/.test(selfTest));
+	check('the passes granted during an outage are counted too', /عبور بدون کپچا/.test(selfTest));
+
+	// 4. It is a test in CI, not a claim.
+	check('the captcha suite runs in CI', /php tests\/php\/captcha-test\.php/.test(ci));
+	check('and is documented', /captcha-test\.php/.test(readme));
+}
+
 async function main() {
 	await testStepBar();
 	await testActionableErrors();
@@ -1260,6 +1306,7 @@ async function main() {
 	await testSmsIrAgainstItsDocumentation();
 	await testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess();
 	await testTheBlockHasAnAnswer();
+	await testTheCaptchaKnowsWhoItIsTalkingTo();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

@@ -159,6 +159,14 @@
 	function Captcha(root, conf) {
 		this.conf = conf || {};
 		this.config = this.conf.config || {};
+		/*
+		 * Why the last attempt produced no token. The server cannot see the
+		 * browser, so this is the only party that can report "the challenge never
+		 * became available here" — and it is reported, not assumed: the guard only
+		 * acts on it for an administrator who chose to stay open during an outage.
+		 */
+		this.state = '';
+
 		this.container = $(root, '[data-tisa-captcha]');
 		this.widgetId = null;
 		this.token = '';
@@ -517,21 +525,19 @@
 	Captcha.prototype.value = function () {
 		var self = this;
 
+		this.state = '';
+
 		if (!this.enabled()) {
 			return Promise.resolve('');
 		}
 
 		if (this.unavailable) {
-			return this.conf.failOpen ? Promise.resolve('') : Promise.reject(this.error());
+			return this.missing();
 		}
 
 		return this.prepare().then(function (ok) {
 			if (!ok) {
-				if (self.conf.failOpen) {
-					return '';
-				}
-
-				throw self.error();
+				return self.missing();
 			}
 
 			if (self.isScore()) {
@@ -540,6 +546,29 @@
 
 			return self.widgetToken();
 		});
+	};
+
+	/**
+	 * The challenge never became usable in this browser.
+	 *
+	 * Two very different things used to happen here, and both were wrong: the
+	 * form was sent with an empty token (so the server logged a rejection that
+	 * looked like a bot), or the visitor was stopped with a message about their
+	 * own identity. What is true is that the service — not the visitor — is
+	 * unreachable from here, which is exactly the case `failOpen` exists for.
+	 *
+	 * With fail-open on, the request goes without a token and says why. With it
+	 * off, the visitor is told, and nothing is sent: a rejection nobody asked for
+	 * would only land in the administrator's statistics as a mystery.
+	 */
+	Captcha.prototype.missing = function () {
+		if (!this.conf.failOpen) {
+			return Promise.reject(this.error());
+		}
+
+		this.state = 'unavailable';
+
+		return Promise.resolve('');
 	};
 
 	Captcha.prototype.error = function () {
@@ -555,39 +584,67 @@
 		var lib = this.library();
 
 		if (!lib || !lib.execute) {
-			return this.conf.failOpen ? '' : Promise.reject(this.error());
+			return this.missing();
 		}
 
-		return new Promise(function (resolve) {
-			var call = function () {
-				var outcome;
+		var once = function () {
+			return new Promise(function (resolve) {
+				var call = function () {
+					var outcome;
 
-				try {
-					outcome = lib.execute(self.siteKey(), { action: self.config.action || 'tisa_otp_send' });
-				} catch (error) {
-					resolve('');
-					return;
-				}
-
-				if (outcome && 'function' === typeof outcome.then) {
-					outcome.then(function (token) {
-						resolve(token || '');
-					}).catch(function () {
+					try {
+						outcome = lib.execute(self.siteKey(), { action: self.config.action || 'tisa_otp_send' });
+					} catch (error) {
 						resolve('');
-					});
+						return;
+					}
 
+					if (outcome && 'function' === typeof outcome.then) {
+						outcome.then(function (token) {
+							resolve(token || '');
+						}).catch(function () {
+							resolve('');
+						});
+
+						return;
+					}
+
+					resolve(typeof outcome === 'string' ? outcome : '');
+				};
+
+				if ('function' === typeof lib.ready) {
+					lib.ready(call);
 					return;
 				}
 
-				resolve(typeof outcome === 'string' ? outcome : '');
-			};
+				call();
+			});
+		};
 
-			if ('function' === typeof lib.ready) {
-				lib.ready(call);
-				return;
+		return once().then(function (token) {
+			if (token) {
+				return token;
 			}
 
-			call();
+			/*
+			 * v3 mints a token per request over the network, and that request can
+			 * simply time out once — a cold connection, a filtered host, a phone
+			 * waking up. One retry after a short pause turns almost all of those
+			 * into a token; without it the form was posted with an empty token and
+			 * the server recorded a rejection that looked like a bot.
+			 */
+			return self.pause(600).then(once).then(function (again) {
+				return again ? again : self.missing();
+			});
+		});
+	};
+
+	/**
+	 * A pause, so a retry is not a hammer.
+	 */
+	Captcha.prototype.pause = function (ms) {
+		return new Promise(function (resolve) {
+			setTimeout(resolve, ms);
 		});
 	};
 
@@ -998,6 +1055,16 @@
 				body.captcha_token = token;
 			}
 
+			/*
+			 * No token, and the browser knows why. Saying it is what lets the
+			 * server tell an outage apart from a robot with a script.
+			 */
+			delete body.captcha_state;
+
+			if (!token && self.captcha.state) {
+				body.captcha_state = self.captcha.state;
+			}
+
 			return self.send(route, body);
 		}).then(function (result) {
 			/*
@@ -1027,6 +1094,7 @@
 
 					// A consumed token is worthless — let the captcha mint a new one.
 					delete body.captcha_token;
+					delete body.captcha_state;
 
 					return self.request(route, payload, true);
 				});

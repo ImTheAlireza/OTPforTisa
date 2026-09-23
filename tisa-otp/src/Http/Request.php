@@ -54,8 +54,13 @@ final class Request {
 		return new self( $phone, $ip, $params, $user instanceof \WP_User && $user->exists() ? $user : null, $agent );
 	}
 
-	public static function make( string $phone, string $ip, array $data = array(), ?\WP_User $user = null ): self {
-		return new self( Phone::normalize( $phone ), $ip, $data, $user, '' );
+	/**
+	 * @param string $userAgent Optional, because a request built in a test or a
+	 *                          CLI tool has no browser behind it — which is
+	 *                          itself a fact the captcha diagnosis reports.
+	 */
+	public static function make( string $phone, string $ip, array $data = array(), ?\WP_User $user = null, string $userAgent = '' ): self {
+		return new self( Phone::normalize( $phone ), $ip, $data, $user, substr( $userAgent, 0, 200 ) );
 	}
 
 	public function phone(): string {

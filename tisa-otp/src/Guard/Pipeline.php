@@ -128,6 +128,14 @@ final class Pipeline {
 						'error_code' => $rejection->errorCode(),
 						'phone'      => $request->phone(),
 						'ip'         => $request->ip(),
+						/*
+						 * Who was on the other end. A rejection without a token is a robot
+						 * when it arrives from a script and a visitor when it arrives from a
+						 * browser — and the difference is the whole answer this row gives
+						 * the administrator, who was told "users' widgets did not load"
+						 * for requests that had no browser at all.
+						 */
+						'ua'         => substr( trim( $request->userAgent() ), 0, 200 ),
 					)
 				);
 
