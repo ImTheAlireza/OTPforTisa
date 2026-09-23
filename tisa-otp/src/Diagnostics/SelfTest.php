@@ -1338,6 +1338,20 @@ final class SelfTest {
 			);
 
 			if ( $enabled ) {
+				$hides  = \TisaOtp\Integrations\WoodMart::hidesAccountBlock( $this->settings );
+				$closed = ! $this->settings->bool( 'woodmart_account_block', true );
+
+				$rows[] = $this->row(
+					__( 'بخش «ساخت حساب» وودمارت', 'tisa-otp' ),
+					$hides ? __( 'برداشته می‌شود', 'tisa-otp' ) : __( 'می‌ماند', 'tisa-otp' ),
+					$hides ? 'ok' : 'info',
+					$hides
+						? __( 'آیکن، متن و لینک ساخت حساب وودمارت از پنل برداشته می‌شود؛ فرم افزونه خودش عضویت می‌سازد.', 'tisa-otp' )
+						: ( $closed
+							? __( 'خودتان خواسته‌اید این بخش بماند.', 'tisa-otp' )
+							: __( 'چون عضویت در فرم افزونه خاموش است، این بخش می‌ماند تا راه ثبت‌نام باز بماند.', 'tisa-otp' ) )
+				);
+
 				$rows[] = $this->row(
 					__( 'فرم رمز عبور وودمارت', 'tisa-otp' ),
 					'replace' === $this->settings->str( 'woodmart_mode', 'replace' ) ? __( 'جایگزین می‌شود', 'tisa-otp' ) : __( 'می‌ماند', 'tisa-otp' ),

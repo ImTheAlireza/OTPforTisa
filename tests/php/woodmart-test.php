@@ -76,11 +76,23 @@ function woodmart_sidebar_login_form(): void {
  * The panel markup, copied in shape from the theme (6.x): the wrapper, the
  * heading, the login form, and the "create an account" block.
  */
-function tisa_woodmart_panel(): string {
+function tisa_woodmart_panel( string $extra = '' ): string {
+	return str_replace( '</div>\nHTML', $extra . '</div>\nHTML', tisa_woodmart_panel_base() );
+}
+
+/**
+ * The panel WoodMart 8.x prints: `login-form-side wd-side-hidden woocommerce`,
+ * a `wd-heading`, the login form, and the sign-up block the owner wants gone.
+ *
+ * The block carries the avatar as a CSS pseudo-element on the same element, so
+ * one element is all three things the eye sees.
+ */
+function tisa_woodmart_panel_base(): string {
 	return <<<'HTML'
-<div class="login-form-side wd-side-hidden wd-right">
-	<div class="widget-heading">
+<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light">
+	<div class="wd-heading">
 		<span class="title">Sign in</span>
+		<div class="close-side-widget"><a href="#" rel="nofollow">Close</a></div>
 	</div>
 	<form method="post" class="login woocommerce-form woocommerce-form-login hidden-form">
 		<p class="form-row form-row-username"><input type="text" name="username"></p>
@@ -101,12 +113,15 @@ HTML;
 function tisa_woodmart( array $extra = array() ): WoodMart {
 	$GLOBALS['tisa_options']['tisa_otp_settings'] = array_merge(
 		array(
-			'captcha_provider'   => 'none',
-			'captcha_site_key'   => '',
-			'captcha_secret_key' => '',
-			'woodmart_sidebar'   => '1',
-			'woodmart_mode'      => 'replace',
-			'login_redirect'     => '',
+			'captcha_provider'       => 'none',
+			'captcha_site_key'       => '',
+			'captcha_secret_key'     => '',
+			'woodmart_sidebar'       => '1',
+			'woodmart_mode'          => 'replace',
+			'woodmart_account_block' => '1',
+			'registration_enabled'   => '1',
+			'auth_mode'              => 'smart',
+			'login_redirect'         => '',
 		),
 		$extra
 	);
@@ -121,6 +136,22 @@ function tisa_woodmart( array $extra = array() ): WoodMart {
 		new FormRenderer( $settings, new FieldSchema( $settings ), $captcha, new View(), $assets ),
 		$assets
 	);
+}
+
+/**
+ * A `Settings` object built from these values.
+ */
+function tisa_woodmart_settings( array $values ): Settings {
+	$GLOBALS['tisa_options']['tisa_otp_settings'] = array_merge(
+		array(
+			'woodmart_account_block' => '1',
+			'registration_enabled'   => '1',
+			'auth_mode'              => 'smart',
+		),
+		$values
+	);
+
+	return new Settings();
 }
 
 /** Not signed in, not in the admin: the state the panel exists in. */
@@ -162,8 +193,10 @@ $swapped     = $integration->swap( $before . $panel . '<div id="cookie-banner">c
 tisa_check( 'output that is not the panel is returned untouched', $before . '<div id="cookie-banner">cookies</div>' === $integration->swap( $before . '<div id="cookie-banner">cookies</div>' ) );
 tisa_check( 'a second pass does not inject twice', $integration->swap( $panel ) === $panel );
 tisa_check( 'and the untouched case keeps every byte', false !== strpos( $swapped, '<div id="cookie-banner">cookies</div>' ) && 0 === strpos( $swapped, $before ) );
-tisa_check( 'the panel itself survives', false !== strpos( $swapped, 'login-form-side' ) && false !== strpos( $swapped, 'widget-heading' ) );
-tisa_check( 'and so does the theme\'s create-an-account block', false !== strpos( $swapped, 'create-account-question' ) );
+tisa_check( 'the panel itself survives', false !== strpos( $swapped, 'login-form-side' ) && false !== strpos( $swapped, 'wd-heading' ) );
+tisa_check( 'and so does the theme\'s close button', false !== strpos( $swapped, 'close-side-widget' ) );
+tisa_check( 'the theme\'s sign-up block is gone', false === strpos( $swapped, 'create-account-question' ) );
+tisa_check( 'with it, the avatar, the question and the link it carries', false === strpos( $swapped, 'create-account-button' ) && false === strpos( $swapped, 'No account yet' ) );
 
 /* -------------------------------------------------------------------------
  * 3. The swap is real: their form out, ours in
@@ -172,7 +205,7 @@ tisa_check( 'and so does the theme\'s create-an-account block', false !== strpos
 tisa_check( 'the theme\'s username/password form is gone', false === strpos( $swapped, 'woocommerce-form-login' ) );
 tisa_check( 'and no password field is left behind', false === strpos( $swapped, 'name="password"' ) );
 tisa_check( 'the plugin\'s form is in its place', false !== strpos( $swapped, 'data-tisa-form' ) );
-tisa_check( 'where the theme\'s form was — between heading and create-account block', strpos( $swapped, 'widget-heading' ) < strpos( $swapped, 'data-tisa-form' ) && strpos( $swapped, 'data-tisa-form' ) < strpos( $swapped, 'create-account-question' ) );
+tisa_check( 'where the theme\'s form was — after the heading, inside the panel', strpos( $swapped, 'wd-heading' ) < strpos( $swapped, 'data-tisa-form' ) && strpos( $swapped, 'data-tisa-form' ) < strrpos( $swapped, '</div>' ) );
 tisa_check( 'it is the same form the shortcode renders', false !== strpos( $swapped, 'tisa-otp tisa-skin' ) && false !== strpos( $swapped, 'tisa-otp__form' ) );
 tisa_check( 'carrying the sidebar class, so its CSS can be scoped', false !== strpos( $swapped, 'tisa-otp--woodmart' ) );
 tisa_check( 'it talks to the same REST route as everywhere else', false !== strpos( $swapped, 'data-endpoint=' ) );
@@ -186,11 +219,53 @@ tisa_check( 'the panel is a single panel, not two', 1 === substr_count( $swapped
 $appended = tisa_woodmart( array( 'woodmart_mode' => 'append' ) )->swap( $panel );
 
 tisa_check( 'in append mode the theme\'s form stays', false !== strpos( $appended, 'woocommerce-form-login' ) );
-tisa_check( 'and the OTP form is added above the create-account block', strpos( $appended, 'data-tisa-form' ) < strpos( $appended, 'create-account-question' ) );
-tisa_check( 'after the theme\'s own form, not inside it', strpos( $appended, 'woocommerce-form-login' ) < strpos( $appended, 'data-tisa-form' ) );
+tisa_check( 'and the OTP form is added where the sign-up block used to be', strpos( $appended, 'woocommerce-form-login' ) < strpos( $appended, 'data-tisa-form' ) );
+tisa_check( 'the sign-up block is gone in append mode too', false === strpos( $appended, 'create-account-question' ) );
 tisa_check(
 	'so nothing nests a form inside a form',
 	2 === substr_count( $appended, '<form' ) && 2 === substr_count( $appended, '</form>' ) && strpos( $appended, '</form>' ) < strpos( $appended, 'data-tisa-form' )
+);
+
+/* -------------------------------------------------------------------------
+ * 3b. The theme's sign-up block: when it goes, and when it stays
+ *
+ * The rule is one line of plain sense: two ways to sign up in one drawer is one
+ * too many, and the block is the only way to sign up when the plugin's own
+ * registration is switched off.
+ */
+
+$panel = tisa_woodmart_panel();
+
+tisa_check( 'the block goes by default', false === strpos( tisa_woodmart()->swap( $panel ), 'create-account-question' ) );
+tisa_check( 'and the decision reads the same from outside', true === WoodMart::hidesAccountBlock( new Settings() ) );
+
+tisa_check(
+	'it stays when the owner asked for it',
+	false === WoodMart::hidesAccountBlock( tisa_woodmart_settings( array( 'woodmart_account_block' => '0' ) ) )
+);
+tisa_check(
+	'and the block is really still there',
+	false !== strpos( tisa_woodmart( array( 'woodmart_account_block' => '0' ) )->swap( $panel ), 'create-account-question' )
+);
+tisa_check(
+	'it stays when the plugin cannot register at all',
+	false === WoodMart::hidesAccountBlock( tisa_woodmart_settings( array( 'registration_enabled' => '0' ) ) )
+);
+tisa_check(
+	'and when the form is login-only',
+	false === WoodMart::hidesAccountBlock( tisa_woodmart_settings( array( 'auth_mode' => 'login_only' ) ) )
+);
+tisa_check(
+	'so registration is never locked away behind a removed link',
+	false !== strpos( tisa_woodmart( array( 'registration_enabled' => '0' ) )->swap( $panel ), 'create-account-button' )
+);
+tisa_check(
+	'a form that only registers is the clearest case of all',
+	true === WoodMart::hidesAccountBlock( tisa_woodmart_settings( array( 'auth_mode' => 'register_only' ) ) )
+);
+tisa_check(
+	'and the form itself is still placed in the panel',
+	false !== strpos( tisa_woodmart( array( 'registration_enabled' => '0' ) )->swap( $panel ), 'data-tisa-form' )
 );
 
 /* -------------------------------------------------------------------------
@@ -206,6 +281,15 @@ tisa_check( 'in the right place', strpos( $handled, 'wd-heading' ) < strpos( $ha
 $noAnchor = '<div class="login-form-side"><p>nothing to hook onto</p></div>';
 
 tisa_check( 'a panel with no anchor at all is left exactly as it was', $noAnchor === tisa_woodmart()->swap( $noAnchor ) );
+tisa_check( 'and its own markup is not half-emptied either', false === strpos( tisa_woodmart()->swap( $noAnchor ), WoodMart::MARKER ) );
+
+/* --- a sign-up block with something inside it ---------------------------- */
+
+$nested = '<div class="login-form-side"><div class="create-account-question"><p>No account yet?</p><div class="wd-icon"><span>x</span></div><a href="#" class="create-account-button">Create</a></div><p id="after-block">end</p></div>';
+$cut    = tisa_woodmart()->swap( $nested );
+
+tisa_check( 'a block with a nested element goes whole, not half', false === strpos( $cut, 'No account yet' ) && false === strpos( $cut, 'create-account-button' ) && false === strpos( $cut, 'wd-icon' ) );
+tisa_check( 'and what came after it stays exactly where it was', false !== strpos( $cut, '<p id="after-block">end</p>' ) );
 
 /* -------------------------------------------------------------------------
  * 5. Registering the buffer: the priority comes from the theme, not from us
@@ -239,20 +323,34 @@ function tisa_woodmart_registry( array $callbacks ): void {
  * @return bool
  */
 function tisa_woodmart_wraps( string $hook, int $priority ): bool {
-	$wanted = array( $priority - 1, $priority + 1 );
-	$seen   = array();
+	$opened = false;
+	$closed = false;
 
 	foreach ( (array) $GLOBALS['tisa_hook_priorities'][ $hook ] as $entry ) {
-		if ( is_array( $entry['callback'] ) && 'close' === $entry['callback'][1] ) {
-			$seen['close'] = $entry['priority'];
+		if ( ! is_array( $entry['callback'] ) ) {
+			continue;
 		}
 
+		$opened = $opened || ( 'open' === $entry['callback'][1] && $priority - 1 === $entry['priority'] );
+		$closed = $closed || ( 'close' === $entry['callback'][1] && $priority + 1 === $entry['priority'] );
+	}
+
+	return $opened && $closed;
+}
+
+/**
+ * How many windows were opened on a hook — one per priority we cover.
+ */
+function tisa_woodmart_windows( string $hook ): int {
+	$count = 0;
+
+	foreach ( (array) $GLOBALS['tisa_hook_priorities'][ $hook ] as $entry ) {
 		if ( is_array( $entry['callback'] ) && 'open' === $entry['callback'][1] ) {
-			$seen['open'] = $entry['priority'];
+			$count++;
 		}
 	}
 
-	return isset( $seen['open'], $seen['close'] ) && $seen['open'] === $wanted[0] && $seen['close'] === $wanted[1];
+	return $count;
 }
 
 tisa_forget_filters();
@@ -283,7 +381,11 @@ tisa_forget_filters();
 $GLOBALS['wp_filter'] = array();
 tisa_woodmart()->wrap();
 
-tisa_check( 'with nothing to discover, the known windows are still covered', tisa_woodmart_wraps( 'wp_footer', 160 ) && tisa_woodmart_wraps( 'woodmart_before_wp_footer', 200 ) );
+tisa_check(
+	'with nothing to discover, the known windows are still covered',
+	tisa_woodmart_wraps( 'wp_footer', 160 ) && tisa_woodmart_wraps( 'wp_footer', 200 ) && tisa_woodmart_wraps( 'woodmart_before_wp_footer', 160 ) && tisa_woodmart_wraps( 'woodmart_before_wp_footer', 200 )
+);
+tisa_check( 'four windows, no more', 2 === tisa_woodmart_windows( 'wp_footer' ) && 2 === tisa_woodmart_windows( 'woodmart_before_wp_footer' ) );
 
 /* A logged-in visitor, or a switched-off integration: no hooks at all. */
 tisa_forget_filters();
@@ -316,6 +418,23 @@ $GLOBALS['tisa_whb'] = array( 'account' => array( 'login_dropdown' => true, 'for
 tisa_check( 'with the side form chosen, the integration runs', true === tisa_woodmart()->willRender() );
 
 /* -------------------------------------------------------------------------
+ * 6b. The account page, where the theme itself prints no panel
+ */
+
+$GLOBALS['tisa_is_account_page'] = true;
+
+tisa_check( 'on the account page the theme prints nothing, so we do nothing', false === tisa_woodmart()->willRender() );
+
+$GLOBALS['tisa_hooks'] = array();
+tisa_woodmart()->wrap();
+
+tisa_check( 'and nothing is buffered for a panel that will not be there', array() === $GLOBALS['tisa_hooks'] );
+
+$GLOBALS['tisa_is_account_page'] = false;
+
+tisa_check( 'off that page, the panel is served again', true === tisa_woodmart()->willRender() );
+
+/* -------------------------------------------------------------------------
  * 7. The redirect, and the promise that no theme file is written
  */
 
@@ -335,6 +454,9 @@ tisa_check(
 
 $source = (string) file_get_contents( TISA_OTP_PATH . 'src/Integrations/WoodMart.php' );
 
+$stylesheet = (string) file_get_contents( TISA_OTP_PATH . 'assets/css/front.css' );
+
+tisa_check( 'the theme\'s sign-up block is removed by markup, not hidden with CSS', false === strpos( $stylesheet, 'create-account-question' ) );
 tisa_check( 'the integration never writes into the theme', false === strpos( $source, 'file_put_contents' ) && false === strpos( $source, 'WP_Filesystem' ) && false === strpos( $source, 'fopen(' ) );
 tisa_check( 'and never reaches for a theme template path', false === strpos( $source, 'get_template_directory' ) && false === strpos( $source, 'get_stylesheet_directory' ) );
 tisa_check( 'it calls the theme only through functions that exist', 3 <= substr_count( $source, 'function_exists(' ) );
@@ -353,6 +475,8 @@ tisa_check( 'the settings screen has the switch', false !== strpos( $screen, "'w
 tisa_check( 'and the mode control', false !== strpos( $screen, "'woodmart_mode'" ) );
 tisa_check( 'and says when the theme is not there', false !== strpos( $screen, 'WoodMart::detected()' ) );
 tisa_check( 'the store test reports the panel state', false !== strpos( $selfTest, 'سایدبار ورود وودمارت' ) );
+tisa_check( 'and the sign-up block decision', false !== strpos( $selfTest, 'بخش «ساخت حساب» وودمارت' ) && false !== strpos( $selfTest, 'WoodMart::hidesAccountBlock' ) );
+tisa_check( 'the settings screen can turn the removal off', false !== strpos( $screen, "'woodmart_account_block'" ) );
 tisa_check( 'and the theme\'s version with it', false !== strpos( $selfTest, 'WoodMart::detected()' ) && false !== strpos( $selfTest, 'themeVersion' ) );
 
 $handled = tisa_woodmart()->swap( tisa_woodmart_panel() );

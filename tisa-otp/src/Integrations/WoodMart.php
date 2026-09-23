@@ -23,6 +23,12 @@
  * theme that prints its own — nothing is captured longer than one call, nothing
  * is injected, and the site behaves exactly as it did before.
  *
+ * The theme's own "No account yet? / Create an Account" block goes the same way
+ * when the plugin's form can register: two ways to sign up in one drawer is one
+ * too many, and the block's avatar, text and link are a single element. When the
+ * plugin's registration is switched off the block stays, because then it is the
+ * only way to sign up from that panel.
+ *
  * The form itself is the same one the shortcode renders: same renderer, same
  * REST routes, same OTP flow, same captcha, same stylesheet. Nothing about it is
  * re-implemented here.
@@ -47,14 +53,23 @@ final class WoodMart implements Bootable {
 	/** Where WoodMart has printed that callback across its versions. */
 	const HOOKS = array( 'woodmart_before_wp_footer', 'wp_footer' );
 
-	/** The fallback window per hook, used when discovery finds nothing. */
+	/**
+	 * The fallback windows per hook, used when discovery finds nothing.
+	 *
+	 * WoodMart has printed the panel at 160 (6.x, and again in 8.x) and at 200
+	 * (the vendor's own 2024 snippet); both are covered, on both hooks, because
+	 * an unused window costs one `ob_start()` and nothing else.
+	 */
 	const FALLBACK = array(
-		'woodmart_before_wp_footer' => 200,
-		'wp_footer'                 => 160,
+		'woodmart_before_wp_footer' => array( 160, 200 ),
+		'wp_footer'                 => array( 160, 200 ),
 	);
 
 	/** A comment in the output, so anyone reading the page can see where it came from. */
 	const MARKER = 'tisa-otp: woodmart login sidebar';
+
+	/** The theme's sign-up block, as WoodMart prints it. */
+	const ACCOUNT_BLOCK = '<div class="create-account-question"';
 
 	/** @var Settings */
 	private $settings;
@@ -65,8 +80,8 @@ final class WoodMart implements Bootable {
 	/** @var Assets */
 	private $assets;
 
-	/** @var bool Output buffering is open right now. */
-	private $buffering = false;
+	/** @var array<int,int> Buffer levels this integration opened and has not closed. */
+	private $buffers = array();
 
 	/** @var bool The sidebar has already been served this request. */
 	private $injected = false;
@@ -121,6 +136,33 @@ final class WoodMart implements Bootable {
 		return 'append' === $this->settings->str( 'woodmart_mode', 'replace' ) ? 'append' : 'replace';
 	}
 
+	/**
+	 * Should the theme's own "create an account" block go as well?
+	 *
+	 * It is one element — avatar, question and link — and it is redundant when
+	 * the plugin's form registers people itself. It stays when registration is
+	 * switched off in the plugin, because then it is the only way to sign up
+	 * from that drawer.
+	 *
+	 * Static so the settings screen and the store test ask the question exactly
+	 * the way this class answers it.
+	 */
+	public static function hidesAccountBlock( Settings $settings ): bool {
+		if ( ! $settings->bool( 'woodmart_account_block', true ) ) {
+			return false;
+		}
+
+		if ( ! $settings->bool( 'registration_enabled', true ) ) {
+			return false;
+		}
+
+		return 'login_only' !== $settings->str( 'auth_mode', 'smart' );
+	}
+
+	public function removesAccountBlock(): bool {
+		return self::hidesAccountBlock( $this->settings );
+	}
+
 	public function boot(): void {
 		/*
 		 * The theme name is read on every request regardless; a site without
@@ -152,6 +194,12 @@ final class WoodMart implements Bootable {
 	 */
 	public function willRender(): bool {
 		if ( ! $this->active() || is_admin() || is_user_logged_in() ) {
+			return false;
+		}
+
+		// The theme does not print the panel on the account page — the page has
+		// the form itself — so neither do we need its stylesheet there.
+		if ( function_exists( 'is_account_page' ) && is_account_page() ) {
 			return false;
 		}
 
@@ -216,11 +264,13 @@ final class WoodMart implements Bootable {
 			$targets = self::FALLBACK;
 		}
 
-		foreach ( $targets as $hook => $priority ) {
-			$priority = max( 0, (int) $priority );
+		foreach ( $targets as $hook => $priorities ) {
+			foreach ( (array) $priorities as $priority ) {
+				$priority = max( 0, (int) $priority );
 
-			add_action( $hook, array( $this, 'open' ), max( 0, $priority - 1 ), 0 );
-			add_action( $hook, array( $this, 'close' ), $priority + 1, 0 );
+				add_action( $hook, array( $this, 'open' ), max( 0, $priority - 1 ), 0 );
+				add_action( $hook, array( $this, 'close' ), $priority + 1, 0 );
+			}
 		}
 	}
 
@@ -230,7 +280,7 @@ final class WoodMart implements Bootable {
 	 * Read from the hook registry, so a theme update that moves the callback is
 	 * followed automatically instead of breaking the integration.
 	 *
-	 * @return array<string,int>
+	 * @return array<string,array<int,int>>
 	 */
 	private function locate(): array {
 		$found = array();
@@ -249,7 +299,7 @@ final class WoodMart implements Bootable {
 			foreach ( $registry->callbacks as $priority => $callbacks ) {
 				foreach ( (array) $callbacks as $callback ) {
 					if ( isset( $callback['function'] ) && self::CALLBACK === $callback['function'] ) {
-						$found[ $hook ] = (int) $priority;
+						$found[ $hook ][] = (int) $priority;
 						break;
 					}
 				}
@@ -264,26 +314,47 @@ final class WoodMart implements Bootable {
 	 * on the host, so the level is verified rather than assumed.
 	 */
 	public function open(): void {
-		if ( $this->buffering || $this->injected || ! $this->willRender() ) {
+		if ( $this->injected || ! $this->willRender() ) {
+			return;
+		}
+
+		/*
+		 * A buffer is already open for this request, which means this hook is
+		 * firing inside our own window — the outer buffer already has the
+		 * output, so there is nothing to add.
+		 */
+		if ( ! empty( $this->buffers ) ) {
 			return;
 		}
 
 		$level = ob_get_level();
 		ob_start();
 
-		$this->buffering = ob_get_level() > $level;
+		if ( ob_get_level() > $level ) {
+			$this->buffers[] = $level;
+		}
 	}
 
 	/**
 	 * Stop buffering and hand the panel back, with our form in it.
 	 */
 	public function close(): void {
-		if ( ! $this->buffering ) {
+		if ( empty( $this->buffers ) ) {
 			return;
 		}
 
-		$this->buffering = false;
-		$html            = ob_get_clean();
+		$level = (int) array_pop( $this->buffers );
+
+		/*
+		 * Only close a buffer we opened, and only when it is the one on top.
+		 * Anything else and this is somebody else's output, which is not ours
+		 * to swallow.
+		 */
+		if ( ob_get_level() !== $level + 1 ) {
+			return;
+		}
+
+		$html = ob_get_clean();
 
 		if ( false === $html ) {
 			return;
@@ -312,12 +383,37 @@ final class WoodMart implements Bootable {
 			return $html;
 		}
 
+		$placed = $this->withForm( $html, $block );
+
+		/*
+		 * Nowhere to put the form — a panel whose markup we do not recognise.
+		 * Half a job is worse than none: the panel is handed back untouched.
+		 */
+		if ( $placed === $html ) {
+			return $html;
+		}
+
+		$this->injected = true;
+
+		/*
+		 * The theme's own sign-up block goes last: in `append` mode the form is
+		 * placed directly above that very block.
+		 */
+		return $this->removeAccountBlock( $placed );
+	}
+
+	/**
+	 * Put the OTP form where the theme's form was, or above the sign-up block.
+	 *
+	 * @param string $html  Captured output.
+	 * @param string $block OTP form markup.
+	 * @return string
+	 */
+	private function withForm( string $html, string $block ): string {
 		if ( 'replace' === $this->mode() ) {
 			$replaced = $this->replaceForm( $html, $block );
 
 			if ( $replaced !== $html ) {
-				$this->injected = true;
-
 				return $replaced;
 			}
 		}
@@ -328,15 +424,52 @@ final class WoodMart implements Bootable {
 		 * The panel's own "create an account" block is the anchor: the OTP form
 		 * belongs directly above it, where the form was.
 		 */
-		$inserted = $this->insertBefore( $html, '<div class="create-account-question"', $block );
+		return $this->insertBefore( $html, '<div class="create-account-question"', $block );
+	}
 
-		if ( $inserted !== $html ) {
-			$this->injected = true;
-
-			return $inserted;
+	/**
+	 * Take the theme's "No account yet? / Create an Account" block out.
+	 *
+	 * One element carries all three parts the eye sees — the avatar is a CSS
+	 * pseudo-element on that same element — so removing it by markup removes
+	 * them together. Nothing is hidden with CSS: what is gone is gone.
+	 *
+	 * @param string $html Captured output.
+	 * @return string
+	 */
+	private function removeAccountBlock( string $html ): string {
+		if ( ! $this->removesAccountBlock() ) {
+			return $html;
 		}
 
-		return $html;
+		$at = strpos( $html, self::ACCOUNT_BLOCK );
+
+		if ( false === $at ) {
+			return $html;
+		}
+
+		// Scanning starts *after* the opening tag: counting it as a nested
+		// opening would hand back the panel's own closing tag as the match.
+		$tagEnd = strpos( $html, '>', $at );
+
+		if ( false === $tagEnd ) {
+			return $html;
+		}
+
+		$close = $this->matchingClose( $html, $tagEnd + 1, 'div' );
+
+		if ( $close < 0 ) {
+			return $html;
+		}
+
+		$start = $at;
+
+		// Take the indentation with it, so the panel does not end in blank lines.
+		while ( $start > 0 && false !== strpos( "\n\r\t ", $html[ $start - 1 ] ) ) {
+			$start--;
+		}
+
+		return substr( $html, 0, $start ) . substr( $html, $close + 6 );
 	}
 
 	/**
@@ -381,7 +514,7 @@ final class WoodMart implements Bootable {
 				continue;
 			}
 
-			$end = $this->matchingClose( $html, $tagEnd + 1 );
+			$end = $this->matchingClose( $html, $tagEnd + 1, 'form' );
 
 			if ( $end < 0 ) {
 				return $html;
@@ -394,32 +527,39 @@ final class WoodMart implements Bootable {
 	}
 
 	/**
-	 * The offset of the `</form>` that closes the form opened before `$from`.
+	 * The offset of the closing tag that matches the opening one before `$from`.
+	 *
+	 * Tags are counted rather than pattern-matched: nesting is the one thing a
+	 * regular expression is bad at, and getting it wrong would either cut a
+	 * panel in half or leave half a form behind.
 	 *
 	 * @param string $html Captured output.
 	 * @param int    $from Offset just past the opening tag.
+	 * @param string $tag  Element name, without brackets.
 	 * @return int Negative when there is no closing tag.
 	 */
-	private function matchingClose( string $html, int $from ): int {
+	private function matchingClose( string $html, int $from, string $tag ): int {
 		$depth = 1;
 		$at    = $from;
+		$open  = '<' . $tag;
+		$shut  = '</' . $tag . '>';
 
 		while ( $depth > 0 ) {
-			$open  = strpos( $html, '<form', $at );
-			$close = strpos( $html, '</form>', $at );
+			$next  = strpos( $html, $open, $at );
+			$close = strpos( $html, $shut, $at );
 
 			if ( false === $close ) {
 				return -1;
 			}
 
-			if ( false !== $open && $open < $close ) {
+			if ( false !== $next && $next < $close ) {
 				$depth++;
-				$at = $open + 5;
+				$at = $next + strlen( $open );
 				continue;
 			}
 
 			$depth--;
-			$at = $close + 7;
+			$at = $close + strlen( $shut );
 
 			if ( 0 === $depth ) {
 				return $close;

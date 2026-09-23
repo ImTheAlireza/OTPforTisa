@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۶.۰)</title>
+<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۶.۱)</title>
 <!-- Same stylesheet the plugin loads in wp-admin. -->
 <link rel="stylesheet" href="/plugin-assets/css/admin.css">
 <style>
@@ -30,7 +30,7 @@
 <body>
 
 <div class="demo-bar">
-	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۶.۰)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
+	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۶.۱)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
 	داده‌ها از سرور آزمایشی همین پیش‌نمایش می‌آیند.
 	<a href="/">فرم ورود</a> · <a href="/account">پنل کاربری</a> · <a href="/woodmart">سایدبار وودمارت</a> · <a href="/admin">پیشخوان</a> · <a href="#reports">گزارش‌ها</a>
 </div>
@@ -40,11 +40,11 @@
 	<div class="tisa-header">
 		<div class="tisa-header__title">
 			<h1>ابزارها و وضعیت</h1>
-			<p class="tisa-note">نسخهٔ ۱.۶.۰ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
+			<p class="tisa-note">نسخهٔ ۱.۶.۱ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
 		</div>
 		<div class="tisa-header__meta">
 			<span class="tisa-badge is-on">فعال</span>
-			<span class="tisa-badge">نسخه 1.6.0</span>
+			<span class="tisa-badge">نسخه 1.6.1</span>
 		</div>
 	</div>
 
@@ -214,6 +214,14 @@
 				<select><option selected>جایگزین شود</option><option>بماند (فرم OTP زیرش بیاید)</option></select>
 			</div>
 			<p class="tisa-row__hint">هیچ فایلی از پوسته تغییر نمی‌کند؛ فرم در همان جای پنل جایگزین می‌شود.</p>
+		</div>
+
+		<div class="tisa-row">
+			<div class="tisa-row__label">بخش «ساخت حساب» وودمارت</div>
+			<div class="tisa-row__control">
+				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>آیکن، متن و لینک «ساخت حساب» وودمارت هم برداشته شود</span></label>
+			</div>
+			<p class="tisa-row__hint">فرم خود افزونه عضویت دارد. اگر عضویت افزونه خاموش باشد، این بخش می‌ماند تا راه ثبت‌نام باز بماند.</p>
 		</div>
 
 		<div class="tisa-inline">

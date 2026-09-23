@@ -201,6 +201,7 @@ final class Settings {
 			// WoodMart visitor tries to sign in.
 			'woodmart_sidebar'       => '1',
 			'woodmart_mode'          => 'replace',
+			'woodmart_account_block' => '1',
 
 			'woo_account_form'       => '1',
 			'woo_checkout_gate'      => '0',

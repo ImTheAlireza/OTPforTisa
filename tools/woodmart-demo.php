@@ -28,18 +28,22 @@ $root = dirname( __DIR__ );
 require $root . '/tests/php/bootstrap.php';
 
 /**
- * The panel WoodMart prints, in the shape the theme prints it.
+ * The panel WoodMart prints, in the shape WoodMart 8.x prints it.
  *
  * Kept in step with `tests/php/woodmart-test.php`, which asserts the same
- * markup is what the integration expects to find.
+ * markup is what the integration expects to find. The sign-up block at the end
+ * carries its avatar as a `:before` pseudo-element in the theme's own CSS —
+ * which is why removing that one element removes all three things the panel
+ * shows: the avatar, the question and the link.
  */
 function tisa_demo_panel(): string {
 	return <<<'HTML'
-<div class="login-form-side wd-side-hidden wd-right color-scheme-light">
-	<div class="widget-heading">
-		<span class="title">ورود / ثبت‌نام</span>
-		<a href="#" class="close-side-widget">بستن</a>
+<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
+	<div class="wd-heading">
+		<span class="title">ورود</span>
+		<div class="close-side-widget"><a href="#" rel="nofollow">بستن</a></div>
 	</div>
+
 	<div class="widget woocommerce widget_shopping_cart_content"></div>
 	<div class="woocommerce-notices-wrapper"></div>
 	<form method="post" class="login woocommerce-form woocommerce-form-login hidden-form">
@@ -59,7 +63,7 @@ function tisa_demo_panel(): string {
 	</form>
 	<div class="create-account-question">
 		<p>هنوز حساب کاربری ندارید؟</p>
-		<a href="#?action=register" class="btn btn-style-link btn-color-primary create-account-button">ساخت حساب</a>
+		<a href="#?action=register" class="btn create-account-button">ایجاد حساب کاربری</a>
 	</div>
 </div>
 HTML;
@@ -207,21 +211,21 @@ HTML;
 		'wm-before',
 		'پیش از افزونه',
 		$before,
-		'این همان چیزی است که وودمارت خودش چاپ می‌کند: نام کاربری و گذرواژه.'
+		'این همان چیزی است که وودمارت خودش چاپ می‌کند: نام کاربری و گذرواژه، و پایین پنل آیکن و متن و لینک «ایجاد حساب کاربری».'
 	);
 
 	$body .= $drawer(
 		'wm-after',
 		'با افزونه، حالت «جایگزین شود»',
 		$after,
-		'فرم ووکامرس از داخل همان پنل برداشته می‌شود و فرم OTP جای آن می‌آید. عنوان، دکمهٔ بستن و بخش «ساخت حساب» دست‌نخورده‌اند.'
+		'فرم ووکامرس از داخل همان پنل برداشته می‌شود و فرم OTP جای آن می‌آید. بخش «ایجاد حساب کاربری» وودمارت هم می‌رود، چون فرم افزونه خودش عضویت می‌سازد؛ عنوان و دکمهٔ بستن دست‌نخورده‌اند.'
 	);
 
 	$body .= $drawer(
 		'wm-alongside',
 		'حالت «بماند»',
 		$alongside,
-		'اگر بخواهید ورود با گذرواژه هم بماند، فرم OTP زیر آن و بالای «ساخت حساب» می‌آید و هیچ فرمی داخل فرم دیگر نمی‌رود.'
+		'اگر بخواهید ورود با گذرواژه هم بماند، فرم OTP زیر آن می‌آید و هیچ فرمی داخل فرم دیگر نمی‌رود.'
 	);
 
 	return <<<HTML
@@ -280,8 +284,8 @@ HTML;
 		padding: 9px 16px; font: inherit; font-size: 14px; cursor: pointer;
 	}
 	/* چهارچوب پوسته: عنوان کشو، دکمهٔ بستن، و فرم قدیمی ووکامرس */
-	.wm-side .widget-heading { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; }
-	.wm-side .widget-heading .title { font-weight: 700; }
+	.wm-side .wd-heading { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; }
+	.wm-side .wd-heading .title { font-weight: 700; }
 	.wm-side .close-side-widget { color: #8d97a3; text-decoration: none; font-size: 13px; }
 	.wm-side form.login { display: grid; gap: 10px; padding: 0 20px 18px; }
 	.wm-side form.login label { display: block; font-size: 13px; color: #a9b1bc; margin-bottom: 4px; }
@@ -293,7 +297,13 @@ HTML;
 	.wm-side .woocommerce-form-login__submit {
 		background: #333941; color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font: inherit; cursor: pointer;
 	}
-	.wm-side .create-account-question { padding: 0 20px 22px; font-size: 14px; color: #a9b1bc; }
+	.wm-side .create-account-question { padding: 0 20px 22px; font-size: 14px; color: #a9b1bc; text-align: center; }
+	/* وودمارت همین آیکن را با فونت آیکن خودش روی همین عنصر می‌کشد؛ اینجا
+	   همان تصویر با یک SVG درون‌خطی بازسازی شده تا وابستگی به فونت پوسته نباشد. */
+	.wm-side .create-account-question:before {
+		content: ""; display: block; width: 54px; height: 54px; margin: 0 auto 14px;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9c0c9' stroke-width='1.3' stroke-linecap='round'%3E%3Ccircle cx='12' cy='7.6' r='3.6'/%3E%3Cpath d='M4.6 20.2c1.2-3.8 4.1-5.7 7.4-5.7s6.2 1.9 7.4 5.7'/%3E%3C/svg%3E") center / contain no-repeat;
+	}
 	.wm-side .create-account-question .create-account-button { color: #7fd1c8; text-decoration: none; }
 	.wm-side .woocommerce-notices-wrapper:empty { display: none; }
 </style>
