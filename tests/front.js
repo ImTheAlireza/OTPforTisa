@@ -1402,6 +1402,96 @@ function testTheFormLooksLikeItself() {
  * two things a shadow root could quietly break: events leaving the tree, and a
  * site that recolours the form from the outside.
  */
+async function testVendorStylesInsideShadow() {
+	scenario("a third-party widget's own stylesheet reaches the form inside its own tree");
+
+	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+	const cssFile = read('tisa-otp', 'assets', 'css', 'front.css');
+
+	/*
+	 * This is the screenshot that came back from a live site: ARCaptcha's
+	 * widget inside an isolated form rendered as bare markup, because its
+	 * stylesheet is injected into the page's <head> and a shadow root cannot
+	 * see the head. Its loader mark is an SVG with viewBox 0 0 621 363, so it
+	 * laid out at that size: a purple cloud across the form.
+	 */
+	const bundle = {
+		enabled: true,
+		provider: 'arcaptcha',
+		siteKey: 'arc-site-key',
+		kind: 'widget',
+		scripts: [],
+		failOpen: true,
+		config: { siteKey: 'arc-site-key', kind: 'widget', lang: 'fa', dir: 'rtl', theme: 'light' },
+	};
+
+	// A page that already carries the vendor's sheet — a second form, or a
+	// library that loaded before this one mounted.
+	const prewarmed = '<style id="arcaptcha-prewarm">.spinner-loader{display:flex;}</style>';
+
+	const ctx = await bootIsolated({
+		config: { isolate: true, css: '/plugin-assets/css/front.css', assets: '/plugin-assets/', captcha: bundle },
+		html: (source) => source.replace('</head>', prewarmed + '</head>'),
+		fetch: (request) => {
+			if (String(request.url).indexOf('.css') > 0) {
+				return Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve(cssFile) });
+			}
+
+			return ok(verifyStep());
+		},
+	});
+
+	ctx.win.arcaptcha = { render: () => 7, getArcToken: () => 'ARC-TOKEN-1' };
+
+	const shadow = ctx.root.shadowRoot;
+	const host = shadow && shadow.querySelector('[data-tisa-captcha]');
+
+	check('the widget is mounted inside the shadow tree', !!host);
+	check(
+		'which is exactly why its stylesheet has to follow it in',
+		!!host && host.getRootNode() === shadow
+	);
+
+	const copies = () => [...shadow.querySelectorAll('style[data-tisa-vendor-style], link[data-tisa-vendor-style]')]
+		.map((node) => node.textContent)
+		.join('\n');
+
+	check('a sheet already in the head that names the vendor is copied in', copies().indexOf('.spinner-loader{display:flex;}') >= 0);
+
+	// The vendor, arriving with the widget, injects its styling the way it does
+	// on every other page: into the head.
+	const late = ctx.doc.createElement('style');
+	late.textContent = '.spinner-logo{width:40px;height:24px;}.tw-flex{display:flex;}';
+	ctx.doc.head.appendChild(late);
+
+	await tick();
+	await tick();
+
+	check('and the sheet it injects later follows it immediately', copies().indexOf('.spinner-logo{width:40px') >= 0);
+
+	// The vendor's rules have to beat this plugin's fallback caps, or a widget
+	// would be clipped to the fallback size on a site where it loads fine.
+	const shadowStyles = [...shadow.querySelectorAll('style')];
+	const vendorLast = shadowStyles[shadowStyles.length - 1];
+
+	check('the copy lands last, after the plugin stylesheet, so the vendor wins a tie', '1' === (vendorLast && vendorLast.getAttribute('data-tisa-vendor-style')));
+
+	// And the fallback: a widget that never gets its stylesheet must not be
+	// able to blow the form apart in the first place.
+	check('the plugin caps runaway media inside the captcha slot', /\.tisa-captcha :where\(img, svg, canvas, video\) \{[^}]*max-height: 96px;/.test(cssFile));
+	check('and caps an embedded frame by width', /\.tisa-captcha :where\(iframe\) \{[^}]*max-width: 100%;/.test(cssFile));
+	check('in the light DOM nothing is mirrored, because the head already applies', !!(await (async () => {
+		const plain = boot({
+			config: { isolate: false, captcha: bundle },
+			fetch: () => ok(verifyStep()),
+		});
+
+		await tick();
+
+		return plain.root.querySelector('[data-tisa-captcha]') && false === plain.root.querySelector('[data-tisa-captcha]').tisaVendorStyles.shadow;
+	})()));
+}
+
 async function testStyleIsolation() {
 	scenario('the form renders in its own tree, so the theme cannot restyle it');
 
@@ -1477,6 +1567,20 @@ async function testStyleIsolation() {
 	});
 
 	check('a stylesheet that cannot be read leaves the form in the light DOM', !broken.root.shadowRoot);
+
+	/*
+	 * A security plugin or a CDN rule can answer the stylesheet request with an
+	 * HTML error page and a 200. Injecting that into a shadow root would leave
+	 * a form nothing can style: the theme cannot reach in, and the plugin's own
+	 * rules are in the page it just threw away.
+	 */
+	const wrongBody = await bootIsolated({
+		config: { isolate: true, css: '/plugin-assets/css/front.css', assets: '/plugin-assets/' },
+		fetch: () => Promise.resolve({ ok: true, status: 200, text: () => Promise.resolve('<html><body>403 Forbidden</body></html>') }),
+	});
+
+	check('and something that is not the stylesheet is not injected as one', !wrongBody.root.shadowRoot);
+	check('with the form still mounted and usable', !!wrongBody.root.tisaForm && !!wrongBody.root.tisaForm.phoneInput);
 	check('and the form is mounted and usable anyway', !!broken.root.tisaForm && !!broken.root.tisaForm.phoneInput);
 	check('nothing claims it was isolated', !broken.root.getAttribute('data-tisa-isolated'));
 
@@ -1644,6 +1748,7 @@ async function main() {
 	await testTheCaptchaKnowsWhoItIsTalkingTo();
 	await testTheFormLooksLikeItself();
 	await testStyleIsolation();
+	await testVendorStylesInsideShadow();
 	await testCooldownAndPersianDigits();
 	await testFocusMovesToTheProblem();
 	await testSkipLink();

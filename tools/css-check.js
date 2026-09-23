@@ -34,6 +34,57 @@ try {
 const REPO = path.join(__dirname, '..');
 const FILES = ['tisa-otp/assets/css/front.css', 'tisa-otp/assets/css/admin.css'];
 
+/**
+ * Split a selector list on its own commas.
+ *
+ * A naive `split(',')` also splits inside `:where(a, b)` and `:is(a, b)`, which
+ * turns one scoped selector into fragments — and a fragment like `svg` reads as
+ * a leaked bare-element selector. Depth-aware splitting keeps a functional
+ * pseudo together, and bare lists (`img, svg { … }`) still get caught.
+ */
+function selectorParts(selector) {
+	const parts = [];
+	let depth = 0;
+	let quote = '';
+	let current = '';
+
+	for (const character of String(selector)) {
+		if ('' !== quote) {
+			current += character;
+
+			if (character === quote) {
+				quote = '';
+			}
+
+			continue;
+		}
+
+		if ('"' === character || "'" === character) {
+			quote = character;
+			current += character;
+			continue;
+		}
+
+		if ('(' === character) {
+			depth++;
+		} else if (')' === character) {
+			depth = Math.max(0, depth - 1);
+		}
+
+		if (',' === character && 0 === depth) {
+			parts.push(current);
+			current = '';
+			continue;
+		}
+
+		current += character;
+	}
+
+	parts.push(current);
+
+	return parts;
+}
+
 /** Selectors that would leak the plugin's styles onto the rest of the site. */
 const FOREIGN = /^(?:html|body|a|p|div|span|ul|ol|li|table|tr|td|th|h[1-6]|input|button|select|textarea|form|img|svg|label|small|strong|em|section|article|header|footer|nav|aside|main|figure|blockquote|pre|code)(?:[.:\s,>+~]|$)/;
 
@@ -68,7 +119,7 @@ for (const file of FILES) {
 
 			// `:host`, `:root` and the plugin's own classes are all fine; a
 			// bare element selector is not.
-			selector.split(',').forEach((part) => {
+			selectorParts(selector).forEach((part) => {
 				const trimmed = part.trim();
 
 				if ('' === trimmed || trimmed.indexOf('.tisa') >= 0 || trimmed.indexOf(':host') >= 0) {

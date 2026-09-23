@@ -1,7 +1,7 @@
 {
 	"files": {
 		"assets/css/admin.css": "b67888212a21bf0273d66d611013907b4a167517c6b475063d96c8fc8e41b06a",
-		"assets/css/front.css": "53316d9b1f99b555c17fd49312f1e972a99f557ba9bd04dd242871de3c700df1",
+		"assets/css/front.css": "751d1cd75ff2099b398fc91a1da0fa9f4a8776e8c3f732bb5ed64b6e34d9aa6a",
 		"assets/css/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"assets/fonts/OFL.txt": "e6f4ce7b6c830d5a25a4f8ac777c267cd7d3c180bc2a7150ca57cbb9b280c4b7",
 		"assets/fonts/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
@@ -13,12 +13,12 @@
 		"assets/fonts/vazirmatn-latin-700-normal.woff2": "a1d13d1cf4cd1ec6af4623ccdacff9cc7beedd6d9cbc4944b56faf59da95478b",
 		"assets/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"assets/js/admin.js": "27738d599b32b68226f4facbcd4d104fdd652da197c614d5316abbcf97bf355d",
-		"assets/js/front.js": "de93d303c41405edc4aa56dd86c8fdb6f9c12dbc736890e535005b73024bd40e",
+		"assets/js/front.js": "0e2506783130cff058dce6893b8d2fdaf920882ac75a91f2d1401a54fed0c687",
 		"assets/js/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"languages/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"languages/tisa-otp.pot": "d63ca9330e50436f6cb6231a27ff7ae481700819f34b4b596c3ce05e4f68c120",
-		"readme.txt": "f88360d7a9e526cf92cbd334e49285d91240b9bb77f51460907fb483831ff3da",
+		"readme.txt": "ba6f8b347ff37f3a7155a81d6b8c34878f03f32f7c0897ff8b8476e51f4f6f8a",
 		"src/Access/EmergencyToken.php": "01371b95d3446a1db137a177276fca2746afc3fffadb7fef936e3e48b0af435e",
 		"src/Access/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
 		"src/Admin/AccessScreen.php": "693f3fe6d37f7d83b352af43ec73111cc26c2d87b8282f9bf69132efaf754444",
@@ -158,9 +158,9 @@
 		"templates/partials/step-phone.php": "0f1e457b25ce2677e9c762436c44e04a0f26bce43885f205f78640d2275239b0",
 		"templates/woocommerce/form-login.php": "4f27a9bd1c028354ebe7064ae988b53ce6ebc8f689f41709808347de33d6ca8f",
 		"templates/woocommerce/index.php": "d0593527e19b199cbde99666ac030b8597527b4df5df955cf68cd578a71a3e43",
-		"tisa-otp.php": "a8d42a16728941baa2719d496a7b2bbdc4f6b2b2330fca5b6c65b0d802e7527d",
+		"tisa-otp.php": "aaf4ad82eeea6368b47968d1cac6452d44eb475ae6c971445a94d2130d68255f",
 		"uninstall.php": "3fcbce749114db89be338fbe85f861778c3865573e9c80a2375b4ca480c666f4"
 	},
 	"name": "tisa-otp",
-	"version": "1.7.1"
+	"version": "1.7.2"
 }

@@ -187,6 +187,161 @@
 		return '';
 	}
 
+	/*
+	 * A captcha widget is a whole design of its own, and it arrives with its own
+	 * stylesheet — written for the page, injected into the document's head.
+	 * A shadow root cannot see the head: no selector crosses that boundary. So
+	 * the widget renders as bare markup, and bare markup is not small.
+	 *
+	 * ARCaptcha is the worked example. Its loader and its checkbox are Vue
+	 * components styled by classes (`spinner-loader`, `spinner-logo`, plus a
+	 * compiled Tailwind set), and the brand mark inside the loader is an SVG
+	 * with viewBox 0 0 621 363. With no stylesheet in reach, that SVG is laid
+	 * out at its own size and a purple cloud takes over the form — a screenshot
+	 * a customer actually sent, with the question "why does it load like this?"
+	 *
+	 * The fix is to let the vendor's styles follow the widget into our tree:
+	 * whatever the page's head gains while this form is on screen is copied
+	 * into the shadow root as well.
+	 *
+	 *   - a <link> is cloned as a <link>, so its own url() references still
+	 *     resolve against the vendor's file rather than against this page;
+	 *   - a <style> is copied as text, appended at the very end of the root, so
+	 *     the vendor's rules outrank this plugin's fallback sizing;
+	 *   - constructable sheets (document.adoptedStyleSheets) are adopted too,
+	 *     for bundles that inject that way;
+	 *   - anything already in the head that names the vendor is copied up
+	 *     front, in case the library loaded before this form mounted.
+	 *
+	 * Nothing happens in the light DOM, where the head already applies.
+	 */
+	function mirrorVendorStyles(container) {
+		if (!container) {
+			return null;
+		}
+
+		if (container.tisaVendorStyles) {
+			return container.tisaVendorStyles;
+		}
+
+		var root = container.getRootNode ? container.getRootNode() : null;
+
+		if (!root || root === document || !root.host) {
+			container.tisaVendorStyles = { shadow: false };
+
+			return container.tisaVendorStyles;
+		}
+
+		var state = { shadow: true, seen: {}, sheets: 0, observer: null };
+
+		container.tisaVendorStyles = state;
+
+		var fingerprint = function (node) {
+			if ('LINK' === node.tagName) {
+				return 'href:' + String(node.getAttribute('href') || '');
+			}
+
+			var text = String(node.textContent || '');
+
+			return 'text:' + text.length + ':' + text.slice(0, 96);
+		};
+
+		var spread = function (node) {
+			var tag = node && node.tagName ? String(node.tagName).toUpperCase() : '';
+
+			if ('LINK' !== tag && 'STYLE' !== tag) {
+				return;
+			}
+
+			if ('LINK' === tag && -1 === String(node.getAttribute('rel') || '').toLowerCase().indexOf('stylesheet')) {
+				return;
+			}
+
+			var id = fingerprint(node);
+
+			if (!id || state.seen[id]) {
+				return;
+			}
+
+			state.seen[id] = true;
+
+			try {
+				var copy = 'LINK' === tag ? node.cloneNode(false) : document.createElement('style');
+
+				if ('STYLE' === tag) {
+					copy.textContent = node.textContent;
+				}
+
+				copy.setAttribute('data-tisa-vendor-style', '1');
+				root.appendChild(copy);
+			} catch (error) {
+				// A closed or detached root simply keeps the fallback sizing.
+			}
+		};
+
+		var tree = function (node) {
+			spread(node);
+
+			if (node && node.querySelectorAll) {
+				Array.prototype.forEach.call(node.querySelectorAll('link[rel~="stylesheet"], style'), spread);
+			}
+		};
+
+		var adoptSheets = function () {
+			var list = document.adoptedStyleSheets;
+
+			if (!list || !('adoptedStyleSheets' in root)) {
+				return;
+			}
+
+			try {
+				for (var i = state.sheets; i < list.length; i++) {
+					if (root.adoptedStyleSheets.indexOf(list[i]) < 0) {
+						root.adoptedStyleSheets = root.adoptedStyleSheets.concat(list[i]);
+					}
+				}
+
+				state.sheets = list.length;
+			} catch (error) {
+				// Older engines grew shadow-root adopted sheets late; the
+				// <link>/<style> path above carries the same stylesheet.
+			}
+		};
+
+		/*
+		 * A widget that loaded before this form mounted has already injected its
+		 * stylesheet. Recognise it by name: the vendor's own classes are
+		 * distinctive, and copying the theme's stylesheet by mistake is the one
+		 * outcome worth avoiding.
+		 */
+		Array.prototype.forEach.call(document.querySelectorAll('head link[rel~="stylesheet"], head style'), function (node) {
+			var href = String((node.getAttribute && node.getAttribute('href')) || '');
+			var text = 'LINK' === node.tagName ? '' : String(node.textContent || '');
+
+			if (/arcaptcha|spinner-logo|spinner-loader|\.tw-[a-z-]+\s*\{/i.test(href + text)) {
+				spread(node);
+			}
+		});
+
+		try {
+			state.observer = new MutationObserver(function (records) {
+				records.forEach(function (record) {
+					Array.prototype.forEach.call(record.addedNodes, tree);
+				});
+
+				adoptSheets();
+			});
+
+			state.observer.observe(document.head, { childList: true, subtree: true });
+		} catch (error) {
+			state.observer = null;
+		}
+
+		adoptSheets();
+
+		return state;
+	}
+
 	function Captcha(root, conf) {
 		this.conf = conf || {};
 		this.config = this.conf.config || {};
@@ -199,6 +354,11 @@
 		this.state = '';
 
 		this.container = $(root, '[data-tisa-captcha]');
+
+		// Installed before the vendor script can run, so no injected rule is
+		// missed; see mirrorVendorStyles above for why it is needed at all.
+		mirrorVendorStyles(this.container);
+
 		this.widgetId = null;
 		this.token = '';
 		this.pending = null;
@@ -2456,6 +2616,23 @@
 	}
 
 	/**
+	 * Is this text really the plugin's stylesheet?
+	 *
+	 * A security plugin, a CDN rule, or an "optimise CSS" plugin can answer a
+	 * fetch with an HTML error page and a 200, and a browser injects that as
+	 * CSS without complaining. Inside a shadow root the result is a form with
+	 * no styling at all — and the theme cannot style it back in either, because
+	 * a shadow boundary is one-way. A stylesheet that does not name this plugin
+	 * is a failed read, and a failed read leaves the form in the light DOM.
+	 */
+	function ownStylesheet(text) {
+		return 'string' === typeof text &&
+			text.length > 4096 &&
+			text.indexOf('.tisa-otp') > 0 &&
+			text.indexOf('--tisa-accent') > 0;
+	}
+
+	/**
 	 * The stylesheet text, fetched once per page. The URL is the same one the
 	 * `<link>` already loaded, so this is a cache hit — not a second download.
 	 */
@@ -2473,7 +2650,9 @@
 				return response && response.ok ? response.text() : '';
 			})
 			.then(function (text) {
-				SHADOW.text = text ? absolutise(text) : '';
+				SHADOW.text = ownStylesheet(text) ? absolutise(text) : '';
+				SHADOW.failed = !SHADOW.text;
+
 				return SHADOW.text;
 			})
 			.catch(function () {

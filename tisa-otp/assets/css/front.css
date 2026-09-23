@@ -1093,6 +1093,24 @@
 	display: none;
 }
 
+/*
+ * A widget that arrives before its stylesheet (or without one) must not be able
+ * to fill the form with its own brand mark: ARCaptcha's loader logo is an SVG
+ * with a 621x363 viewBox, and that is exactly what it did.
+ *
+ * These are caps, not sizes — anything the vendor sets smaller stays smaller,
+ * and the vendor's own rules are appended after this stylesheet inside the
+ * shadow root, so on a tie they win. See mirrorVendorStyles() in front.js.
+ */
+.tisa-captcha :where(img, svg, canvas, video) {
+	max-width: 100%;
+	max-height: 96px;
+}
+
+.tisa-captcha :where(iframe) {
+	max-width: 100%;
+}
+
 /* An empty slot is a bug the visitor should be able to see coming. */
 .tisa-captcha:not([hidden]):empty::after {
 	content: "";
