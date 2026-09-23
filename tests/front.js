@@ -1476,6 +1476,35 @@ async function testVendorStylesInsideShadow() {
 
 	check('the copy lands last, after the plugin stylesheet, so the vendor wins a tie', '1' === (vendorLast && vendorLast.getAttribute('data-tisa-vendor-style')));
 
+	// A widget may also append its sheet to the body, or to a wrapper of its
+	// own; the copy still has to arrive.
+	const inBody = ctx.doc.createElement('style');
+	inBody.textContent = '.arcaptcha, #checkbox { box-sizing: border-box; }';
+	ctx.doc.body.appendChild(inBody);
+
+	await tick();
+	await tick();
+
+	check('a sheet the widget puts in the body is picked up as well', copies().indexOf('#checkbox { box-sizing') >= 0);
+
+	/*
+	 * The same door, used by a theme: CSS that loads after the form mounted is
+	 * copied in, but *below* this plugin's own rules, so the form keeps its own
+	 * layout — which is the promise isolation makes.
+	 */
+	const theme = ctx.doc.createElement('style');
+	theme.textContent = '.tisa-otp .tisa-btn { background: #ff0000 !important; }';
+	ctx.doc.head.appendChild(theme);
+
+	await tick();
+	await tick();
+
+	const order = [...shadow.querySelectorAll('style')];
+	const pluginAt = order.findIndex((node) => '1' === node.getAttribute('data-tisa-shadow-style'));
+	const pageAt = order.findIndex((node) => '1' === node.getAttribute('data-tisa-page-style'));
+
+	check('a theme sheet that loads late is copied in below the plugin rules, not above them', pageAt >= 0 && pluginAt >= 0 && pageAt < pluginAt);
+
 	// And the fallback: a widget that never gets its stylesheet must not be
 	// able to blow the form apart in the first place.
 	check('the plugin caps runaway media inside the captcha slot', /\.tisa-captcha :where\(img, svg, canvas, video\) \{[^}]*max-height: 96px;/.test(cssFile));

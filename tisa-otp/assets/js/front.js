@@ -206,14 +206,18 @@
 	 *
 	 *   - a <link> is cloned as a <link>, so its own url() references still
 	 *     resolve against the vendor's file rather than against this page;
-	 *   - a <style> is copied as text, appended at the very end of the root, so
-	 *     the vendor's rules outrank this plugin's fallback sizing;
+	 *   - a <style> is copied as text, at the very end of the root, so the
+	 *     vendor's rules outrank this plugin's fallback sizing;
 	 *   - constructable sheets (document.adoptedStyleSheets) are adopted too,
 	 *     for bundles that inject that way;
-	 *   - anything already in the head that names the vendor is copied up
-	 *     front, in case the library loaded before this form mounted.
+	 *   - anything already in the document that names the vendor is copied up
+	 *     front, in case the library loaded before this form mounted;
+	 *   - anything else the page injects later is copied too, but *before* this
+	 *     plugin's stylesheet, so a theme that loads its CSS late still cannot
+	 *     outrank the form's own layout.
 	 *
-	 * Nothing happens in the light DOM, where the head already applies.
+	 * Nothing happens in the light DOM, where the page's own CSS already
+	 * applies.
 	 */
 	function mirrorVendorStyles(container) {
 		if (!container) {
@@ -236,6 +240,20 @@
 
 		container.tisaVendorStyles = state;
 
+		/*
+		 * The widget's own classes. Its styling is compiled per component and
+		 * carries names like these; a stylesheet that mentions them is the
+		 * widget's, not the theme's.
+		 */
+		var HINT = /arcaptcha|spinner-logo|spinner-loader|bg-purple-s5/i;
+
+		var vendorish = function (node) {
+			var href = String((node.getAttribute && node.getAttribute('href')) || '');
+			var text = 'LINK' === node.tagName ? '' : String(node.textContent || '');
+
+			return HINT.test(href + ' ' + text);
+		};
+
 		var fingerprint = function (node) {
 			if ('LINK' === node.tagName) {
 				return 'href:' + String(node.getAttribute('href') || '');
@@ -244,6 +262,25 @@
 			var text = String(node.textContent || '');
 
 			return 'text:' + text.length + ':' + text.slice(0, 96);
+		};
+
+		/*
+		 * Where a copy lands decides who wins a tie, and the two cases want
+		 * opposite answers:
+		 *
+		 *   - the widget's own sheet goes last, so its sizing and colours beat
+		 *     this plugin's fallback caps;
+		 *   - anything else the page injects while the form is on screen goes
+		 *     *before* this plugin's stylesheet, so a theme that loads CSS late
+		 *     still cannot outrank the form's own layout — which is the whole
+		 *     point of putting the form in its own tree.
+		 */
+		var place = function (copy, own) {
+			if (own && own.parentNode === root) {
+				root.insertBefore(copy, own);
+			} else {
+				root.insertBefore(copy, root.firstChild);
+			}
 		};
 
 		var spread = function (node) {
@@ -267,13 +304,19 @@
 
 			try {
 				var copy = 'LINK' === tag ? node.cloneNode(false) : document.createElement('style');
+				var own = root.querySelector('style[data-tisa-shadow-style]');
 
 				if ('STYLE' === tag) {
 					copy.textContent = node.textContent;
 				}
 
-				copy.setAttribute('data-tisa-vendor-style', '1');
-				root.appendChild(copy);
+				if (vendorish(node)) {
+					copy.setAttribute('data-tisa-vendor-style', '1');
+					root.appendChild(copy);
+				} else {
+					copy.setAttribute('data-tisa-page-style', '1');
+					place(copy, own);
+				}
 			} catch (error) {
 				// A closed or detached root simply keeps the fallback sizing.
 			}
@@ -310,15 +353,12 @@
 
 		/*
 		 * A widget that loaded before this form mounted has already injected its
-		 * stylesheet. Recognise it by name: the vendor's own classes are
-		 * distinctive, and copying the theme's stylesheet by mistake is the one
-		 * outcome worth avoiding.
+		 * stylesheet. Recognise it by name and copy it in; the page's own sheets
+		 * are deliberately left behind, because leaving them behind is the whole
+		 * reason the form lives in its own tree.
 		 */
 		Array.prototype.forEach.call(document.querySelectorAll('head link[rel~="stylesheet"], head style'), function (node) {
-			var href = String((node.getAttribute && node.getAttribute('href')) || '');
-			var text = 'LINK' === node.tagName ? '' : String(node.textContent || '');
-
-			if (/arcaptcha|spinner-logo|spinner-loader|\.tw-[a-z-]+\s*\{/i.test(href + text)) {
+			if (vendorish(node)) {
 				spread(node);
 			}
 		});
@@ -332,12 +372,13 @@
 				adoptSheets();
 			});
 
-			state.observer.observe(document.head, { childList: true, subtree: true });
+			// Anywhere in the light DOM, not only the head: a widget may append
+			// its sheet to the body, and the copy has to be there before the
+			// widget's own first frame.
+			state.observer.observe(document.documentElement, { childList: true, subtree: true });
 		} catch (error) {
 			state.observer = null;
 		}
-
-		adoptSheets();
 
 		return state;
 	}
