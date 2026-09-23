@@ -353,14 +353,17 @@
 				traceRows(list, data.trace, data.plan);
 			}).catch(function (error) {
 				busy(send, false);
+
+				var data = error.data || {};
+
 				list.appendChild(checkRow({
 					label: i18n.failed || '',
 					value: error.message,
 					status: 'fail',
-					note: i18n.smsHint || ''
+					note: [data.reason || '', i18n.smsHint || ''].filter(Boolean).join(' — ')
 				}));
 
-				traceRows(list, (error.data || {}).trace, (error.data || {}).plan);
+				traceRows(list, data.trace, data.plan);
 			});
 		});
 
@@ -379,11 +382,23 @@
 	 */
 	function traceRows(list, trace, plan) {
 		(trace || []).forEach(function (step) {
+			var note = step.message || '';
+
+			/*
+			 * The Persian sentence says what to do; the reason is the sentence
+			 * from the server that says what happened ("DNS: could not resolve
+			 * host api.sms.ir"). Both belong here — "transport" alone is what
+			 * this project was told off for.
+			 */
+			if (step.reason) {
+				note = note ? note + ' — ' + step.reason : step.reason;
+			}
+
 			list.appendChild(checkRow({
 				label: (step.gateway || '') + (step.sent ? ' (' + (i18n.traceSent || '') + ')' : ''),
 				value: step.error_code || step.status || '',
 				status: step.sent ? 'ok' : 'fail',
-				note: step.message || ''
+				note: note
 			}));
 		});
 

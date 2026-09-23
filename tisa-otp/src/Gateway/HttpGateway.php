@@ -8,6 +8,7 @@
 namespace TisaOtp\Gateway;
 
 use TisaOtp\Config\Settings;
+use TisaOtp\Support\Transport;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -141,11 +142,22 @@ abstract class HttpGateway implements SmsGateway {
 
 		$code = $response->get_error_code();
 
-		if ( false !== strpos( $code, 'timeout' ) ) {
-			return GatewayResult::failed( $this->id(), 'timeout', __( 'ارتباط با سامانه پیامکی به‌موقع برقرار نشد.', 'tisa-otp' ) );
+		/*
+		 * The sentence WP_Error carries is the whole answer — it names the host
+		 * and the cause ("cURL error 6: Could not resolve host: api.sms.ir").
+		 * Reducing it to the word `transport` is what made "the SMS does not
+		 * arrive" unfixable from the admin: the administrator saw the same word
+		 * whether the DNS was down, the firewall was shut or the site had
+		 * blocked outbound HTTP. Now the word stays, and the reason travels with
+		 * it into the log row, the health card and the self-test.
+		 */
+		$transport = Transport::fromError( $response );
+
+		if ( 'timeout' === $transport['kind'] ) {
+			return GatewayResult::failed( $this->id(), 'timeout', $transport['message'], 0, array( 'detail' => $code, 'reason' => $transport['reason'] ) );
 		}
 
-		return GatewayResult::failed( $this->id(), 'transport', __( 'خطای شبکه در ارتباط با سامانه پیامکی.', 'tisa-otp' ), 0, array( 'detail' => $code ) );
+		return GatewayResult::failed( $this->id(), 'transport', $transport['message'], 0, array( 'detail' => $code, 'reason' => $transport['reason'] ) );
 	}
 
 	/**

@@ -146,6 +146,8 @@ final class Dispatcher {
 				array_merge( $result->meta(), array( 'channel' => $id ) )
 			);
 
+			$meta = $result->meta();
+
 			$this->logger->warning(
 				'code.not_sent',
 				array(
@@ -154,6 +156,8 @@ final class Dispatcher {
 					'error_code' => $result->errorCode(),
 					'status'     => $result->httpStatus(),
 					'phone'      => $phone,
+					'reason'     => isset( $meta['reason'] ) ? (string) $meta['reason'] : '',
+					'message'    => $result->message(),
 				)
 			);
 

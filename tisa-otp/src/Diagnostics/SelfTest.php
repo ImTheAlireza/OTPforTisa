@@ -32,6 +32,7 @@ use TisaOtp\Otp\OtpService;
 use TisaOtp\Registration\FieldCatalog;
 use TisaOtp\Registration\FieldSchema;
 use TisaOtp\Support\Colour;
+use TisaOtp\Support\Transport;
 use TisaOtp\Support\Rejection;
 
 defined( 'ABSPATH' ) || exit;
@@ -392,12 +393,33 @@ final class SelfTest {
 			}
 
 			$status = $gateway['ready'] ? ( $gateway['active'] || $gateway['backup'] ? 'ok' : 'info' ) : 'warn';
+			$value  = $gateway['ready'] ? ( $gateway['sender'] ? $gateway['sender'] : __( 'آماده', 'tisa-otp' ) ) : __( 'آماده نیست', 'tisa-otp' );
+
+			/*
+			 * A gateway whose last send failed is not "ready". Saying "آماده"
+			 * next to a failure the owner reported is how this test loses their
+			 * trust; the row has to carry the failure and its reason.
+			 */
+			$health = isset( $gateway['health'] ) ? (array) $gateway['health'] : array();
+
+			if ( $health && empty( $health['ok'] ) ) {
+				$status = 'fail';
+				$value  = isset( $health['error'] ) && '' !== (string) $health['error'] ? (string) $health['error'] : __( 'ناموفق', 'tisa-otp' );
+
+				if ( ! empty( $health['detail'] ) ) {
+					$note[] = (string) $health['detail'];
+				}
+
+				if ( ! empty( $health['reason'] ) ) {
+					$note[] = (string) $health['reason'];
+				}
+			}
 
 			$rows[] = $this->row(
 				$gateway['label'] . ( $role ? ' — ' . implode( ' / ', $role ) : '' ),
-				$gateway['ready'] ? ( $gateway['sender'] ? $gateway['sender'] : __( 'آماده', 'tisa-otp' ) ) : __( 'آماده نیست', 'tisa-otp' ),
+				$value,
 				$status,
-				implode( ' · ', $note )
+				implode( ' · ', array_filter( $note ) )
 			);
 		}
 
@@ -419,6 +441,19 @@ final class SelfTest {
 			__( 'اگر سامانهٔ اول خطا بدهد، بعدی امتحان می‌شود.', 'tisa-otp' )
 		);
 
+		$channel = $this->settings->str( 'channel', 'sms' );
+
+		$rows[] = $this->row(
+			__( 'کانال ارسال کد', 'tisa-otp' ),
+			'sms' === $channel ? __( 'پیامک', 'tisa-otp' ) : __( 'ایمیل', 'tisa-otp' ),
+			'sms' === $channel ? 'ok' : 'warn',
+			'sms' === $channel
+				? ''
+				: __( 'این سایت الان کدها را با ایمیل می‌فرستد، نه پیامک. اگر انتظار پیامک دارید، کانال پیش‌فرض را در بخش «کد و کانال‌ها» روی پیامک بگذارید.', 'tisa-otp' )
+		);
+
+		$rows[] = $this->reachability( $chain );
+
 		$rows[] = $this->row(
 			__( 'ارسال واقعی', 'tisa-otp' ),
 			__( 'آزمایش جدا', 'tisa-otp' ),
@@ -430,6 +465,99 @@ final class SelfTest {
 			__( 'آزمایش سامانه‌های پیامکی', 'tisa-otp' ),
 			__( 'هر سامانه: آماده است یا چه چیزی کم دارد، و ترتیب تلاش در ارسال واقعی.', 'tisa-otp' ),
 			$rows
+		);
+	}
+
+	/**
+	 * Can this server open a connection to the gateway it is configured to use?
+	 *
+	 * This is the row that answers "the SMS does not arrive" without asking
+	 * anybody: it asks the host to resolve the panel's domain and open a socket
+	 * to it, and reports what came back. It never sends a message and never
+	 * carries credentials, so it is safe to press as often as you like.
+	 *
+	 * @param string[] $chain Delivery order.
+	 * @return array<string,mixed>
+	 */
+	private function reachability( array $chain ): array {
+		$target = '';
+
+		foreach ( $chain as $id ) {
+			$plan = $this->gateways->planFor( $id );
+
+			if ( ! empty( $plan['endpoint'] ) && false === strpos( (string) $plan['endpoint'], '…' ) ) {
+				$target = (string) $plan['endpoint'];
+				break;
+			}
+		}
+
+		if ( '' === $target ) {
+			return $this->row(
+				__( 'دسترسی این سرور به سامانه', 'tisa-otp' ),
+				__( 'بررسی نشد', 'tisa-otp' ),
+				'info',
+				__( 'برای این سامانه نشانی قابل بررسی ثبت نشده است.', 'tisa-otp' )
+			);
+		}
+
+		if ( defined( 'WP_HTTP_BLOCK_EXTERNAL' ) && WP_HTTP_BLOCK_EXTERNAL ) {
+			return $this->row(
+				__( 'دسترسی این سرور به سامانه', 'tisa-otp' ),
+				__( 'بسته است', 'tisa-otp' ),
+				'fail',
+				Transport::explain( 'block_external', 'WP_HTTP_BLOCK_EXTERNAL' )
+			);
+		}
+
+		$started  = microtime( true );
+		$response = wp_remote_get(
+			$target,
+			array(
+				'timeout'             => 8,
+				'redirection'         => 0,
+				'limit_response_size' => 1024,
+				'headers'             => array( 'Accept' => '*/*' ),
+				'user-agent'          => 'TisaOTP/' . TISA_OTP_VERSION . '; ' . home_url( '/' ),
+			)
+		);
+
+		$ms   = (int) round( ( microtime( true ) - $started ) * 1000 );
+		$host = (string) wp_parse_url( $target, PHP_URL_HOST );
+
+		$this->logs->write(
+			'diagnostic',
+			'admin.reachability',
+			sprintf( /* translators: 1: host, 2: outcome */ __( 'بررسی دسترسی به %1$s: %2$s', 'tisa-otp' ), $host, is_wp_error( $response ) ? $response->get_error_code() : (string) wp_remote_retrieve_response_code( $response ) ),
+			array(
+				'service' => $host,
+				'ok'      => ! is_wp_error( $response ),
+				'ms'      => $ms,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			$transport = Transport::fromError( $response );
+
+			return $this->row(
+				__( 'دسترسی این سرور به سامانه', 'tisa-otp' ),
+				$host,
+				'fail',
+				$ms . ' ' . __( 'میلی‌ثانیه', 'tisa-otp' ) . ' · ' . $transport['reason'] . ' — ' . $transport['message']
+			);
+		}
+
+		$status = (int) wp_remote_retrieve_response_code( $response );
+
+		return $this->row(
+			__( 'دسترسی این سرور به سامانه', 'tisa-otp' ),
+			$host,
+			$status > 0 ? 'ok' : 'warn',
+			sprintf(
+				/* translators: 1: milliseconds, 2: HTTP status */
+				__( '%1$d میلی‌ثانیه · پاسخ HTTP %2$d. این سرور می‌تواند به سامانه وصل شود؛ اگر پیامک نمی‌رسد، مشکل از کلید، اعتبار یا الگوی سامانه است.', 'tisa-otp' ),
+				$ms,
+				$status
+			)
 		);
 	}
 
@@ -505,6 +633,29 @@ final class SelfTest {
 				: __( 'با قطعی سرویس کپچا، هیچ ورودی‌ای پذیرفته نمی‌شود.', 'tisa-otp' )
 		);
 
+		/*
+		 * What the guard has actually been doing. A captcha that never renders
+		 * is not a theory: it shows up as `guard.rejected / captcha_missing` in
+		 * the events, one row per visitor who tried to log in. Counting those
+		 * rows here turns "the captcha does not load" into a number and a fix.
+		 */
+		$rejected = $this->captchaRejects( 7 );
+
+		if ( $rejected['total'] > 0 ) {
+			$rows[] = $this->row(
+				__( 'ردشدن به‌خاطر کپچا (۷ روز)', 'tisa-otp' ),
+				number_format_i18n( $rejected['total'] ) . ' ' . __( 'درخواست', 'tisa-otp' ),
+				$rejected['captcha'] > 0 ? 'fail' : 'warn',
+				$rejected['captcha'] > 0
+					? sprintf(
+						/* translators: %d: number of requests */
+						__( '%d درخواست بدون توکن کپچا رسیده است؛ یعنی ویجت روی مرورگر کاربران بارگذاری نشده. اگر ردیف «نمایش در این مرورگر» هم قرمز است، نشانی جایگزین اسکریپت را پر کنید یا کپچا را موقتاً خاموش کنید تا کاربران پشت در نمانند.', 'tisa-otp' ),
+						$rejected['captcha']
+					)
+					: __( 'هیچ‌کدام به‌خاطر نبود توکن کپچا نبوده؛ محدودیت‌های دیگر کاربران را رد کرده‌اند.', 'tisa-otp' )
+			);
+		}
+
 		$rows[] = $this->row(
 			__( 'نمایش در این مرورگر', 'tisa-otp' ),
 			__( 'در همین پنجره ادامه دارد…', 'tisa-otp' ),
@@ -516,6 +667,41 @@ final class SelfTest {
 			__( 'آزمایش امنیت و کپچا', 'tisa-otp' ),
 			__( 'تنظیمات کپچا از سمت سرور بررسی می‌شود و سپس در همین پنجره، در مرورگر شما امتحان می‌شود.', 'tisa-otp' ),
 			$rows
+		);
+	}
+
+	/**
+	 * How many requests the guard turned away, and how many of them because the
+	 * captcha token was never there.
+	 *
+	 * @param int $days Window.
+	 * @return array{total:int,captcha:int}
+	 */
+	private function captchaRejects( int $days ): array {
+		$tally = $this->logs->tally( 'guard.rejected', $days );
+		$total = 0;
+
+		foreach ( (array) $tally as $count ) {
+			$total += (int) $count;
+		}
+
+		$captcha = 0;
+
+		foreach ( $this->logs->query(
+			array(
+				'event' => 'guard.rejected',
+				'hours' => $days * 24,
+				'limit' => 500,
+			)
+		) as $row ) {
+			if ( isset( $row->error_code ) && 'captcha_missing' === $row->error_code ) {
+				$captcha++;
+			}
+		}
+
+		return array(
+			'total'   => $total,
+			'captcha' => $captcha,
 		);
 	}
 

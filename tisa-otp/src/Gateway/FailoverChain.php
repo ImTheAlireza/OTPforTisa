@@ -99,9 +99,20 @@ final class FailoverChain {
 			}
 
 			$last = $result;
+			$meta = $result->meta();
+
+			/*
+			 * The health card is where "why did it fail last time?" is answered
+			 * without reading logs, so the technical reason travels with the
+			 * sentence: "DNS: Could not resolve host: api.sms.ir — نام دامنه…".
+			 */
+			$detail = trim(
+				( isset( $meta['reason'] ) ? (string) $meta['reason'] : '' ) . ' '
+				. (string) $result->message()
+			);
 
 			$this->record( $result, $attempt, $id );
-			$this->health->failure( $result->gateway(), $result->errorCode(), $result->message(), $result->httpStatus() );
+			$this->health->failure( $result->gateway(), $result->errorCode(), $detail, $result->httpStatus() );
 
 			$this->logger->warning(
 				'gateway.failed',
@@ -111,6 +122,9 @@ final class FailoverChain {
 					'status'     => $result->httpStatus(),
 					'phone'      => $request->phone(),
 					'attempt'    => $attempt,
+					// What actually failed, in the row the administrator reads.
+					'reason'     => isset( $meta['reason'] ) ? (string) $meta['reason'] : '',
+					'message'    => $result->message(),
 				)
 			);
 
@@ -184,6 +198,7 @@ final class FailoverChain {
 			'sent'       => $result->isSent(),
 			'error_code' => $result->errorCode(),
 			'message'    => $result->message(),
+			'reason'     => isset( $result->meta()['reason'] ) ? (string) $result->meta()['reason'] : '',
 			'status'     => $result->httpStatus(),
 			'reference'  => $result->reference(),
 		);

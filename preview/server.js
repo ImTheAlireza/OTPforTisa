@@ -275,6 +275,8 @@ function checkPayload(kind) {
 				{ label: 'SMS.ir — اصلی', value: '3000505', status: 'ok', note: 'الگوی «کد ورود» انتخاب شده است.' },
 				{ label: 'کاوه‌نگار — پشتیبان', value: 'آماده نیست', status: 'warn', note: 'ناقص: کلید API' },
 				{ label: 'ترتیب تلاش', value: 'SMS.ir → کاوه‌نگار', status: 'ok', note: 'اگر سامانهٔ اول خطا بدهد، بعدی امتحان می‌شود.' },
+				{ label: 'کانال ارسال کد', value: 'پیامک', status: 'ok' },
+				{ label: 'دسترسی این سرور به سامانه', value: 'api.sms.ir', status: 'fail', note: '۱۲۰۰ میلی‌ثانیه · CONNECT: cURL error 7: Failed to connect to api.sms.ir port 443 — اتصال خروجی این سرور به سامانه پیامکی بسته است (پورت ۴۴۳ باز نمی‌شود). فایروال هاست باید دامنهٔ سامانه را برای این سایت باز کند.' },
 				{ label: 'ارسال واقعی', value: 'آزمایش جدا', status: 'info', note: 'این آزمایش چیزی ارسال نمی‌کند.' },
 			],
 		},
@@ -286,6 +288,7 @@ function checkPayload(kind) {
 				{ label: 'کلید سایت', value: '1000••••••0001', status: 'ok' },
 				{ label: 'کلید مخفی', value: 'ثبت شده', status: 'ok' },
 				{ label: 'فهرست اسکریپت‌ها', value: '۲ نشانی', status: 'ok', note: 'https://js.hcaptcha.com/1/api.js' },
+				{ label: 'ردشدن به‌خاطر کپچا (۷ روز)', value: '۹ درخواست', status: 'fail', note: '۹ درخواست بدون توکن کپچا رسیده است؛ یعنی ویجت روی مرورگر کاربران بارگذاری نشده.' },
 				{ label: 'نمایش در این مرورگر', value: 'در همین پنجره ادامه دارد…', status: 'info' },
 			],
 		},
@@ -455,17 +458,18 @@ function handleRest(route, body, headers) {
 		case 'admin/test':
 			if ('09120000000' === phone) {
 				// A gateway that answers 401 — the trace is the whole point.
-				return fail('delivery_failed', 'پیامک ارسال نشد: کلید API نامعتبر است.', {
+				return fail('delivery_failed', 'اتصال خروجی این سرور به سامانه پیامکی بسته است (پورت ۴۴۳ باز نمی‌شود). فایروال هاست باید دامنهٔ سامانه را برای این سایت باز کند.', {
 					gateway: 'smsir',
-					error_code: 'unauthorized',
+					error_code: 'transport',
+					reason: 'CONNECT: cURL error 7: Failed to connect to api.sms.ir port 443: Connection timed out',
 					trace: [
-						{ gateway: 'smsir', sent: false, error_code: 'unauthorized', status: 401, message: 'کلید API نامعتبر است.' },
-						{ gateway: 'kavenegar', sent: false, error_code: 'missing_key', status: 0, message: 'کلید API تنظیم نشده است.' },
+						{ gateway: 'smsir', sent: false, error_code: 'transport', status: 0, message: 'اتصال خروجی این سرور به سامانه پیامکی بسته است (پورت ۴۴۳ باز نمی‌شود).', reason: 'CONNECT: cURL error 7: Failed to connect to api.sms.ir port 443' },
+						{ gateway: 'kavenegar', sent: false, error_code: 'missing_key', status: 0, message: 'کلید API تنظیم نشده است.', reason: '' },
 					],
+
 					plan: { mode: 'pattern', sender: '3000505', template: '123456' },
 				});
 			}
-
 			return ok({
 				sent: true,
 				via: 'smsir',

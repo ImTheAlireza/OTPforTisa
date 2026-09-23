@@ -19,6 +19,7 @@ use TisaOtp\Otp\OtpService;
 use TisaOtp\Support\Phone;
 use TisaOtp\Diagnostics\SelfTest;
 use TisaOtp\Support\Rejection;
+use TisaOtp\Support\Transport;
 use TisaOtp\Throttle\Throttle;
 
 defined( 'ABSPATH' ) || exit;
@@ -115,6 +116,8 @@ final class AdminController {
 			)
 		);
 
+		$meta = $result->meta();
+
 		$this->logger->info(
 			'admin.test_send',
 			array(
@@ -122,6 +125,10 @@ final class AdminController {
 				'gateway'    => $result->gateway(),
 				'channel'    => $channel,
 				'error_code' => $result->isSent() ? '' : $result->errorCode(),
+				'reason'     => $result->isSent() ? '' : ( isset( $meta['reason'] ) ? (string) $meta['reason'] : '' ),
+				'message'    => $result->isSent()
+					? sprintf( /* translators: 1: channel, 2: gateway */ __( 'کد آزمایشی از %1$s (%2$s) ارسال شد.', 'tisa-otp' ), $channel, $result->gateway() )
+					: $result->message(),
 				'user_id'    => $request->userId(),
 			)
 		);
@@ -135,6 +142,7 @@ final class AdminController {
 				array(
 					'gateway'    => $result->gateway(),
 					'error_code' => $result->errorCode(),
+					'reason'     => isset( $meta['reason'] ) ? (string) $meta['reason'] : '',
 					'status'     => $result->httpStatus(),
 					'trace'      => $this->dispatcher->trace(),
 					'plan'       => $this->gateways->planFor( $result->gateway() ),
@@ -244,6 +252,10 @@ final class AdminController {
 		);
 
 		if ( is_wp_error( $response ) ) {
+			$transport = $blocked
+				? Transport::from( 'block_external', (string) $response->get_error_code() )
+				: Transport::fromError( $response );
+
 			return array(
 				'service' => $service,
 				'url'     => $url,
@@ -251,9 +263,9 @@ final class AdminController {
 				'ms'      => $elapsed,
 				'status'  => 0,
 				'error'   => $response->get_error_code(),
-				'message' => $blocked
-					? __( 'ارتباط خروجی وردپرس بسته است (WP_HTTP_BLOCK_EXTERNAL). دامنه سرویس را در WP_ACCESSIBLE_HOSTS اضافه کنید.', 'tisa-otp' )
-					: sprintf( /* translators: %s: transport error code */ __( 'ارتباط برقرار نشد (%s). میزبان، فایروال یا DNS را بررسی کنید.', 'tisa-otp' ), $response->get_error_code() ),
+				'kind'    => $transport['kind'],
+				'reason'  => $transport['reason'],
+				'message' => $transport['message'],
 			);
 		}
 

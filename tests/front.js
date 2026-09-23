@@ -922,6 +922,10 @@ function testThePanelKeepsItsOwnPromises() {
 	// request. Three things now stand in the way of that happening again.
 	const guard = read('tisa-otp', 'src', 'Install', 'Guard.php');
 	const packageFile = read('tisa-otp', 'src', 'Install', 'Package.php');
+	const transport = read('tisa-otp', 'src', 'Support', 'Transport.php');
+	const failover = read('tisa-otp', 'src', 'Gateway', 'FailoverChain.php');
+	const httpGateway = read('tisa-otp', 'src', 'Gateway', 'HttpGateway.php');
+	const dispatcherFile = read('tisa-otp', 'src', 'Channel', 'Dispatcher.php');
 	const manifest = JSON.parse(read('tisa-otp', 'build.json'));
 	const builder = read('tools', 'build_package.py');
 	const wiring = read('tests', 'php', 'wiring-test.php');
@@ -938,6 +942,37 @@ function testThePanelKeepsItsOwnPromises() {
 	check('and stays quiet when nothing is wrong', /if \( ! empty\( self::\$failures \) \)/.test(guard) && /if \( empty\( \$state\['ok'\] \) \)/.test(guard));
 	check('the general self-test shows package health too', /یکپارچگی بستهٔ نصب‌شده/.test(selfTest));
 	check('the demo shows that row', /یکپارچگی بستهٔ نصب‌شده/.test(server));
+
+	// --- an error has to name a cause and a person --------------------------
+	// The owner sent their events screen: every failure read `transport`. That
+	// word is true and useless — it hides a DNS failure, a blocked port and a
+	// stale CA bundle behind the same three syllables.
+	const transportTest = read('tests', 'php', 'transport-test.php');
+
+	check('the transport classifier exists and names its cases', /const DNS\s+= 'dns'/.test(transport) && /const CONNECT/.test(transport) && /const TLS/.test(transport) && /const BLOCKED/.test(transport));
+	check('a dropped port is a connect failure, not a slow panel', transport.indexOf("self::CONNECT") < transport.indexOf("return self::TIMEOUT;"));
+	check('the server sentence is kept, not summarised away', /strtoupper\( \$kind \) \. ': ' \. \$detail/.test(transport));
+	check('and a credential in it is masked', /api_key\|apikey\|access_token/.test(transport));
+	check('each cause has a Persian sentence that says what to do', /WP_ACCESSIBLE_HOSTS/.test(transport) && /هاست/.test(transport) && /DNS/.test(transport));
+
+	check('the gateway keeps the reason instead of the word transport', /Transport::fromError\( \$response \)/.test(httpGateway));
+	check('the failing log rows carry it', /'reason'\s+=> isset\( \$meta\['reason'\] \)/.test(failover) && /'reason'\s+=> isset\( \$meta\['reason'\] \)/.test(dispatcherFile));
+	check('and carry a message, because that is the column the admin reads', /'message'\s+=> \$result->message\(\)/.test(failover) && /'message'\s+=> \$result->message\(\)/.test(dispatcherFile));
+	check('the health card gets the reason too', /\$detail = trim\(/.test(failover) && /health->failure\( \$result->gateway\(\), \$result->errorCode\(\), \$detail/.test(failover));
+
+	check('the gateways self-test asks the server to reach the gateway', /private function reachability\( array \$chain \)/.test(selfTest) && /wp_remote_get\(/.test(selfTest));
+	check('it never sends a message and never carries a key', /'limit_response_size' => 1024/.test(selfTest) && selfTest.indexOf('Authorization', selfTest.indexOf('private function reachability')) < 0);
+	check('it reports the millisecond and the status', /میلی‌ثانیه · پاسخ HTTP/.test(selfTest));
+	check('and it respects the site that blocked outbound HTTP', /WP_HTTP_BLOCK_EXTERNAL/.test(selfTest));
+	check('the self-test says which channel the site sends with', /کانال ارسال کد/.test(selfTest));
+	check('a gateway whose last send failed is not called ready', /\$status = 'fail';/.test(selfTest) && /\$health && empty\( \$health\['ok'\] \)/.test(selfTest));
+	check('the captcha rejects are counted, not guessed', /private function captchaRejects\( int \$days \)/.test(selfTest) && /'captcha_missing' === \$row->error_code/.test(selfTest));
+
+	check('the browser test has a suite of its own, in CI', /php tests\/php\/transport-test\.php/.test(read('.github', 'workflows', 'ci.yml')));
+	check('and that suite covers the sentences hosts really produce', transportTest.indexOf('Could not resolve host') >= 0 && transportTest.indexOf('Connection refused') >= 0 && transportTest.indexOf('SSL certificate problem') >= 0);
+
+	check('the test modal shows the reason next to the advice', /step\.reason/.test(adminJs) && /data\.reason/.test(adminJs));
+	check('the demo has a gateway failure that explains itself', /reason: 'CONNECT: cURL error 7/.test(server) && /دسترسی این سرور به سامانه/.test(server) && /ردشدن به‌خاطر کپچا/.test(server));
 
 	// --- app mode: the panel can take the whole window ----------------------
 	// The panel sits inside somebody else's page. This is the opt-in that hides
