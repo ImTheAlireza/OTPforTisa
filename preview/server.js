@@ -689,8 +689,13 @@ const server = http.createServer(async (req, res) => {
 		return;
 	}
 
+	/*
+	 * The form demo *is* the login page, and it used to live in a file that was
+	 * never written: /login answered 404 while the route list promised it. One
+	 * page, two addresses.
+	 */
 	if (pathname === '/login' || pathname === '/login.html') {
-		serveStatic(res, path.join(PUBLIC_DIR, 'login.html'));
+		serveStatic(res, path.join(PUBLIC_DIR, 'index.html'));
 		return;
 	}
 

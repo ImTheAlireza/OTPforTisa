@@ -1355,6 +1355,7 @@ function testTheFormLooksLikeItself() {
 	// 6. It is a test in CI, not a paragraph.
 	check('the appearance suite runs in CI', /php tests\/php\/appearance-test\.php/.test(ci));
 	check('and the demo shows the new rows', /چالش دیدنی است؟/.test(server) && /فونت فرم/.test(server));
+	check('every address the preview promises is an address it serves', /pathname === '\/login'[\s\S]{0,160}index\.html/.test(server));
 }
 
 async function main() {
