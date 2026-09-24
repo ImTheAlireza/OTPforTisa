@@ -1,6 +1,6 @@
 {
 	"files": {
-		"assets/css/admin.css": "bf1cc7266f09f22065bd3937f0fc4b371ec434f1675beb40c3809b5f79bb96ed",
+		"assets/css/admin.css": "611614e71ad28f622a84d592a6668f382d68ed37f466fd178c3324965628e9b4",
 		"assets/css/front.css": "1ee2a4848dfcf52613d4ea532d99daa7d373e726aac2345e2f47ccee828512a2",
 		"assets/css/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
 		"assets/fonts/OFL.txt": "e6f4ce7b6c830d5a25a4f8ac777c267cd7d3c180bc2a7150ca57cbb9b280c4b7",
@@ -17,9 +17,9 @@
 		"assets/js/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
 		"index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
 		"languages/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
-		"languages/signa.pot": "f361ad1ae71260cd059401856ca32a64c298ccdd3b051e64033efa84e6259452",
-		"readme.txt": "f7d701bacda7e316b8c623133e0808ea43bed76e2ecae2ca58d66627ba894026",
-		"signa.php": "72c041a87dee4e90bd96d7755388c55c9e83ea559c2884e60292f1056407692a",
+		"languages/signa.pot": "15a2a8369501789896f19df31d912c51aabbbd5e90ed3d316e3565d7cb03c015",
+		"readme.txt": "4ae24972acd49e59d0ce27115cb82c8b240271f1075856ed5c6e99bcac9ac87b",
+		"signa.php": "4daa3d3bfb787655b214a8a0c81caca2ba5a78c8584fd5d9cec4cde47b386aba",
 		"src/Access/EmergencyToken.php": "d650f05d569cf44dbd5e19e9d09079ccedecae3cacc0e1f5cf72aa09573ead31",
 		"src/Access/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
 		"src/Admin/AccessScreen.php": "248e1926db65055982492e29940000e381abf238513e42a20b553b90e656f5a3",
@@ -163,8 +163,8 @@
 		"templates/partials/step-phone.php": "94971090b3e5545ce42209c92b1d7ee037ad8120557b3acdc4a7adb82a27b298",
 		"templates/woocommerce/form-login.php": "130b6aed4df0d1455f5e5f20cd3b05dedc1806acee2cfcf7f670c9aa09eb15ae",
 		"templates/woocommerce/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
-		"uninstall.php": "731488da862eac6f2d5fa4c70e3de4aadfa3548a7eb3045ed8cf47f17fb705a4"
+		"uninstall.php": "858e4d2081495d304c2843e113807b4526fb89ebd4b94a0825a13bd6c1cb6e8e"
 	},
 	"name": "signa",
-	"version": "1.7.2"
+	"version": "2.0.0"
 }

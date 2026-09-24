@@ -19,6 +19,7 @@ $wipe     = is_array( $settings ) && ! empty( $settings['wipe_on_uninstall'] ) &
 delete_option( 'signa_settings' );
 delete_option( 'signa_db_version' );
 delete_option( 'signa_pepper' );
+delete_option( 'signa_gateway_health' );
 
 // The blocklist and any armed emergency code are security material: they never
 // survive the plugin, regardless of the wipe setting. The code is stored as a
@@ -29,7 +30,7 @@ delete_option( 'signa_emergency' );
 wp_clear_scheduled_hook( 'signa_maintenance' );
 
 $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
-	"DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_signa\_otp\_%' OR option_name LIKE '\_transient\_timeout\_signa\_otp\_%'"
+	"DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_signa\_%' OR option_name LIKE '\_transient\_timeout\_signa\_%'"
 );
 
 if ( $wipe ) {

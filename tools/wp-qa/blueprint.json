@@ -1,0 +1,14 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "preferredVersions": {
+    "php": "__PHP__",
+    "wp": "latest"
+  },
+  "landingPage": "/wp-admin/admin.php?page=signa",
+  "steps": [
+    {
+      "step": "activatePlugin",
+      "pluginPath": "signa/signa.php"
+    }
+  ]
+}

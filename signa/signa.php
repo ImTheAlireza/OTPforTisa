@@ -3,7 +3,7 @@
  * Plugin Name:       سیگنا — ورود و عضویت با کد یکبارمصرف
  * Plugin URI:        https://example.com/signa
  * Description:       ورود، عضویت و تأیید شماره موبایل با کد یکبارمصرف از طریق پیامک یا ایمیل؛ معماری ماژولار، کانال‌های قابل‌تعویض و محافظت چندلایه در برابر ربات.
- * Version:           1.7.2
+ * Version:           2.0.0
  * Requires at least: 6.1
  * Requires PHP:      7.4
  * Author:            Signa
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SIGNA_VERSION', '1.7.2' );
+define( 'SIGNA_VERSION', '2.0.0' );
 define( 'SIGNA_FILE', __FILE__ );
 define( 'SIGNA_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SIGNA_URL', plugin_dir_url( __FILE__ ) );
