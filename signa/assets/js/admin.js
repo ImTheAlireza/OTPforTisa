@@ -1,9 +1,10 @@
 /*!
  * Signa — admin screen behaviour.
  *
- * Handles the small amount of interactivity the settings and tools screens need:
- * toggles, card radios, the colour picker, the media picker, the field repeater,
- * the REST-driven tools (test send, throttle reset, importer) and the browser-side
+ * Handles the interactivity the settings and tools screens need: switching
+ * sections without a reload, the save bar, the live form preview, option cards,
+ * placeholders, the colour and media pickers, the field repeater, the
+ * REST-driven tools (test send, throttle reset, importer) and the browser-side
  * generator for the emergency code.
  */
 (function (window, document) {
@@ -463,25 +464,11 @@
 	/* Toggles, cards and colour picker -------------------------------------- */
 
 	function initControls() {
-		$$('.signa-toggle').forEach(function (toggle) {
-			var input = toggle.querySelector('input');
-
-			if (!input) {
-				return;
-			}
-
+		// Option cards: the ring follows the checked radio, not the last click.
+		$$('.signa-opts').forEach(function (group) {
 			var sync = function () {
-				toggle.classList.toggle('is-on', input.checked);
-			};
-
-			sync();
-			input.addEventListener('change', sync);
-		});
-
-		$$('.signa-cards').forEach(function (group) {
-			var sync = function () {
-				$$('.signa-card', group).forEach(function (card) {
-					var input = card.querySelector('input[type="radio"]');
+				$$('.signa-opt', group).forEach(function (card) {
+					var input = card.querySelector('input');
 					card.classList.toggle('is-selected', !!(input && input.checked));
 				});
 			};
@@ -490,18 +477,62 @@
 			group.addEventListener('change', sync);
 		});
 
+		// A switch announces its state: role="switch" reads aria-checked.
+		$$('input.signa-tgl[role="switch"]').forEach(function (input) {
+			var sync = function () {
+				input.setAttribute('aria-checked', input.checked ? 'true' : 'false');
+			};
+
+			sync();
+			input.addEventListener('change', sync);
+		});
+
 		if (window.jQuery && window.jQuery.fn.wpColorPicker) {
-			window.jQuery('.signa-color').wpColorPicker();
+			window.jQuery('.signa-color').wpColorPicker({
+				change: function (event) {
+					// The picker writes the value without an input event of its own.
+					window.setTimeout(function () {
+						event.target.dispatchEvent(new window.Event('input', { bubbles: true }));
+					}, 0);
+				},
+				clear: function (event) {
+					var input = event.target.closest('.wp-picker-container');
+					input = input ? input.querySelector('.signa-color') : null;
+
+					if (input) {
+						input.dispatchEvent(new window.Event('input', { bubbles: true }));
+					}
+				}
+			});
 		}
 
-		var saved = document.querySelector('[data-signa-saved]');
+		// Placeholders such as {code}: insert at the caret of the field they belong to.
+		document.addEventListener('click', function (event) {
+			var token = event.target.closest('[data-signa-token]');
 
-		if (saved && /[?&]settings-updated=true/.test(window.location.search)) {
-			saved.hidden = false;
-			window.setTimeout(function () {
-				saved.hidden = true;
-			}, 2600);
-		}
+			if (!token) {
+				return;
+			}
+
+			var field = document.getElementById(token.getAttribute('data-target') || '');
+
+			if (!field) {
+				return;
+			}
+
+			var text = token.getAttribute('data-signa-token') || '';
+			var start = 'number' === typeof field.selectionStart ? field.selectionStart : field.value.length;
+			var end = 'number' === typeof field.selectionEnd ? field.selectionEnd : field.value.length;
+
+			field.value = field.value.slice(0, start) + text + field.value.slice(end);
+			field.focus();
+
+			if (field.setSelectionRange) {
+				field.setSelectionRange(start + text.length, start + text.length);
+			}
+
+			field.dispatchEvent(new window.Event('input', { bubbles: true }));
+		});
 
 		$$('[data-signa-confirm]').forEach(function (link) {
 			link.addEventListener('click', function (event) {
@@ -509,6 +540,385 @@
 					event.preventDefault();
 				}
 			});
+		});
+	}
+
+	/*
+	 * The settings screen prints every section into one form and hides all but
+	 * one. The side links are real links (?tab=…), so without this script each
+	 * one is a page load; with it, a click only swaps the visible pane and the
+	 * address, and nothing typed in another pane is lost.
+	 */
+	function initSections() {
+		var form = document.querySelector('[data-signa-settings]');
+
+		if (!form) {
+			return;
+		}
+
+		var panes = {};
+		$$('[data-signa-pane]', form).forEach(function (pane) {
+			panes[pane.getAttribute('data-signa-pane')] = pane;
+		});
+
+		var links = $$('[data-signa-section]');
+
+		function referer() {
+			// options.php sends the browser back to this address after a save.
+			var field = form.querySelector('input[name="_wp_http_referer"]');
+
+			if (field) {
+				field.value = window.location.pathname + window.location.search;
+			}
+		}
+
+		function show(name, options) {
+			options = options || {};
+
+			if (!panes[name]) {
+				return false;
+			}
+
+			Object.keys(panes).forEach(function (key) {
+				panes[key].hidden = key !== name;
+			});
+
+			links.forEach(function (link) {
+				var on = link.getAttribute('data-signa-section') === name;
+				link.classList.toggle('is-current', on);
+
+				if (on) {
+					link.setAttribute('aria-current', 'page');
+				} else {
+					link.removeAttribute('aria-current');
+				}
+			});
+
+			if (options.push !== false && window.history && window.history.replaceState) {
+				var url = new window.URL(window.location.href);
+				url.searchParams.set('tab', name);
+				url.searchParams.delete('settings-updated');
+				url.hash = options.hash || '';
+				window.history.replaceState({ signaTab: name }, '', url.toString());
+				referer();
+			}
+
+			if (options.focus) {
+				var title = panes[name].querySelector('.signa-sechead__title');
+
+				if (title) {
+					title.setAttribute('tabindex', '-1');
+					title.focus({ preventScroll: true });
+				}
+
+				var top = form.getBoundingClientRect().top + window.pageYOffset - 48;
+
+				if (window.pageYOffset > top) {
+					window.scrollTo(0, Math.max(0, top));
+				}
+			}
+
+			form.dispatchEvent(new window.CustomEvent('signa:section', { detail: { section: name } }));
+
+			return true;
+		}
+
+		function reveal(hash) {
+			var target = hash ? document.getElementById(hash.replace(/^#/, '')) : null;
+
+			if (!target) {
+				return;
+			}
+
+			var acc = target.closest('details');
+
+			if (acc) {
+				acc.open = true;
+			}
+
+			target.scrollIntoView({ block: 'start' });
+		}
+
+		document.addEventListener('click', function (event) {
+			var link = event.target.closest('[data-signa-section], [data-signa-goto]');
+
+			if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+				return;
+			}
+
+			var name = link.getAttribute('data-signa-section') || link.getAttribute('data-signa-goto');
+			var hash = (link.getAttribute('href') || '').split('#')[1] || '';
+
+			if (show(name, { focus: !hash, hash: hash ? '#' + hash : '' })) {
+				event.preventDefault();
+				reveal(hash);
+			}
+		});
+
+		// An address that names another pane than the server drew (the demo, a bookmark).
+		var wanted = new window.URL(window.location.href).searchParams.get('tab');
+
+		if (wanted && panes[wanted] && panes[wanted].hidden) {
+			show(wanted, { push: false });
+		}
+
+		reveal(window.location.hash);
+		referer();
+	}
+
+	/*
+	 * The dark bar at the bottom: it says whether anything is unsaved, puts the
+	 * form back, and saves without leaving the page. The save is still the one
+	 * options.php runs, with its nonce and sanitising; without this script the
+	 * same button is a plain submit.
+	 */
+	function initSaveBar() {
+		var form = document.querySelector('[data-signa-settings]');
+		var bar = document.querySelector('[data-signa-savebar]');
+
+		if (!form || !bar) {
+			return;
+		}
+
+		var label = bar.querySelector('[data-signa-save-state]');
+		var reset = bar.querySelector('[data-signa-reset]');
+		var save = bar.querySelector('[data-signa-save]');
+		var resting = label ? label.textContent : '';
+		var dirty = false;
+		var timer = null;
+
+		function state(name, text) {
+			bar.setAttribute('data-state', name);
+
+			if (label) {
+				label.textContent = text;
+			}
+
+			if (save) {
+				save.disabled = 'saving' === name;
+			}
+		}
+
+		function mark() {
+			if (!dirty) {
+				dirty = true;
+				state('dirty', i18n.stateDirty || 'تغییرات ذخیره نشده دارید');
+			}
+		}
+
+		function clean(text) {
+			dirty = false;
+			state('clean', text || resting || i18n.stateClean || '');
+		}
+
+		// Controls that sit in the form but only drive the screen, not the settings.
+		function counts(event) {
+			var target = event.target;
+
+			if (!target || target.closest('[data-signa-transient]')) {
+				return false;
+			}
+
+			return !!(target.name || target.hasAttribute('data-signa-rows'));
+		}
+
+		form.addEventListener('input', function (event) {
+			if (counts(event)) {
+				mark();
+			}
+		});
+		form.addEventListener('change', function (event) {
+			if (counts(event)) {
+				mark();
+			}
+		});
+
+		if (reset) {
+			reset.addEventListener('click', function () {
+				form.reset();
+
+				// reset() fires no change events: let every mirror catch up.
+				$$('input, select, textarea', form).forEach(function (input) {
+					input.dispatchEvent(new window.Event('change', { bubbles: true }));
+				});
+
+				if (window.jQuery && window.jQuery.fn.wpColorPicker) {
+					$$('.signa-color', form).forEach(function (input) {
+						window.jQuery(input).wpColorPicker('color', input.defaultValue);
+					});
+				}
+
+				clean();
+			});
+		}
+
+		window.addEventListener('beforeunload', function (event) {
+			if (!dirty) {
+				return undefined;
+			}
+
+			event.preventDefault();
+			event.returnValue = i18n.leave || '';
+
+			return event.returnValue;
+		});
+
+		function done() {
+			window.clearTimeout(timer);
+			clean(i18n.stateSaved || 'ذخیره شد');
+			$$('input, select, textarea', form).forEach(function (input) {
+				// What was just saved is the new starting point for "reset".
+				if ('checkbox' === input.type || 'radio' === input.type) {
+					input.defaultChecked = input.checked;
+				} else if ('SELECT' === input.tagName) {
+					$$('option', input).forEach(function (option) {
+						option.defaultSelected = option.selected;
+					});
+				} else if ('file' !== input.type) {
+					input.defaultValue = input.value;
+				}
+			});
+			timer = window.setTimeout(function () {
+				if (!dirty) {
+					clean();
+				}
+			}, 2600);
+		}
+
+		function failed(messages) {
+			state('error', messages && messages.length ? messages.join(' ') : (i18n.stateError || 'ذخیره نشد'));
+		}
+
+		form.addEventListener('submit', function (event) {
+			if (!window.fetch || !window.FormData || !window.DOMParser) {
+				dirty = false;
+				return;
+			}
+
+			event.preventDefault();
+			state('saving', i18n.stateSaving || 'در حال ذخیره…');
+
+			if (cfg.demo) {
+				window.setTimeout(done, 500);
+				return;
+			}
+
+			window.fetch(form.action, {
+				method: 'POST',
+				body: new window.FormData(form),
+				credentials: 'same-origin'
+			}).then(function (response) {
+				return response.text().then(function (html) {
+					// options.php answers with a redirect back to this screen; the page
+					// it lands on carries whatever the sanitiser had to say.
+					var page = new window.DOMParser().parseFromString(html, 'text/html');
+					var errors = $$('.notice-error, .error.settings-error', page).map(function (notice) {
+						return notice.textContent.replace(/\s+/g, ' ').trim();
+					}).filter(Boolean);
+
+					if (!response.ok || !/[?&]settings-updated=true/.test(response.url || '')) {
+						throw errors;
+					}
+
+					if (errors.length) {
+						failed(errors);
+						return;
+					}
+
+					done();
+				});
+			}).catch(function (errors) {
+				failed(Array.isArray(errors) ? errors : []);
+			});
+		});
+
+		clean();
+	}
+
+	/*
+	 * The live preview: the plugin's own template, rendered by the server from
+	 * what is in the form right now, shown in a sandboxed frame.
+	 */
+	function initPreview() {
+		var form = document.querySelector('[data-signa-settings]');
+
+		$$('[data-signa-preview]').forEach(function (aside) {
+			var frame = aside.querySelector('iframe');
+			var box = aside.querySelector('.signa-pv__frame');
+			var url = aside.getAttribute('data-url');
+			var step = 'phone';
+			var timer = null;
+			var seq = 0;
+
+			if (!frame || !url || !form || !window.fetch) {
+				return;
+			}
+
+			function visible() {
+				return !aside.closest('[hidden]');
+			}
+
+			function draw() {
+				var body = new window.URLSearchParams();
+				var own = seq + 1;
+
+				new window.FormData(form).forEach(function (value, key) {
+					// The form's own nonce must not replace the preview's nonce.
+					if ('string' === typeof value && ['_wpnonce', '_wp_http_referer', 'option_page', 'action'].indexOf(key) < 0) {
+						body.append(key, value);
+					}
+				});
+				body.append('step', step);
+				seq = own;
+
+				if (box) {
+					box.classList.add('is-loading');
+				}
+
+				window.fetch(url, {
+					method: 'POST',
+					body: body,
+					credentials: 'same-origin'
+				}).then(function (response) {
+					return response.ok ? response.text() : Promise.reject(response.status);
+				}).then(function (html) {
+					if (own === seq) {
+						frame.removeAttribute('src');
+						frame.srcdoc = html;
+					}
+				}).catch(function () {
+					// Keep the last good picture; the form itself is unaffected.
+				}).then(function () {
+					if (own === seq && box) {
+						box.classList.remove('is-loading');
+					}
+				});
+			}
+
+			function later() {
+				window.clearTimeout(timer);
+				timer = window.setTimeout(function () {
+					if (visible()) {
+						draw();
+					}
+				}, 350);
+			}
+
+			$$('[data-signa-preview-step]', aside).forEach(function (button) {
+				button.addEventListener('click', function () {
+					step = button.getAttribute('data-signa-preview-step') || 'phone';
+					$$('[data-signa-preview-step]', aside).forEach(function (other) {
+						var on = other === button;
+						other.classList.toggle('is-current', on);
+						other.setAttribute('aria-pressed', on ? 'true' : 'false');
+					});
+					draw();
+				});
+			});
+
+			form.addEventListener('input', later);
+			form.addEventListener('change', later);
+			form.addEventListener('signa:section', later);
 		});
 	}
 
@@ -570,6 +980,7 @@
 					var html = template.innerHTML.replace(/__i__/g, String($$('.signa-repeater__row', rows).length));
 					rows.insertAdjacentHTML('beforeend', html);
 					reindex();
+					rows.dispatchEvent(new window.Event('change', { bubbles: true }));
 
 					var last = rows.lastElementChild;
 					var first = last ? last.querySelector('input') : null;
@@ -593,6 +1004,7 @@
 					if (row) {
 						row.remove();
 						reindex();
+						rows.dispatchEvent(new window.Event('change', { bubbles: true }));
 					}
 				});
 			}
@@ -1128,6 +1540,9 @@
 	ready(function () {
 		initAppMode();
 		initControls();
+		initSections();
+		initSaveBar();
+		initPreview();
 		initSelfTests();
 		initMedia();
 		initRepeater();

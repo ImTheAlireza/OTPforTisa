@@ -104,7 +104,8 @@ const dark = Object.assign({}, light, slate);
 // The dashboard has its own token block, and its own way to fail a contrast
 // check: an accent that reads fine on a card but not on the soft tint behind a
 // table cell.
-const adminRaw = tokens('.signa-wrap', adminCss);
+// The block is shared with the modal, which WordPress appends to <body>.
+const adminRaw = tokens('.signa-wrap,\n.signa-modal', adminCss);
 const admin = Object.assign(
 	{
 		'--signa-card': '#ffffff',
@@ -152,6 +153,15 @@ const checks = [
 	['admin: screen pill label on card', admin['--signa-ink'], admin['--signa-white'], 4.5, admin],
 	['admin: warning text on card (test rows)', admin['--signa-warning'], admin['--signa-white'], 4.5, admin],
 	['admin: modal result state on its tint', admin['--signa-danger'], admin['--signa-white'], 4.5, admin],
+	// 2.0 design: hints, notices and the side navigation.
+	['admin: hint text on card', admin['--signa-hint'], admin['--signa-white'], 4.5, admin],
+	['admin: current section label on its tint', admin['--signa-accent'], admin['--signa-accent-soft'], 4.5, admin],
+	['admin: primary button label (white on accent hover)', admin['--signa-white'], admin['--signa-accent-strong'], 4.5, admin],
+	['admin: info notice on its tint', admin['--signa-info'], admin['--signa-info-soft'], 4.5, admin],
+	['admin: warning notice on its tint', admin['--signa-warning'], admin['--signa-warning-soft'], 4.5, admin],
+	['admin: success notice on its tint', admin['--signa-success'], admin['--signa-success-soft'], 4.5, admin],
+	['admin: danger chip on its tint', admin['--signa-danger'], admin['--signa-danger-soft'], 4.5, admin],
+	['admin: input border on card (1.4.11)', admin['--signa-field'], admin['--signa-white'], 3, admin],
 ];
 
 let failed = 0;

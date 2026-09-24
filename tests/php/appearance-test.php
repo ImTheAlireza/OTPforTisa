@@ -25,6 +25,7 @@
 require __DIR__ . '/bootstrap.php';
 
 use Signa\Admin\Controls;
+use Signa\Admin\Dashboard;
 use Signa\Admin\SettingsScreen;
 use Signa\Captcha\Manager;
 use Signa\Config\Sanitizer;
@@ -385,10 +386,11 @@ $signa_screen = new SettingsScreen(
 	new FieldSchema( new Settings() ),
 	new Manager( new Settings(), new Logger( new Settings(), new Redactor(), new LogStore( new Settings() ) ) ),
 	new LogStore( new Settings() ),
-	new ReportScreen( new LogStore( new Settings() ), new Settings() )
+	new ReportScreen( new LogStore( new Settings() ), new Settings() ),
+	new Dashboard( new Settings(), new Registry( new Settings() ), new LogStore( new Settings() ) )
 );
 
-$_GET['tab'] = 'design';
+$_GET['tab'] = 'formskin';
 
 ob_start();
 $signa_screen->render();

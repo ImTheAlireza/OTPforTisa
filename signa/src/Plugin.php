@@ -120,6 +120,7 @@ final class Plugin {
 			Admin\LogsScreen::class,
 			Admin\ToolsScreen::class,
 			Admin\AccessScreen::class,
+			Admin\FormPreview::class,
 			Admin\AppMode::class,
 			Admin\Menu::class,
 		);
@@ -414,7 +415,24 @@ final class Plugin {
 				$c->make( Registration\FieldSchema::class ),
 				$c->make( Captcha\Manager::class ),
 				$c->make( Log\LogStore::class ),
-				$c->make( Admin\ReportScreen::class )
+				$c->make( Admin\ReportScreen::class ),
+				$c->make( Admin\Dashboard::class )
+			);
+		} );
+
+		$c->bind( Admin\Dashboard::class, static function ( Container $c ) {
+			return new Admin\Dashboard(
+				$c->make( Config\Settings::class ),
+				$c->make( Gateway\Registry::class ),
+				$c->make( Log\LogStore::class )
+			);
+		} );
+
+		$c->bind( Admin\FormPreview::class, static function ( Container $c ) {
+			return new Admin\FormPreview(
+				$c->make( Config\Settings::class ),
+				$c->make( Front\FormRenderer::class ),
+				$c->make( Front\Assets::class )
 			);
 		} );
 

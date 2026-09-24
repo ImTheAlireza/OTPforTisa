@@ -1,9 +1,15 @@
 <?php
 /**
- * Small rendering helpers shared by the admin screens.
+ * Rendering helpers shared by the settings screen.
  *
- * Every control writes into `signa_settings[...]` so the native Settings API
- * (options.php) can persist the whole screen in one POST — no custom AJAX save.
+ * Every control writes into `signa_settings[...]`, so the native Settings API
+ * (options.php) persists the whole page in one POST — with or without the
+ * script that saves it in the background. Two shapes cover the page:
+ *
+ * - a setting row (`.signa-sr`): title and one line of explanation on one side,
+ *   the control (a switch, a select, a number) on the other;
+ * - a field (`.signa-f`): a label above an input and a hint below it, laid out
+ *   two or three to a row with `grid()`.
  *
  * @package Signa
  */
@@ -32,30 +38,96 @@ final class Controls {
 		return 'signa-' . str_replace( '_', '-', $key );
 	}
 
-	/**
-	 * Wrap a control in the shared row markup.
-	 */
-	public function row( string $label, callable $control, string $hint = '' ): void {
-		echo '<div class="signa-row">';
-		echo '<div class="signa-row__head"><span class="signa-row__label">' . esc_html( $label ) . '</span>';
+	/* Layout ---------------------------------------------------------------- */
 
-		if ( '' !== trim( $hint ) ) {
-			echo '<p class="signa-row__hint">' . esc_html( $hint ) . '</p>';
+	/**
+	 * A setting row: text on one side, any control on the other.
+	 *
+	 * @param string   $for The id of the control, so the title is its label.
+	 */
+	public function row( string $title, callable $control, string $hint = '', string $for = '' ): void {
+		echo '<div class="signa-sr"><div class="signa-sr__text">';
+
+		if ( '' !== $for ) {
+			echo '<label class="signa-sr__t" for="' . esc_attr( $for ) . '">' . esc_html( $title ) . '</label>';
+		} else {
+			echo '<span class="signa-sr__t">' . esc_html( $title ) . '</span>';
 		}
 
-		echo '</div><div class="signa-row__control">';
+		if ( '' !== trim( $hint ) ) {
+			echo '<p class="signa-sr__s">' . esc_html( $hint ) . '</p>';
+		}
+
+		echo '</div><div class="signa-sr__ctl">';
 		$control();
 		echo '</div></div>';
 	}
 
-	public function text( string $key, string $placeholder = '', string $type = 'text' ): void {
+	/**
+	 * The most common row: a title, a hint and an on/off switch.
+	 */
+	public function toggleRow( string $key, string $title, string $hint = '' ): void {
+		$id = $this->id( $key );
+
+		echo '<div class="signa-sr"><div class="signa-sr__text">';
+		echo '<label class="signa-sr__t" for="' . esc_attr( $id ) . '" id="' . esc_attr( $id ) . '-label">' . esc_html( $title ) . '</label>';
+
+		if ( '' !== trim( $hint ) ) {
+			echo '<p class="signa-sr__s" id="' . esc_attr( $id ) . '-hint">' . esc_html( $hint ) . '</p>';
+		}
+
+		echo '</div><div class="signa-sr__ctl">';
+		$this->toggle( $key, '', '' !== trim( $hint ) ? $id . '-hint' : '' );
+		echo '</div></div>';
+	}
+
+	/**
+	 * A labelled field for the grid.
+	 */
+	public function field( string $label, callable $control, string $hint = '', string $for = '', string $class = '' ): void {
+		echo '<div class="signa-f' . ( '' !== $class ? ' ' . esc_attr( $class ) : '' ) . '">';
+
+		if ( '' !== $label ) {
+			if ( '' !== $for ) {
+				echo '<label class="signa-f__label" for="' . esc_attr( $for ) . '">' . esc_html( $label ) . '</label>';
+			} else {
+				echo '<span class="signa-f__label">' . esc_html( $label ) . '</span>';
+			}
+		}
+
+		$control();
+
+		if ( '' !== trim( $hint ) ) {
+			echo '<p class="signa-f__hint">' . esc_html( $hint ) . '</p>';
+		}
+
+		echo '</div>';
+	}
+
+	/**
+	 * Fields two or three to a row; one per row on narrow screens.
+	 */
+	public function grid( int $columns, callable $body ): void {
+		echo '<div class="signa-grid signa-grid--' . (int) max( 1, min( 3, $columns ) ) . '">';
+		$body();
+		echo '</div>';
+	}
+
+	/* Inputs ---------------------------------------------------------------- */
+
+	/**
+	 * @param bool $ltr Keys, addresses and numbers read left-to-right; Persian copy does not.
+	 */
+	public function text( string $key, string $placeholder = '', string $type = 'text', bool $ltr = true ): void {
 		printf(
-			'<input class="regular-text signa-input" type="%1$s" id="%2$s" name="%3$s" value="%4$s" placeholder="%5$s" dir="ltr">',
+			'<input class="signa-inp%1$s" type="%2$s" id="%3$s" name="%4$s" value="%5$s" placeholder="%6$s"%7$s>',
+			$ltr ? ' signa-inp--mono' : '',
 			esc_attr( $type ),
 			esc_attr( $this->id( $key ) ),
 			esc_attr( $this->name( $key ) ),
 			esc_attr( $this->settings->str( $key ) ),
-			esc_attr( $placeholder )
+			esc_attr( $placeholder ),
+			$ltr ? ' dir="ltr"' : ''
 		);
 	}
 
@@ -63,56 +135,79 @@ final class Controls {
 	 * Secrets are never echoed back; the stored value survives a masked submit.
 	 */
 	public function secret( string $key, string $placeholder = '' ): void {
+		$stored = '' !== $this->settings->str( $key );
+
 		printf(
-			'<input class="regular-text signa-input signa-input--secret" type="password" id="%1$s" name="%2$s" value="%3$s" placeholder="%4$s" autocomplete="new-password" dir="ltr">',
+			'<input class="signa-inp signa-inp--mono signa-input--secret" type="password" id="%1$s" name="%2$s" value="%3$s" placeholder="%4$s" autocomplete="new-password" dir="ltr"%5$s>',
 			esc_attr( $this->id( $key ) ),
 			esc_attr( $this->name( $key ) ),
-			esc_attr( '' !== $this->settings->str( $key ) ? Sanitizer::placeholder() : '' ),
-			esc_attr( $placeholder )
+			esc_attr( $stored ? Sanitizer::placeholder() : '' ),
+			esc_attr( $placeholder ),
+			$stored ? ' aria-describedby="' . esc_attr( $this->id( $key ) ) . '-stored"' : ''
 		);
 
-		if ( '' !== $this->settings->str( $key ) ) {
-			echo '<p class="signa-note">' . esc_html__( 'مقدار ذخیره شده است؛ برای تغییر، مقدار تازه را وارد کنید.', 'signa' ) . '</p>';
+		if ( $stored ) {
+			echo '<p class="signa-f__hint" id="' . esc_attr( $this->id( $key ) ) . '-stored">' . esc_html__( 'ذخیره شده؛ برای تغییر، مقدار تازه وارد کنید.', 'signa' ) . '</p>';
 		}
 	}
 
-	public function number( string $key, int $min, int $max, string $suffix = '' ): void {
+	public function number( string $key, int $min, int $max, string $unit = '' ): void {
 		printf(
-			'<span class="signa-number"><input class="small-text signa-input" type="number" id="%1$s" name="%2$s" value="%3$s" min="%4$d" max="%5$d" step="1" dir="ltr">%6$s</span>',
+			'<span class="signa-unit"><input class="signa-inp signa-inp--num" type="number" id="%1$s" name="%2$s" value="%3$s" min="%4$d" max="%5$d" step="1" dir="ltr">%6$s</span>',
 			esc_attr( $this->id( $key ) ),
 			esc_attr( $this->name( $key ) ),
 			esc_attr( $this->settings->str( $key ) ),
 			$min,
 			$max,
-			'' !== $suffix ? '<em>' . esc_html( $suffix ) . '</em>' : ''
+			'' !== $unit ? '<span class="signa-unit__u">' . esc_html( $unit ) . '</span>' : ''
 		);
 	}
 
-	public function textarea( string $key, int $rows = 3, string $placeholder = '' ): void {
+	public function textarea( string $key, int $rows = 3, string $placeholder = '', bool $ltr = false ): void {
 		printf(
-			'<textarea class="large-text signa-input" id="%1$s" name="%2$s" rows="%3$d" placeholder="%4$s">%5$s</textarea>',
+			'<textarea class="signa-inp signa-inp--area%1$s" id="%2$s" name="%3$s" rows="%4$d" placeholder="%5$s"%6$s>%7$s</textarea>',
+			$ltr ? ' signa-inp--mono' : '',
 			esc_attr( $this->id( $key ) ),
 			esc_attr( $this->name( $key ) ),
 			$rows,
 			esc_attr( $placeholder ),
+			$ltr ? ' dir="ltr"' : '',
 			esc_textarea( $this->settings->str( $key ) )
 		);
 	}
 
-	public function toggle( string $key, string $label, string $hint = '' ): void {
+	/**
+	 * An on/off switch: a real checkbox with the switch role, so it submits
+	 * without script and a screen reader announces «روشن/خاموش».
+	 *
+	 * @param string $label       Visible text beside the switch; empty when a row title labels it.
+	 * @param string $describedBy Id of the sentence that explains it.
+	 */
+	public function toggle( string $key, string $label = '', string $describedBy = '' ): void {
 		$on = $this->settings->bool( $key );
+		$id = $this->id( $key );
 
 		// Tells the sanitizer this toggle was rendered, so "off" is stored.
 		printf( '<input type="hidden" name="%s" value="%s">', esc_attr( $this->name( '_fields' ) . '[]' ), esc_attr( $key ) );
 
-		printf(
-			'<label class="signa-toggle%1$s" for="%2$s"><input type="checkbox" id="%2$s" name="%3$s" value="1"%4$s><span class="signa-toggle__track" aria-hidden="true"></span><span class="signa-toggle__text">%5$s%6$s</span></label>',
-			$on ? ' is-on' : '',
-			esc_attr( $this->id( $key ) ),
+		$input = sprintf(
+			'<input type="checkbox" role="switch" class="signa-tgl" id="%1$s" name="%2$s" value="1"%3$s%4$s>',
+			esc_attr( $id ),
 			esc_attr( $this->name( $key ) ),
 			$on ? ' checked' : '',
-			esc_html( $label ),
-			'' !== trim( $hint ) ? '<em>' . esc_html( $hint ) . '</em>' : ''
+			'' !== $describedBy ? ' aria-describedby="' . esc_attr( $describedBy ) . '"' : ''
+		);
+
+		if ( '' === $label ) {
+			echo $input; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above.
+			return;
+		}
+
+		printf(
+			'<label class="signa-toggle" for="%1$s">%2$s<span class="signa-toggle__text">%3$s</span></label>',
+			esc_attr( $id ),
+			$input, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above.
+			esc_html( $label )
 		);
 	}
 
@@ -122,7 +217,7 @@ final class Controls {
 	public function select( string $key, array $options ): void {
 		$current = $this->settings->str( $key );
 
-		echo '<select class="signa-input signa-select" id="' . esc_attr( $this->id( $key ) ) . '" name="' . esc_attr( $this->name( $key ) ) . '">';
+		echo '<span class="signa-sel"><select class="signa-inp" id="' . esc_attr( $this->id( $key ) ) . '" name="' . esc_attr( $this->name( $key ) ) . '">';
 
 		foreach ( $options as $value => $label ) {
 			printf(
@@ -133,29 +228,32 @@ final class Controls {
 			);
 		}
 
-		echo '</select>';
+		echo '</select>' . Icons::svg( 'chevron', 16, 'signa-sel__chev' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
 	}
 
 	/**
-	 * @param array<string,array<string,string>> $options id => label/desc
+	 * Radio cards: one option per card, the chosen one filled.
+	 *
+	 * @param array<string,array<string,string>> $options value => label/desc
+	 * @param string                             $legend  Accessible name of the group.
 	 */
-	public function cards( string $key, array $options ): void {
+	public function cards( string $key, array $options, string $legend = '' ): void {
 		$current = $this->settings->str( $key );
 
-		echo '<div class="signa-cards">';
+		echo '<div class="signa-opts" role="radiogroup"' . ( '' !== $legend ? ' aria-label="' . esc_attr( $legend ) . '"' : '' ) . '>';
 
 		foreach ( $options as $value => $option ) {
 			$label = isset( $option['label'] ) ? $option['label'] : (string) $value;
 			$desc  = isset( $option['desc'] ) ? $option['desc'] : '';
 
 			printf(
-				'<label class="signa-card%1$s"><input type="radio" name="%2$s" value="%3$s"%4$s><span class="signa-card__title">%5$s</span>%6$s</label>',
+				'<label class="signa-opt%1$s"><input class="signa-opt__input" type="radio" name="%2$s" value="%3$s"%4$s><span class="signa-opt__dot" aria-hidden="true"></span><span class="signa-opt__text"><span class="signa-opt__t">%5$s</span>%6$s</span></label>',
 				$current === (string) $value ? ' is-selected' : '',
 				esc_attr( $this->name( $key ) ),
 				esc_attr( (string) $value ),
 				checked( $current, (string) $value, false ),
 				esc_html( $label ),
-				'' !== $desc ? '<span class="signa-card__desc">' . esc_html( $desc ) . '</span>' : ''
+				'' !== $desc ? '<span class="signa-opt__s">' . esc_html( $desc ) . '</span>' : ''
 			);
 		}
 
@@ -172,7 +270,7 @@ final class Controls {
 
 		foreach ( $options as $value => $label ) {
 			printf(
-				'<label class="signa-check"><input type="checkbox" name="%1$s" value="%2$s"%3$s><span>%4$s</span></label>',
+				'<label class="signa-chip signa-check"><input type="checkbox" class="signa-chk" name="%1$s" value="%2$s"%3$s><span>%4$s</span></label>',
 				esc_attr( $this->name( $key ) . '[]' ),
 				esc_attr( (string) $value ),
 				checked( in_array( (string) $value, $current, true ), true, false ),
@@ -185,18 +283,44 @@ final class Controls {
 
 	public function color( string $key ): void {
 		printf(
-			'<input type="text" class="signa-input signa-color" id="%1$s" name="%2$s" value="%3$s" data-default-color="%3$s" dir="ltr">',
+			'<input type="text" class="signa-inp signa-inp--mono signa-color" id="%1$s" name="%2$s" value="%3$s" data-default-color="%3$s" dir="ltr">',
 			esc_attr( $this->id( $key ) ),
 			esc_attr( $this->name( $key ) ),
 			esc_attr( $this->settings->str( $key ) )
 		);
 	}
 
+	/* Messages -------------------------------------------------------------- */
+
 	public function notice( string $text, string $type = 'info' ): void {
 		printf(
-			'<div class="signa-notice signa-notice--%1$s"><p>%2$s</p></div>',
+			'<div class="signa-notice signa-notice--%1$s">%2$s<p>%3$s</p></div>',
 			esc_attr( $type ),
+			Icons::svg( self::noticeIcon( $type ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
 			esc_html( $text )
+		);
+	}
+
+	private static function noticeIcon( string $type ): string {
+		$icons = array(
+			'info'    => 'info',
+			'success' => 'check',
+			'warning' => 'alert',
+			'error'   => 'alert',
+		);
+
+		return isset( $icons[ $type ] ) ? $icons[ $type ] : 'info';
+	}
+
+	/**
+	 * A notice whose text carries a little markup (code, bold, links).
+	 */
+	public function richNotice( string $html, string $type = 'info' ): void {
+		printf(
+			'<div class="signa-notice signa-notice--%1$s">%2$s<p>%3$s</p></div>',
+			esc_attr( $type ),
+			Icons::svg( self::noticeIcon( $type ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			wp_kses_post( $html )
 		);
 	}
 

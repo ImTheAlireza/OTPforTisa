@@ -78,6 +78,20 @@ final class FormRenderer {
 	}
 
 	/**
+	 * The form as a visitor would see it, for the admin preview.
+	 *
+	 * The administrator who opens the preview is signed in and the plugin may
+	 * be switched off while it is being set up, so neither of the checks in
+	 * render() applies — and nothing is queued, because the preview page prints
+	 * its own stylesheet.
+	 */
+	public function preview(): string {
+		self::$sequence++;
+
+		return $this->view->render( 'form.php', $this->templateData( array() ) );
+	}
+
+	/**
 	 * Payload used by `GET /form-config` for lazily mounted forms.
 	 */
 	public function clientConfig(): array {

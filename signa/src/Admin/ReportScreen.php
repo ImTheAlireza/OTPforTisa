@@ -79,110 +79,112 @@ final class ReportScreen implements Bootable {
 			return;
 		}
 
-		echo '<div class="wrap signa-wrap" dir="rtl"><div class="signa-header"><div class="signa-header__title"><h1>' . esc_html__( 'گزارش‌ها', 'signa' ) . '</h1></div></div>';
+		Layout::open( 'reports', $this->settings, __( 'گزارش‌ها و رویدادها', 'signa' ) );
 
-		ScreenNav::render( self::SLUG );
+		echo '<div class="signa-sechead"><div class="signa-sechead__text"><h2 class="signa-sechead__title">' . esc_html__( 'گزارش‌ها و رویدادها', 'signa' ) . '</h2></div></div>';
 
 		$this->body( $this->range() );
 
-		echo '</div>';
+		Layout::close();
 	}
 
 	/**
-	 * Everything below the header: the range switch, the numbers, the chart, the
-	 * failure table and the CSV export.
-	 *
-	 * The settings screen draws this same body in its own reports tab, so there is
-	 * one report rendered in two places and no way for the two to drift apart.
+	 * The report itself. The settings page and this screen both draw it, so
+	 * there is one report with one set of numbers, reachable from two menus.
 	 */
 	public function body( int $days ): void {
 		$data = $this->data( $days );
+		$days = (int) $data['days'];
 
+		echo '<div class="signa-report-bar">';
 		$this->rangeBar( $days );
+		printf(
+			'<a class="signa-btn signa-btn--gh signa-btn--sm" href="%1$s">%2$s<span>%3$s</span></a>',
+			esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=signa_export_report&range=' . $days ), 'signa_export_report' ) ),
+			Icons::svg( 'download', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			esc_html__( 'دانلود CSV', 'signa' )
+		);
+		echo '</div>';
 
-		$this->kpis( $data['kpis'], $days );
+		if ( ! $this->settings->bool( 'logs_enabled', true ) ) {
+			echo '<div class="signa-notice signa-notice--warning">' . Icons::svg( 'alert' ) . '<p>' . esc_html__( 'ثبت رویدادها خاموش است؛ عددهای زیر فقط تا لحظهٔ خاموش شدن را نشان می‌دهند.', 'signa' ) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+		}
+
+		$this->kpis( $data['kpis'] );
 		$this->chart( $data['series'], (int) $data['peak'], $days );
+
+		echo '<section class="signa-card" id="signa-card-recent">';
+		Layout::cardHead( __( 'آخرین رویدادها', 'signa' ), 'list', __( 'زنده، از همان جدول رویدادها', 'signa' ) );
+		echo '<div class="signa-card__body">';
+		self::eventsTable( $this->logs->query( array( 'limit' => 8 ) ) );
+		printf(
+			'<p class="signa-card__more"><a href="%1$s">%2$s</a></p>',
+			esc_url( admin_url( 'admin.php?page=' . LogsScreen::SLUG ) ),
+			esc_html__( 'همهٔ رویدادها با جست‌وجو و فیلتر ←', 'signa' )
+		);
+		echo '</div></section>';
+
 		$this->failureTable( $data['failures'] );
 
-		echo '<div class="signa-panel signa-panel--foot"><p>';
-
 		printf(
-			/* translators: 1: number of events, 2: how many are errors, 3: days of retention */
-			esc_html__( '%1$s رویداد ثبت شده است؛ %2$s موردش خطا بوده. رویدادها %3$s روز نگه داشته می‌شوند.', 'signa' ),
-			esc_html( number_format_i18n( (int) $data['totals']['total'] ) ),
-			esc_html( number_format_i18n( (int) $data['totals']['errors'] ) ),
-			esc_html( number_format_i18n( $this->settings->int( 'logs_keep_days', 7 ) ) )
+			'<p class="signa-footnote">%s</p>',
+			esc_html(
+				sprintf(
+					/* translators: 1: number of events, 2: how many are errors, 3: days of retention */
+					__( '%1$s رویداد ثبت شده است؛ %2$s موردش خطا بوده. رویدادها %3$s روز نگه داشته می‌شوند.', 'signa' ),
+					number_format_i18n( (int) $data['totals']['total'] ),
+					number_format_i18n( (int) $data['totals']['errors'] ),
+					number_format_i18n( $this->settings->int( 'logs_keep_days', 7 ) )
+				)
+			)
 		);
-
-		echo ' <a href="' . esc_url( admin_url( 'admin.php?page=' . LogsScreen::SLUG ) ) . '">' . esc_html__( 'دیدن تک‌تک رویدادها', 'signa' ) . '</a></p>';
-
-		printf(
-			'<p><a class="button" href="%s">%s</a></p>',
-			esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=signa_export_report&range=' . $days ), 'signa_export_report' ) ),
-			esc_html__( 'دانلود گزارش این بازه (CSV)', 'signa' )
-		);
-
-		echo '</div>';
 	}
 
 	private function rangeBar( int $days ): void {
-		$base = admin_url( 'admin.php?page=' . self::SLUG );
+		$base = SettingsScreen::tabUrl( 'reports' );
 
-		echo '<div class="signa-range">';
+		echo '<nav class="signa-range" aria-label="' . esc_attr__( 'بازهٔ گزارش', 'signa' ) . '">';
 
 		foreach ( self::RANGES as $range ) {
 			printf(
-				'<a class="signa-range__item%1$s" href="%2$s">%3$s</a>',
+				'<a class="signa-range__item signa-chip%1$s" href="%2$s"%3$s>%4$s</a>',
 				$range === $days ? ' is-active' : '',
 				esc_url( add_query_arg( 'range', $range, $base ) ),
-				esc_html( sprintf( /* translators: %d: number of days */ __( '%d روز', 'signa' ), $range ) )
+				$range === $days ? ' aria-current="true"' : '',
+				esc_html( sprintf( /* translators: %s: number of days */ __( '%s روز', 'signa' ), number_format_i18n( $range ) ) )
 			);
 		}
 
-		echo '</div>';
+		echo '</nav>';
 	}
 
 	/**
-	 * @param array<string,mixed> $kpis
+	 * One number card with its tile. Shared with the dashboard strip.
 	 */
-	private function kpis( array $kpis, int $days ): void {
-		$cards = array(
-			array( __( 'درخواست‌ها', 'signa' ), number_format_i18n( (int) $kpis['requests'] ), __( 'هر بار که کاربر کد خواست', 'signa' ), '' ),
-			array( __( 'موفق', 'signa' ), number_format_i18n( (int) $kpis['sent'] ), __( 'کد ارسال شد', 'signa' ), 'is-good' ),
-			array( __( 'ناموفق', 'signa' ), number_format_i18n( (int) $kpis['failed'] ), __( 'ارسال نشد یا رد شد', 'signa' ), (int) $kpis['failed'] > 0 ? 'is-bad' : '' ),
-			array( __( 'نرخ موفقیت', 'signa' ), number_format_i18n( (float) $kpis['rate'], 1 ) . '٪', __( 'از درخواست‌ها', 'signa' ), 'is-rate' ),
-			array( __( 'حساب تازه', 'signa' ), number_format_i18n( (int) $kpis['created'] ), __( 'عضویت کامل‌شده', 'signa' ), '' ),
-			array( __( 'رد محافظ‌ها', 'signa' ), number_format_i18n( (int) $kpis['rejected'] ), __( 'محدودیت، ربات، مسدودی', 'signa' ), '' ),
-		);
-
-		echo '<div class="signa-kpis">';
-
-		foreach ( $cards as $card ) {
-			printf(
-				'<div class="signa-kpi %1$s"><span class="signa-kpi__value">%2$s</span><span class="signa-kpi__label">%3$s</span><span class="signa-kpi__hint">%4$s</span></div>',
-				esc_attr( $card[3] ),
-				esc_html( $card[1] ),
-				esc_html( $card[0] ),
-				esc_html( $card[2] )
-			);
-		}
-
-		echo '</div>';
-
+	public static function kpi( string $label, string $value, string $icon, string $tone = '', string $hint = '' ): void {
 		printf(
-			'<p class="signa-muted">%s</p>',
-			esc_html( sprintf( /* translators: %d: number of days */ __( 'بازه: %d روز گذشته.', 'signa' ), $days ) )
+			'<div class="%1$s"><span class="signa-kpi__tile">%2$s</span><span class="signa-kpi__text"><span class="signa-kpi__value">%3$s</span><span class="signa-kpi__label">%4$s</span>%5$s</span></div>',
+			esc_attr( trim( 'signa-kpi ' . $tone ) ),
+			Icons::svg( $icon, 18 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			esc_html( $value ),
+			esc_html( $label ),
+			'' !== $hint ? '<span class="signa-kpi__hint">' . esc_html( $hint ) . '</span>' : ''
 		);
 	}
 
-	/**
-	 * A bar per day, two segments each: what went out and what did not.
-	 *
-	 * Bars, not a canvas chart: the numbers are small, and a stack of divs
-	 * needs no library and prints in the browser's own colours.
-	 *
-	 * @param array<string,array<string,int>> $series
-	 */
+	private function kpis( array $kpis ): void {
+		echo '<div class="signa-kpis signa-kpis--6">';
+
+		self::kpi( __( 'درخواست‌ها', 'signa' ), number_format_i18n( (int) $kpis['requests'] ), 'send', '', __( 'هر بار که کاربر کد خواست', 'signa' ) );
+		self::kpi( __( 'موفق', 'signa' ), number_format_i18n( (int) $kpis['sent'] ), 'check', 'is-good', __( 'کد ارسال شد', 'signa' ) );
+		self::kpi( __( 'ناموفق', 'signa' ), number_format_i18n( (int) $kpis['failed'] ), 'alert', (int) $kpis['failed'] > 0 ? 'is-bad' : 'is-quiet', __( 'ارسال نشد یا رد شد', 'signa' ) );
+		self::kpi( __( 'نرخ موفقیت', 'signa' ), number_format_i18n( (float) $kpis['rate'], 1 ) . '٪', 'chart', 'is-rate', __( 'از درخواست‌ها', 'signa' ) );
+		self::kpi( __( 'حساب تازه', 'signa' ), number_format_i18n( (int) $kpis['created'] ), 'user-add', '', __( 'عضویت کامل‌شده', 'signa' ) );
+		self::kpi( __( 'رد محافظ‌ها', 'signa' ), number_format_i18n( (int) $kpis['rejected'] ), 'shield', '', __( 'محدودیت، ربات، مسدودی', 'signa' ) );
+
+		echo '</div>';
+	}
+
 	private function chart( array $series, int $peak, int $days ): void {
 		if ( array() === $series ) {
 			return;
@@ -190,8 +192,19 @@ final class ReportScreen implements Bootable {
 
 		$peak = max( 1, $peak );
 
-		echo '<div class="signa-panel"><h2 class="signa-panel__title">' . esc_html__( 'ارسال‌ها و خطاها، روز به روز', 'signa' ) . '</h2>';
+		echo '<section class="signa-card" id="signa-card-chart">';
+		Layout::cardHead(
+			__( 'ارسال‌ها و خطاها، روز به روز', 'signa' ),
+			'chart',
+			sprintf( /* translators: %s: number of days */ __( 'بازه: %s روز گذشته.', 'signa' ), number_format_i18n( $days ) ),
+			sprintf(
+				'<span class="signa-legend"><span class="signa-legend__item"><span class="signa-dot is-sent"></span>%1$s</span><span class="signa-legend__item"><span class="signa-dot is-failed"></span>%2$s</span></span>',
+				esc_html__( 'ارسال‌شده', 'signa' ),
+				esc_html__( 'ناموفق', 'signa' )
+			)
+		);
 
+		echo '<div class="signa-card__body">';
 		echo '<div class="signa-chart" role="img" aria-label="' . esc_attr( sprintf( /* translators: %d: number of days */ __( 'نمودار ارسال و خطا در %d روز گذشته', 'signa' ), $days ) ) . '">';
 
 		foreach ( $series as $day => $counts ) {
@@ -200,46 +213,38 @@ final class ReportScreen implements Bootable {
 			$total  = $sent + $failed;
 
 			printf(
-				'<div class="signa-chart__col"><span class="signa-chart__count">%1$s</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:%2$s%%"></span><span class="signa-chart__bar is-sent" style="height:%3$s%%"></span></div><span class="signa-chart__day" dir="ltr">%4$s</span></div>',
+				'<div class="signa-chart__col" title="%5$s"><span class="signa-chart__count">%1$s</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:%2$s%%"></span><span class="signa-chart__bar is-sent" style="height:%3$s%%"></span></div><span class="signa-chart__day" dir="ltr">%4$s</span></div>',
 				$total > 0 ? esc_html( number_format_i18n( $total ) ) : '',
 				esc_attr( (string) round( ( $failed / $peak ) * 100, 2 ) ),
 				esc_attr( (string) round( ( $sent / $peak ) * 100, 2 ) ),
-				esc_html( gmdate( 'm-d', (int) strtotime( $day ) ) )
+				esc_html( gmdate( 'm-d', (int) strtotime( $day ) ) ),
+				esc_attr( sprintf( /* translators: 1: day, 2: sent, 3: failed */ __( '%1$s: %2$s ارسال، %3$s ناموفق', 'signa' ), $day, number_format_i18n( $sent ), number_format_i18n( $failed ) ) )
 			);
 		}
 
-		echo '</div>';
-
-		printf(
-			'<p class="signa-legend"><span class="signa-legend__item"><span class="signa-dot is-sent"></span>%1$s</span><span class="signa-legend__item"><span class="signa-dot is-failed"></span>%2$s</span></p>',
-			esc_html__( 'ارسال‌شده', 'signa' ),
-			esc_html__( 'ناموفق', 'signa' )
-		);
-
-		echo '</div>';
+		echo '</div></div></section>';
 	}
 
-	/**
-	 * @param array<int,array<string,mixed>> $failures
-	 */
 	private function failureTable( array $failures ): void {
-		echo '<div class="signa-panel"><h2 class="signa-panel__title">' . esc_html__( 'بیشترین دلیل‌های شکست', 'signa' ) . '</h2>';
+		echo '<section class="signa-card" id="signa-card-failures">';
+		Layout::cardHead( __( 'بیشترین دلیل‌های شکست', 'signa' ), 'alert' );
+		echo '<div class="signa-card__body">';
 
 		if ( array() === $failures ) {
-			echo '<p class="signa-empty">' . esc_html__( 'در این بازه هیچ شکستی ثبت نشده است.', 'signa' ) . '</p></div>';
+			echo '<p class="signa-empty">' . esc_html__( 'در این بازه هیچ شکستی ثبت نشده است.', 'signa' ) . '</p></div></section>';
 
 			return;
 		}
 
 		$top = max( 1, (int) $failures[0]['total'] );
 
-		echo '<table class="widefat signa-report-table"><thead><tr>';
-		echo '<th>' . esc_html__( 'رویداد', 'signa' ) . '</th><th>' . esc_html__( 'کد خطا', 'signa' ) . '</th><th>' . esc_html__( 'تعداد', 'signa' ) . '</th><th>' . esc_html__( 'سهم', 'signa' ) . '</th>';
+		echo '<div class="signa-table-wrap"><table class="signa-table signa-report-table"><thead><tr>';
+		echo '<th scope="col">' . esc_html__( 'رویداد', 'signa' ) . '</th><th scope="col">' . esc_html__( 'کد خطا', 'signa' ) . '</th><th scope="col">' . esc_html__( 'تعداد', 'signa' ) . '</th><th scope="col">' . esc_html__( 'سهم', 'signa' ) . '</th>';
 		echo '</tr></thead><tbody>';
 
 		foreach ( $failures as $row ) {
 			printf(
-				'<tr><td>%1$s</td><td dir="ltr"><code>%2$s</code></td><td>%3$s</td><td><span class="signa-meter"><span class="signa-meter__fill" style="width:%4$s%%"></span></span></td></tr>',
+				'<tr><td>%1$s</td><td><code class="signa-code" dir="ltr">%2$s</code></td><td class="signa-num">%3$s</td><td><span class="signa-meter"><span class="signa-meter__fill" style="width:%4$s%%"></span></span></td></tr>',
 				esc_html( Report::label( (string) $row['event'] ) ),
 				esc_html( '' === (string) $row['error_code'] ? '—' : (string) $row['error_code'] ),
 				esc_html( number_format_i18n( (int) $row['total'] ) ),
@@ -247,7 +252,71 @@ final class ReportScreen implements Bootable {
 			);
 		}
 
+		echo '</tbody></table></div></div></section>';
+	}
+
+	/**
+	 * The latest events as a compact table. Shared with the dashboard.
+	 *
+	 * @param object[] $rows    Log rows, newest first.
+	 * @param bool     $compact Leave out the column header (the dashboard card is small).
+	 */
+	public static function eventsTable( array $rows, bool $compact = false ): void {
+		if ( array() === $rows ) {
+			echo '<p class="signa-empty">' . esc_html__( 'هنوز رویدادی ثبت نشده است.', 'signa' ) . '</p>';
+
+			return;
+		}
+
+		$channels = array(
+			'sms'   => __( 'پیامک', 'signa' ),
+			'email' => __( 'ایمیل', 'signa' ),
+		);
+
+		echo '<div class="signa-table-wrap"><table class="signa-table signa-events-table">';
+
+		if ( ! $compact ) {
+			echo '<thead><tr><th scope="col">' . esc_html__( 'زمان', 'signa' ) . '</th><th scope="col">' . esc_html__( 'رویداد', 'signa' ) . '</th><th scope="col">' . esc_html__( 'کاربر', 'signa' ) . '</th><th scope="col">' . esc_html__( 'کانال', 'signa' ) . '</th><th scope="col">' . esc_html__( 'نتیجه', 'signa' ) . '</th></tr></thead>';
+		}
+
+		echo '<tbody>';
+
+		foreach ( $rows as $row ) {
+			$bad     = in_array( (string) $row->event, Report::failureEvents(), true ) || in_array( (string) $row->severity, array( 'error', 'critical', 'warning' ), true );
+			$channel = (string) $row->channel;
+
+			printf(
+				'<tr><td class="signa-muted-cell">%1$s</td><td>%2$s</td><td dir="ltr" class="signa-mono-cell">%3$s</td><td>%4$s</td><td><span class="signa-chip %5$s">%6$s</span></td></tr>',
+				esc_html( self::ago( (string) $row->created_at ) ),
+				esc_html( Report::label( (string) $row->event ) ),
+				esc_html( '' !== (string) $row->phone_mask ? (string) $row->phone_mask : '—' ),
+				'' !== $channel ? '<span class="signa-chip">' . esc_html( isset( $channels[ $channel ] ) ? $channels[ $channel ] : $channel ) . '</span>' : '—',
+				$bad ? 'signa-chip--bad' : 'signa-chip--ok',
+				esc_html( $bad ? __( 'ناموفق', 'signa' ) : __( 'موفق', 'signa' ) )
+			);
+		}
+
 		echo '</tbody></table></div>';
+	}
+
+	/**
+	 * «۵ دقیقه پیش» for a GMT timestamp from the event table.
+	 */
+	public static function ago( string $gmt ): string {
+		$time = strtotime( $gmt . ' UTC' );
+
+		if ( false === $time ) {
+			return $gmt;
+		}
+
+		$diff = max( 0, time() - $time );
+
+		if ( $diff < MINUTE_IN_SECONDS ) {
+			return __( 'همین حالا', 'signa' );
+		}
+
+		/* translators: %s: a time span such as «۵ دقیقه» */
+		return sprintf( __( '%s پیش', 'signa' ), human_time_diff( $time, time() ) );
 	}
 
 	/**

@@ -98,56 +98,69 @@ final class Assets implements Bootable {
 		wp_enqueue_style( 'signa-admin', SIGNA_URL . 'assets/css/admin.css', array(), SIGNA_VERSION );
 		wp_enqueue_script( 'signa-admin', SIGNA_URL . 'assets/js/admin.js', array(), SIGNA_VERSION, true );
 
-		wp_localize_script(
-			'signa-admin',
-			'signaOtpAdmin',
-			array(
-				'restUrl' => esc_url_raw( rest_url( 'signa/v1/' ) ),
-				'nonce'   => wp_create_nonce( 'wp_rest' ),
-				'captcha' => $this->captchaTest(),
-				'i18n'    => array(
-					'working'    => __( 'در حال انجام…', 'signa' ),
-					'done'       => __( 'انجام شد', 'signa' ),
-					'failed'     => __( 'ناموفق', 'signa' ),
-					'confirm'    => __( 'این عملیات قابل بازگشت نیست. ادامه می‌دهید؟', 'signa' ),
-					'captcha'    => __( 'کپچا', 'signa' ),
-					'traceTitle' => __( 'مسیر تلاش برای ارسال:', 'signa' ),
-					'traceSent'  => __( 'ارسال شد', 'signa' ),
-					'ok'         => __( 'فعال', 'signa' ),
-					'testing'    => __( 'در حال آزمایش…', 'signa' ),
-					'captchaOk'  => __( 'کپچا درست بارگذاری شد.', 'signa' ),
-					'captchaNoScript' => __( 'نشانی اسکریپت خالی است. کلید سایت را در همین کارت وارد کنید.', 'signa' ),
-					'captchaBlocked'  => __( 'اسکریپت کپچا در مرورگر بارگذاری نشد. افزونهٔ مسدودکننده، DNS یا فیلترینگ را بررسی کنید؛ می‌توانید «نشانی جایگزین اسکریپت» را هم پر کنید.', 'signa' ),
-					'close'         => __( 'بستن', 'signa' ),
-					'rerun'         => __( 'اجرای دوباره', 'signa' ),
-					'statusOk'      => __( 'سالم', 'signa' ),
-					'statusWarn'    => __( 'هشدار', 'signa' ),
-					'statusFail'    => __( 'نیاز به رسیدگی', 'signa' ),
-					'statusInfo'    => __( 'اطلاع', 'signa' ),
-					'captchaRow'    => __( 'بارگذاری در مرورگر', 'signa' ),
-					'captchaTrying' => __( 'اسکریپت‌هایی که امتحان می‌شوند', 'signa' ),
-					'smsTitle'      => __( 'ارسال پیامک آزمایشی', 'signa' ),
-					'smsIntro'      => __( 'یک کد واقعی از مسیر واقعی ارسال می‌شود. شماره‌ای را وارد کنید که در دسترس خودتان است؛ هر سامانه‌ای که امتحان شود با پاسخش نشان داده می‌شود.', 'signa' ),
-					'smsPhone'      => __( 'شماره', 'signa' ),
-					'smsNeedPhone'  => __( 'بدون شماره، آزمایشی ارسال نمی‌شود.', 'signa' ),
-					'smsSend'       => __( 'ارسال', 'signa' ),
-					'smsSent'       => __( 'ارسال شد', 'signa' ),
-					'smsNotSent'    => __( 'پیامک ارسال نشد', 'signa' ),
-					'smsVia'        => __( 'از طریق', 'signa' ),
-					'smsChannel'    => __( 'پیامک', 'signa' ),
-					'emailChannel'  => __( 'ایمیل', 'signa' ),
-					'fix'           => __( 'راه‌حل', 'signa' ),
-					'planIssues'    => __( 'ایرادهای پیکربندی این سامانه', 'signa' ),
-				),
-				'myPhone' => $this->ownPhone(),
-			)
-		);
+		wp_localize_script( 'signa-admin', 'signaOtpAdmin', $this->adminConfig() );
 
 		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_script( 'wp-color-picker' );
 		wp_enqueue_media();
 
 		unset( $hook );
+	}
+
+	/**
+	 * What admin.js is handed: the REST root, the nonce and every sentence it
+	 * prints. Public so the static admin demo shows the same words.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function adminConfig(): array {
+		return array(
+			'restUrl' => esc_url_raw( rest_url( 'signa/v1/' ) ),
+			'nonce'   => wp_create_nonce( 'wp_rest' ),
+			'captcha' => $this->captchaTest(),
+			'i18n'    => array(
+				'working'    => __( 'در حال انجام…', 'signa' ),
+				'done'       => __( 'انجام شد', 'signa' ),
+				'failed'     => __( 'ناموفق', 'signa' ),
+				'confirm'    => __( 'این عملیات قابل بازگشت نیست. ادامه می‌دهید؟', 'signa' ),
+				'captcha'    => __( 'کپچا', 'signa' ),
+				'traceTitle' => __( 'مسیر تلاش برای ارسال:', 'signa' ),
+				'traceSent'  => __( 'ارسال شد', 'signa' ),
+				'ok'         => __( 'فعال', 'signa' ),
+				'testing'    => __( 'در حال آزمایش…', 'signa' ),
+				'captchaOk'  => __( 'کپچا درست بارگذاری شد.', 'signa' ),
+				'captchaNoScript' => __( 'نشانی اسکریپت خالی است. کلید سایت را در همین کارت وارد کنید.', 'signa' ),
+				'captchaBlocked'  => __( 'اسکریپت کپچا در مرورگر بارگذاری نشد. افزونهٔ مسدودکننده، DNS یا فیلترینگ را بررسی کنید؛ می‌توانید «نشانی جایگزین اسکریپت» را هم پر کنید.', 'signa' ),
+				'close'         => __( 'بستن', 'signa' ),
+				'rerun'         => __( 'اجرای دوباره', 'signa' ),
+				'statusOk'      => __( 'سالم', 'signa' ),
+				'statusWarn'    => __( 'هشدار', 'signa' ),
+				'statusFail'    => __( 'نیاز به رسیدگی', 'signa' ),
+				'statusInfo'    => __( 'اطلاع', 'signa' ),
+				'captchaRow'    => __( 'بارگذاری در مرورگر', 'signa' ),
+				'captchaTrying' => __( 'اسکریپت‌هایی که امتحان می‌شوند', 'signa' ),
+				'smsTitle'      => __( 'ارسال پیامک آزمایشی', 'signa' ),
+				'smsIntro'      => __( 'یک کد واقعی از مسیر واقعی ارسال می‌شود. شماره‌ای را وارد کنید که در دسترس خودتان است؛ هر سامانه‌ای که امتحان شود با پاسخش نشان داده می‌شود.', 'signa' ),
+				'smsPhone'      => __( 'شماره', 'signa' ),
+				'smsNeedPhone'  => __( 'بدون شماره، آزمایشی ارسال نمی‌شود.', 'signa' ),
+				'smsSend'       => __( 'ارسال', 'signa' ),
+				'smsSent'       => __( 'ارسال شد', 'signa' ),
+				'smsNotSent'    => __( 'پیامک ارسال نشد', 'signa' ),
+				'smsVia'        => __( 'از طریق', 'signa' ),
+				'smsChannel'    => __( 'پیامک', 'signa' ),
+				'emailChannel'  => __( 'ایمیل', 'signa' ),
+				'fix'           => __( 'راه‌حل', 'signa' ),
+				'planIssues'    => __( 'ایرادهای پیکربندی این سامانه', 'signa' ),
+				'stateClean'    => __( 'همه‌چیز ذخیره شده است', 'signa' ),
+				'stateDirty'    => __( 'تغییرات ذخیره نشده دارید', 'signa' ),
+				'stateSaving'   => __( 'در حال ذخیره…', 'signa' ),
+				'stateSaved'    => __( 'ذخیره شد', 'signa' ),
+				'stateError'    => __( 'ذخیره نشد؛ دوباره امتحان کنید.', 'signa' ),
+				'leave'         => __( 'تغییرات ذخیره نشده از بین می‌رود.', 'signa' ),
+				'copied'        => __( 'رونوشت شد', 'signa' ),
+			),
+			'myPhone' => $this->ownPhone(),
+		);
 	}
 
 	/**
@@ -365,6 +378,22 @@ final class Assets implements Bootable {
 			'signa-radius'        => $radius . 'px',
 			'signa-width'         => $width . 'px',
 		);
+	}
+
+	/**
+	 * The form's stylesheet and its inline variables, for a page that prints
+	 * its own <head> (the admin form preview).
+	 */
+	public function previewStyles(): string {
+		$css = $this->cssVariables();
+		$own = trim( $this->settings->str( 'custom_css' ) );
+
+		if ( '' !== $own ) {
+			$css .= "\n" . wp_strip_all_tags( $own );
+		}
+
+		return '<link rel="stylesheet" href="' . esc_url( SIGNA_URL . 'assets/css/front.css?ver=' . SIGNA_VERSION ) . '">'
+			. '<style>' . $css . '</style>';
 	}
 
 	private function cssVariables(): string {

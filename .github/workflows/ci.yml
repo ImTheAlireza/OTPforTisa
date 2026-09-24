@@ -28,6 +28,7 @@ jobs:
           php tests/php/fields-test.php
           php tests/php/report-test.php
           php tests/php/screens-test.php
+          php tests/php/dashboard-test.php
           php tests/php/colour-test.php
           php tests/php/transport-test.php
           php tests/php/captcha-test.php
@@ -45,6 +46,10 @@ jobs:
         # the renderer or the integration changes, this fails until it is
         # regenerated. `php tools/woodmart-demo.php --write` does that.
         run: php tools/woodmart-demo.php --check
+      - name: The admin preview pages are the plugin's current screens
+        # preview/public/admin*.html are generated the same way; regenerate
+        # with `node tools/admin-demo.js`.
+        run: SIGNA_PHP=php node tools/admin-demo.js --check
       - name: Lint every PHP file
         run: |
           php -v
@@ -89,6 +94,7 @@ jobs:
         run: |
           npm install --no-save jsdom
           node tests/front.js
+          node tests/admin-js.js
 
   brand:
     name: Brand

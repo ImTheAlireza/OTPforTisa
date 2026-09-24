@@ -55,9 +55,10 @@ final class ToolsScreen implements Bootable {
 			return;
 		}
 
-		echo '<div class="wrap signa-wrap" dir="rtl"><div class="signa-header"><div class="signa-header__title"><h1>' . esc_html__( 'ابزارها و وضعیت', 'signa' ) . '</h1></div></div>';
+		Layout::open( self::SLUG, $this->settings, __( 'ابزارها و وضعیت', 'signa' ) );
 
-		ScreenNav::render( self::SLUG );
+		echo '<div class="signa-sechead"><div class="signa-sechead__text"><h2 class="signa-sechead__title">' . esc_html__( 'ابزارها و وضعیت', 'signa' ) . '</h2>';
+		echo '<p class="signa-sechead__desc">' . esc_html__( 'سلامت سرور و سامانه، ارسال آزمایشی، واردسازی شماره‌های قدیمی و نگهداری.', 'signa' ) . '</p></div></div>';
 
 		$this->statusCards();
 		$this->doctorCard();
@@ -65,7 +66,7 @@ final class ToolsScreen implements Bootable {
 		$this->importCard();
 		$this->housekeepingCard();
 
-		echo '</div>';
+		Layout::close();
 	}
 
 	private function statusCards(): void {

@@ -57,18 +57,16 @@ final class AccessScreen implements Bootable {
 			return;
 		}
 
-		echo '<div class="wrap signa-wrap" dir="rtl">';
-		echo '<div class="signa-header"><div class="signa-header__title"><h1>' . esc_html__( 'دسترسی و مسدودی', 'signa' ) . '</h1>';
-		echo '<p>' . esc_html__( 'دو اهرم اضطراری: کدی برای روزی که پیامک قطع است، و فهرستی از شماره‌هایی که اجازه ورود ندارند.', 'signa' ) . '</p>';
-		echo '</div></div>';
+		Layout::open( self::SLUG, $this->settings, __( 'دسترسی و مسدودی', 'signa' ) );
 
-		ScreenNav::render( self::SLUG );
+		echo '<div class="signa-sechead"><div class="signa-sechead__text"><h2 class="signa-sechead__title">' . esc_html__( 'دسترسی و مسدودی', 'signa' ) . '</h2>';
+		echo '<p class="signa-sechead__desc">' . esc_html__( 'دو اهرم اضطراری: کدی برای روزی که پیامک قطع است، و فهرستی از شماره‌هایی که اجازه ورود ندارند.', 'signa' ) . '</p></div></div>';
 
 		$this->notice();
 		$this->emergencyCard();
 		$this->blocklistCard();
 
-		echo '</div>';
+		Layout::close();
 	}
 
 	/* ---------------------------------------------------------------------

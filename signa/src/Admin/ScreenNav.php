@@ -1,18 +1,12 @@
 <?php
 /**
- * The plugin's screen switcher.
+ * The side navigation every plugin screen shares.
  *
- * The plugin registers five screens: settings, reports, events, tools and
- * access. Only the settings screen has its own in-page tab navigation, so
- * until now four of the five were reachable *only* from the WordPress sidebar —
- * which is exactly where nobody looks when they are already inside the plugin.
- *
- * This row prints the five screens in menu order on every one of them, so
- * "where is the reports page?" has an answer on the page you are standing on.
- *
- * The row also carries the app-mode switch, because it is the one element that
- * exists on all five screens: the control that leaves the mode has to be where
- * the control that entered it was.
+ * One list for the eight sections of the settings page and a second, captioned
+ * list for the three tool screens. Each screen draws the same nav with itself
+ * marked, so "where is the reports page?" always has the same answer — and a
+ * screen that is in the WordPress menu but not here (or the other way round)
+ * is exactly the bug this class exists to prevent.
  *
  * @package Signa
  */
@@ -24,80 +18,125 @@ defined( 'ABSPATH' ) || exit;
 final class ScreenNav {
 
 	/**
-	 * Every screen the plugin registers, in the order WordPress lists them.
+	 * Settings sections, in order: id => array( label, icon ).
 	 *
-	 * @return array<string,string> Screen slug => menu label.
+	 * @return array<string,array{0:string,1:string}>
 	 */
-	public static function screens(): array {
+	public static function sections(): array {
 		return array(
-			Menu::ROOT         => __( 'تنظیمات', 'signa' ),
-			ReportScreen::SLUG => __( 'گزارش‌ها', 'signa' ),
-			LogsScreen::SLUG   => __( 'رویدادها', 'signa' ),
-			ToolsScreen::SLUG  => __( 'ابزارها', 'signa' ),
-			AccessScreen::SLUG => __( 'دسترسی و مسدودی', 'signa' ),
+			'dash'     => array( __( 'داشبورد', 'signa' ), 'home' ),
+			'login'    => array( __( 'ورود و عضویت', 'signa' ), 'login' ),
+			'channels' => array( __( 'پیامک و کانال‌ها', 'signa' ), 'send' ),
+			'formskin' => array( __( 'ظاهر فرم', 'signa' ), 'palette' ),
+			'security' => array( __( 'امنیت و محدودیت', 'signa' ), 'shield' ),
+			'integ'    => array( __( 'یکپارچه‌سازی‌ها', 'signa' ), 'link' ),
+			'reports'  => array( __( 'گزارش‌ها و رویدادها', 'signa' ), 'chart' ),
+			'advanced' => array( __( 'پیشرفته', 'signa' ), 'sliders' ),
 		);
 	}
 
 	/**
-	 * Where one screen lives.
+	 * The tool screens under the «ابزارها» caption: slug => array( label, icon ).
 	 *
-	 * Reports has two doors (its own page and the settings tab), and the pill
-	 * points at the tab: that is where an administrator already is, and it keeps
-	 * the plugin's own navigation inside the plugin.
+	 * @return array<string,array{0:string,1:string}>
 	 */
-	public static function url( string $slug ): string {
-		if ( ReportScreen::SLUG === $slug ) {
-			return SettingsScreen::tabUrl( 'reports' );
-		}
-
-		return admin_url( 'admin.php?page=' . $slug );
+	public static function tools(): array {
+		return array(
+			LogsScreen::SLUG   => array( __( 'همهٔ رویدادها', 'signa' ), 'list' ),
+			ToolsScreen::SLUG  => array( __( 'ابزارها و وضعیت', 'signa' ), 'tools' ),
+			AccessScreen::SLUG => array( __( 'دسترسی و مسدودی', 'signa' ), 'ban' ),
+		);
 	}
 
 	/**
-	 * Print the row, marking the screen the visitor is already on.
+	 * The sections that live inside the one settings form, and can therefore be
+	 * switched in place without a page load.
 	 *
-	 * @param string $current Slug of the screen being rendered.
+	 * @return string[]
+	 */
+	public static function formSections(): array {
+		return array( 'login', 'channels', 'formskin', 'security', 'integ', 'advanced' );
+	}
+
+	/**
+	 * Address of a section or a tool screen.
+	 */
+	public static function url( string $id ): string {
+		if ( ReportScreen::SLUG === $id ) {
+			return SettingsScreen::tabUrl( 'reports' );
+		}
+
+		if ( array_key_exists( $id, self::tools() ) ) {
+			return admin_url( 'admin.php?page=' . $id );
+		}
+
+		if ( Menu::ROOT === $id ) {
+			return SettingsScreen::tabUrl( 'dash' );
+		}
+
+		return SettingsScreen::tabUrl( $id );
+	}
+
+	/**
+	 * Draw the nav with one entry marked as the current page.
+	 *
+	 * @param string $current A section id or a tool screen slug.
 	 */
 	public static function render( string $current ): void {
-		echo '<nav class="signa-screens" aria-label="' . esc_attr__( 'صفحه‌های افزونه', 'signa' ) . '"><ul>';
+		if ( Menu::ROOT === $current ) {
+			$current = 'dash';
+		} elseif ( ReportScreen::SLUG === $current ) {
+			$current = 'reports';
+		}
 
-		foreach ( self::screens() as $slug => $label ) {
-			$is_current = $current === $slug;
+		echo '<nav class="signa-screens" aria-label="' . esc_attr__( 'صفحه‌های افزونه', 'signa' ) . '">';
+		echo '<ul class="signa-screens__list">';
 
-			printf(
-				'<li><a href="%1$s" class="signa-screen%2$s"%3$s>%4$s</a></li>',
-				esc_url( self::url( $slug ) ),
-				$is_current ? ' is-current' : '',
-				$is_current ? ' aria-current="page"' : '',
-				esc_html( $label )
-			);
+		foreach ( self::sections() as $id => $item ) {
+			self::item( $id, $item[0], $item[1], $current, in_array( $id, self::formSections(), true ) );
 		}
 
 		echo '</ul>';
 
-		self::appToggle();
+		echo '<p class="signa-screens__cap" id="signa-screens-tools">' . esc_html__( 'ابزارها', 'signa' ) . '</p>';
+		echo '<ul class="signa-screens__list" aria-labelledby="signa-screens-tools">';
 
-		echo '</nav>';
+		foreach ( self::tools() as $slug => $item ) {
+			self::item( $slug, $item[0], $item[1], $current, false );
+		}
+
+		echo '</ul></nav>';
+	}
+
+	private static function item( string $id, string $label, string $icon, string $current, bool $inForm ): void {
+		$is_current = $current === $id;
+
+		printf(
+			'<li><a href="%1$s" class="signa-screen%2$s"%3$s%4$s>%5$s<span>%6$s</span></a></li>',
+			esc_url( self::url( $id ) ),
+			$is_current ? ' is-current' : '',
+			$is_current ? ' aria-current="page"' : '',
+			$inForm ? ' data-signa-section="' . esc_attr( $id ) . '"' : '',
+			Icons::svg( $icon ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			esc_html( $label )
+		);
 	}
 
 	/**
-	 * The full-screen switch, drawn with the state it would go to.
-	 *
-	 * Nothing here needs JavaScript: a form post flips the administrator's own
-	 * preference and sends them straight back to this page.
+	 * The full-screen switch. It is a POST with a nonce, so a link cannot flip it.
 	 */
-	private static function appToggle(): void {
+	public static function appToggle(): void {
 		$on = AppMode::isOn();
 
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="signa-appmode" aria-label="' . esc_attr__( 'حالت نمایش', 'signa' ) . '">';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="signa-appmode">';
 		echo '<input type="hidden" name="action" value="' . esc_attr( AppMode::ACTION ) . '">';
 		wp_nonce_field( AppMode::ACTION );
-		echo '<button type="submit" class="button signa-appmode__button">'
-			. esc_html( $on ? __( 'نمای پیشخوان', 'signa' ) : __( 'حالت اپ', 'signa' ) )
-			. '</button>';
-		echo '<span class="signa-appmode__hint">'
-			. esc_html( $on ? __( 'بازگشت به چیدمان وردپرس.', 'signa' ) : __( 'تمام‌صفحه، بدون منو و نوار مدیریت.', 'signa' ) )
-			. '</span>';
+		printf(
+			'<button type="submit" class="signa-btn signa-btn--gh signa-btn--sm" title="%1$s">%2$s<span>%3$s</span></button>',
+			esc_attr( $on ? __( 'بازگشت به چیدمان وردپرس.', 'signa' ) : __( 'تمام‌صفحه، بدون منو و نوار مدیریت.', 'signa' ) ),
+			Icons::svg( 'expand', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			esc_html( $on ? __( 'نمای پیشخوان', 'signa' ) : __( 'حالت اپ', 'signa' ) )
+		);
 		echo '</form>';
 	}
 }

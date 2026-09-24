@@ -30,6 +30,15 @@ const SCRIPT = path.join(REPO, 'signa', 'assets', 'js', 'front.js');
 const scriptSource = fs.readFileSync(SCRIPT, 'utf8');
 const pageSource = fs.readFileSync(PAGE, 'utf8');
 
+// The admin preview is generated from the plugin's real screens, one file per
+// screen (tools/admin-demo.js). A promise about "the admin demo" holds for the
+// set, whichever screen it happens to be drawn on.
+const ADMIN_DEMO = fs.readdirSync(path.join(REPO, 'preview', 'public'))
+	.filter((name) => /^admin(-[a-z]+)?\.html$/.test(name) && !/^admin-preview-/.test(name))
+	.sort()
+	.map((name) => fs.readFileSync(path.join(REPO, 'preview', 'public', name), 'utf8'))
+	.join('\n');
+
 let passed = 0;
 let failed = 0;
 
@@ -798,7 +807,7 @@ function testTheThreeDemoPages() {
 	scenario('The demo pages keep up with the plugin');
 
 	const account = fs.readFileSync(path.join(REPO, 'preview', 'public', 'account.html'), 'utf8');
-	const admin = fs.readFileSync(path.join(REPO, 'preview', 'public', 'admin.html'), 'utf8');
+	const admin = ADMIN_DEMO;
 	const adminCss = fs.readFileSync(path.join(REPO, 'signa', 'assets', 'css', 'admin.css'), 'utf8');
 	const server = fs.readFileSync(path.join(REPO, 'preview', 'server.js'), 'utf8');
 	const demo = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document;
@@ -827,13 +836,13 @@ function testTheThreeDemoPages() {
 	check('the template handles the postcode type the way the demo shows', /'postcode' === \$field\['type'\]/.test(template) && /postal-code/.test(template));
 
 	// The admin demo shows the report screen the plugin renders.
-	for (const name of ['signa-kpi', 'signa-chart__col', 'signa-report-table', 'signa-range__item']) {
+	for (const name of ['signa-kpi', 'signa-chart__col', 'signa-table', 'signa-range__item']) {
 		check('the admin demo has .' + name, admin.indexOf(name) >= 0);
 		check('and the real admin stylesheet defines .' + name, adminCss.indexOf('.' + name) >= 0);
 	}
 
 	check('the report screen is a real admin page', /class ReportScreen/.test(fs.readFileSync(path.join(REPO, 'signa', 'src', 'Admin', 'ReportScreen.php'), 'utf8')));
-	check('the captcha test is wired in the demo, with the keys the plugin localizes', /data-signa-captcha-test/.test(admin) && /captcha: \{/.test(admin) && /'global'/.test(fs.readFileSync(path.join(REPO, 'signa', 'src', 'Front', 'Assets.php'), 'utf8')));
+	check('the captcha test is wired in the demo, with the keys the plugin localizes', /data-signa-captcha-test/.test(admin) && /"captcha":\{/.test(admin) && /'global'/.test(fs.readFileSync(path.join(REPO, 'signa', 'src', 'Front', 'Assets.php'), 'utf8')));
 	check('and admin.js implements it', /testCaptcha/.test(fs.readFileSync(path.join(REPO, 'signa', 'assets', 'js', 'admin.js'), 'utf8')));
 }
 
@@ -850,33 +859,37 @@ function testEveryScreenIsReachable() {
 	const nav = read('signa', 'src', 'Admin', 'ScreenNav.php');
 	const settings = read('signa', 'src', 'Admin', 'SettingsScreen.php');
 	const menu = read('signa', 'src', 'Admin', 'Menu.php');
-	const admin = read('preview', 'public', 'admin.html');
+	const admin = ADMIN_DEMO;
 	const adminCss = read('signa', 'assets', 'css', 'admin.css');
 
 	check('the switcher knows all five screens', ['Menu::ROOT', 'ReportScreen::SLUG', 'LogsScreen::SLUG', 'ToolsScreen::SLUG', 'AccessScreen::SLUG'].every((slug) => nav.indexOf(slug) >= 0));
 
+	// Since 2.0 every screen opens with the same frame, and the frame draws the nav.
+	const layout = read('signa', 'src', 'Admin', 'Layout.php');
+	check('the frame prints the side navigation', /ScreenNav::render\( \$current \)/.test(layout));
+
 	for (const [file, marker] of [
-		['SettingsScreen', 'ScreenNav::render( Menu::ROOT )'],
-		['ReportScreen', 'ScreenNav::render( self::SLUG )'],
-		['LogsScreen', 'ScreenNav::render( self::SLUG )'],
-		['ToolsScreen', 'ScreenNav::render( self::SLUG )'],
-		['AccessScreen', 'ScreenNav::render( self::SLUG )'],
+		['SettingsScreen', 'Layout::open( $tab,'],
+		['ReportScreen', "Layout::open( 'reports',"],
+		['LogsScreen', 'Layout::open( self::SLUG,'],
+		['ToolsScreen', 'Layout::open( self::SLUG,'],
+		['AccessScreen', 'Layout::open( self::SLUG,'],
 	]) {
-		check(file + ' prints the switcher', read('signa', 'src', 'Admin', file + '.php').indexOf(marker) >= 0);
+		check(file + ' opens the shared frame', read('signa', 'src', 'Admin', file + '.php').indexOf(marker) >= 0);
 	}
 
 	check('the menu and the switcher share one slug per screen', /LogsScreen::SLUG/.test(menu) && /ToolsScreen::SLUG/.test(menu) && menu.indexOf("self::ROOT . '-logs'") < 0 && menu.indexOf("self::ROOT . '-tools'") < 0);
 	check('the tools screen owns its slug like the others', /const SLUG = 'signa-tools'/.test(read('signa', 'src', 'Admin', 'ToolsScreen.php')));
 
-	// The settings screen counts the last week and names the page that explains it.
-	check('the settings screen shows a seven-day overview', /private function overview\(\)/.test(settings) && /const OVERVIEW_DAYS = 7/.test(settings));
-	check('with the four numbers the reports screen also shows', /signa-kpis/.test(settings) && /'requests'/.test(settings) && /'rate'/.test(settings));
-	check('and a way into the reports tab', /self::tabUrl\( 'reports' \)/.test(settings) && /گزارش\u200cها/.test(settings));
-	check('it says so instead of showing zeros when logging is off', /logs_enabled/.test(settings) && /notice\(/.test(settings));
+	// The dashboard counts the last day (as the design does) and names the page that explains it.
+	const dashboard = read('signa', 'src', 'Admin', 'Dashboard.php');
+	check('the dashboard shows a 24-hour overview', /signa-kpis/.test(dashboard) && /const DAYS = 1;/.test(dashboard) && /۲۴ ساعت/.test(dashboard));
+	check('and a way into the reports section', /tabUrl\( 'reports' \)/.test(dashboard) || /ScreenNav::url\( 'reports' \)/.test(dashboard));
+	check('it says so instead of showing zeros when logging is off', /logs_enabled/.test(dashboard));
 
-	check('the css defines the switcher', /\.signa-screens \{/.test(adminCss) && /\.signa-screen\.is-current/.test(adminCss));
-	check('and the overview strip', /\.signa-overview \.signa-kpis \{/.test(adminCss));
-	check('the demo mirrors both', admin.indexOf('signa-screens') >= 0 && admin.indexOf('signa-overview') >= 0);
+	check('the css defines the navigation', /\.signa-screens__list \{/.test(adminCss) && /\.signa-screen\.is-current/.test(adminCss));
+	check('and the numbers strip', /\.signa-kpis \{/.test(adminCss));
+	check('the demo mirrors both', admin.indexOf('signa-screens') >= 0 && admin.indexOf('signa-kpis') >= 0);
 
 	// "Which build is on my site?" must be answerable from the dashboard header.
 	const plugin = read('signa', 'signa.php');
@@ -907,7 +920,7 @@ function testThePanelKeepsItsOwnPromises() {
 	const api = read('signa', 'src', 'Http', 'Api.php');
 	const controller = read('signa', 'src', 'Http', 'AdminController.php');
 	const nav = read('signa', 'src', 'Admin', 'ScreenNav.php');
-	const admin = read('preview', 'public', 'admin.html');
+	const admin = ADMIN_DEMO;
 	const server = read('preview', 'server.js');
 	const appMode = read('signa', 'src', 'Admin', 'AppMode.php');
 	const pluginSource = read('signa', 'src', 'Plugin.php');
@@ -915,22 +928,19 @@ function testThePanelKeepsItsOwnPromises() {
 	const readme = read('signa', 'readme.txt');
 
 	// --- reports as a tab of the settings panel ------------------------------
-	check('the settings panel has a reports tab', /'reports'\s+=> __\(/.test(settings));
+	check('the settings panel has a reports section', /'reports'\s+=> array\( __\(/.test(nav));
 	check('and it draws the reports screen body rather than a copy of it', /\$this->reports->body\( \$this->reports->range\(\) \)/.test(settings));
 	check('the reports screen exposes that body', /public function body\( int \$days \): void/.test(report));
-	check('both callers use it: the screen and the tab', (report.match(/\$this->body\(/g) || []).length === 1 && (settings.match(/->body\(/g) || []).length === 1);
+	check('both callers use it: the screen and the section', (report.match(/\$this->body\(/g) || []).length === 1 && (settings.match(/->body\(/g) || []).length === 1);
 
-	// The tab is not a form: no save button, no settings fields.
+	// The section is not a form: no save button, no settings fields.
 	const tabBranch = (settings.match(/if \( 'reports' === \$tab \) \{[\s\S]*?\n\t\t\}/) || [''])[0];
-	check('the tab skips the settings form entirely', /return;/.test(tabBranch) && tabBranch.indexOf('settings_fields') < 0);
-	check('the overview strip does not double the numbers on the reports tab', /'reports' !== \$tab/.test(settings));
+	check('the section skips the settings form entirely', /return;/.test(tabBranch) && tabBranch.indexOf('settings_fields') < 0);
 
-	// One address for reports inside the plugin.
-	check('tab urls are built in one place', /public static function tabUrl\(/.test(settings) && /self::tabUrl\( \$id \)/.test(settings));
-	check('the screens row points at the tab, not at a second page', /SettingsScreen::tabUrl\( 'reports' \)/.test(nav));
-	check('and the overview button does the same', /\$reports = self::tabUrl\( 'reports' \)/.test(settings));
-
-	check('reports sits at the end of the row, after the data section', settings.indexOf("'data'         =>") < settings.indexOf("'reports'      =>"));
+	// One address per section inside the plugin.
+	check('section urls are built in one place', /public static function tabUrl\(/.test(settings) && /SettingsScreen::tabUrl\( \$id \)/.test(nav));
+	check('the navigation points at the section, not at a second page', /SettingsScreen::tabUrl\( 'reports' \)/.test(nav));
+	check('reports sits after the integrations section', nav.indexOf("'integ'") < nav.indexOf("'reports'"));
 
 	// --- "did my update actually land?" --------------------------------------
 	// Twice now the answer to "where is it?" was "the installed package is older
@@ -938,7 +948,8 @@ function testThePanelKeepsItsOwnPromises() {
 	// every tab, so it is on screen before a single setting is read — and it is
 	// the only place a release is described: a card of release notes in front of
 	// the settings was prose the owner did not ask for.
-	check('the running version is printed in the header of every tab', /signa-header__meta/.test(settings) && /نسخه %s/.test(settings) && /SIGNA_VERSION/.test(settings));
+	const layoutFile = read('signa', 'src', 'Admin', 'Layout.php');
+	check('the running version is printed in the header of every screen', /signa-header__meta/.test(layoutFile) && /نسخه %s/.test(layoutFile) && /SIGNA_VERSION/.test(layoutFile));
 	check('and no card of release notes stands in front of the settings', settings.indexOf('whatsNew') < 0 && settings.indexOf('تازه در نسخهٔ') < 0 && settings.indexOf('signa-bullets') < 0);
 
 	// --- the text diet -------------------------------------------------------
@@ -949,7 +960,7 @@ function testThePanelKeepsItsOwnPromises() {
 	const longOnes = sentences(settings).concat(sentences(selfTest));
 	check('no sentence in the admin screens runs past 120 characters', longOnes.length === 0, longOnes.slice(0, 2).join(' | '));
 	check('the release-notes card is gone from the panel', settings.indexOf('private function whatsNew') < 0);
-	check('and the settings tab starts with settings', /private function generalSection\(\): void \{\s*\n\s*\$c = \$this->controls;\s*\n\s*\$this->card\(/.test(settings));
+	check('and every settings section starts with settings', /private function loginSection\(\): void \{\s*\n\s*\$c = \$this->controls;\s*\n\s*\$this->card\(/.test(settings));
 
 	const version = (bootstrap.match(/define\( 'SIGNA_VERSION', '([0-9.]+)' \)/) || [])[1];
 	// Persian digits, for the places a release is named to a person.
@@ -959,7 +970,7 @@ function testThePanelKeepsItsOwnPromises() {
 	check('and the readme explains what changed in it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
 	check('the preview says which version it is showing', admin.indexOf(version) >= 0);
 	check('and the preview shows no release-notes card either', admin.indexOf('تازه در نسخهٔ ' + faVersion) < 0 && admin.indexOf('signa-bullets') < 0);
-	check('but it still leads into the reports section', /class="button" href="#reports"/.test(admin) || admin.indexOf('#reports') >= 0);
+	check('but it still leads into the reports section', admin.indexOf('href="/admin/reports"') >= 0);
 
 	// --- a broken install must not take the site down -----------------------
 	// 1.3.2 shipped a constructor that had grown a tenth argument while the
@@ -1028,23 +1039,23 @@ function testThePanelKeepsItsOwnPromises() {
 	check('the body is marked before it is painted', /add_filter\( 'admin_body_class'/.test(appMode) && /' signa-app'/.test(appMode));
 	check('the switch is a form post with a nonce and a capability check', /admin_post_/.test(appMode) && /check_admin_referer\( self::ACTION \)/.test(appMode) && /current_user_can\( Menu::CAPABILITY \)/.test(appMode));
 	check('and it lands back on the page it was pressed from', /wp_safe_redirect\( \$back/.test(appMode));
-	check('the switch rides in the screen row, so all five screens have it', /private static function appToggle\(\)/.test(nav) && /self::appToggle\(\);/.test(nav));
+	check('the switch rides in the shared header, so all five screens have it', /public static function appToggle\(\)/.test(nav) && /ScreenNav::appToggle\(\);/.test(read('signa', 'src', 'Admin', 'Layout.php')));
 	check('the button names where it goes, not what it is', /'نمای پیشخوان'/.test(nav) && /'حالت اپ'/.test(nav));
 	check('the stylesheet takes the chrome away', /body\.signa-app #adminmenumain/.test(adminCss) && /body\.signa-app #wpadminbar/.test(adminCss) && /body\.signa-app #wpfooter/.test(adminCss));
 	check('and keeps the notices, because a save message is feedback', adminCss.indexOf('body.signa-app .notice') < 0);
 	check('the toolbar room is given back on html as well', /html:has\(body\.signa-app\)/.test(adminCss) && /initAppMode\(\)/.test(adminJs));
-	check('the demo shows the switch and what it does', /data-signa-app-demo/.test(admin) && /body\.signa-app \.demo-bar \{ display: none; \}/.test(admin));
+	check('the demo shows the switch and what it does', /name="action" value="signa_app_mode"/.test(admin) && /body\.signa-app \.demo-bar\{display:none\}/.test(admin));
 
 	// --- one self-test per section ------------------------------------------
 	const kinds = (selfTest.match(/return array\( '([a-z]+)'(?:, '[a-z]+')* \);/) || [])[1];
 	check('the self-test knows which sections exist', !!kinds && ['general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data'].every((kind) => selfTest.indexOf("'" + kind + "'") >= 0));
 
 	for (const kind of ['general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data']) {
-		check('the ' + kind + ' section has a test button', settings.indexOf('data-signa-check="' + kind + '"') >= 0 || new RegExp("'" + kind + "',").test(settings));
+		check('the ' + kind + ' section has a test button', new RegExp("'" + kind + "'\\s+=> __\\(").test(settings) && admin.indexOf('data-signa-check="' + kind + '"') >= 0);
 		check('and the test really exists', new RegExp('private function ' + kind + '\\(\\)').test(selfTest));
 	}
 
-	check('the test card is what prints the buttons', /private function testCard\(/.test(settings) && (settings.match(/\$this->testCard\(/g) || []).length === 8);
+	check('the section head is what prints the buttons', /private function sectionHead\(/.test(settings) && /data-signa-check="%1\$s"/.test(settings));
 	check('the gateways section offers a real send too', /data-signa-sms-test/.test(settings));
 	check('the captcha button kept its old hook', /data-signa-captcha-test/.test(settings) && settings.indexOf('data-signa-captcha-result') < 0);
 
@@ -1075,8 +1086,9 @@ function testThePanelKeepsItsOwnPromises() {
 	check('the demo can run a section test', /data-signa-check="(gateways|data|general)"/.test(admin));
 	check('the demo can show the captcha test', /data-signa-check="security" data-signa-captcha-test/.test(admin));
 	check('the demo can send a test message', admin.indexOf('data-signa-sms-test') >= 0);
-	check('and the demo names all eight sections in one place', ['عمومی', 'کد و کانال\u200cها', 'سامانه‌های پیامکی', 'امنیت و محدودیت', 'فرم عضویت', 'ظاهر فرم', 'فروشگاه', 'داده و رویدادها'].every((label) => admin.indexOf(label) >= 0));
-	check('the demo shows the reports tab in the same pill row', /class="signa-screen">گزارش\u200cها و آمار<\/a>/.test(admin) || /href="#reports" class="signa-screen">گزارش\u200cها و آمار<\/a>/.test(admin));
+	const sectionLabels = [...nav.matchAll(/'([a-z]+)'\s+=> array\( __\( '([^']+)'/g)].map((m) => m[2]);
+	check('and the demo names all eight sections in one place', sectionLabels.length === 8 && sectionLabels.every((label) => admin.indexOf('>' + label + '<') >= 0), sectionLabels.join(' | '));
+	check('the demo shows reports in the same navigation', /<a href="\/admin\/reports" class="signa-screen[^"]*"[^>]*>/.test(admin));
 	check('the demo api answers the check route', /case 'admin\/check':/.test(server) && /function checkPayload\(/.test(server));
 	check('with a failing row in it, so the modal is seen doing its job', /status: 'warn'/.test(server) || /status: 'fail'/.test(server));
 }
@@ -1101,7 +1113,7 @@ function testSmsIrAgainstItsDocumentation() {
 	const selfTest = read('signa', 'src', 'Diagnostics', 'SelfTest.php');
 	const suite = read('tests', 'php', 'smsir-test.php');
 	const ci = read('.github', 'workflows', 'ci.yml');
-	const admin = read('preview', 'public', 'admin.html');
+	const admin = ADMIN_DEMO;
 	const server = read('preview', 'server.js');
 
 	// The two documented endpoints, and the two documented ways to authenticate.
@@ -1153,7 +1165,7 @@ function testSmsIrAgainstItsDocumentation() {
 	check('and with a reachability row that carries a cause', server.indexOf('دسترسی این سرور به سامانه') >= 0 && server.indexOf('CONNECT') >= 0);
 	const pluginVersion = (read('signa', 'signa.php').match(/Version:\s*([0-9.]+)/) || [])[1];
 	const faPluginVersion = !!pluginVersion && pluginVersion.replace(/[0-9]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[digit]);
-	check('the demo version follows the plugin', !!pluginVersion && admin.indexOf(faPluginVersion) >= 0 && admin.indexOf(pluginVersion) >= 0, pluginVersion);
+	check('the demo version follows the plugin', !!pluginVersion && !!faPluginVersion && admin.indexOf('نسخه ' + pluginVersion) >= 0, pluginVersion);
 }
 
 /*
@@ -1226,7 +1238,7 @@ function testTheBlockHasAnAnswer() {
 	const settings = read('signa', 'src', 'Config', 'Settings.php');
 	const sanitizer = read('signa', 'src', 'Config', 'Sanitizer.php');
 	const server = read('preview', 'server.js');
-	const adminHtml = read('preview', 'public', 'admin.html');
+	const adminHtml = ADMIN_DEMO;
 	const ci = read('.github', 'workflows', 'ci.yml');
 
 	// 1. The failure itself: two numbered answers and the host to put in them.
@@ -1258,7 +1270,7 @@ function testTheBlockHasAnAnswer() {
 	check('the hint sentence that explained the modal is gone', adminJs.indexOf('smsHint') < 0 && assets.indexOf('smsHint') < 0);
 
 	// 5. The demo promises the same thing, and CI runs the suite that proves it.
-	check('the demo has the switch and the fix', /ارسال مستقیم/.test(adminHtml) && /fix: 'راه‌حل'/.test(adminHtml));
+	check('the demo has the switch and the fix', /ارسال مستقیم/.test(adminHtml) && /"fix":"راه‌حل"/.test(adminHtml));
 	check('and its mock answers with the Persian channel label', /carrier_label: 'ایمیل'/.test(server) && /fix: '/.test(server));
 	// 6. Who is told what: the administrator's sentence stays in the panel.
 	const auth = read('signa', 'src', 'Http', 'AuthController.php');

@@ -7,7 +7,7 @@
  * administrator opened «سامانه‌های پیامکی». Every gate was green: the file
  * parsed, the class wired up, and the tests read it as text.
  *
- * So this test opens the screen. All nine tabs, with the real classes and the
+ * So this test opens the screen. All eight sections, with the real classes and the
  * bootstrap's WordPress stubs, and it fails on anything that throws or prints a
  * PHP error. It is the difference between "the file compiles" and "the screen
  * works", and the setting screen is the first page an owner sees.
@@ -18,6 +18,7 @@
 require __DIR__ . '/bootstrap.php';
 
 use Signa\Admin\Controls;
+use Signa\Admin\Dashboard;
 use Signa\Admin\ReportScreen;
 use Signa\Admin\SettingsScreen;
 use Signa\Captcha\Manager;
@@ -50,7 +51,8 @@ $signa_screen   = new SettingsScreen(
 	new FieldSchema( $signa_settings ),
 	new Manager( $signa_settings, new Logger( $signa_settings, new Redactor(), $signa_logs ) ),
 	$signa_logs,
-	new ReportScreen( $signa_logs, $signa_settings )
+	new ReportScreen( $signa_logs, $signa_settings ),
+	new Dashboard( $signa_settings, new Registry( $signa_settings ), $signa_logs )
 );
 
 /**
@@ -91,15 +93,14 @@ function signa_php_noise( string $html ): string {
 signa_start( 'every tab of the settings screen renders' );
 
 $signa_tabs = array(
-	'general'      => 'رفتار ورود',
-	'code'         => 'طول کد',
-	'gateways'     => 'سامانه‌های پیامکی',
-	'security'     => 'امنیت و محدودیت',
-	'registration' => 'فرم عضویت',
-	'design'       => 'ظاهر فرم',
-	'store'        => 'فروشگاه',
-	'data'         => 'داده و رویدادها',
-	'reports'      => 'گزارش‌ها',
+	'dash'     => 'سلامت افزونه',
+	'login'    => 'رفتار ورود',
+	'channels' => 'سامانه‌های پیامکی',
+	'formskin' => 'پیش‌نمایش زنده',
+	'security' => 'کپچا',
+	'integ'    => 'ووکامرس',
+	'reports'  => 'آخرین رویدادها',
+	'advanced' => 'ثبت رویدادها',
 );
 
 foreach ( $signa_tabs as $signa_tab => $signa_marker ) {
@@ -117,9 +118,9 @@ foreach ( $signa_tabs as $signa_tab => $signa_marker ) {
 		echo '        printed: ' . $signa_noise . "\n";
 	}
 
-	// The reports tab is a report rather than a form of cards, so it is the
-	// numbers it prints that say it drew.
-	$signa_body = 'reports' === $signa_tab ? 'signa-kpis' : 'signa-card';
+	// The reports and the dashboard are pages rather than forms, so it is
+	// the numbers they print that say they drew.
+	$signa_body = in_array( $signa_tab, array( 'reports', 'dash' ), true ) ? 'signa-kpis' : 'signa-card';
 
 	if ( '' !== $signa_result['html'] && false === strpos( $signa_result['html'], $signa_body ) ) {
 		echo '        printed no ' . $signa_body . "\n";
@@ -129,19 +130,44 @@ foreach ( $signa_tabs as $signa_tab => $signa_marker ) {
 		'and it prints the markup an administrator is looking for',
 		'' !== $signa_result['html']
 			&& false !== strpos( $signa_result['html'], $signa_body )
-			&& '' === $signa_noise
+			&& false !== strpos( $signa_result['html'], $signa_marker )
+			&& '' === $signa_noise,
+		$signa_tab
+	);
+
+	signa_check(
+		'and the navigation marks it as the current section',
+		1 === preg_match( '/<a href="([^"]*)" class="signa-screen is-current" aria-current="page"/', $signa_result['html'], $signa_m )
+			&& 1 === preg_match( '/tab=' . $signa_tab . '$/', html_entity_decode( $signa_m[1] ) ),
+		$signa_tab
 	);
 }
 
+signa_start( 'the addresses of the old tabs still land somewhere' );
+
+foreach ( array( 'general' => 'login', 'registration' => 'login', 'code' => 'channels', 'gateways' => 'channels', 'design' => 'formskin', 'store' => 'integ', 'data' => 'advanced', 'nonsense' => 'dash' ) as $signa_old => $signa_new ) {
+	$_GET['tab'] = $signa_old;
+	signa_check( '"' . $signa_old . '" opens "' . $signa_new . '"', $signa_new === $signa_screen->currentTab() );
+}
+
+unset( $_GET['tab'] );
+signa_check( 'no tab at all opens the dashboard', 'dash' === $signa_screen->currentTab() );
+
 signa_start( 'the screen around the tabs is intact' );
 
-$signa_general = signa_render_tab( $signa_screen, 'general' )['html'];
+$signa_general = signa_render_tab( $signa_screen, 'login' )['html'];
+$signa_dash    = signa_render_tab( $signa_screen, 'dash' )['html'];
 
 signa_check( 'the switcher is on the page', false !== strpos( $signa_general, 'signa-screens' ) );
 signa_check( 'the running version is in the header', false !== strpos( $signa_general, SIGNA_VERSION ) );
-signa_check( 'the seven-day strip is drawn', false !== strpos( $signa_general, 'signa-kpis' ) );
+signa_check( 'the dashboard draws the last day in numbers', false !== strpos( $signa_dash, 'signa-kpis' ) && false !== strpos( $signa_dash, 'آمار ۲۴ ساعت گذشته' ) );
+signa_check( 'and a setup checklist with its progress', false !== strpos( $signa_dash, 'راه‌اندازی سریع' ) && false !== strpos( $signa_dash, 'role="progressbar"' ) );
+signa_check( 'and no settings form, since there is nothing to save there', false === strpos( $signa_dash, 'options.php' ) );
 signa_check( 'the form posts to the settings API', false !== strpos( $signa_general, 'options.php' ) );
 signa_check( 'and there is a save button', false !== strpos( $signa_general, 'ذخیره تنظیمات' ) );
+signa_check( 'every form section is on the page, the others hidden', 6 === substr_count( $signa_general, 'data-signa-pane=' ) && 5 === preg_match_all( '/data-signa-pane="[a-z]+"[^>]*hidden/', $signa_general ) );
+signa_check( 'toggles announce themselves as switches', false !== strpos( $signa_general, 'role="switch"' ) );
+signa_check( 'the live preview sits beside the form settings', false !== strpos( $signa_general, 'data-signa-preview' ) && false !== strpos( $signa_general, 'signa_form_preview' ) );
 signa_check( 'the release-notes card is gone', false === strpos( $signa_general, 'تازه در نسخهٔ' ) && false === strpos( $signa_general, 'signa-bullets' ) );
 
 signa_start( 'the test card of every section is present and complete' );
@@ -153,18 +179,30 @@ signa_start( 'the test card of every section is present and complete' );
  */
 $signa_kinds = array( 'general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data' );
 
-foreach ( $signa_tabs as $signa_tab => $signa_marker ) {
-	if ( 'reports' === $signa_tab ) {
-		continue;
+$signa_home = array(
+	'general'      => 'login',
+	'registration' => 'login',
+	'code'         => 'channels',
+	'gateways'     => 'channels',
+	'design'       => 'formskin',
+	'security'     => 'security',
+	'store'        => 'integ',
+	'data'         => 'advanced',
+);
+
+foreach ( $signa_home as $signa_kind => $signa_tab ) {
+	$signa_html = signa_render_tab( $signa_screen, $signa_tab )['html'];
+	$signa_pane = '';
+
+	if ( preg_match( '/<section class="signa-section" id="signa-section-' . $signa_tab . '".*?(?=<section class="signa-section"|<div class="signa-savebar)/su', $signa_html, $signa_m ) ) {
+		$signa_pane = $signa_m[0];
 	}
 
-	$signa_html = signa_render_tab( $signa_screen, $signa_tab )['html'];
-
 	signa_check(
-		'the "' . $signa_tab . '" tab has a test card for its own kind',
-		false !== strpos( $signa_html, 'آزمایش این بخش' )
-			&& false !== strpos( $signa_html, 'data-signa-check="' . $signa_tab . '"' ),
-		$signa_tab
+		'the "' . $signa_tab . '" section tests the "' . $signa_kind . '" kind',
+		false !== strpos( $signa_pane, 'آزمایش این بخش' )
+			&& false !== strpos( $signa_pane, 'data-signa-check="' . $signa_kind . '"' ),
+		$signa_kind
 	);
 
 	signa_check(
@@ -176,20 +214,20 @@ foreach ( $signa_tabs as $signa_tab => $signa_marker ) {
 
 signa_check( 'every kind the panel offers is one the self-test runs', count( array_diff( $signa_kinds, $signa_kinds ) ) === 0 );
 
-signa_start( 'the gateways tab carries the two controls that send nothing' );
+signa_start( 'the channels section carries the two controls that send nothing' );
 
-$signa_gateways = signa_render_tab( $signa_screen, 'gateways' )['html'];
+$signa_gateways = signa_render_tab( $signa_screen, 'channels' )['html'];
 
 signa_check( 'there is a button for a real test message', false !== strpos( $signa_gateways, 'data-signa-sms-test' ) );
 signa_check( 'and the card says what it costs', false !== strpos( $signa_gateways, 'آزمایش این بخش' ) );
 
-signa_start( 'the security tab hands the captcha test to the browser' );
+signa_start( 'the security section hands the captcha test to the browser' );
 
 $signa_security = signa_render_tab( $signa_screen, 'security' )['html'];
 
 signa_check( 'with the attribute admin.js looks for', false !== strpos( $signa_security, 'data-signa-captcha-test' ) );
 
-signa_start( 'the store tab has a second face when WooCommerce is there' );
+signa_start( 'the integrations section has a second face when WooCommerce is there' );
 
 /*
  * The store section branches on `class_exists( 'WooCommerce' )` — one shape for a
@@ -199,13 +237,13 @@ signa_start( 'the store tab has a second face when WooCommerce is there' );
  */
 eval( 'class WooCommerce { public function __construct() {} }' );
 
-$signa_woo = signa_render_tab( $signa_screen, 'store' );
+$signa_woo = signa_render_tab( $signa_screen, 'integ' );
 
 if ( '' !== $signa_woo['error'] ) {
 	echo '        threw: ' . $signa_woo['error'] . "\n";
 }
 
-signa_check( 'with WooCommerce present, the store tab still renders', '' === $signa_woo['error'] );
+signa_check( 'with WooCommerce present, the integrations section still renders', '' === $signa_woo['error'] );
 signa_check( 'and it prints the shop controls', false !== strpos( $signa_woo['html'], 'signa-card' ) );
 signa_check( 'and no PHP noise', '' === signa_php_noise( $signa_woo['html'] ) );
 

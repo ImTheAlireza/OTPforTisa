@@ -28,6 +28,18 @@ final class Settings {
 	/**
 	 * @return mixed
 	 */
+	/**
+	 * Put unsaved values in front of the stored ones, for this request only.
+	 *
+	 * The form preview draws the real template with what the owner has typed
+	 * but not saved; nothing here touches the database.
+	 *
+	 * @param array<string,mixed> $values Already sanitised values.
+	 */
+	public function preview( array $values ): void {
+		$this->values = array_merge( $this->all(), $values );
+	}
+
 	public function get( string $key, $default = null ) {
 		$all = $this->all();
 

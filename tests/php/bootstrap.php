@@ -101,6 +101,12 @@ class Signa_Wpdb_Stub {
 	/** @var string */
 	public $prefix = 'wp_';
 
+	/** @var string */
+	public $usermeta = 'wp_usermeta';
+
+	/** @var string */
+	public $users = 'wp_users';
+
 	/** @var int */
 	public $insert_id = 0;
 
@@ -1060,6 +1066,13 @@ function get_editable_roles(): array {
 
 class Signa_Wp_Roles_Stub {
 
+	/** @var array<string,array{name:string}> What `WP_Roles::$roles` holds. */
+	public $roles = array(
+		'administrator' => array( 'name' => 'Administrator' ),
+		'editor'        => array( 'name' => 'Editor' ),
+		'subscriber'    => array( 'name' => 'Subscriber' ),
+	);
+
 	/** @var array<string,string> */
 	private $names = array(
 		'administrator' => 'مدیر',
@@ -1071,6 +1084,10 @@ class Signa_Wp_Roles_Stub {
 	public function get_names(): array {
 		return $this->names;
 	}
+}
+
+function translate_user_role( $name ): string {
+	return (string) $name;
 }
 
 function wp_roles(): Signa_Wp_Roles_Stub {

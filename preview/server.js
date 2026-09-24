@@ -715,6 +715,36 @@ const server = http.createServer(async (req, res) => {
 		return;
 	}
 
+	/*
+	 * The admin screens, generated from the plugin's own output by
+	 * tools/admin-demo.js. The form preview has no PHP behind it here, so a
+	 * POST of unsaved values gets the saved-settings page for the step asked for.
+	 */
+	if (pathname === '/admin/form-preview') {
+		let step = url.searchParams.get('step') || 'phone';
+
+		if (req.method === 'POST') {
+			const raw = await new Promise((resolve) => {
+				let data = '';
+				req.on('data', (chunk) => { data += chunk; });
+				req.on('end', () => resolve(data));
+			});
+			const posted = new URLSearchParams(raw).get('step');
+			step = posted || step;
+		}
+
+		step = ['phone', 'code', 'fields'].includes(step) ? step : 'phone';
+		serveStatic(res, path.join(PUBLIC_DIR, 'admin-preview-' + step + '.html'));
+		return;
+	}
+
+	const adminPage = /^\/admin\/(settings|reports|logs|tools|access)\/?$/.exec(pathname);
+
+	if (adminPage) {
+		serveStatic(res, path.join(PUBLIC_DIR, 'admin-' + adminPage[1] + '.html'));
+		return;
+	}
+
 	if (pathname === '/account' || pathname === '/account.html') {
 		serveStatic(res, path.join(PUBLIC_DIR, 'account.html'));
 		return;
@@ -738,7 +768,7 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
 	console.log('Signa preview listening on http://' + HOST + ':' + PORT);
 	console.log('  /                     front-end form demo');
-	console.log('  /admin                admin screens demo');
+	console.log('  /admin                the admin dashboard (settings, reports, tools: /admin/settings …)');
 	console.log('  /account              signed-in account panel demo');
 	console.log('  /woodmart             the OTP form inside WoodMart\'s sign-in drawer');
 	console.log('  /download/signa.zip  installable package (built on demand)');

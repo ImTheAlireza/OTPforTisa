@@ -599,7 +599,7 @@ foreach ( signa_plugin_sources() as $relative => $source ) {
  * walk: it turns a green gate into a false promise. So the counter is checked
  * against a call that is deliberately one argument short.
  */
-$control = "<?php\nnamespace Signa\\Probe;\n\nclass Sample {\n\tprivate function needs_two( string $a, string $b ): void {}\n\tpublic function run(): void {\n\t\t\$this->needs_two( 'one' );\n\t\t\$this->needs_two( 'one', 'two' );\n\t}\n}\n";
+$control = "<?php\nnamespace Signa\\Probe;\n\nclass Sample {\n\tprivate function needs_two( string \$a, string \$b ): void {}\n\tpublic function run(): void {\n\t\t\$this->needs_two( 'one' );\n\t\t\$this->needs_two( 'one', 'two' );\n\t}\n}\n";
 $seen    = signa_self_calls( $control );
 $counts  = array();
 

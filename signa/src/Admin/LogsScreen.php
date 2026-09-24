@@ -52,14 +52,15 @@ final class LogsScreen implements Bootable {
 			array_pop( $rows );
 		}
 
-		echo '<div class="wrap signa-wrap" dir="rtl"><div class="signa-header"><div class="signa-header__title"><h1>' . esc_html__( 'رویدادها', 'signa' ) . '</h1></div></div>';
+		Layout::open( self::SLUG, $this->settings, __( 'همهٔ رویدادها', 'signa' ) );
 
-		ScreenNav::render( self::SLUG );
+		echo '<div class="signa-sechead"><div class="signa-sechead__text"><h2 class="signa-sechead__title">' . esc_html__( 'همهٔ رویدادها', 'signa' ) . '</h2>';
+		echo '<p class="signa-sechead__desc">' . esc_html__( 'تک‌تک رویدادها با جست‌وجو، فیلتر و خروجی CSV. شماره‌ها فقط ماسک‌شده ذخیره می‌شوند.', 'signa' ) . '</p></div></div>';
 
 		$this->summaryBar();
 		$this->filterBar( $filters );
 
-		echo '<div class="signa-panel"><table class="widefat signa-log-table"><thead><tr>';
+		echo '<div class="signa-panel"><div class="signa-table-wrap"><table class="widefat signa-table signa-log-table"><thead><tr>';
 
 		foreach ( array( __( 'زمان', 'signa' ), __( 'سطح', 'signa' ), __( 'رویداد', 'signa' ), __( 'کانال/سامانه', 'signa' ), __( 'شماره', 'signa' ), __( 'خطا', 'signa' ), __( 'توضیح', 'signa' ) ) as $heading ) {
 			echo '<th>' . esc_html( $heading ) . '</th>';
@@ -84,11 +85,13 @@ final class LogsScreen implements Bootable {
 			);
 		}
 
-		echo '</tbody></table>';
+		echo '</tbody></table></div>';
 
 		$this->pagination( $page, $hasMore, $filters );
 
-		echo '</div></div>';
+		echo '</div>';
+
+		Layout::close();
 	}
 
 	private function summaryBar(): void {
