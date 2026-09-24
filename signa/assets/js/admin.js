@@ -789,6 +789,38 @@
 			state('error', messages && messages.length ? messages.join(' ') : (i18n.stateError || 'ذخیره نشد'));
 		}
 
+		/*
+		 * The address to post to. admin_url() is built from the "WordPress
+		 * address" setting while this page may be open on another origin (www
+		 * or not, http or https — the site address, a CDN in front of it). A
+		 * cross-origin fetch carries no login cookie and is refused, so the
+		 * same path is posted on the origin this page is actually open on.
+		 */
+		function target() {
+			try {
+				var url = new window.URL(form.getAttribute('action') || 'options.php', window.location.href);
+
+				return window.location.origin + url.pathname + url.search;
+			} catch (e) {
+				return form.action;
+			}
+		}
+
+		/*
+		 * When the quick save cannot tell what went wrong (a firewall, a login
+		 * that expired, a fatal error, a browser that refused the request), the
+		 * form is sent the ordinary way: WordPress then either saves it or shows
+		 * its own error page, which names the real cause.
+		 */
+		function fallback(status) {
+			var note = i18n.stateFallback || 'ذخیرهٔ سریع انجام نشد؛ فرم به روش عادی ارسال می‌شود…';
+
+			state('saving', status ? note + ' (HTTP ' + status + ')' : note);
+			dirty = false;
+			form.setAttribute('action', target());
+			HTMLFormElement.prototype.submit.call(form);
+		}
+
 		form.addEventListener('submit', function (event) {
 			if (!window.fetch || !window.FormData || !window.DOMParser) {
 				dirty = false;
@@ -803,7 +835,7 @@
 				return;
 			}
 
-			window.fetch(form.action, {
+			window.fetch(target(), {
 				method: 'POST',
 				body: new window.FormData(form),
 				credentials: 'same-origin'
@@ -816,8 +848,14 @@
 						return notice.textContent.replace(/\s+/g, ' ').trim();
 					}).filter(Boolean);
 
-					if (!response.ok || !/[?&]settings-updated=true/.test(response.url || '')) {
-						throw errors;
+					if (response.ok && /[?&]settings-updated=true/.test(response.url || '')) {
+						if (errors.length) {
+							failed(errors);
+							return;
+						}
+
+						done();
+						return;
 					}
 
 					if (errors.length) {
@@ -825,10 +863,10 @@
 						return;
 					}
 
-					done();
+					fallback(response.status);
 				});
-			}).catch(function (errors) {
-				failed(Array.isArray(errors) ? errors : []);
+			}).catch(function () {
+				fallback(0);
 			});
 		});
 

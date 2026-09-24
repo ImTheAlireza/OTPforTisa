@@ -180,7 +180,12 @@ final class CaptchaGuard implements Guard {
 
 		$usage = $this->throttle->usage( $request->phone(), $request->ip() );
 
-		return $usage['phone'] >= 2 || $usage['ip'] >= max( 3, (int) floor( $usage['ip_limit'] / 2 ) );
+		/*
+		 * The quota is charged after this guard now (Pipeline::run), so the
+		 * request being judged is not counted yet: +1 keeps the threshold
+		 * where it was — the second code for a phone asks for a challenge.
+		 */
+		return ( $usage['phone'] + 1 ) >= 2 || ( $usage['ip'] + 1 ) >= max( 3, (int) floor( $usage['ip_limit'] / 2 ) );
 	}
 
 	private function token( Request $request ): string {

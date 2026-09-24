@@ -156,6 +156,7 @@ final class Assets implements Bootable {
 				'stateSaving'   => __( 'در حال ذخیره…', 'signa' ),
 				'stateSaved'    => __( 'ذخیره شد', 'signa' ),
 				'stateError'    => __( 'ذخیره نشد؛ دوباره امتحان کنید.', 'signa' ),
+				'stateFallback' => __( 'ذخیرهٔ سریع انجام نشد؛ فرم به روش عادی ارسال می‌شود…', 'signa' ),
 				'leave'         => __( 'تغییرات ذخیره نشده از بین می‌رود.', 'signa' ),
 				'copied'        => __( 'رونوشت شد', 'signa' ),
 			),

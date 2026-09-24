@@ -2,20 +2,26 @@
 /**
  * FarazSMS driver.
  *
- * The panel is built on IPPanel's infrastructure, and its own documentation
- * ships exactly two working transports:
+ * FarazSMS moved its web service to a new platform. The current official
+ * documentation (https://farazsms.com/webservice/ → docs.iranpayamak.com)
+ * describes a JSON API with an `Api-Key` header:
+ *
+ *   pattern  POST https://api.iranpayamak.com/ws/v1/sms/pattern
+ *            {code, attributes:{name:value}, recipient:"09…",
+ *             line_number, number_format:"english"}
+ *   text     POST https://api.iranpayamak.com/ws/v1/sms/simple
+ *            {text, line_number, recipients:["09…"], number_format, schedule}
+ *   answer   {"status":"success"|"error", "data":<id>, "messages":…}
+ *
+ * That is the route used whenever an API key is set. Accounts still on the
+ * old IPPanel-based panel (username + password, no key) keep the legacy
+ * transports below, which follow the vendor's old PHP samples:
  *
  *   pattern   POST https://ippanel.com/patterns/pattern
- *             query/body: username, password, from, to=<json array>,
- *                         input_data=<json map>, pattern_code
  *   free text GET  http://sms.farazsms.com/class/sms/webservice/send_url.php
- *             ?from=&to=&msg=&uname=&pass=
  *
- * The previous code posted a bespoke JSON body (`op: pattern`, `inputData` as a
- * map) to a form endpoint, which the panel rejects — "the code was not sent"
- * with no explanation anywhere. The transports below follow the vendor samples
- * and the free-text path keeps a second attempt for accounts whose panel still
- * exposes the IPPanel `api/select` bridge.
+ * The legacy routes answer with a bare number; a short one is an error code,
+ * not a tracking id (2.0.0 counted both as "sent").
  *
  * @package Signa
  */
@@ -30,6 +36,9 @@ defined( 'ABSPATH' ) || exit;
 
 final class FarazSms extends HttpGateway {
 
+	const API_PATTERN_ENDPOINT = 'https://api.iranpayamak.com/ws/v1/sms/pattern';
+	const API_SIMPLE_ENDPOINT  = 'https://api.iranpayamak.com/ws/v1/sms/simple';
+
 	const PATTERN_ENDPOINT = 'https://ippanel.com/patterns/pattern';
 	const SEND_URL_ENDPOINT = 'http://sms.farazsms.com/class/sms/webservice/send_url.php';
 	const SELECT_ENDPOINT   = 'http://ippanel.com/api/select';
@@ -43,33 +52,55 @@ final class FarazSms extends HttpGateway {
 	}
 
 	public function docsUrl(): string {
-		return 'https://farazsms.com/';
+		return 'https://docs.iranpayamak.com/send-pattern-based-sms-13925177e0';
 	}
 
 	public function fields(): array {
 		return array(
-			'faraz_username' => array(
-				'label' => __( 'نام کاربری', 'signa' ),
-				'type'  => 'text',
-			),
-			'faraz_password' => array(
-				'label' => __( 'رمز عبور', 'signa' ),
+			'faraz_api_key'  => array(
+				'label' => __( 'کلید API', 'signa' ),
 				'type'  => 'password',
-			),
-			'faraz_from'     => array(
-				'label' => __( 'شماره فرستنده', 'signa' ),
-				'type'  => 'text',
+				'hint'  => __( 'وب‌سرویس جدید فراز؛ اگر پنل شما کلید API دارد فقط همین کافی است.', 'signa' ),
 			),
 			'faraz_pattern'  => array(
 				'label' => __( 'کد پترن', 'signa' ),
 				'type'  => 'text',
 				'hint'  => __( 'در صورت تنظیم، ارسال از مسیر پترن انجام می‌شود.', 'signa' ),
 			),
+			'faraz_param'    => array(
+				'label' => __( 'نام متغیر پترن', 'signa' ),
+				'type'  => 'text',
+				'hint'  => __( 'همان نامی که در متن پترن آمده؛ پیش‌فرض: code (پنل قدیمی: verification-code)', 'signa' ),
+			),
+			'faraz_from'     => array(
+				'label' => __( 'شماره خط فرستنده', 'signa' ),
+				'type'  => 'text',
+			),
+			'faraz_username' => array(
+				'label' => __( 'نام کاربری (پنل قدیمی)', 'signa' ),
+				'type'  => 'text',
+				'hint'  => __( 'فقط برای پنل‌های قدیمی بدون کلید API.', 'signa' ),
+			),
+			'faraz_password' => array(
+				'label' => __( 'رمز عبور (پنل قدیمی)', 'signa' ),
+				'type'  => 'password',
+			),
 		);
 	}
 
+	/**
+	 * Either an API key (new platform) or username + password (legacy panel).
+	 */
 	public function missing(): array {
+		if ( $this->usesApi() ) {
+			return array();
+		}
+
 		$missing = array();
+
+		if ( '' === trim( $this->option( 'faraz_username' ) ) && '' === trim( $this->option( 'faraz_password' ) ) ) {
+			return array( 'faraz_api_key' );
+		}
 
 		if ( '' === trim( $this->option( 'faraz_username' ) ) ) {
 			$missing[] = 'faraz_username';
@@ -81,13 +112,32 @@ final class FarazSms extends HttpGateway {
 		return $missing;
 	}
 
+	private function usesApi(): bool {
+		return '' !== trim( $this->option( 'faraz_api_key' ) );
+	}
+
+	private function param(): string {
+		/**
+		 * Filter the pattern variable name used by FarazSMS.
+		 *
+		 * @param string $key Input key.
+		 */
+		return (string) apply_filters( 'signa_faraz_pattern_key', $this->paramName( 'faraz_param', $this->usesApi() ? 'code' : 'verification-code' ) );
+	}
+
+	private function line(): string {
+		return trim( \Signa\Support\Phone::latinDigits( $this->option( 'faraz_from' ) ) );
+	}
+
 	/**
 	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
 	 */
 	public function plan(): array {
 		$pattern = trim( $this->option( 'faraz_pattern' ) );
-		$sender  = trim( $this->option( 'faraz_from' ) );
+		$sender  = $this->line();
+		$api     = $this->usesApi();
 		$issues  = array();
+		$notes   = array();
 
 		foreach ( $this->missing() as $key ) {
 			$label    = isset( $this->fields()[ $key ]['label'] ) ? (string) $this->fields()[ $key ]['label'] : $key;
@@ -95,28 +145,55 @@ final class FarazSms extends HttpGateway {
 		}
 
 		if ( '' === $pattern && '' === $sender ) {
-			$issues[] = __( 'برای ارسال متنی، شماره فرستنده لازم است؛ یا کد پترن را وارد کنید.', 'signa' );
+			$issues[] = __( 'برای ارسال متنی، شماره خط لازم است؛ یا کد پترن را وارد کنید.', 'signa' );
+		}
+
+		if ( '' !== $pattern ) {
+			$notes[] = sprintf(
+				/* translators: %s: variable name */
+				__( 'متغیر پترن «%s» فرستاده می‌شود؛ باید با متغیر داخل متن پترن یکی باشد.', 'signa' ),
+				$this->param()
+			);
+		}
+
+		if ( ! $api && array() === $this->missing() ) {
+			$notes[] = __( 'این حساب با نام کاربری و رمز (پنل قدیمی) وصل است. اگر پنل فراز شما کلید API دارد، آن را وارد کنید تا از وب‌سرویس جدید استفاده شود.', 'signa' );
+		}
+
+		if ( $api ) {
+			$endpoint = '' !== $pattern ? self::API_PATTERN_ENDPOINT : self::API_SIMPLE_ENDPOINT;
+		} else {
+			$endpoint = '' !== $pattern ? self::PATTERN_ENDPOINT : self::SEND_URL_ENDPOINT;
 		}
 
 		return array(
 			'mode'     => '' !== $pattern ? 'pattern' : 'text',
-			'sender'   => '' !== $sender ? $sender : '+983000505',
+			'sender'   => '' !== $sender ? $sender : ( $api ? '' : '+983000505' ),
 			'template' => $pattern,
-			'endpoint' => '' !== $pattern ? self::PATTERN_ENDPOINT : self::SEND_URL_ENDPOINT,
+			'endpoint' => $endpoint,
 			'issues'   => $issues,
-			'notes'    => array( __( 'نام متغیر داخل پترن باید با کلید ارسالی یکی باشد (پیش‌فرض: verification-code).', 'signa' ) ),
+			'notes'    => $notes,
 		);
 	}
 
 	public function deliver( DeliveryRequest $request ): GatewayResult {
 		if ( array() !== $this->missing() ) {
-			return $this->notConfigured( __( 'برای فراز اس‌ام‌اس نام کاربری و رمز را در تنظیمات کامل کنید.', 'signa' ) );
+			return $this->notConfigured( __( 'برای فراز اس‌ام‌اس کلید API (یا در پنل قدیمی، نام کاربری و رمز) را در تنظیمات کامل کنید.', 'signa' ) );
+		}
+
+		$pattern = trim( $this->option( 'faraz_pattern' ) );
+		$sender  = $this->line();
+
+		if ( $this->usesApi() ) {
+			if ( '' === $pattern && '' === $sender ) {
+				return $this->notConfigured( __( 'برای ارسال متنی فراز، شماره خط را وارد کنید یا کد پترن بگذارید.', 'signa' ) );
+			}
+
+			return $this->sendApi( $request, trim( $this->option( 'faraz_api_key' ) ), $pattern, $sender );
 		}
 
 		$username = $this->option( 'faraz_username' );
 		$password = $this->option( 'faraz_password' );
-		$pattern  = trim( $this->option( 'faraz_pattern' ) );
-		$sender   = trim( $this->option( 'faraz_from' ) );
 
 		if ( '' !== $pattern ) {
 			return $this->sendPattern( $request, $username, $password, $pattern, $sender );
@@ -130,16 +207,118 @@ final class FarazSms extends HttpGateway {
 	}
 
 	/**
+	 * The current FarazSMS web service (docs.iranpayamak.com).
+	 */
+	private function sendApi( DeliveryRequest $request, string $key, string $pattern, string $sender ): GatewayResult {
+		if ( '' !== $pattern ) {
+			$url     = self::API_PATTERN_ENDPOINT;
+			$payload = array(
+				'code'          => $pattern,
+				'attributes'    => array( $this->param() => $request->code() ),
+				'recipient'     => $request->phone(),
+				'number_format' => 'english',
+			);
+
+			if ( '' !== $sender ) {
+				$payload['line_number'] = $sender;
+			}
+		} else {
+			$url     = self::API_SIMPLE_ENDPOINT;
+			$payload = array(
+				'text'          => $request->render( $this->settings->str( 'sms_template' ), $this->settings->int( 'code_ttl', 120 ) ),
+				'line_number'   => $sender,
+				'recipients'    => array( $request->phone() ),
+				'number_format' => 'english',
+				'schedule'      => null,
+			);
+		}
+
+		$mode     = '' !== $pattern ? 'pattern' : 'text';
+		$response = $this->post(
+			$url,
+			array(
+				'headers' => array(
+					'Content-Type' => 'application/json',
+					'Accept'       => 'application/json',
+					'Api-Key'      => $key,
+				),
+				'body'    => wp_json_encode( $payload ),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $this->transportFailure( $response );
+		}
+
+		$status = $this->status( $response );
+		$body   = $this->decode( $response );
+		$state  = isset( $body['status'] ) && is_scalar( $body['status'] ) ? strtolower( (string) $body['status'] ) : '';
+
+		if ( $status >= 200 && $status < 300 && 'success' === $state ) {
+			return GatewayResult::sent( $this->id(), $this->referenceFrom( $body, array( 'data' ) ), $status, array( 'mode' => $mode ) );
+		}
+
+		$text = $this->apiMessage( $body );
+		$code = $this->codeForStatus( $status );
+
+		if ( $status >= 200 && $status < 300 ) {
+			$code = 'rejected';
+		} elseif ( 422 === $status && preg_match( '/اعتبار|موجودی|credit|balance/iu', $text ) ) {
+			$code = 'no_credit';
+		}
+
+		return GatewayResult::failed(
+			$this->id(),
+			$code,
+			'' !== $text ? $text : __( 'فراز اس‌ام‌اس درخواست را نپذیرفت.', 'signa' ),
+			$status,
+			array(
+				'mode'   => $mode,
+				'reason' => 'FarazSMS HTTP ' . $status . ( '' !== $text ? ': ' . $text : '' ),
+			)
+		);
+	}
+
+	/**
+	 * `messages` is a string, a list, or a field => list map.
+	 *
+	 * @param array<string,mixed> $body
+	 */
+	private function apiMessage( array $body ): string {
+		foreach ( array( 'messages', 'message', 'errors' ) as $key ) {
+			if ( ! isset( $body[ $key ] ) ) {
+				continue;
+			}
+
+			$value = $body[ $key ];
+			$flat  = array();
+
+			array_walk_recursive(
+				$value,
+				static function ( $item ) use ( &$flat ) {
+					if ( is_scalar( $item ) && '' !== trim( (string) $item ) ) {
+						$flat[] = trim( (string) $item );
+					}
+				}
+			);
+
+			if ( is_scalar( $value ) && '' !== trim( (string) $value ) ) {
+				$flat = array( trim( (string) $value ) );
+			}
+
+			if ( array() !== $flat ) {
+				return substr( sanitize_text_field( implode( ' — ', array_slice( $flat, 0, 3 ) ) ), 0, 240 );
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Pattern delivery, exactly as the vendor's own PHP sample does it.
 	 */
 	private function sendPattern( DeliveryRequest $request, string $username, string $password, string $pattern, string $sender ): GatewayResult {
-		/**
-		 * Filter the pattern variable name used by FarazSMS.
-		 *
-		 * @param string $key Input key.
-		 */
-		$inputKey = (string) apply_filters( 'signa_faraz_pattern_key', 'verification-code' );
-		$payload  = array( $inputKey => $request->code() );
+		$payload = array( $this->param() => $request->code() );
 
 		$url = add_query_arg(
 			array(
@@ -238,7 +417,7 @@ final class FarazSms extends HttpGateway {
 		}
 
 		if ( 200 === $status && '' !== $raw && ! $this->looksLikeFailure( $raw, $body ) ) {
-			// A tracking code is short and alphanumeric; a failure sentence is not.
+			// A tracking id is a long number; a failure sentence is not.
 			return GatewayResult::sent( $this->id(), substr( preg_replace( '/[^0-9a-zA-Z\-]/', '', $raw ), 0, 64 ), $status, array( 'mode' => $mode ) );
 		}
 
@@ -279,6 +458,17 @@ final class FarazSms extends HttpGateway {
 		}
 
 		if ( preg_match( '/[^0-9a-zA-Z\-\s]/u', $raw ) ) {
+			return true;
+		}
+
+		/*
+		 * The legacy panels answer errors with a bare, short number (0, 2, -1,
+		 * 11…) and success with a long tracking id. 2.0.0 read both as sent,
+		 * so an empty account looked healthy while no code arrived.
+		 */
+		$bare = trim( $raw, " \t\n\r\0\x0B\"[]" );
+
+		if ( preg_match( '/^-?\d+$/', $bare ) && strlen( ltrim( $bare, '-' ) ) < 5 ) {
 			return true;
 		}
 

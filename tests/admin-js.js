@@ -62,13 +62,32 @@ setTimeout(() => {
     form.dispatchEvent(new w.Event('submit', { cancelable: true }));
     setTimeout(() => {
       ok('a sanitiser error is shown: ' + d.querySelector('[data-signa-save-state]').textContent, bar.dataset.state === 'error' && /کلید API/.test(bar.textContent));
+      // Anything options.php did not explain falls back to an ordinary submit.
+      let native = 0;
+      w.HTMLFormElement.prototype.submit = function () { if (this === form) native++; };
       answer('http://x.test/wp-login.php', '<form id="loginform"></form>');
       form.dispatchEvent(new w.Event('submit', { cancelable: true }));
       setTimeout(() => {
-        ok('a lost session is not reported as saved', bar.dataset.state === 'error');
-        answer('http://x.test/wp-admin/admin.php?page=signa&settings-updated=true', '<div class="notice notice-success"><p>ok</p></div>');
+        ok('a lost session is not reported as saved: ' + bar.textContent.trim().slice(0, 40), bar.dataset.state !== 'clean' && native === 1);
+        w.fetch = () => Promise.resolve({ ok: false, status: 403, url: 'http://x.test/wp-admin/options.php', text: () => Promise.resolve('<p>The link you followed has expired.</p>') });
         form.dispatchEvent(new w.Event('submit', { cancelable: true }));
-        setTimeout(() => ok('a clean save is clean', bar.dataset.state === 'clean'), 30);
+        setTimeout(() => {
+          ok('a 403 falls back and names the status', native === 2 && /HTTP 403/.test(bar.textContent));
+          w.fetch = () => Promise.reject(new TypeError('Failed to fetch'));
+          form.dispatchEvent(new w.Event('submit', { cancelable: true }));
+          setTimeout(() => {
+            ok('a refused request falls back too', native === 3);
+            // admin_url() on another origin (www, http) than the page: post on the page's own.
+            const seen = [];
+            form.setAttribute('action', 'https://www.other.test/wp-admin/options.php');
+            w.fetch = (u) => { seen.push(u); return Promise.resolve({ ok: true, url: 'http://x.test/wp-admin/admin.php?page=signa&settings-updated=true', text: () => Promise.resolve('<div class="notice notice-success"><p>ok</p></div>') }); };
+            form.dispatchEvent(new w.Event('submit', { cancelable: true }));
+            setTimeout(() => {
+              ok('posts on the page origin: ' + seen[0], seen[0] === 'http://x.test/wp-admin/options.php');
+              ok('a clean save is clean', bar.dataset.state === 'clean' && native === 3);
+            }, 30);
+          }, 30);
+        }, 30);
       }, 30);
     }, 30);
   }, 700);

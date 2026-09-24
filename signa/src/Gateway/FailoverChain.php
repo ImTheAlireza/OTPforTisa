@@ -38,6 +38,15 @@ final class FailoverChain {
 	}
 
 	/**
+	 * Gateway ids in the order they will be tried.
+	 *
+	 * @return string[]
+	 */
+	public function order(): array {
+		return array_values( array_map( 'strval', $this->registry->deliveryOrder() ) );
+	}
+
+	/**
 	 * Delivery plan for one gateway, straight from its driver.
 	 *
 	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
@@ -219,22 +228,21 @@ final class FailoverChain {
 	}
 
 	/**
-	 * Failover only makes sense for transient problems and only while another
-	 * gateway is left in the chain.
+	 * Ask the next gateway while one is left, failover is on, and the refusal
+	 * was not about the recipient's number (see GatewayResult::worthFailover).
 	 */
 	private function shouldContinue( GatewayResult $result, int $index, int $total ): bool {
-		if ( $index + 1 >= $total ) {
+		return self::continues( $result, $index, $total, $this->settings->bool( 'failover_enabled', true ) );
+	}
+
+	/**
+	 * Pure form of the rule above, so it is testable without WordPress.
+	 */
+	public static function continues( GatewayResult $result, int $index, int $total, bool $enabled ): bool {
+		if ( $index + 1 >= $total || ! $enabled ) {
 			return false;
 		}
 
-		if ( ! $this->settings->bool( 'failover_enabled', true ) ) {
-			return false;
-		}
-
-		if ( $result->isConfigurationProblem() ) {
-			return false;
-		}
-
-		return $result->isTransient();
+		return $result->worthFailover();
 	}
 }

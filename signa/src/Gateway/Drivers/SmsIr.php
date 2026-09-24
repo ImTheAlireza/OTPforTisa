@@ -96,6 +96,11 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 				'type'  => 'text',
 				'hint'  => __( 'خالی بماند، پیامک متنی معمولی فرستاده می‌شود.', 'signa' ),
 			),
+			'smsir_param'       => array(
+				'label' => __( 'نام متغیر الگو', 'signa' ),
+				'type'  => 'text',
+				'hint'  => __( 'همان نامی که بین # در الگو آمده، با همان حروف کوچک و بزرگ؛ پیش‌فرض: CODE', 'signa' ),
+			),
 			'smsir_sender'      => array(
 				'label' => __( 'شماره خط', 'signa' ),
 				'type'  => 'text',
@@ -192,7 +197,7 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		 *
 		 * @param string $name Parameter name.
 		 */
-		$name = trim( (string) apply_filters( 'signa_smsir_param', 'CODE' ) );
+		$name = trim( (string) apply_filters( 'signa_smsir_param', $this->paramName( 'smsir_param', 'CODE' ) ) );
 		$code = $request->code();
 
 		if ( '' === $name ) {

@@ -542,7 +542,10 @@ final class SelfTest {
 		$this->logs->write(
 			'diagnostic',
 			'admin.reachability',
-			sprintf( /* translators: 1: host, 2: outcome */ __( 'بررسی دسترسی به %1$s: %2$s', 'signa' ), $host, is_wp_error( $response ) ? $response->get_error_code() : (string) wp_remote_retrieve_response_code( $response ) ),
+			is_wp_error( $response )
+				? sprintf( /* translators: 1: host, 2: error code */ __( 'دسترسی به %1$s برقرار نشد: %2$s', 'signa' ), $host, $response->get_error_code() )
+				/* translators: 1: host, 2: HTTP status. Any status (405 included) means the host answered. */
+				: sprintf( __( '%1$s در دسترس است (سرور با HTTP %2$d پاسخ داد؛ هر پاسخی یعنی ارتباط برقرار است).', 'signa' ), $host, (int) wp_remote_retrieve_response_code( $response ) ),
 			array(
 				'service' => $host,
 				'ok'      => ! is_wp_error( $response ),
@@ -569,7 +572,7 @@ final class SelfTest {
 			$status > 0 ? 'ok' : 'warn',
 			sprintf(
 				/* translators: 1: milliseconds, 2: HTTP status */
-				__( '%1$d میلی‌ثانیه · پاسخ HTTP %2$d.', 'signa' ),
+				__( '%1$d میلی‌ثانیه · سرور پاسخ داد (HTTP %2$d). این آزمون فقط دسترسی را می‌سنجد؛ کد 404 یا 405 هم یعنی ارتباط سالم است.', 'signa' ),
 				$ms,
 				$status
 			)

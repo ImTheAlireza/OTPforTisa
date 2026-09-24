@@ -156,6 +156,11 @@ final class Arcaptcha implements CaptchaProvider, ScriptFallbacks {
 
 			$this->logger->notice( 'captcha.rejected', array( 'gateway' => $this->id(), 'reason' => implode( ',', $codes ) ) );
 
+			// https://docs.arcaptcha.co/API/Verify/ — error code reference.
+			if ( array() !== array_intersect( array( 'invalid-input-secret', 'missing-input-secret', 'invalid-input-sitekey', 'missing-input-sitekey' ), $codes ) ) {
+				return CaptchaResult::failed( 'captcha_misconfigured', __( 'کلیدهای آرکپچا درست نیستند. با مدیر سایت تماس بگیرید.', 'signa' ) );
+			}
+
 			if ( in_array( 'timeout-or-duplicate', $codes, true ) ) {
 				return CaptchaResult::failed( 'captcha_expired', __( 'اعتبار کپچا منقضی شده است. لطفاً دوباره تأیید کنید.', 'signa' ) );
 			}

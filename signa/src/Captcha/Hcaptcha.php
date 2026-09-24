@@ -88,11 +88,11 @@ final class Hcaptcha implements CaptchaProvider, ScriptFallbacks {
 
 			$this->logger->notice( 'captcha.rejected', array( 'gateway' => $this->id(), 'reason' => implode( ',', array_slice( $codes, 0, 3 ) ) ) );
 
-			if ( in_array( 'invalid-input-secret', $codes, true ) || in_array( 'missing-input-secret', $codes, true ) ) {
+			if ( array() !== array_intersect( array( 'invalid-input-secret', 'missing-input-secret', 'sitekey-secret-mismatch', 'invalid-sitekey' ), $codes ) ) {
 				return CaptchaResult::failed( 'captcha_misconfigured', __( 'کلیدهای hCaptcha درست نیستند. با مدیر سایت تماس بگیرید.', 'signa' ) );
 			}
 
-			if ( in_array( 'expired-input-response', $codes, true ) || in_array( 'already-seen-response', $codes, true ) ) {
+			if ( array() !== array_intersect( array( 'expired-input-response', 'already-seen-response', 'invalid-or-already-seen-response' ), $codes ) ) {
 				return CaptchaResult::failed( 'captcha_expired', __( 'اعتبار کپچا منقضی شده است. لطفاً دوباره تأیید کنید.', 'signa' ) );
 			}
 

@@ -2,6 +2,20 @@
 /**
  * Kavenegar driver — verify/lookup with a template, or plain sms/send.
  *
+ * Checked against https://kavenegar.com/rest.html:
+ *
+ *   https://api.kavenegar.com/v1/{API-KEY}/verify/lookup.json
+ *       receptor, token, template            (form POST)
+ *   https://api.kavenegar.com/v1/{API-KEY}/sms/send.json
+ *       receptor, message, sender (optional) (form POST)
+ *
+ * Every answer carries `return.status` / `return.message`; 200 is success and
+ * the message id is in `entries[0].messageid`.
+ *
+ * Two bugs fixed in 2.0.1: the form body left with the JSON content type the
+ * shared plumbing adds by default, and the error table read 413 ("message
+ * empty or too long") as "no credit" — credit is 418.
+ *
  * @package Signa
  */
 
@@ -17,6 +31,39 @@ final class Kavenegar extends HttpGateway {
 
 	const API_BASE = 'https://api.kavenegar.com/v1/';
 
+	/**
+	 * The documented return codes: our error code, and what the owner does.
+	 *
+	 * @see https://kavenegar.com/rest.html (جدول کدهای برگشتی)
+	 *
+	 * @var array<int,array<int,string>>
+	 */
+	private static $statuses = array(
+		400 => array( 'rejected', 'پارامترهای درخواست ناقص است.' ),
+		401 => array( 'unauthorized', 'حساب کاوه‌نگار غیرفعال شده است؛ با پشتیبانی کاوه‌نگار تماس بگیرید.' ),
+		402 => array( 'upstream', 'کاوه‌نگار عملیات را ناموفق اعلام کرد؛ کمی بعد دوباره تلاش کنید.' ),
+		403 => array( 'unauthorized', 'کلید API کاوه‌نگار نامعتبر است؛ کلید را از پنل، بخش تنظیمات حساب، دوباره کپی کنید.' ),
+		404 => array( 'rejected', 'متد درخواستی در کاوه‌نگار پیدا نشد.' ),
+		405 => array( 'rejected', 'نوع درخواست (GET/POST) برای این متد درست نیست.' ),
+		407 => array( 'unauthorized', 'دسترسی رد شد؛ IP این سرور را در پنل کاوه‌نگار، بخش تنظیمات امنیتی، مجاز کنید.' ),
+		409 => array( 'upstream', 'سرور کاوه‌نگار موقتاً پاسخ نمی‌دهد؛ کمی بعد دوباره تلاش کنید.' ),
+		411 => array( 'invalid_recipient', 'شمارهٔ گیرنده از نظر کاوه‌نگار نامعتبر است.' ),
+		412 => array( 'rejected', 'شمارهٔ فرستنده نامعتبر است یا متعلق به حساب شما نیست.' ),
+		413 => array( 'rejected', 'متن پیامک خالی یا بیش از حد طولانی است.' ),
+		414 => array( 'rejected', 'حجم درخواست بیش از حد مجاز کاوه‌نگار است.' ),
+		417 => array( 'rejected', 'تاریخ ارسال نامعتبر است.' ),
+		418 => array( 'no_credit', 'اعتبار حساب کاوه‌نگار کافی نیست؛ حساب را شارژ کنید.' ),
+		422 => array( 'rejected', 'داده‌ها کاراکتر نامناسب دارند.' ),
+		424 => array( 'rejected', 'الگویی با این نام در کاوه‌نگار نیست یا هنوز تأیید نشده است؛ نام الگو را دقیقاً مثل پنل وارد کنید.' ),
+		426 => array( 'rejected', 'استفاده از الگو (Verify) به سرویس پیشرفتهٔ کاوه‌نگار نیاز دارد؛ آن را از پنل فعال کنید.' ),
+		428 => array( 'rejected', 'ارسال کد به‌صورت تماس صوتی ممکن نیست؛ توکن باید فقط عدد باشد.' ),
+		431 => array( 'rejected', 'توکن نباید فاصله، خط جدید یا زیرخط داشته باشد.' ),
+		432 => array( 'rejected', 'در متن الگوی کاوه‌نگار عبارت %token نیست؛ الگو را اصلاح کنید.' ),
+		451 => array( 'rate_limited', 'فراخوانی بیش از حد از این IP؛ کاوه‌نگار موقتاً محدود کرده است.' ),
+		501 => array( 'rejected', 'حساب کاوه‌نگار هنوز آزمایشی است و فقط به شمارهٔ صاحب حساب پیامک می‌فرستد.' ),
+		607 => array( 'rejected', 'نام یکی از تگ‌های ارسالی اشتباه است.' ),
+	);
+
 	public function id(): string {
 		return 'kavenegar';
 	}
@@ -26,7 +73,7 @@ final class Kavenegar extends HttpGateway {
 	}
 
 	public function docsUrl(): string {
-		return 'https://doc.kavenegar.com/';
+		return 'https://kavenegar.com/rest.html';
 	}
 
 	public function fields(): array {
@@ -38,11 +85,12 @@ final class Kavenegar extends HttpGateway {
 			'kavenegar_template' => array(
 				'label' => __( 'نام الگوی تأیید', 'signa' ),
 				'type'  => 'text',
-				'hint'  => __( 'در صورت تنظیم، از سرویس Verify استفاده می‌شود.', 'signa' ),
+				'hint'  => __( 'در صورت تنظیم، از سرویس Verify استفاده می‌شود؛ متن الگو باید %token داشته باشد.', 'signa' ),
 			),
 			'kavenegar_sender'   => array(
 				'label' => __( 'شماره فرستنده', 'signa' ),
 				'type'  => 'text',
+				'hint'  => __( 'فقط برای پیامک متنی؛ خالی بماند، خط پیش‌فرض حساب استفاده می‌شود.', 'signa' ),
 			),
 		);
 	}
@@ -58,13 +106,14 @@ final class Kavenegar extends HttpGateway {
 		$template = trim( $this->option( 'kavenegar_template' ) );
 		$sender   = trim( $this->option( 'kavenegar_sender' ) );
 		$issues   = array();
+		$notes    = array();
 
 		if ( '' === trim( $this->option( 'kavenegar_api_key' ) ) ) {
 			$issues[] = __( 'کلید API کاوه‌نگار تنظیم نشده است.', 'signa' );
 		}
 
-		if ( '' === $template && '' === $sender ) {
-			$issues[] = __( 'برای ارسال متنی، شماره فرستنده لازم است؛ یا نام الگوی تأیید را وارد کنید.', 'signa' );
+		if ( '' === $template ) {
+			$notes[] = __( 'بدون الگو، پیامک متنی از خط تبلیغاتی به شماره‌های «لیست سیاه» نمی‌رسد؛ برای کد ورود، الگوی Verify توصیه می‌شود.', 'signa' );
 		}
 
 		return array(
@@ -73,12 +122,12 @@ final class Kavenegar extends HttpGateway {
 			'template' => $template,
 			'endpoint' => self::API_BASE . ( '' !== $template ? '…/verify/lookup.json' : '…/sms/send.json' ),
 			'issues'   => $issues,
-			'notes'    => array(),
+			'notes'    => $notes,
 		);
 	}
 
 	public function deliver( DeliveryRequest $request ): GatewayResult {
-		$apiKey = $this->option( 'kavenegar_api_key' );
+		$apiKey = trim( $this->option( 'kavenegar_api_key' ) );
 
 		if ( '' === $apiKey ) {
 			return $this->notConfigured( __( 'برای کاوه‌نگار کلید API را در تنظیمات کامل کنید.', 'signa' ) );
@@ -87,17 +136,25 @@ final class Kavenegar extends HttpGateway {
 		$template = trim( $this->option( 'kavenegar_template' ) );
 
 		if ( '' !== $template ) {
-			$url  = self::API_BASE . rawurlencode( $apiKey ) . '/verify/lookup.json';
-			$body = array(
-				'receptor' => $request->phone(),
-				'token'    => $request->code(),
-				'template' => $template,
-			);
+			// 431: no spaces, newlines or underscores inside a token.
+			$token = (string) preg_replace( '/[\s_]+/u', '', $request->code() );
 
-			return $this->evaluate( $this->post( $url, array( 'body' => $body ) ) );
+			return $this->evaluate(
+				$this->post(
+					self::API_BASE . rawurlencode( $apiKey ) . '/verify/lookup.json',
+					array(
+						'headers' => $this->formHeaders(),
+						'body'    => array(
+							'receptor' => $request->phone(),
+							'token'    => $token,
+							'template' => $template,
+						),
+					)
+				),
+				'pattern'
+			);
 		}
 
-		$url  = self::API_BASE . rawurlencode( $apiKey ) . '/sms/send.json';
 		$body = array(
 			'receptor' => $request->phone(),
 			'message'  => $request->render( $this->settings->str( 'sms_template' ), $this->settings->int( 'code_ttl', 120 ) ),
@@ -108,40 +165,61 @@ final class Kavenegar extends HttpGateway {
 			$body['sender'] = $sender;
 		}
 
-		return $this->evaluate( $this->post( $url, array( 'body' => $body ) ) );
+		return $this->evaluate(
+			$this->post(
+				self::API_BASE . rawurlencode( $apiKey ) . '/sms/send.json',
+				array(
+					'headers' => $this->formHeaders(),
+					'body'    => $body,
+				)
+			),
+			'text'
+		);
 	}
 
 	/**
 	 * @param array|\WP_Error $response
 	 */
-	private function evaluate( $response ): GatewayResult {
+	private function evaluate( $response, string $mode ): GatewayResult {
 		if ( is_wp_error( $response ) ) {
 			return $this->transportFailure( $response );
 		}
 
 		$status = $this->status( $response );
 		$body   = $this->decode( $response );
+		$api    = isset( $body['return']['status'] ) && is_numeric( $body['return']['status'] ) ? (int) $body['return']['status'] : null;
 
-		if ( isset( $body['return']['status'] ) && 200 === (int) $body['return']['status'] ) {
-			return GatewayResult::sent( $this->id(), $this->referenceFrom( $body, array( 'entries.0.messageid' ) ), $status );
+		if ( 200 === $api ) {
+			return GatewayResult::sent( $this->id(), $this->referenceFrom( $body, array( 'entries.0.messageid' ) ), $status, array( 'mode' => $mode, 'api_status' => 200 ) );
 		}
 
-		$message = isset( $body['return']['message'] ) ? sanitize_text_field( (string) $body['return']['message'] ) : '';
-		$code    = $this->codeForStatus( $status );
+		$sentence = isset( $body['return']['message'] ) && is_scalar( $body['return']['message'] ) ? sanitize_text_field( (string) $body['return']['message'] ) : '';
 
-		if ( isset( $body['return']['status'] ) ) {
-			$apiStatus = (int) $body['return']['status'];
-			if ( in_array( $apiStatus, array( 401, 403 ), true ) ) {
-				$code = 'unauthorized';
-			} elseif ( in_array( $apiStatus, array( 402, 413 ), true ) ) {
-				$code = 'no_credit';
-			} elseif ( 429 === $apiStatus ) {
-				$code = 'rate_limited';
-			} elseif ( $apiStatus >= 500 ) {
-				$code = 'upstream';
-			}
+		if ( null !== $api && isset( self::$statuses[ $api ] ) ) {
+			return GatewayResult::failed(
+				$this->id(),
+				self::$statuses[ $api ][0],
+				self::$statuses[ $api ][1],
+				$status,
+				array(
+					'mode'       => $mode,
+					'api_status' => $api,
+					'reason'     => 'Kavenegar ' . $api . ': ' . ( '' !== $sentence ? $sentence : self::$statuses[ $api ][1] ),
+				)
+			);
 		}
 
-		return GatewayResult::failed( $this->id(), $code, $message, $status );
+		$code = $this->codeForStatus( null !== $api ? $api : $status );
+
+		return GatewayResult::failed(
+			$this->id(),
+			$code,
+			'' !== $sentence ? $sentence : __( 'پاسخ کاوه‌نگار قابل خواندن نبود.', 'signa' ),
+			$status,
+			array(
+				'mode'   => $mode,
+				'reason' => 'Kavenegar ' . ( null !== $api ? $api : 'HTTP ' . $status ) . ( '' !== $sentence ? ': ' . $sentence : '' ),
+			)
+		);
 	}
 }

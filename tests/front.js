@@ -1018,7 +1018,7 @@ function testThePanelKeepsItsOwnPromises() {
 
 	check('the gateways self-test asks the server to reach the gateway', /private function reachability\( array \$chain \)/.test(selfTest) && /wp_remote_get\(/.test(selfTest));
 	check('it never sends a message and never carries a key', /'limit_response_size' => 1024/.test(selfTest) && selfTest.indexOf('Authorization', selfTest.indexOf('private function reachability')) < 0);
-	check('it reports the millisecond and the status', /میلی‌ثانیه · پاسخ HTTP/.test(selfTest));
+	check('it reports the millisecond and the status', /میلی‌ثانیه · سرور پاسخ داد \(HTTP/.test(selfTest));
 	check('and it respects the site that blocked outbound HTTP', /Transport::blockFailure\( \$host \)/.test(selfTest) && /WP_HTTP_BLOCK_EXTERNAL/.test(transport));
 	check('the self-test says which channel the site sends with', /کانال ارسال کد/.test(selfTest));
 	check('a gateway whose last send failed is not called ready', /\$status = 'fail';/.test(selfTest) && /\$health && empty\( \$health\['ok'\] \)/.test(selfTest));

@@ -175,8 +175,24 @@ class Signa_Wpdb_Stub {
 		return 0;
 	}
 
+	/** @var array<string,bool> Lock rows taken by `StateStore::claim()`. */
+	public $locks = array();
+
 	public function query( $query = '' ) {
 		$this->sql[] = (string) $query;
+
+		// `StateStore::claim()`: insert-if-absent on the state table.
+		if ( 0 === strpos( ltrim( (string) $query ), 'INSERT IGNORE INTO' ) && false !== strpos( (string) $query, 'signa_state' ) ) {
+			$key = $this->stateKey( (string) $query );
+
+			if ( '' === $key || isset( $this->locks[ $key ] ) ) {
+				return 0;
+			}
+
+			$this->locks[ $key ] = true;
+
+			return 1;
+		}
 
 		// The one statement whose effect a test needs to see: a counter going up.
 		if ( false !== strpos( (string) $query, 'ON DUPLICATE KEY UPDATE' ) && false !== strpos( (string) $query, 'hits = IF(' ) ) {
@@ -215,6 +231,20 @@ class Signa_Wpdb_Stub {
 
 	public function insert( $table, $data ) {
 		$this->writes[] = $data;
+
+		return 1;
+	}
+
+	/**
+	 * `StateStore::forget()`: the row goes, and so do its lock and counter.
+	 *
+	 * @param array<string,mixed> $where
+	 */
+	public function delete( $table, $where ) {
+		if ( isset( $where['state_key'] ) ) {
+			$key = (string) $where['state_key'];
+			unset( $this->locks[ $key ], $this->counters[ $key ] );
+		}
 
 		return 1;
 	}

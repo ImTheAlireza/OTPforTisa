@@ -99,6 +99,9 @@ final class Pipeline {
 		// and the blocklist is never skipped.
 		$trusted = $this->trusted->matches( $request->phone() );
 
+		/** @var ThrottleGuard|null $holder The throttle guard that took the in-flight lock. */
+		$holder = null;
+
 		foreach ( $this->guards() as $guard ) {
 			if ( ! in_array( $stage, $guard->stages(), true ) ) {
 				continue;
@@ -119,7 +122,15 @@ final class Pipeline {
 
 			try {
 				$guard->inspect( $request, $stage );
+
+				if ( self::STAGE_SEND === $stage && $guard instanceof ThrottleGuard ) {
+					$holder = $guard;
+				}
 			} catch ( Rejection $rejection ) {
+				if ( null !== $holder ) {
+					$holder->release( $request );
+				}
+
 				$this->logger->notice(
 					'guard.rejected',
 					array(
@@ -135,6 +146,32 @@ final class Pipeline {
 						 * the administrator, who was told "users' widgets did not load"
 						 * for requests that had no browser at all.
 						 */
+						'ua'         => substr( trim( $request->userAgent() ), 0, 200 ),
+					)
+				);
+
+				throw $rejection;
+			}
+		}
+
+		/*
+		 * Every guard said yes: only now is the send quota spent. A quota
+		 * rejection at this point gives the in-flight lock back as well.
+		 */
+		if ( null !== $holder ) {
+			try {
+				$holder->settle( $request );
+			} catch ( Rejection $rejection ) {
+				$holder->release( $request );
+
+				$this->logger->notice(
+					'guard.rejected',
+					array(
+						'guard'      => $holder->name(),
+						'stage'      => $stage,
+						'error_code' => $rejection->errorCode(),
+						'phone'      => $request->phone(),
+						'ip'         => $request->ip(),
 						'ua'         => substr( trim( $request->userAgent() ), 0, 200 ),
 					)
 				);

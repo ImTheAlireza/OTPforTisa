@@ -222,6 +222,31 @@ signa_check( 'the verification went to the provider, not around it', 1 === count
 	return false !== strpos( (string) $url, 'recaptcha' ) || false !== strpos( (string) $url, 'google' ) || false !== strpos( (string) $url, 'recaptcha.net' );
 } ) ) );
 
+/*
+ * Google's v3 advice: a token made for another action (a comment form on the
+ * same key) must not unlock an SMS, and an answer with no score means v2 keys.
+ */
+foreach (
+	array(
+		'another action is refused' => '{"success":true,"score":0.9,"action":"comment"}',
+		'an answer with no score is refused' => '{"success":true,"action":"signa_send"}',
+	) as $label => $answer
+) {
+	$GLOBALS['signa_options'] = array();
+	signa_reply( array( 'response' => array( 'code' => 200 ), 'body' => $answer ) );
+	list( $guard, $logs ) = signa_captcha_guard();
+
+	$passed = true;
+
+	try {
+		$guard->inspect( signa_captcha_request( array( 'captcha_token' => 'real-token-from-google' ) ), 'send' );
+	} catch ( Rejection $rejection ) {
+		$passed = false;
+	}
+
+	signa_check( $label, ! $passed );
+}
+
 /* -------------------------------------------------------------------------
  * 4. ARCaptcha's contract, which this plugin has had wrong before
  */
@@ -330,5 +355,45 @@ $row = signa_captcha_context( 'guard.rejected' );
 
 signa_check( 'and a script is recorded as a script', 0 === strpos( LogStore::metaOf( $row, 'ua' ), 'curl/' ) );
 signa_check( 'and nothing in the guard blames the visitor for an outage', strpos( file_get_contents( dirname( __DIR__, 2 ) . '/signa/src/Guard/CaptchaGuard.php' ), 'ویجت در مرورگر' ) === false );
+
+/*
+ * The captcha must stand in front of the quota. A request it refuses must not
+ * spend the phone's send quota (or a bot that never solves a challenge locks a
+ * stranger's number out), and must not keep the twenty-second in-flight lock
+ * (or the visitor who retries reads «درخواست موازی دیگری در جریان است»).
+ */
+$GLOBALS['signa_options'] = array();
+$GLOBALS['wpdb']->writes = array();
+$settings = signa_captcha_settings( array( 'throttle_enabled' => '1', 'captcha_fail_open' => '0' ) );
+$throttle = new Throttle( new StateStore(), $settings );
+$pipeline = new Pipeline( $settings, $throttle, new Manager( $settings, new Logger( $settings, new Redactor(), $logs ) ), new Logger( $settings, new Redactor(), $logs ), new Blocklist() );
+
+signa_reply( array( 'response' => array( 'code' => 200 ), 'body' => '{"success":false,"error-codes":["invalid-input-response"]}' ) );
+
+for ( $i = 0; $i < 3; $i++ ) {
+	try {
+		$pipeline->run( Pipeline::STAGE_SEND, signa_captcha_request( array( 'captcha_token' => 'bad-token' ) ) );
+	} catch ( Rejection $rejection ) {
+		$last = $rejection->errorCode();
+	}
+}
+
+$usage = $throttle->usage( '09121234567', '203.0.113.9' );
+
+signa_check( 'every retry is judged by the captcha, not by a leftover lock', 'captcha_rejected' === $last );
+signa_same( 'and three refused requests spent no quota', 0, (int) $usage['phone'] );
+
+signa_reply( array( 'response' => array( 'code' => 200 ), 'body' => '{"success":true,"score":0.9,"action":"signa_send"}' ) );
+
+$passed = true;
+
+try {
+	$pipeline->run( Pipeline::STAGE_SEND, signa_captcha_request( array( 'captcha_token' => 'good-token' ) ) );
+} catch ( Rejection $rejection ) {
+	$passed = false;
+}
+
+signa_check( 'a solved challenge goes through', $passed );
+signa_same( 'and only that request is charged', 1, (int) $throttle->usage( '09121234567', '203.0.113.9' )['phone'] );
 
 signa_finish();

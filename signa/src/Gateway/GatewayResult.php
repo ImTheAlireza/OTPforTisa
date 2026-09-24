@@ -125,8 +125,9 @@ final class GatewayResult {
 	}
 
 	/**
-	 * Configuration or credential problems must never trigger a failover,
-	 * otherwise a typo silently burns the backup gateway's quota.
+	 * Configuration or credential problems: the owner has something to fix.
+	 * Used to label the failure (health card, self-test); since 2.0.1 it no
+	 * longer stops the failover chain — see worthFailover().
 	 *
 	 * A transient failure is never a configuration problem, even when the panel
 	 * chooses to report it with a 4xx status: an empty account (402/400 "no
@@ -143,6 +144,29 @@ final class GatewayResult {
 		}
 
 		return $this->httpStatus >= 400 && $this->httpStatus <= 499;
+	}
+
+	/**
+	 * Whether the next gateway in the chain should be asked.
+	 *
+	 * The backup gateway exists for exactly one sentence: «if one panel stops
+	 * working, logins must not». Until 2.0.1 it only stepped in for transient
+	 * trouble (timeouts, empty credit, rate limits). A suspended account, an
+	 * expired key, a pattern the panel withdrew — all of them "configuration"
+	 * — stopped the chain, and every visitor was locked out while a working,
+	 * paid-for backup sat idle. That was the wrong trade: one OTP costs one
+	 * SMS whichever panel sends it, and the failure is still recorded against
+	 * the primary so the health card and the self-test name it.
+	 *
+	 * The one refusal that is not worth a second panel is the recipient
+	 * itself: a number that is not a mobile will not become one next door.
+	 */
+	public function worthFailover(): bool {
+		if ( $this->sent ) {
+			return false;
+		}
+
+		return 'invalid_recipient' !== $this->errorCode;
 	}
 
 	public function toWpError(): \WP_Error {

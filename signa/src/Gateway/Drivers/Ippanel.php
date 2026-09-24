@@ -1,17 +1,24 @@
 <?php
 /**
- * IPPanel driver — pattern delivery when a pattern code exists, otherwise a
- * plain webservice message.
+ * IPPanel driver (Edge API) — pattern delivery when a pattern code exists,
+ * otherwise a plain webservice message.
  *
- * Two payload bugs made this driver fail on every request:
+ * Checked against https://ippanelcom.github.io/Edge-Document/docs/send/ :
  *
- *   1. `sending_type` was sent as `bulk`; the v1 API only knows
- *      `webservice`, `pattern`, `peer_to_peer` and `url`, so the panel answered
- *      an error and the visitor saw "the code was not sent".
- *   2. the sender number was never required, so an account without a configured
- *      line sent `from_number: ""`.
+ *   POST https://edge.ippanel.com/v1/api/send
+ *   Authorization: <api key>            (the raw key, no "Bearer")
+ *   pattern     {sending_type:"pattern", from_number, code,
+ *                recipients:["+989…"], params:{name:value}}
+ *   webservice  {sending_type:"webservice", from_number, message,
+ *                params:{recipients:["+989…"]}}
  *
- * The endpoint and the `Authorization` header were already right.
+ * Numbers are E.164 on both sides. Every answer is
+ * `{data, meta:{status, message, message_code}}`; success carries
+ * `data.message_outbox_ids`.
+ *
+ * Fixed in 2.0.1: recipients left as `0912…` instead of `+98912…`, and the
+ * webservice route put `recipients` at the top level where the API expects
+ * it inside `params` — every free-text send was refused.
  *
  * @package Signa
  */
@@ -37,7 +44,7 @@ final class Ippanel extends HttpGateway {
 	}
 
 	public function docsUrl(): string {
-		return 'https://ippanel.com/';
+		return 'https://ippanelcom.github.io/Edge-Document/docs/send/pattern/';
 	}
 
 	public function fields(): array {
@@ -45,11 +52,17 @@ final class Ippanel extends HttpGateway {
 			'ippanel_api_key' => array(
 				'label' => __( 'کلید API', 'signa' ),
 				'type'  => 'password',
+				'hint'  => __( 'از پنل: توسعه‌دهندگان › کلیدهای دسترسی.', 'signa' ),
 			),
 			'ippanel_pattern' => array(
 				'label' => __( 'کد پترن', 'signa' ),
 				'type'  => 'text',
 				'hint'  => __( 'اگر خالی بماند، پیام متنی معمولی ارسال می‌شود.', 'signa' ),
+			),
+			'ippanel_param'   => array(
+				'label' => __( 'نام متغیر پترن', 'signa' ),
+				'type'  => 'text',
+				'hint'  => __( 'همان نامی که در متن پترن آمده؛ پیش‌فرض: code', 'signa' ),
 			),
 			'ippanel_sender'  => array(
 				'label' => __( 'شماره فرستنده', 'signa' ),
@@ -68,7 +81,7 @@ final class Ippanel extends HttpGateway {
 	 */
 	public function plan(): array {
 		$pattern = trim( $this->option( 'ippanel_pattern' ) );
-		$sender  = trim( $this->option( 'ippanel_sender' ) );
+		$sender  = self::e164Line( $this->option( 'ippanel_sender' ) );
 		$issues  = array();
 
 		if ( '' === trim( $this->option( 'ippanel_api_key' ) ) ) {
@@ -86,52 +99,66 @@ final class Ippanel extends HttpGateway {
 			'endpoint' => self::ENDPOINT,
 			'issues'   => $issues,
 			'notes'    => '' !== $pattern
-				? array( __( 'متغیر پترن باید «code» باشد؛ در غیر این صورت نام متغیر را با فیلتر signa_ippanel_param عوض کنید.', 'signa' ) )
-				: array(),
+				? array(
+					sprintf(
+						/* translators: %s: variable name */
+						__( 'متغیر پترن «%s» فرستاده می‌شود؛ باید با متغیر داخل متن پترن یکی باشد.', 'signa' ),
+						$this->param()
+					),
+				)
+				: array( __( 'بدون پترن، پیامک متنی به شماره‌های «لیست سیاه» نمی‌رسد؛ برای کد ورود، پترن توصیه می‌شود.', 'signa' ) ),
 		);
 	}
 
+	private function param(): string {
+		/**
+		 * Filter the pattern variable name expected by the IPPanel pattern.
+		 *
+		 * @param string $name Variable name inside the pattern.
+		 */
+		return (string) apply_filters( 'signa_ippanel_param', $this->paramName( 'ippanel_param', 'code' ) );
+	}
+
 	public function deliver( DeliveryRequest $request ): GatewayResult {
-		$apiKey = $this->option( 'ippanel_api_key' );
+		$apiKey = trim( $this->option( 'ippanel_api_key' ) );
 
 		if ( '' === $apiKey ) {
 			return $this->notConfigured( __( 'برای آی‌پی‌پنل کلید API را در تنظیمات کامل کنید.', 'signa' ) );
 		}
 
 		$pattern = trim( $this->option( 'ippanel_pattern' ) );
-		$sender  = trim( $this->option( 'ippanel_sender' ) );
+		$sender  = self::e164Line( $this->option( 'ippanel_sender' ) );
 
 		if ( '' === $sender ) {
 			return $this->notConfigured( __( 'برای آی‌پی‌پنل شماره فرستنده را در تنظیمات وارد کنید.', 'signa' ) );
 		}
 
-		$payload = array(
-			'from_number' => $sender,
-			'recipients'  => array( $request->phone() ),
-		);
+		$to = self::e164( $request->phone() );
 
 		if ( '' !== $pattern ) {
-			/**
-			 * Filter the pattern variable name expected by the IPPanel pattern.
-			 *
-			 * @param string $name Variable name inside the pattern.
-			 */
-			$param = (string) apply_filters( 'signa_ippanel_param', 'code' );
-
-			$payload['sending_type'] = 'pattern';
-			$payload['code']         = $pattern;
-			$payload['params']       = array( $param => $request->code() );
+			$payload = array(
+				'sending_type' => 'pattern',
+				'from_number'  => $sender,
+				'code'         => $pattern,
+				'recipients'   => array( $to ),
+				'params'       => array( $this->param() => $request->code() ),
+			);
 		} else {
-			$payload['sending_type'] = 'webservice';
-			$payload['message']      = $request->render( $this->settings->str( 'sms_template' ), $this->settings->int( 'code_ttl', 120 ) );
+			$payload = array(
+				'sending_type' => 'webservice',
+				'from_number'  => $sender,
+				'message'      => $request->render( $this->settings->str( 'sms_template' ), $this->settings->int( 'code_ttl', 120 ) ),
+				'params'       => array( 'recipients' => array( $to ) ),
+			);
 		}
 
+		$mode     = '' !== $pattern ? 'pattern' : 'text';
 		$response = $this->post(
 			self::ENDPOINT,
 			array(
 				'headers' => array(
-					'Content-Type' => 'application/json',
-					'Accept'       => 'application/json',
+					'Content-Type'  => 'application/json',
+					'Accept'        => 'application/json',
 					'Authorization' => $apiKey,
 				),
 				'body'    => wp_json_encode( $payload ),
@@ -145,21 +172,34 @@ final class Ippanel extends HttpGateway {
 		$status = $this->status( $response );
 		$body   = $this->decode( $response );
 
-		if ( in_array( $status, array( 200, 201, 202 ), true ) && ! $this->hasError( $body ) ) {
+		if ( $status >= 200 && $status < 300 && ! $this->hasError( $body ) && array() !== $body ) {
 			return GatewayResult::sent(
 				$this->id(),
-				$this->referenceFrom( $body, array( 'data.id', 'data.message_id', 'data.ids.0', 'data.message_ids.0', 'data.0' ) ),
+				$this->referenceFrom( $body, array( 'data.message_outbox_ids.0', 'data.bulk_id', 'data.id', 'data.message_id' ) ),
 				$status,
-				array( 'mode' => '' !== $pattern ? 'pattern' : 'text' )
+				array( 'mode' => $mode )
 			);
+		}
+
+		$text  = $this->errorText( $body );
+		$mcode = isset( $body['meta']['message_code'] ) && is_scalar( $body['meta']['message_code'] ) ? (string) $body['meta']['message_code'] : '';
+		$code  = $this->codeForStatus( $status );
+
+		if ( '400-1' === $mcode ) {
+			$code = 'unauthorized';
+		} elseif ( $status >= 200 && $status < 300 ) {
+			$code = 'rejected';
 		}
 
 		return GatewayResult::failed(
 			$this->id(),
-			'' !== $this->errorText( $body ) ? 'rejected' : $this->codeForStatus( $status ),
-			$this->errorText( $body ),
+			$code,
+			'' !== $text ? $text : __( 'آی‌پی‌پنل درخواست را نپذیرفت.', 'signa' ),
 			$status,
-			array( 'mode' => '' !== $pattern ? 'pattern' : 'text' )
+			array(
+				'mode'   => $mode,
+				'reason' => 'IPPanel HTTP ' . $status . ( '' !== $mcode ? ' ' . $mcode : '' ) . ( '' !== $text ? ': ' . $text : '' ),
+			)
 		);
 	}
 
@@ -167,6 +207,11 @@ final class Ippanel extends HttpGateway {
 	 * @param array<string,mixed> $body
 	 */
 	private function hasError( array $body ): bool {
+		// The documented envelope: meta.status is false on every refusal.
+		if ( isset( $body['meta'] ) && is_array( $body['meta'] ) && array_key_exists( 'status', $body['meta'] ) && false === (bool) $body['meta']['status'] ) {
+			return true;
+		}
+
 		if ( ! empty( $body['error'] ) ) {
 			return true;
 		}
@@ -183,7 +228,7 @@ final class Ippanel extends HttpGateway {
 	 * @param array<string,mixed> $body
 	 */
 	private function errorText( array $body ): string {
-		foreach ( array( 'error.message', 'error', 'message', 'data.message' ) as $path ) {
+		foreach ( array( 'meta.message', 'error.message', 'error', 'message', 'data.message' ) as $path ) {
 			$value = $body;
 
 			foreach ( explode( '.', $path ) as $segment ) {

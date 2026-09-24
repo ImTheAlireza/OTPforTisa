@@ -51,12 +51,47 @@ final class SmsChannel implements Channel {
 			return __( 'کانال پیامک غیرفعال است.', 'signa' );
 		}
 
-		$gateway = $this->settings->str( 'sms_gateway', 'smsir' );
-		$keys    = $this->credentialKeys( $gateway );
+		/*
+		 * The channel is usable when at least one gateway in the delivery
+		 * order can send. Until 2.0.1 only the primary was checked: a primary
+		 * with an expired key made the whole channel "unavailable", and the
+		 * fully configured backup was never asked. The first gateway's reason
+		 * is still the one reported when none of them can send.
+		 */
+		$order = $this->chain->order();
 
-		foreach ( $keys as $key ) {
+		if ( array() === $order ) {
+			$order = array( $this->settings->str( 'sms_gateway', 'smsir' ) );
+		}
+
+		$first = '';
+
+		foreach ( $order as $gateway ) {
+			$reason = $this->gatewayReason( (string) $gateway );
+
+			if ( '' === $reason ) {
+				return '';
+			}
+
+			if ( '' === $first ) {
+				$first = $reason;
+			}
+		}
+
+		return $first;
+	}
+
+	/**
+	 * Why one gateway cannot send right now, or '' when it can.
+	 */
+	private function gatewayReason( string $gateway ): string {
+		foreach ( $this->credentialKeys( $gateway ) as $key ) {
 			if ( '' === trim( $this->settings->str( $key ) ) && ! defined( 'SIGNA_' . strtoupper( $key ) ) ) {
-				return __( 'اعتبارنامه سامانه پیامکی کامل نیست.', 'signa' );
+				return sprintf(
+					/* translators: %s: the empty field */
+					__( 'اعتبارنامه سامانه پیامکی کامل نیست: «%s» ذخیره نشده است. آن را وارد کنید و «ذخیره تنظیمات» را بزنید.', 'signa' ),
+					$this->fieldLabel( $key )
+				);
 			}
 		}
 
@@ -100,6 +135,21 @@ final class SmsChannel implements Channel {
 	}
 
 	/**
+	 * The label an administrator sees for a credential option.
+	 */
+	private function fieldLabel( string $key ): string {
+		$labels = array(
+			'smsir_api_key'     => __( 'کلید API سامانه sms.ir', 'signa' ),
+			'kavenegar_api_key' => __( 'کلید API کاوه‌نگار', 'signa' ),
+			'meli_username'     => __( 'نام کاربری ملی پیامک', 'signa' ),
+			'meli_password'     => __( 'رمز عبور ملی پیامک', 'signa' ),
+			'ippanel_api_key'   => __( 'کلید API آی‌پی‌پنل', 'signa' ),
+		);
+
+		return isset( $labels[ $key ] ) ? $labels[ $key ] : $key;
+	}
+
+	/**
 	 * @return string[]
 	 */
 	private function credentialKeys( string $gateway ): array {
@@ -108,7 +158,9 @@ final class SmsChannel implements Channel {
 			'kavenegar' => array( 'kavenegar_api_key' ),
 			'meli'      => array( 'meli_username', 'meli_password' ),
 			'ippanel'   => array( 'ippanel_api_key' ),
-			'faraz'     => array( 'faraz_username', 'faraz_password' ),
+			// API key (new platform) or username + password (legacy panel):
+			// the driver's own plan() reports which one is missing.
+			'faraz'     => array(),
 		);
 
 		/**

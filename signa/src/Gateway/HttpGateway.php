@@ -214,7 +214,7 @@ abstract class HttpGateway implements SmsGateway {
 					CURLOPT_URL            => $url,
 					CURLOPT_RETURNTRANSFER => true,
 					CURLOPT_CUSTOMREQUEST  => $method,
-					CURLOPT_POSTFIELDS     => isset( $args['body'] ) && is_scalar( $args['body'] ) ? (string) $args['body'] : '',
+					CURLOPT_POSTFIELDS     => self::wireBody( isset( $args['body'] ) ? $args['body'] : '' ),
 					CURLOPT_HTTPHEADER     => $headers,
 					CURLOPT_CONNECTTIMEOUT => min( 5, $timeout ),
 					CURLOPT_TIMEOUT        => $timeout,
@@ -258,6 +258,102 @@ abstract class HttpGateway implements SmsGateway {
 		}
 
 		return new \WP_Error( 'http_request_failed', 'cURL error: the request was not executed.' );
+	}
+
+	/**
+	 * The body exactly as it leaves the site.
+	 *
+	 * WP_HTTP turns an array body into a form-encoded string by itself; cURL
+	 * called directly does not. Before this, a driver that posts a form
+	 * (Kavenegar, MeliPayamak, the legacy FarazSMS pattern route) sent an
+	 * empty body whenever «ارسال مستقیم» was on — the panel answered "missing
+	 * parameters" and the code never left.
+	 *
+	 * @param mixed $body Request body.
+	 */
+	public static function wireBody( $body ): string {
+		if ( is_array( $body ) || is_object( $body ) ) {
+			return http_build_query( (array) $body, '', '&' );
+		}
+
+		return is_scalar( $body ) ? (string) $body : '';
+	}
+
+	/**
+	 * Headers for a classic HTML form post.
+	 *
+	 * Without them the default `Content-Type: application/json` above is
+	 * merged in, and a form-encoded body goes out labelled as JSON — which a
+	 * strict panel reads as an empty request.
+	 *
+	 * @return array<string,string>
+	 */
+	protected function formHeaders(): array {
+		return array(
+			'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
+			'Accept'       => 'application/json',
+		);
+	}
+
+	/**
+	 * `09121234567` → `+989121234567` (E.164), for panels that insist on it.
+	 */
+	public static function e164( string $phone ): string {
+		$digits = (string) preg_replace( '/\D/', '', $phone );
+
+		if ( 0 === strpos( $digits, '0098' ) ) {
+			$digits = substr( $digits, 4 );
+		} elseif ( 0 === strpos( $digits, '98' ) && 12 === strlen( $digits ) ) {
+			$digits = substr( $digits, 2 );
+		} elseif ( 0 === strpos( $digits, '0' ) ) {
+			$digits = substr( $digits, 1 );
+		}
+
+		return '' === $digits ? '' : '+98' . $digits;
+	}
+
+	/**
+	 * A sender line in E.164: `3000505`, `983000505`, `+983000505` and
+	 * `۳۰۰۰۵۰۵` all become `+983000505`.
+	 */
+	public static function e164Line( string $line ): string {
+		$line = trim( \Signa\Support\Phone::latinDigits( $line ) );
+
+		if ( '' === $line ) {
+			return '';
+		}
+
+		$plus   = 0 === strpos( $line, '+' );
+		$digits = (string) preg_replace( '/\D/', '', $line );
+
+		if ( '' === $digits ) {
+			return '';
+		}
+
+		if ( $plus ) {
+			return '+' . $digits;
+		}
+
+		if ( 0 === strpos( $digits, '0098' ) ) {
+			return '+' . substr( $digits, 2 );
+		}
+
+		if ( 0 === strpos( $digits, '98' ) && strlen( $digits ) >= 9 ) {
+			return '+' . $digits;
+		}
+
+		return '+98' . ltrim( $digits, '0' );
+	}
+
+	/**
+	 * A template variable name typed in the settings, or the documented
+	 * default. Kept case-sensitive: `CODE` and `Code` are different names to
+	 * every panel.
+	 */
+	protected function paramName( string $key, string $default ): string {
+		$value = trim( (string) preg_replace( '/[^A-Za-z0-9_\-]/', '', $this->option( $key ) ) );
+
+		return '' !== $value ? $value : $default;
 	}
 
 	/**

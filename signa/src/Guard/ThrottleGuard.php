@@ -66,6 +66,32 @@ final class ThrottleGuard implements Guard {
 			);
 		}
 
+		/*
+		 * The quota is not charged here any more: see settle(). A request the
+		 * captcha refuses next must not spend the phone's quota, or a bot
+		 * that never solves a challenge could lock a stranger's number (and,
+		 * spread over many addresses, the whole site's daily ceiling) out.
+		 */
+	}
+
+	/**
+	 * Charge the send quotas once every guard has let the request through.
+	 * Called by the pipeline; throws the quota rejections as before.
+	 */
+	public function settle( Request $request ): void {
+		if ( ! $this->throttle->isEnabled() ) {
+			return;
+		}
+
 		$this->throttle->chargeSend( $request->phone(), $request->ip() );
+	}
+
+	/**
+	 * Give back the in-flight lock taken by inspect() when a later guard
+	 * refuses — otherwise the visitor who mistyped a captcha reads «درخواست
+	 * موازی دیگری در جریان است» for twenty seconds.
+	 */
+	public function release( Request $request ): void {
+		$this->throttle->releaseReservation( $request->phone() );
 	}
 }
