@@ -229,6 +229,9 @@ token = re.search(r'data-form-token="([^"]+)"', front)
 fnonce = re.search(r'signaOtp = \{[^;]*?"nonce":"([^"]+)"', front)
 check('the form renders for a visitor', 'data-signa-form' in front and bool(token))
 check('with its stylesheet and script', 'signa/assets/css/front.css' in front and 'signa/assets/js/front.js' in front)
+# The form token must be older than FormToken::MIN_AGE (1 s, whole seconds):
+# a person cannot fill the form faster, and a fast CI runner otherwise can.
+time.sleep(2.2)
 phone = '0912' + str(int(time.time()))[-7:]
 base = {'phone': phone, 'channel': 'sms', 'signa_hp': '', 'signa_ts': str(int(time.time()) - 15), 'signa_ft': token.group(1) if token else ''}
 
