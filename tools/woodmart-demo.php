@@ -20,7 +20,7 @@
  * Printing by default is deliberate: the sandbox's WebAssembly PHP cannot
  * write to this filesystem, so a redirect is how the page is produced here.
  *
- * @package TisaOtp\Tools
+ * @package Signa\Tools
  */
 
 $root = dirname( __DIR__ );
@@ -36,7 +36,7 @@ require $root . '/tests/php/bootstrap.php';
  * which is why removing that one element removes all three things the panel
  * shows: the avatar, the question and the link.
  */
-function tisa_demo_panel(): string {
+function signa_demo_panel(): string {
 	return <<<'HTML'
 <div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
 	<div class="wd-heading">
@@ -86,11 +86,11 @@ function whb_get_settings(): array {
 }
 
 function woodmart_sidebar_login_form(): void {
-	echo tisa_demo_panel();
+	echo signa_demo_panel();
 }
 
-$GLOBALS['tisa_template'] = 'woodmart';
-$GLOBALS['tisa_options']['tisa_otp_settings'] = array(
+$GLOBALS['signa_template'] = 'woodmart';
+$GLOBALS['signa_options']['signa_settings'] = array(
 	'woodmart_sidebar' => '1',
 	'woodmart_mode'    => 'replace',
 );
@@ -101,24 +101,24 @@ $GLOBALS['tisa_options']['tisa_otp_settings'] = array(
  * A fresh one per panel: the integration injects once per request, which is
  * exactly the behaviour a page needs.
  */
-function tisa_demo_integration( string $mode ): TisaOtp\Integrations\WoodMart {
-	$GLOBALS['tisa_options']['tisa_otp_settings']['woodmart_mode'] = $mode;
+function signa_demo_integration( string $mode ): Signa\Integrations\WoodMart {
+	$GLOBALS['signa_options']['signa_settings']['woodmart_mode'] = $mode;
 
-	$settings = new TisaOtp\Config\Settings();
-	$logs     = new TisaOtp\Log\LogStore( $settings );
-	$captcha  = new TisaOtp\Captcha\Manager( $settings, new TisaOtp\Log\Logger( $settings, new TisaOtp\Log\Redactor(), $logs ) );
-	$assets   = new TisaOtp\Front\Assets( $settings, $captcha );
+	$settings = new Signa\Config\Settings();
+	$logs     = new Signa\Log\LogStore( $settings );
+	$captcha  = new Signa\Captcha\Manager( $settings, new Signa\Log\Logger( $settings, new Signa\Log\Redactor(), $logs ) );
+	$assets   = new Signa\Front\Assets( $settings, $captcha );
 
-	return new TisaOtp\Integrations\WoodMart(
+	return new Signa\Integrations\WoodMart(
 		$settings,
-		new TisaOtp\Front\FormRenderer( $settings, new TisaOtp\Registration\FieldSchema( $settings ), $captcha, new TisaOtp\Support\View(), $assets ),
+		new Signa\Front\FormRenderer( $settings, new Signa\Registration\FieldSchema( $settings ), $captcha, new Signa\Support\View(), $assets ),
 		$assets
 	);
 }
 
 /* Two modes, one panel each: what the theme prints, and what comes out. */
-$after     = tisa_demo_integration( 'replace' )->swap( tisa_demo_panel() );
-$alongside = tisa_demo_integration( 'append' )->swap( tisa_demo_panel() );
+$after     = signa_demo_integration( 'replace' )->swap( signa_demo_panel() );
+$alongside = signa_demo_integration( 'append' )->swap( signa_demo_panel() );
 
 /**
  * The panel, wired to the preview's stubs instead of a live WordPress.
@@ -129,19 +129,19 @@ $alongside = tisa_demo_integration( 'append' )->swap( tisa_demo_panel() );
  * the file this script writes is the same file tomorrow: without that, the
  * `--check` gate in CI could never pass.
  */
-function tisa_demo_localise( string $html ): string {
+function signa_demo_localise( string $html ): string {
 	$html = str_replace(
 		array(
-			'https://example.test/wp-json/tisa-otp/v1/',
-			'https://example.test/wp-json/tisa-otp/v1/form-config',
+			'https://example.test/wp-json/signa/v1/',
+			'https://example.test/wp-json/signa/v1/form-config',
 		),
-		array( '/mock/tisa-otp/v1/', '/mock/tisa-otp/v1/form-config' ),
+		array( '/mock/signa/v1/', '/mock/signa/v1/form-config' ),
 		$html
 	);
 
 	$html = (string) preg_replace(
-		'/class="tisa-otp__rendered" value="[0-9]+"/',
-		'class="tisa-otp__rendered" value="0"',
+		'/class="signa__rendered" value="[0-9]+"/',
+		'class="signa__rendered" value="0"',
 		$html
 	);
 
@@ -158,13 +158,13 @@ function tisa_demo_localise( string $html ): string {
 	);
 }
 
-$after     = tisa_demo_localise( $after );
-$alongside = tisa_demo_localise( $alongside );
+$after     = signa_demo_localise( $after );
+$alongside = signa_demo_localise( $alongside );
 
 /* The "before" column is the theme's own markup, untouched. */
-$before = tisa_demo_panel();
+$before = signa_demo_panel();
 
-$page = tisa_demo_page( $before, $after, $alongside );
+$page = signa_demo_page( $before, $after, $alongside );
 $argv = isset( $argv ) ? (array) $argv : array();
 
 if ( in_array( '--check', $argv, true ) ) {
@@ -190,7 +190,7 @@ echo $page;
 /**
  * The page itself: the preview's chrome, the two panels, and the notes.
  */
-function tisa_demo_page( string $before, string $after, string $alongside ): string {
+function signa_demo_page( string $before, string $after, string $alongside ): string {
 	$drawer = static function ( string $id, string $label, string $html, string $note ): string {
 		return <<<HTML
 		<section class="wm-col">
@@ -234,7 +234,7 @@ HTML;
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تیسا — فرم OTP داخل سایدبار ورود وودمارت</title>
+<title>سیگنا — فرم OTP داخل سایدبار ورود وودمارت</title>
 <!--
 	پوستهٔ واقعی وودمارت این صفحه را نمی‌سازد: اینجا فقط چهارچوب پوسته (هدر، کشو،
 	رنگ‌های تیره) بازسازی شده تا فرم در همان جایی دیده شود که روی سایت دیده
@@ -310,12 +310,12 @@ HTML;
 </head>
 <body>
 <nav class="wm-bar">
-	<strong>تیسا</strong>
+	<strong>سیگنا</strong>
 	<a href="/">فرم ورود</a>
 	<a href="/account">حساب کاربری</a>
 	<a href="/admin">پنل مدیریت</a>
 	<a class="is-here" href="/woodmart">سایدبار وودمارت</a>
-	<a href="/download/tisa-otp.zip" download>دانلود افزونه</a>
+	<a href="/download/signa.zip" download>دانلود افزونه</a>
 </nav>
 
 <main>
@@ -337,11 +337,11 @@ HTML;
 </main>
 
 <script>
-	/* Stands in for wp_localize_script( 'tisa-otp-front', 'tisaOtp', ... ) */
-	window.tisaOtp = {
-		restUrl: '/mock/tisa-otp/v1/',
+	/* Stands in for wp_localize_script( 'signa-front', 'signaOtp', ... ) */
+	window.signaOtp = {
+		restUrl: '/mock/signa/v1/',
 		nonce: 'demo-nonce',
-		configUrl: '/mock/tisa-otp/v1/form-config',
+		configUrl: '/mock/signa/v1/form-config',
 		cacheMode: 'auto',
 		autoVerify: true,
 		webOtp: false,
@@ -360,12 +360,12 @@ HTML;
 		css: '/plugin-assets/css/front.css',
 		assets: '/plugin-assets/',
 		vars: {
-			'--tisa-accent': '#7fd1c8',
-			'--tisa-accent-strong': '#5bb3aa',
-			'--tisa-accent-soft': 'rgba(127, 209, 200, .16)',
-			'--tisa-surface': '#1b1e23',
-			'--tisa-radius': '12px',
-			'--tisa-width': '100%'
+			'--signa-accent': '#7fd1c8',
+			'--signa-accent-strong': '#5bb3aa',
+			'--signa-accent-soft': 'rgba(127, 209, 200, .16)',
+			'--signa-surface': '#1b1e23',
+			'--signa-radius': '12px',
+			'--signa-width': '100%'
 		}
 	};
 </script>

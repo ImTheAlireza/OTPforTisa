@@ -1,12 +1,12 @@
 /**
- * Preview harness for the Tisa OTP plugin UI.
+ * Preview harness for the Signa plugin UI.
  *
  * There is no PHP in this sandbox, so the plugin itself cannot run. This server
  * serves the plugin's REAL front.css / front.js / admin.css / admin.js straight
  * out of the repository, wraps them in hand-written markup that mirrors what the
  * PHP templates print, answers the REST routes with the same JSON contract
  * `src/Http/Api.php` uses ({success, data} / {success:false, code, message, data}),
- * and builds an installable tisa-otp.zip on demand.
+ * and builds an installable signa.zip on demand.
  *
  * Run with:  node preview/server.js     (then open http://localhost:4173)
  */
@@ -21,16 +21,16 @@ const { execFileSync } = require('child_process');
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4173;
 const HOST = '0.0.0.0';
 const REPO = path.join(__dirname, '..');
-const PLUGIN = path.join(REPO, 'tisa-otp');
+const PLUGIN = path.join(REPO, 'signa');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PLUGIN_ASSETS = path.join(PLUGIN, 'assets');
 /*
  * The download is built next to the sources, not on top of them: rebuilding
- * `tisa-otp.zip` in the repo would leave the working tree dirty every time
+ * `signa.zip` in the repo would leave the working tree dirty every time
  * somebody clicked the link (and the committed archive is what CI compares
  * against, byte for byte).
  */
-const ZIP_PATH = path.join(os.tmpdir(), 'tisa-otp-preview.zip');
+const ZIP_PATH = path.join(os.tmpdir(), 'signa-preview.zip');
 
 const MIME = {
 	'.html': 'text/html; charset=utf-8',
@@ -65,7 +65,7 @@ function buildZip() {
 			'-c',
 			[
 				'import os, zipfile',
-				'root, out = "tisa-otp", ' + JSON.stringify(ZIP_PATH),
+				'root, out = "signa", ' + JSON.stringify(ZIP_PATH),
 				'stamp = (2026, 9, 22, 5, 36, 0)',
 				'entries = []',
 				'for dirpath, dirnames, filenames in os.walk(root):',
@@ -142,11 +142,11 @@ const demoI18n = {
 /** Mirrors FormRenderer::clientConfig(). */
 function formConfig() {
 	return {
-		restUrl: '/mock/tisa-otp/v1/',
+		restUrl: '/mock/signa/v1/',
 		nonce: freshNonce(),
 		formToken: freshFormToken(),
 		renderedAt: Math.floor(Date.now() / 1000),
-		configUrl: '/mock/tisa-otp/v1/form-config',
+		configUrl: '/mock/signa/v1/form-config',
 		cacheMode: 'auto',
 		autoVerify: true,
 		webOtp: false,
@@ -314,7 +314,7 @@ function checkPayload(kind) {
 				{ label: 'ترتیب گام‌ها', value: 'اول مشخصات، بعد کد', status: 'ok' },
 				{ label: 'فیلدهای فعال', value: 'ایمیل · کد پستی · آدرس', status: 'ok' },
 				{ label: 'فیلدهای اجباری', value: 'ایمیل', status: 'info' },
-				{ label: 'کلید متای شماره', value: 'tisa_phone', status: 'ok' },
+				{ label: 'کلید متای شماره', value: 'signa_phone', status: 'ok' },
 			],
 		},
 		design: {
@@ -343,7 +343,7 @@ function checkPayload(kind) {
 			summary: 'یک رویداد نوشته و بلافاصله خوانده می‌شود.',
 			rows: [
 				{ label: 'ثبت رویدادها', value: 'روشن', status: 'ok' },
-				{ label: 'جدول رویدادها', value: 'موجود', status: 'ok', note: 'wp_tisa_otp_logs' },
+				{ label: 'جدول رویدادها', value: 'موجود', status: 'ok', note: 'wp_signa_logs' },
 				{ label: 'رویدادهای ثبت‌شده', value: '۱٬۲۸۴', status: 'info', note: '۱۷ موردش خطا بوده است.' },
 				{ label: 'نگهداری', value: '۷ روز', status: 'info' },
 				{ label: 'نوشتن و خواندن', value: 'درست', status: 'ok', note: 'یک رویداد admin.self_test نوشته و بلافاصله پیدا شد.' },
@@ -412,7 +412,7 @@ function probePayload(service) {
 		smsir: 'https://api.sms.ir/v1/send/bulk',
 		kavenegar: 'https://api.kavenegar.com/v1/lookup',
 		captcha: 'https://widget.arcaptcha.ir/1/api.js',
-		wordpress: 'https://api.wordpress.org/plugins/info/1.0/tisa-otp.json',
+		wordpress: 'https://api.wordpress.org/plugins/info/1.0/signa.json',
 	};
 
 	if (service === 'kavenegar') {
@@ -454,7 +454,7 @@ function handleRest(route, body, headers) {
 	// A page cache with a long TTL also freezes the signed form token. The guard
 	// says `stale_form` with `recoverable`, the client pulls /form-config and
 	// sends once more — exactly what a 24-hour cache does on a real site.
-	if ('stale-form-token' === body.tisa_ft) {
+	if ('stale-form-token' === body.signa_ft) {
 		return fail('stale_form', 'این فرم مدت‌ها پیش ساخته شده است. یک بار دیگر تلاش کنید.', { recoverable: true, reason: 'stale' });
 	}
 
@@ -550,7 +550,7 @@ function handleRest(route, body, headers) {
 					step: 'signed_in',
 					user_id: 42,
 					redirect: '',
-					display_name: 'کاربر تیسا',
+					display_name: 'کاربر سیگنا',
 					message: body.draft_token ? 'حساب شما ساخته شد. در حال انتقال…' : 'خوش آمدید. در حال انتقال…',
 				});
 			}
@@ -657,14 +657,14 @@ const server = http.createServer(async (req, res) => {
 	const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
 	const pathname = decodeURIComponent(url.pathname);
 
-	if (pathname === '/download/tisa-otp.zip' || pathname === '/tisa-otp.zip') {
+	if (pathname === '/download/signa.zip' || pathname === '/signa.zip') {
 		try {
 			const size = buildZip();
 			send(res, 200, fs.readFileSync(ZIP_PATH), {
 				'Content-Type': 'application/zip',
 				'Content-Length': String(size),
-				'Content-Disposition': 'attachment; filename="tisa-otp.zip"',
-				'X-Tisa-Built': new Date().toISOString(),
+				'Content-Disposition': 'attachment; filename="signa.zip"',
+				'X-Signa-Built': new Date().toISOString(),
 			});
 		} catch (error) {
 			send(res, 500, 'Could not build the package: ' + error.message, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -672,8 +672,8 @@ const server = http.createServer(async (req, res) => {
 		return;
 	}
 
-	if (pathname.startsWith('/mock/tisa-otp/v1/')) {
-		const route = pathname.replace('/mock/tisa-otp/v1/', '').replace(/\/$/, '');
+	if (pathname.startsWith('/mock/signa/v1/')) {
+		const route = pathname.replace('/mock/signa/v1/', '').replace(/\/$/, '');
 		const body = req.method === 'POST' ? await readBody(req) : {};
 		const result = handleRest(route, body, req.headers);
 
@@ -736,11 +736,11 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-	console.log('Tisa OTP preview listening on http://' + HOST + ':' + PORT);
+	console.log('Signa preview listening on http://' + HOST + ':' + PORT);
 	console.log('  /                     front-end form demo');
 	console.log('  /admin                admin screens demo');
 	console.log('  /account              signed-in account panel demo');
 	console.log('  /woodmart             the OTP form inside WoodMart\'s sign-in drawer');
-	console.log('  /download/tisa-otp.zip  installable package (built on demand)');
+	console.log('  /download/signa.zip  installable package (built on demand)');
 	console.log('  plugin assets served from ' + PLUGIN_ASSETS);
 });

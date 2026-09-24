@@ -11,8 +11,8 @@
  *   node tools/php-test.js --lint          # require every plugin file
  *
  * Setup (once):  npm install --no-save @php-wasm/node
- * Overrides:     TISA_PHP_WASM=/path/to/node_modules/@php-wasm/node
- *                TISA_PHP_VERSION=8.3
+ * Overrides:     SIGNA_PHP_WASM=/path/to/node_modules/@php-wasm/node
+ *                SIGNA_PHP_VERSION=8.3
  */
 'use strict';
 
@@ -24,8 +24,8 @@ const path = require('path');
  * scratch directory this sandbox keeps it in.
  */
 function wasmDir() {
-	if (process.env.TISA_PHP_WASM) {
-		return process.env.TISA_PHP_WASM;
+	if (process.env.SIGNA_PHP_WASM) {
+		return process.env.SIGNA_PHP_WASM;
 	}
 
 	for (const base of [__dirname + '/..', '/tmp/phpwasm']) {
@@ -41,7 +41,7 @@ function wasmDir() {
 
 const WASM_DIR = wasmDir();
 const ROOT = path.join(__dirname, '..');
-const VERSION = process.env.TISA_PHP_VERSION || '7.4';
+const VERSION = process.env.SIGNA_PHP_VERSION || '7.4';
 
 function loadModule(relative) {
 	const base = WASM_DIR.replace(/\/@php-wasm\/node$/, '');
@@ -119,7 +119,7 @@ async function main() {
 		 * is one release. Mounting only .php files made that test report every
 		 * stylesheet as missing.
 		 */
-		...collect(path.join(ROOT, 'tisa-otp'), '/tisa-otp'),
+		...collect(path.join(ROOT, 'signa'), '/signa'),
 		// The tools, so a generator can be run here too.
 		...collect(path.join(ROOT, 'tools'), '/tools', (file) => file.endsWith('.php')),
 	];
@@ -127,7 +127,7 @@ async function main() {
 	await put(php, files);
 
 	if (lint) {
-		const plugin = files.filter(([, vfs]) => vfs.startsWith('/tisa-otp/') && vfs.endsWith('.php'));
+		const plugin = files.filter(([, vfs]) => vfs.startsWith('/signa/') && vfs.endsWith('.php'));
 		const failures = [];
 
 		/*

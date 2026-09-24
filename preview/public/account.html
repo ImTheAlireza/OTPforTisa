@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تیسا OTP — پیش‌نمایش پنل کاربری (نسخهٔ ۱.۶.۱)</title>
+<title>سیگنا — پیش‌نمایش پنل کاربری (نسخهٔ ۱.۶.۱)</title>
 <!-- Same stylesheet the plugin loads on the front end. -->
-<!-- The font is not borrowed from a CDN any more: tisa-otp/assets/fonts is
+<!-- The font is not borrowed from a CDN any more: signa/assets/fonts is
 	     served with the plugin and declared in front.css, exactly as it is on a
 	     real site. -->
 <link rel="stylesheet" href="/plugin-assets/css/front.css">
@@ -127,8 +127,8 @@
 	.badge--ok { background: #ecfdf3; color: #067647; }
 	.badge--warn { background: #fffaeb; color: #b54708; }
 
-	.tisa-otp { max-width: none; }
-	.tisa-otp__form { padding: 20px 22px 18px; }
+	.signa { max-width: none; }
+	.signa__form { padding: 20px 22px 18px; }
 
 	@media (max-width: 760px) {
 		.account__grid { grid-template-columns: 1fr; }
@@ -187,7 +187,7 @@
 					<div><dt>حالت حساب</dt><dd><span class="badge badge--ok">فعال</span></dd></div>
 				</dl>
 				<p style="margin:16px 0 0">
-					<button type="button" class="tisa-btn tisa-btn--primary tisa-btn--compact" data-demo="switch">ورود با کد دیگر</button>
+					<button type="button" class="signa-btn signa-btn--primary signa-btn--compact" data-demo="switch">ورود با کد دیگر</button>
 				</p>
 			</div>
 
@@ -196,44 +196,44 @@
 				<p class="card__note">شماره جدید پیش از ثبت، با یک کد تأیید کنترل می‌شود.</p>
 
 				<!-- The plugin's own form, mounted by the same script the site loads. -->
-				<div class="tisa-otp" dir="rtl" data-tisa-form data-skin="line">
-					<form class="tisa-otp__form" method="post" novalidate autocomplete="on">
-						<a class="tisa-otp__skip" href="#account-phone" data-tisa-skip>رفتن به فرم ورود</a>
-						<input type="text" name="tisa_hp" class="tisa-otp__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
-						<input type="hidden" name="tisa_ts" class="tisa-otp__rendered" value="1758530000">
-						<input type="hidden" name="tisa_ft" value="demo-form-token-account">
+				<div class="signa" dir="rtl" data-signa-form data-skin="line">
+					<form class="signa__form" method="post" novalidate autocomplete="on">
+						<a class="signa__skip" href="#account-phone" data-signa-skip>رفتن به فرم ورود</a>
+						<input type="text" name="signa_hp" class="signa__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
+						<input type="hidden" name="signa_ts" class="signa__rendered" value="1758530000">
+						<input type="hidden" name="signa_ft" value="demo-form-token-account">
 
-						<section class="tisa-step is-current" data-tisa-step="phone" aria-labelledby="account-phone-title">
-							<header class="tisa-step__head">
-								<h2 class="tisa-step__title" id="account-phone-title" tabindex="-1">شمارهٔ جدید</h2>
-								<p class="tisa-step__hint" id="account-phone-hint">کد تأیید به شمارهٔ جدید فرستاده می‌شود.</p>
+						<section class="signa-step is-current" data-signa-step="phone" aria-labelledby="account-phone-title">
+							<header class="signa-step__head">
+								<h2 class="signa-step__title" id="account-phone-title" tabindex="-1">شمارهٔ جدید</h2>
+								<p class="signa-step__hint" id="account-phone-hint">کد تأیید به شمارهٔ جدید فرستاده می‌شود.</p>
 							</header>
 
-							<div class="tisa-field">
-								<label class="tisa-field__label" for="account-phone">شماره موبایل</label>
-								<div class="tisa-phone">
-									<input class="tisa-field__input tisa-phone__input" id="account-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09121234567" data-tisa-phone aria-describedby="account-phone-hint account-phone-error" aria-invalid="false" required>
+							<div class="signa-field">
+								<label class="signa-field__label" for="account-phone">شماره موبایل</label>
+								<div class="signa-phone">
+									<input class="signa-field__input signa-phone__input" id="account-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" dir="ltr" placeholder="09121234567" data-signa-phone aria-describedby="account-phone-hint account-phone-error" aria-invalid="false" required>
 								</div>
-								<p class="tisa-field__error" id="account-phone-error" data-tisa-error="phone" role="alert" hidden></p>
+								<p class="signa-field__error" id="account-phone-error" data-signa-error="phone" role="alert" hidden></p>
 							</div>
 
-							<div class="tisa-captcha" data-tisa-captcha hidden></div>
+							<div class="signa-captcha" data-signa-captcha hidden></div>
 
-							<button type="button" class="tisa-btn tisa-btn--primary" data-tisa-action="start">
-								<span class="tisa-btn__label">ثبت شمارهٔ جدید</span>
-								<span class="tisa-btn__spinner" aria-hidden="true"></span>
+							<button type="button" class="signa-btn signa-btn--primary" data-signa-action="start">
+								<span class="signa-btn__label">ثبت شمارهٔ جدید</span>
+								<span class="signa-btn__spinner" aria-hidden="true"></span>
 							</button>
 
-							<ul class="tisa-otp__trust">
-								<li class="tisa-otp__trust-item">
+							<ul class="signa__trust">
+								<li class="signa__trust-item">
 									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 									<span>شمارهٔ قبلی تا تأیید شمارهٔ تازه فعال می‌ماند</span>
 								</li>
-								<li class="tisa-otp__trust-item">
+								<li class="signa__trust-item">
 									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 									<span>تأیید در چند ثانیه</span>
 								</li>
-								<li class="tisa-otp__trust-item">
+								<li class="signa__trust-item">
 									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><rect x="4.5" y="4.5" width="11" height="11" rx="2.5"></rect><path d="M8.5 10h3" stroke-linecap="round"></path></svg>
 									<span>فقط خودتان کد را می‌بینید</span>
 								</li>
@@ -252,10 +252,10 @@
 	 * The account page has no endpoint of its own in the demo, so the plugin's
 	 * own script is pointed at the mock REST routes the form demo uses.
 	 */
-	window.tisaOtp = {
-		restUrl: '/mock/tisa-otp/v1/',
+	window.signaOtp = {
+		restUrl: '/mock/signa/v1/',
 		nonce: 'demo-nonce',
-		configUrl: '/mock/tisa-otp/v1/form-config',
+		configUrl: '/mock/signa/v1/form-config',
 		cacheMode: 'off',
 		formToken: 'demo-form-token-account',
 		renderedAt: 1758530000,

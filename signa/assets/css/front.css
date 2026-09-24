@@ -1,0 +1,1511 @@
+/*!
+ * Signa — front-end styles.
+ *
+ * Two rules shape everything below:
+ *
+ *   1. Every colour, radius, space and shadow is a token. A theme can restyle
+ *      the whole form by overriding five variables set from PHP
+ *      (`Assets::cssVariables`) or from the shortcode/Elementor attributes:
+ *
+ *        --signa-accent        main colour
+ *        --signa-accent-soft   tinted wash for focus and hover
+ *        --signa-surface       card background
+ *        --signa-radius        corner radius
+ *        --signa-width         form width
+ *
+ *   2. Nothing may depend on two elements staying in step with each other.
+ *      The previous step bar drew its connector line as a pseudo-element that
+ *      painted *over* the numbered circles, and the phone field printed "09"
+ *      twice. Both looked broken for a reason that was structural, not
+ *      cosmetic, so both are rebuilt rather than repainted: the progress bar is
+ *      three filled segments, and the country prefix is a real chip that the
+ *      placeholder no longer repeats.
+ *
+ * Contrast-critical values were measured, not guessed: see
+ * `node tests/contrast.js` and docs/UI-PLAN.fa.md §3.
+ */
+
+/* The font the form is designed in -----------------------------------------
+ *
+ * Vazirmatn (SIL OFL 1.1, assets/fonts/OFL.txt) ships with the plugin, so the
+ * form does not depend on a theme that may have no Persian glyphs at all, on a
+ * CDN that is blocked from Iran, or on the reader's operating system. Two
+ * subsets per weight: the Arabic one carries the Persian letters and digits,
+ * the Latin one carries ASCII (the phone and code fields are `dir=ltr`) and
+ * the punctuation. `unicode-range` is what lets both live under the same
+ * family name — without it the second block simply replaces the first.
+ * The ranges below were read out of the font files themselves.
+ */
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-400-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-400-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-600-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-600-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-700-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-700-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+.signa {
+	/* Colour ------------------------------------------------------------- */
+	--signa-accent: #0f766e;
+	--signa-accent-soft: rgba(15, 118, 110, 0.12);
+	--signa-accent-strong: #0b5c56;
+	--signa-accent-contrast: #ffffff;
+	--signa-surface: #ffffff;
+	--signa-surface-sunken: #f9fafb;
+	--signa-text: #101828;
+	--signa-muted: #667085;
+	--signa-line: #e4e7ec;
+	--signa-input-line: #767f8d;
+	--signa-placeholder: #6b7280;
+	--signa-focus: var(--signa-accent);
+	--signa-danger: #b42318;
+	--signa-danger-soft: rgba(180, 35, 24, 0.1);
+	--signa-danger-line: rgba(180, 35, 24, 0.35);
+	--signa-success: #067647;
+	--signa-success-soft: #ecfdf3;
+	--signa-success-line: rgba(6, 118, 71, 0.25);
+	--signa-info: #175cd3;
+	--signa-info-soft: rgba(23, 92, 211, 0.08);
+	--signa-info-line: rgba(23, 92, 211, 0.22);
+	--signa-overlay: rgba(255, 255, 255, 0.72);
+
+	/* Space — a 4px rhythm, so vertical distances stay related ----------- */
+	--signa-space-1: 4px;
+	--signa-space-2: 8px;
+	--signa-space-3: 12px;
+	--signa-space: 14px;
+	--signa-space-4: var(--signa-space);
+	--signa-space-5: 18px;
+	--signa-space-6: 24px;
+	--signa-space-8: 32px;
+
+	/* Radius and depth ---------------------------------------------------- */
+	--signa-radius: 14px;
+	--signa-radius-card: 18px;
+	--signa-radius-sm: calc(var(--signa-radius) * 0.5);
+	--signa-radius-control: calc(var(--signa-radius) * 0.7);
+	--signa-ring: 0 0 0 4px var(--signa-accent-soft);
+	--signa-elev-1: 0 1px 2px rgba(16, 24, 40, 0.06);
+	--signa-elev-2: 0 18px 40px -24px rgba(16, 24, 40, 0.35);
+	--signa-elev-3: 0 24px 56px -28px rgba(16, 24, 40, 0.45);
+	--signa-elev-button: 0 12px 26px -16px var(--signa-accent-strong);
+
+	/* Motion -------------------------------------------------------------- */
+	--signa-dur-fast: 120ms;
+	--signa-dur-base: 180ms;
+	--signa-dur-slow: 320ms;
+	--signa-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+	--signa-ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+	/* Type ---------------------------------------------------------------- */
+	--signa-width: 420px;
+	--signa-font: 'Vazirmatn', 'Vazir', 'IRANSans', 'Iranian Sans', Tahoma, sans-serif;
+
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--signa-width);
+	margin-inline: auto;
+	padding: 0;
+	color: var(--signa-text);
+	font-family: var(--signa-font);
+	font-size: 15px;
+	line-height: 1.75;
+	direction: rtl;
+	text-align: right;
+
+	/* Nothing inherited --------------------------------------------------
+	 *
+	 * These are the properties a theme's content column is most likely to set
+	 * — and the ones that make a form look like somebody else's prose: a
+	 * stretched or squeezed letter-spacing, a theme-wide bold, a text shadow,
+	 * a minimum or maximum weight. The form declares every one of them, so it
+	 * reads the same on any site and inside a shadow root.
+	 */
+	font-weight: 400;
+	font-style: normal;
+	font-variant: normal;
+	font-feature-settings: normal;
+	font-kerning: normal;
+	letter-spacing: normal;
+	word-spacing: normal;
+	text-transform: none;
+	text-shadow: none;
+	text-indent: 0;
+	visibility: visible;
+}
+
+/*
+ * Inside a shadow root the host element is the boundary: light DOM themes set
+ * properties on it, and a bare `display: inline` host would collapse the form
+ * to the width of one word. This rule is inert in the light DOM (nothing
+ * matches `:host` outside a shadow tree), so the same file serves both paths.
+ */
+:host {
+	display: block;
+	contain: layout style;
+}
+
+.signa *,
+.signa *::before,
+.signa *::after {
+	box-sizing: inherit;
+}
+
+/* Text for screen readers only. Used for the step announcement, the code
+   labels and the resend status. */
+.signa .signa-screen-reader {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* Skip link -----------------------------------------------------------------
+ *
+ * The first tab stop jumps past the (invisible) honeypot and straight to the
+ * phone field. It has to be *gone* until it is focused: the previous version
+ * only nudged itself up with `translateY(-150%)`, which left it sitting on the
+ * card in plain sight — the button users kept asking about.
+ */
+
+.signa__skip {
+	position: absolute;
+	top: 8px;
+	inset-inline-start: 50%;
+	z-index: 3;
+	padding: 8px 16px;
+	border-radius: 999px;
+	background: var(--signa-accent);
+	color: var(--signa-accent-contrast);
+	font-size: 13.5px;
+	font-weight: 700;
+	text-decoration: none;
+	white-space: nowrap;
+	box-shadow: var(--signa-elev-1);
+	transform: translateX(50%) translateY(-12px);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--signa-dur-fast) var(--signa-ease-out), transform var(--signa-dur-fast) var(--signa-ease-out);
+}
+
+.signa__skip:focus,
+.signa__skip:focus-visible {
+	outline: 2px solid var(--signa-focus);
+	outline-offset: 2px;
+	opacity: 1;
+	pointer-events: auto;
+	transform: translateX(50%) translateY(0);
+}
+
+/* WoodMart login sidebar ------------------------------------------------------
+ *
+ * The form is placed inside the theme's own sign-in panel, replacing its
+ * WooCommerce username/password form (see src/Integrations/WoodMart.php). The
+ * panel is a narrow drawer with its own padding, so the form only needs room.
+ *
+ * The selector targets the *host* element — the one the theme's markup
+ * contains — because the form renders in a shadow root: padding on the host
+ * still lays out the form inside it, and in the no-JavaScript case the same
+ * rule lands on the form itself. One rule, both paths.
+ */
+.login-form-side .signa {
+	padding: 0 20px 22px;
+}
+
+.login-form-side .signa__brand {
+	margin-bottom: var(--signa-space-3);
+}
+
+/* Alignment ----------------------------------------------------------------- */
+
+.signa-align-start {
+	margin-inline-start: 0;
+	margin-inline-end: auto;
+}
+
+.signa-align-end {
+	margin-inline-start: auto;
+	margin-inline-end: 0;
+}
+
+/* Brand --------------------------------------------------------------------- */
+
+.signa__brand {
+	margin-bottom: var(--signa-space-5);
+	text-align: center;
+}
+
+.signa__brand img {
+	height: auto;
+	max-width: 100%;
+}
+
+/* Form shell ---------------------------------------------------------------- */
+
+.signa__form {
+	display: block;
+	margin: 0;
+	padding: 0;
+}
+
+.signa__honeypot {
+	position: absolute !important;
+	inset-inline-start: -9999px;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Status card --------------------------------------------------------------- */
+
+.signa__status {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--signa-space-3);
+	margin-bottom: var(--signa-space-5);
+	padding: var(--signa-space-3) var(--signa-space-4);
+	border: 1px solid var(--signa-info-line);
+	border-radius: var(--signa-radius-control);
+	background: var(--signa-info-soft);
+	color: var(--signa-text);
+	font-size: 13.5px;
+	animation: signa-step-in var(--signa-dur-base) var(--signa-ease-out);
+}
+
+.signa__status[hidden] {
+	display: none;
+}
+
+.signa__status-icon {
+	flex: none;
+	width: 20px;
+	height: 20px;
+	margin-top: 2px;
+	color: var(--signa-info);
+}
+
+.signa__status-body {
+	min-width: 0;
+}
+
+.signa__status-title {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.6;
+}
+
+.signa__status-title[hidden] {
+	display: none;
+}
+
+.signa__status-text {
+	margin: 0;
+	line-height: 1.8;
+}
+
+.signa__status-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--signa-space-3);
+	margin-top: var(--signa-space-2);
+}
+
+.signa__status-action {
+	min-height: 40px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: currentColor;
+	font-family: inherit;
+	font-size: 13.5px;
+	font-weight: 700;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	cursor: pointer;
+}
+
+.signa__status.is-info {
+	border-color: var(--signa-info-line);
+	background: var(--signa-info-soft);
+}
+
+.signa__status.is-info .signa__status-icon {
+	color: var(--signa-info);
+}
+
+.signa__status.is-success {
+	border-color: var(--signa-success-line);
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa__status.is-success .signa__status-icon {
+	color: var(--signa-success);
+}
+
+.signa__status.is-error {
+	border-color: var(--signa-danger-line);
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa__status.is-error .signa__status-icon {
+	color: var(--signa-danger);
+}
+
+/* Progress ------------------------------------------------------------------
+ *
+ * Three segments instead of numbered circles joined by a line. A segment can
+ * never land on top of another one, it survives any font size, and it reads the
+ * same in RTL and LTR — which is exactly what the old connector failed at.
+ *
+ * Decorative for assistive tech: `aria-hidden` on the list, with the visually
+ * hidden "step N of M" sentence beside it doing the announcing.
+ */
+
+.signa__steps {
+	display: flex;
+	gap: var(--signa-space-2);
+	margin: 0 0 var(--signa-space-6);
+	padding: 0;
+	list-style: none;
+	counter-reset: signa-step;
+}
+
+.signa__steps[hidden] {
+	display: none;
+}
+
+.signa__steps li {
+	flex: 1 1 0;
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	min-width: 0;
+	color: var(--signa-muted);
+	font-size: 12px;
+	line-height: 1.6;
+	text-align: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.signa__steps li::before {
+	content: "";
+	display: block;
+	height: 4px;
+	border-radius: 999px;
+	background: var(--signa-line);
+	transition: background-color var(--signa-dur-slow) var(--signa-ease-out);
+}
+
+.signa__steps li.is-done::before,
+.signa__steps li.is-current::before {
+	background: var(--signa-accent);
+}
+
+.signa__steps li.is-done {
+	color: var(--signa-accent);
+}
+
+.signa__steps li.is-current {
+	color: var(--signa-text);
+	font-weight: 700;
+}
+
+/* Steps --------------------------------------------------------------------- */
+
+.signa-step {
+	display: none;
+}
+
+.signa-step.is-current {
+	display: block;
+	animation: signa-step-in var(--signa-dur-slow) var(--signa-ease-out);
+}
+
+@keyframes signa-step-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.signa-step__head {
+	margin-bottom: var(--signa-space-5);
+}
+
+.signa-step__title {
+	margin: 0 0 6px;
+	color: inherit;
+	font-size: 21px;
+	font-weight: 700;
+	line-height: 1.5;
+	letter-spacing: -0.01em;
+}
+
+.signa-step__hint {
+	margin: 0;
+	color: var(--signa-muted);
+	font-size: 13.5px;
+}
+
+/* The step title is focused programmatically when a step opens. */
+.signa-step__title:focus {
+	outline: none;
+}
+
+.signa-step__title:focus-visible {
+	outline: 2px solid var(--signa-focus);
+	outline-offset: 4px;
+	border-radius: 4px;
+}
+
+.signa__masked {
+	direction: ltr;
+	unicode-bidi: embed;
+	font-weight: 700;
+	color: var(--signa-text);
+	letter-spacing: 0.02em;
+}
+
+/* Fields -------------------------------------------------------------------- */
+
+.signa-fields {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--signa-space-4);
+	margin-bottom: var(--signa-space-5);
+}
+
+.signa-field {
+	width: 100%;
+	margin-bottom: var(--signa-space-5);
+}
+
+.signa-fields .signa-field {
+	margin-bottom: 0;
+}
+
+.signa-field--half {
+	flex: 1 1 calc(50% - (var(--signa-space-4) / 2));
+	min-width: 160px;
+}
+
+.signa-field--full {
+	flex: 1 1 100%;
+}
+
+.signa-field__label {
+	display: block;
+	margin-bottom: 7px;
+	color: var(--signa-text);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+
+.signa-field__star {
+	color: var(--signa-danger);
+}
+
+.signa-field__hint {
+	margin: 7px 0 0;
+	color: var(--signa-muted);
+	font-size: 12.5px;
+}
+
+.signa-field__error {
+	margin: 7px 0 0;
+	color: var(--signa-danger);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.signa-field__error[hidden] {
+	display: none;
+}
+
+/*
+ * 16px, not 15px: iOS zooms the whole page when a focused input is smaller,
+ * which leaves the form sitting half off-screen on every iPhone.
+ */
+.signa-field__input,
+.signa-field__select,
+.signa-phone__input,
+.signa-code__bulk {
+	width: 100%;
+	padding: 13px 15px;
+	border: 1px solid var(--signa-input-line);
+	border-radius: var(--signa-radius-control);
+	background: var(--signa-surface);
+	color: var(--signa-text);
+	font-family: inherit;
+	font-size: 16px;
+	line-height: 1.6;
+	transition: border-color var(--signa-dur-fast) var(--signa-ease-out), box-shadow var(--signa-dur-fast) var(--signa-ease-out), background-color var(--signa-dur-fast) var(--signa-ease-out);
+	appearance: none;
+}
+
+/* Theme-proofing -------------------------------------------------------------
+ *
+ * Every rule above names one class, so a theme that styles its own content —
+ * `.entry-content input`, `.wp-block-group button`, `#main .searchform input` —
+ * outranks them and the form starts looking like the theme instead of like
+ * this design. That is the whole of the honest answer to "your preview does
+ * not match my site": WordPress never rewrites the markup, the theme's
+ * stylesheet simply wins the cascade.
+ *
+ * These declarations re-assert the parts a theme is most likely to set and
+ * that this design never wants from it. They are written *before* the skins on
+ * purpose: a later rule at the same specificity still wins, so no skin loses
+ * its look, and `letter-spacing`/`text-indent` stay available to the single
+ * code field, which uses both to keep digits centred.
+ */
+.signa .signa-field__input,
+.signa .signa-field__select,
+.signa .signa-phone__input,
+.signa .signa-code__bulk,
+.signa .signa-code__box,
+.signa .signa-btn {
+	font-family: inherit;
+	letter-spacing: normal;
+	text-transform: none;
+	text-shadow: none;
+	text-indent: 0;
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+.signa-field__input::placeholder,
+.signa-phone__input::placeholder,
+.signa-code__bulk::placeholder {
+	color: var(--signa-placeholder);
+	letter-spacing: normal;
+}
+
+.signa-field__input:focus,
+.signa-field__select:focus,
+.signa-phone__input:focus,
+.signa-code__bulk:focus,
+.signa-code__box:focus {
+	outline: none;
+	border-color: var(--signa-focus);
+	box-shadow: var(--signa-ring);
+}
+
+.signa-field__input.has-error,
+.signa-field__select.has-error,
+.signa-field__input[aria-invalid="true"],
+.signa-field__select[aria-invalid="true"],
+.signa-phone__input[aria-invalid="true"],
+.signa-code__bulk[aria-invalid="true"],
+.signa-code__box[aria-invalid="true"] {
+	border-color: var(--signa-danger);
+	background: var(--signa-danger-soft);
+}
+
+.signa-code__box[aria-invalid="true"]:focus,
+.signa-code__bulk[aria-invalid="true"]:focus,
+.signa-field__input[aria-invalid="true"]:focus {
+	box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.14);
+}
+
+.signa-check {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.signa-check input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	accent-color: var(--signa-accent);
+}
+
+/* Phone ---------------------------------------------------------------------
+ *
+ * One field, one number. There used to be a fixed `09` chip inside this
+ * control, which contradicted the error message right underneath it ("start
+ * with 09") — the field asked for something it had already printed. Now the
+ * placeholder shows the whole number the way it is written on a phone, and
+ * anything the visitor types is folded to `09xxxxxxxxx` before it is sent
+ * (see `canonicalPhone()` in `front.js`).
+ */
+
+.signa-phone {
+	/* The number is written left to right, so the field is too. There is no
+	   prefix chip any more: the placeholder shows the whole number, and what
+	   the user types is what gets sent. */
+	direction: ltr;
+}
+
+.signa-phone__input,
+.signa-phone__input:focus {
+	/* Inherited from `.signa-field__input`: one border, one radius, one focus
+	   ring. All this adds is the direction and the tracking the eye needs to
+	   read eleven digits as one number. */
+	text-align: left;
+	direction: ltr;
+	letter-spacing: 0.06em;
+	font-variant-numeric: tabular-nums;
+}
+
+.signa-phone__input::placeholder {
+	/* The placeholder is a tail, not a value: it should not shout. */
+	color: var(--signa-placeholder);
+}
+
+/* Code --------------------------------------------------------------------- */
+
+.signa-code {
+	margin-bottom: var(--signa-space-4);
+}
+
+.signa-code__phone {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: var(--signa-space-2);
+	margin-bottom: var(--signa-space-4);
+	padding: 7px var(--signa-space-4);
+	border: 1px solid var(--signa-line);
+	border-radius: 999px;
+	background: var(--signa-surface-sunken);
+	color: var(--signa-muted);
+	font-size: 13px;
+}
+
+.signa-code__phone[hidden] {
+	display: none;
+}
+
+.signa-code__phone-value {
+	color: var(--signa-text);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+}
+
+.signa-code__boxes {
+	display: flex;
+	gap: var(--signa-space-2);
+	/* Centred, always: five boxes hugging one edge left a hole on the other
+	   side of the card and made the step look half-finished. */
+	justify-content: center;
+	direction: ltr;
+}
+
+.signa-code__box {
+	flex: 1 1 0;
+	min-width: 0;
+	max-width: 58px;
+	height: 58px;
+	padding: 0;
+	border: 1px solid var(--signa-input-line);
+	border-radius: var(--signa-radius-control);
+	background: var(--signa-surface);
+	color: var(--signa-text);
+	font-family: inherit;
+	font-size: 24px;
+	font-weight: 700;
+	/* Tabular figures keep the boxes from twitching as digits land. */
+	font-feature-settings: "tnum" 1;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	transition: border-color var(--signa-dur-fast) var(--signa-ease-out), box-shadow var(--signa-dur-fast) var(--signa-ease-out);
+}
+
+.signa-code-single .signa-code__boxes,
+.signa-code-boxes .signa-code__bulk {
+	display: none;
+}
+
+.signa-code-single .signa-code__bulk {
+	direction: ltr;
+	text-align: center;
+	letter-spacing: 0.5em;
+	/* The trailing letter-spacing would otherwise push the text off-centre. */
+	text-indent: 0.5em;
+	font-size: 22px;
+	font-weight: 700;
+	font-feature-settings: "tnum" 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.signa-code__paste {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	margin: calc(var(--signa-space-5) * -0.35) auto 0;
+	min-height: 40px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.signa-code__paste svg {
+	width: 17px;
+	height: 17px;
+}
+
+.signa-code__footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--signa-space-3);
+	justify-content: space-between;
+	align-items: center;
+	margin-top: var(--signa-space-5);
+	font-size: 13.5px;
+}
+
+.signa-code__attempts {
+	display: block;
+	margin-top: var(--signa-space-2);
+	color: var(--signa-danger);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.signa-code__attempts[hidden] {
+	display: none;
+}
+
+/* Cooldown bar: one CSS animation instead of a second timer (UI plan 4.5). */
+
+.signa-code__cooldown {
+	height: 3px;
+	margin-top: var(--signa-space-2);
+	border-radius: 999px;
+	background: var(--signa-line);
+	overflow: hidden;
+}
+
+.signa-code__cooldown[hidden] {
+	display: none;
+}
+
+.signa-code__cooldown > i {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--signa-accent);
+	transform-origin: inline-start;
+	animation: signa-cooldown var(--signa-cooldown, 60s) linear forwards;
+}
+
+@keyframes signa-cooldown {
+	from {
+		transform: scaleX(1);
+	}
+
+	to {
+		transform: scaleX(0);
+	}
+}
+
+/* "No SMS?" helper — an offer, not a warning, so it reads like a card. */
+
+.signa-code__rescue {
+	margin-top: var(--signa-space-4);
+	padding: var(--signa-space-3) var(--signa-space-4);
+	border: 1px solid var(--signa-info-line);
+	border-radius: var(--signa-radius-control);
+	background: var(--signa-info-soft);
+	/* The panel explains a situation; it never centres itself and it never
+	   raises its voice above the code boxes it sits under. */
+	text-align: start;
+	animation: signa-step-in var(--signa-dur-base) var(--signa-ease-out);
+}
+
+.signa-code__rescue[hidden] {
+	display: none;
+}
+
+.signa-code__rescue-title {
+	display: flex;
+	align-items: center;
+	gap: var(--signa-space-2);
+	margin: 0;
+	color: var(--signa-text);
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.7;
+}
+
+.signa-code__rescue-icon {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: var(--signa-surface);
+	color: var(--signa-info);
+}
+
+.signa-code__rescue-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.signa-code__rescue-list {
+	margin: var(--signa-space-2) 0 0;
+	padding: 0;
+	list-style: none;
+	color: var(--signa-muted);
+	font-size: 13px;
+	line-height: 1.95;
+}
+
+.signa-code__rescue-list li {
+	position: relative;
+	padding-inline-start: var(--signa-space-4);
+}
+
+.signa-code__rescue-list li::before {
+	content: '';
+	position: absolute;
+	inset-inline-start: 3px;
+	top: 0.72em;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: var(--signa-info);
+	opacity: 0.5;
+}
+
+.signa.is-expired .signa-code__box,
+.signa.is-expired .signa-code__bulk {
+	border-color: var(--signa-danger-line);
+}
+
+/* Buttons ------------------------------------------------------------------- */
+
+.signa-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	width: 100%;
+	/* 44px is the WCAG 2.2 target-size floor; 52px is the comfortable one. */
+	min-height: 52px;
+	margin: 0;
+	padding: 13px 22px;
+	border: 1px solid transparent;
+	border-radius: var(--signa-radius-control);
+	font-family: inherit;
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.5;
+	cursor: pointer;
+	transition: background-color var(--signa-dur-fast) var(--signa-ease-out), color var(--signa-dur-fast) var(--signa-ease-out), border-color var(--signa-dur-fast) var(--signa-ease-out), box-shadow var(--signa-dur-base) var(--signa-ease-out), transform 90ms var(--signa-ease-out), opacity var(--signa-dur-fast) var(--signa-ease-out);
+}
+
+/* The label keeps its resting width so "..." does not resize the button. */
+.signa-btn__label {
+	min-width: var(--signa-label-width, auto);
+}
+
+.signa-btn--primary {
+	/* The depth is a translucent sheen *over* the accent, never a second
+	   colour. A fixed "darker teal" stop used to sit under the gradient, so a
+	   crimson button faded into green and every hover turned teal — the token
+	   could not follow a setting it knew nothing about. */
+	background-color: var(--signa-accent);
+	background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(0, 0, 0, 0.18) 100%);
+	color: var(--signa-accent-contrast);
+	box-shadow: var(--signa-elev-button);
+}
+
+.signa-btn--primary:hover:not(:disabled) {
+	background-image: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.3) 100%);
+	box-shadow: 0 16px 30px -16px var(--signa-accent-strong);
+}
+
+.signa-btn--primary:active:not(:disabled) {
+	transform: translateY(1px);
+	box-shadow: 0 6px 14px -10px var(--signa-accent-strong);
+}
+
+.signa-btn--ghost {
+	margin-top: var(--signa-space-2);
+	background: transparent;
+	border-color: var(--signa-line);
+	color: var(--signa-muted);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.signa-btn--ghost:hover:not(:disabled) {
+	background: var(--signa-accent-soft);
+	border-color: var(--signa-accent);
+	color: var(--signa-accent);
+}
+
+.signa-btn:disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+
+.signa-btn:focus-visible,
+.signa-link:focus-visible,
+.signa-code__paste:focus-visible,
+.signa__status-action:focus-visible {
+	outline: 2px solid var(--signa-focus);
+	outline-offset: 2px;
+	border-radius: 6px;
+}
+
+.signa-btn__spinner {
+	display: none;
+	width: 16px;
+	height: 16px;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: signa-spin 720ms linear infinite;
+}
+
+.signa.is-busy .signa-btn--primary .signa-btn__spinner {
+	display: inline-block;
+}
+
+@keyframes signa-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* While a request is in flight the step dims, so the wait is visible even
+   when the pressed button has scrolled out of view. */
+
+.signa.is-busy .signa-step.is-current {
+	opacity: 0.72;
+	transition: opacity var(--signa-dur-fast) var(--signa-ease-out);
+}
+
+.signa.is-busy .signa-code__box,
+.signa.is-busy .signa-field__input,
+.signa.is-busy .signa-phone__input {
+	pointer-events: none;
+}
+
+.signa-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--signa-accent);
+	font-family: inherit;
+	font-size: 13.5px;
+	font-weight: 600;
+	text-decoration: none;
+	text-underline-offset: 3px;
+	cursor: pointer;
+}
+
+.signa-link:hover:not(:disabled) {
+	text-decoration: underline;
+}
+
+.signa-link:disabled {
+	color: var(--signa-muted);
+	cursor: default;
+}
+
+/* Captcha ------------------------------------------------------------------- */
+
+.signa-captcha {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--signa-space-2);
+	min-height: 0;
+	margin-bottom: var(--signa-space-4);
+}
+
+.signa-captcha[hidden] {
+	display: none;
+}
+
+/*
+ * A widget that arrives before its stylesheet (or without one) must not be able
+ * to fill the form with its own brand mark: ARCaptcha's loader logo is an SVG
+ * with a 621x363 viewBox, and that is exactly what it did.
+ *
+ * These are caps, not sizes — anything the vendor sets smaller stays smaller,
+ * and the vendor's own rules are appended after this stylesheet inside the
+ * shadow root, so on a tie they win. See mirrorVendorStyles() in front.js.
+ */
+.signa-captcha :where(img, svg, canvas, video) {
+	max-width: 100%;
+	max-height: 96px;
+}
+
+.signa-captcha :where(iframe) {
+	max-width: 100%;
+}
+
+/* An empty slot is a bug the visitor should be able to see coming. */
+.signa-captcha:not([hidden]):empty::after {
+	content: "";
+	width: 26px;
+	height: 26px;
+	border: 2px solid var(--signa-input-line);
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: signa-spin 900ms linear infinite;
+}
+
+.signa-captcha__error {
+	width: 100%;
+	padding: var(--signa-space-3) var(--signa-space-4);
+	border: 1px solid var(--signa-danger-line);
+	border-radius: var(--signa-radius-control);
+	background: var(--signa-danger-soft);
+	color: var(--signa-text);
+	text-align: start;
+}
+
+.signa-captcha__error-text {
+	margin: 0 0 var(--signa-space-2);
+	font-size: 13px;
+	line-height: 1.8;
+}
+
+.signa-captcha__error-hint {
+	margin: var(--signa-space-2) 0 0;
+	color: var(--signa-muted);
+	font-size: 12.5px;
+	line-height: 1.8;
+}
+
+/* Trust row -----------------------------------------------------------------
+ *
+ * Sits under the primary button, where the hesitation happens ("should I give
+ * this site my number?"). Quiet by design: it is reassurance, not a feature
+ * list, so it stays one muted line of three short claims.
+ */
+
+.signa__trust {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: var(--signa-space-2) var(--signa-space-4);
+	margin: var(--signa-space-5) 0 0;
+	padding: 0;
+	list-style: none;
+	color: var(--signa-muted);
+	font-size: 12px;
+	line-height: 1.7;
+}
+
+.signa__trust-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.signa__trust-item svg {
+	width: 15px;
+	height: 15px;
+	flex: none;
+	color: var(--signa-accent);
+}
+
+/* Terms --------------------------------------------------------------------- */
+
+.signa__terms {
+	margin: var(--signa-space-4) 0 0;
+	color: var(--signa-muted);
+	font-size: 12.5px;
+	text-align: center;
+}
+
+.signa__terms a {
+	color: var(--signa-accent);
+}
+
+/* Skins --------------------------------------------------------------------
+ *
+ * `line` is the default: no card at all, so the form can be dropped into a
+ * theme that already draws one. The others add a surface of their own.
+ */
+
+.signa-skin-line .signa__form {
+	padding: 0;
+}
+
+.signa-skin-card .signa__form,
+.signa-skin-glass .signa__form,
+.signa-skin-slate .signa__form {
+	padding: var(--signa-space-8) var(--signa-space-6) var(--signa-space-6);
+	border: 1px solid var(--signa-line);
+	border-radius: var(--signa-radius-card);
+	background: var(--signa-surface);
+	box-shadow: var(--signa-elev-2);
+}
+
+.signa-skin-card .signa__form {
+	/* A hairline of the accent at the very top: the card gets an edge to sit
+	   against without a header band eating vertical space. */
+	border-top: 3px solid var(--signa-accent);
+}
+
+.signa-skin-glass .signa__form {
+	border-color: rgba(255, 255, 255, 0.45);
+	background: rgba(255, 255, 255, 0.66);
+	backdrop-filter: blur(16px) saturate(140%);
+	-webkit-backdrop-filter: blur(16px) saturate(140%);
+	box-shadow: var(--signa-elev-3);
+}
+
+.signa-skin-glass .signa-field__input,
+.signa-skin-glass .signa-code__box,
+.signa-skin-glass .signa-code__bulk {
+	background: rgba(255, 255, 255, 0.78);
+}
+
+/*
+ * Slate is a pure token swap: no component-level colour overrides, so any new
+ * component inherits the dark palette for free (UI plan 6.2).
+ */
+
+.signa-skin-slate {
+	--signa-text: #f2f4f7;
+	--signa-muted: #98a2b3;
+	--signa-line: #344054;
+	/* 3.98:1 on --signa-surface and 4.8:1 on the form background (WCAG 1.4.11). */
+	--signa-input-line: #7a8697;
+	--signa-placeholder: #98a2b3;
+	--signa-surface: #1d2939;
+	--signa-surface-sunken: #101828;
+	--signa-accent-strong: #2dd4bf;
+	--signa-focus: #7dd3fc;
+	--signa-danger: #fda29b;
+	--signa-danger-soft: rgba(253, 162, 155, 0.14);
+	--signa-danger-line: #7a271a;
+	--signa-success: #6ce9a6;
+	--signa-success-soft: #12352a;
+	--signa-success-line: #17533c;
+	--signa-info: #b2ddff;
+	--signa-info-soft: #1d2939;
+	--signa-info-line: #344054;
+	--signa-overlay: rgba(16, 24, 40, 0.72);
+	color: var(--signa-text);
+}
+
+.signa-skin-slate .signa__form {
+	border-color: var(--signa-line);
+	background: var(--signa-surface-sunken);
+}
+
+.signa-skin-slate .signa-field__input,
+.signa-skin-slate .signa-field__select,
+.signa-skin-slate .signa-code__box,
+.signa-skin-slate .signa-code__bulk,
+.signa-skin-slate .signa-code__phone {
+	background: var(--signa-surface);
+}
+
+.signa-skin-slate .signa-code__phone-value {
+	color: var(--signa-text);
+}
+
+.signa-skin-pill {
+	--signa-radius-control: 999px;
+	--signa-radius-sm: 999px;
+}
+
+.signa-skin-pill .signa-btn,
+.signa-skin-pill .signa-field__input,
+.signa-skin-pill .signa-code__box,
+.signa-skin-pill .signa-code__bulk,
+.signa-skin-pill .signa__status {
+	border-radius: 999px;
+}
+
+/* Responsive ---------------------------------------------------------------- */
+
+/* md — tablets and narrow desktop columns. */
+@media (max-width: 768px) {
+	.signa__steps li {
+		font-size: 11.5px;
+	}
+
+	.signa-skin-card .signa__form,
+	.signa-skin-glass .signa__form,
+	.signa-skin-slate .signa__form {
+		padding: var(--signa-space-6) 20px var(--signa-space-5);
+	}
+}
+
+/* sm — phones. */
+@media (max-width: 480px) {
+	.signa {
+		font-size: 14.5px;
+	}
+
+	.signa-field--half {
+		flex: 1 1 100%;
+	}
+
+	/* The action stays within thumb reach while the boxes are typed. */
+	.signa-step.is-current .signa-btn--primary {
+		position: sticky;
+		bottom: 10px;
+		z-index: 3;
+	}
+
+	.signa-code__box {
+		height: 54px;
+		/* Still 16px+ so iOS does not zoom when a box takes focus. */
+		font-size: 22px;
+	}
+
+	.signa-code__boxes {
+		gap: 6px;
+	}
+
+	.signa-code__phone {
+		justify-content: flex-start;
+		border-radius: var(--signa-radius-control);
+	}
+
+	.signa-code__footer {
+		gap: var(--signa-space-2);
+	}
+
+	.signa-skin-card .signa__form,
+	.signa-skin-glass .signa__form,
+	.signa-skin-slate .signa__form {
+		padding: 22px 16px 18px;
+	}
+
+	.signa-step__title {
+		font-size: 19px;
+	}
+}
+
+/* xs — 360px and below, where eight code boxes stop fitting. */
+@media (max-width: 380px) {
+	.signa-code__box {
+		height: 50px;
+		font-size: 20px;
+	}
+
+	.signa-code__boxes {
+		gap: var(--signa-space-1);
+	}
+
+	/* Only the "step 2 of 3" sentence survives; the labels would wrap. */
+	.signa__steps {
+		display: none;
+	}
+
+	.signa__steps-text {
+		position: static !important;
+		width: auto;
+		height: auto;
+		margin: 0 0 var(--signa-space-3);
+		padding: 0;
+		overflow: visible;
+		clip: auto;
+		color: var(--signa-muted);
+		font-size: 12.5px;
+		white-space: normal;
+	}
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.signa-step.is-current,
+	.signa__status,
+	.signa-code__rescue {
+		animation: none;
+	}
+
+	.signa-btn,
+	.signa-btn__label,
+	.signa__skip,
+	.signa__steps li::before,
+	.signa-field__input,
+	.signa-field__select,
+	.signa-code__bulk,
+	.signa-code__box,
+	.signa.is-busy .signa-step.is-current {
+		transition: none;
+	}
+
+	/* The bar would be a 60-second moving object; the number stays instead. */
+	.signa-code__cooldown {
+		display: none;
+	}
+
+	.signa-btn__spinner {
+		animation-duration: 1.6s;
+	}
+}
+
+@media (prefers-contrast: more) {
+	.signa {
+		--signa-line: #4b5563;
+		--signa-input-line: #1f2937;
+		--signa-placeholder: #4b5563;
+		--signa-muted: #374151;
+	}
+
+	.signa-btn--primary {
+		border: 2px solid currentColor;
+	}
+
+	.signa-field__hint,
+	.signa-step__hint,
+	.signa__trust {
+		font-weight: 600;
+	}
+}
+
+/* Left-to-right installs: the attribute wins over the RTL default. */
+.signa[dir="ltr"] {
+	direction: ltr;
+	text-align: left;
+}
+
+/* The skip link centres itself with a transform, which is physical, so the
+   LTR form needs the mirrored value. */
+.signa[dir="ltr"] .signa__skip {
+	transform: translateX(-50%) translateY(-12px);
+}
+
+.signa[dir="ltr"] .signa__skip:focus,
+.signa[dir="ltr"] .signa__skip:focus-visible {
+	transform: translateX(-50%) translateY(0);
+}
+
+.signa[dir="ltr"] .signa-code__cooldown > i {
+	transform-origin: inline-start;
+}
+
+@media (forced-colors: active) {
+	.signa-btn--primary {
+		background-image: none;
+		background: ButtonFace;
+		color: ButtonText;
+		border-color: ButtonText;
+		box-shadow: none;
+	}
+
+	.signa-field__input,
+	.signa-code__box,
+	.signa__status,
+	.signa__status-action,
+	.signa-code__rescue {
+		border-color: CanvasText;
+	}
+
+	.signa__steps li::before,
+	.signa-code__cooldown > i {
+		background: Highlight;
+	}
+
+	.signa__status-icon {
+		color: CanvasText;
+	}
+}
+
+/* wp-login.php takeover ----------------------------------------------------- */
+
+.login.signa-login #login {
+	width: 100%;
+	max-width: 460px;
+	padding: 24px 12px;
+}
+
+.login.signa-login h1 a {
+	display: none;
+}
+
+.login.signa-login #login form#loginform,
+.login.signa-login #login form#lostpasswordform,
+.login.signa-login #login form#registerform,
+.login.signa-login #login #nav,
+.login.signa-login #login #backtoblog {
+	display: none;
+}
+
+.login.signa-login #login form#loginform.signa-keep,
+.login.signa-login.signa-allow-classic #login form#loginform,
+.login.signa-login.signa-allow-classic #login #nav,
+.login.signa-login.signa-allow-classic #login #backtoblog {
+	display: block;
+}
+
+.login.signa-login #login .signa {
+	margin-top: 12px;
+}

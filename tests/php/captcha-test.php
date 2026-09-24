@@ -19,39 +19,39 @@
  *   3. the row that counts all this says which of the two happened, and stays
  *      quiet about browsers when no browser was involved.
  *
- * @package TisaOtp\Tests
+ * @package Signa\Tests
  */
 
 require __DIR__ . '/bootstrap.php';
 
-use TisaOtp\Captcha\Manager;
-use TisaOtp\Config\Settings;
-use TisaOtp\Blocklist\Blocklist;
-use TisaOtp\Guard\BotGuard;
-use TisaOtp\Guard\CaptchaGuard;
-use TisaOtp\Guard\Pipeline;
-use TisaOtp\Http\Request;
-use TisaOtp\Log\Logger;
-use TisaOtp\Log\LogStore;
-use TisaOtp\Log\Redactor;
-use TisaOtp\Support\Rejection;
-use TisaOtp\State\StateStore;
-use TisaOtp\Throttle\Throttle;
+use Signa\Captcha\Manager;
+use Signa\Config\Settings;
+use Signa\Blocklist\Blocklist;
+use Signa\Guard\BotGuard;
+use Signa\Guard\CaptchaGuard;
+use Signa\Guard\Pipeline;
+use Signa\Http\Request;
+use Signa\Log\Logger;
+use Signa\Log\LogStore;
+use Signa\Log\Redactor;
+use Signa\Support\Rejection;
+use Signa\State\StateStore;
+use Signa\Throttle\Throttle;
 
 /**
  * Settings with reCAPTCHA v3 configured and the challenge always required.
  *
  * @param array<string,mixed> $extra
  */
-function tisa_captcha_settings( array $extra = array() ): Settings {
-	$GLOBALS['tisa_options']['tisa_otp_settings'] = array_merge(
+function signa_captcha_settings( array $extra = array() ): Settings {
+	$GLOBALS['signa_options']['signa_settings'] = array_merge(
 		array(
 			'captcha_provider'   => 'recaptcha_v3',
 			'captcha_site_key'   => '6Lch98ctAAAAAG1emWrt-CMXgJGOQ5iJkbBoe8EV',
 			'captcha_secret_key' => 'secret-key',
 			'captcha_trigger'    => 'always',
 			'captcha_fail_open'  => '1',
-			'phone_meta_key'     => 'tisa_phone',
+			'phone_meta_key'     => 'signa_phone',
 		),
 		$extra
 	);
@@ -64,8 +64,8 @@ function tisa_captcha_settings( array $extra = array() ): Settings {
  *
  * @param array<string,mixed> $extra
  */
-function tisa_captcha_manager( array $extra = array() ): Manager {
-	$settings = tisa_captcha_settings( $extra );
+function signa_captcha_manager( array $extra = array() ): Manager {
+	$settings = signa_captcha_settings( $extra );
 
 	return new Manager( $settings, new Logger( $settings, new Redactor(), new LogStore( $settings ) ) );
 }
@@ -75,8 +75,8 @@ function tisa_captcha_manager( array $extra = array() ): Manager {
  *
  * @return array{0:CaptchaGuard,1:LogStore}
  */
-function tisa_captcha_guard( array $extra = array() ): array {
-	$settings = tisa_captcha_settings( $extra );
+function signa_captcha_guard( array $extra = array() ): array {
+	$settings = signa_captcha_settings( $extra );
 	$logs     = new LogStore( $settings );
 
 	return array(
@@ -94,7 +94,7 @@ function tisa_captcha_guard( array $extra = array() ): array {
  *
  * @param array<string,mixed> $body
  */
-function tisa_captcha_request( array $body, string $ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1' ): Request {
+function signa_captcha_request( array $body, string $ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1' ): Request {
 	$_SERVER['REMOTE_ADDR']     = '203.0.113.9';
 	$_SERVER['HTTP_USER_AGENT'] = $ua;
 
@@ -113,7 +113,7 @@ function tisa_captcha_request( array $body, string $ua = 'Mozilla/5.0 (iPhone; C
 }
 
 /** Events written to the log, in order. */
-function tisa_captcha_events(): array {
+function signa_captcha_events(): array {
 	$events = array();
 
 	foreach ( $GLOBALS['wpdb']->writes as $row ) {
@@ -126,7 +126,7 @@ function tisa_captcha_events(): array {
 }
 
 /** The last written context for one event. */
-function tisa_captcha_context( string $event ): array {
+function signa_captcha_context( string $event ): array {
 	$found = array();
 
 	foreach ( $GLOBALS['wpdb']->writes as $row ) {
@@ -142,83 +142,83 @@ function tisa_captcha_context( string $event ): array {
  * 1. No token is a rejection — with the evidence attached
  */
 
-$GLOBALS['tisa_options'] = array();
+$GLOBALS['signa_options'] = array();
 $GLOBALS['wpdb']->writes = array();
 
-list( $guard, $logs ) = tisa_captcha_guard();
+list( $guard, $logs ) = signa_captcha_guard();
 
 try {
-	$guard->inspect( tisa_captcha_request( array() ), 'send' );
-	tisa_check( 'a request with no token is rejected', false );
+	$guard->inspect( signa_captcha_request( array() ), 'send' );
+	signa_check( 'a request with no token is rejected', false );
 } catch ( Rejection $rejection ) {
-	tisa_check( 'a request with no token is rejected', 'captcha_missing' === $rejection->errorCode() );
-	tisa_check( 'and the visitor is asked for a challenge, not accused', false !== strpos( $rejection->getMessage(), 'ربات' ) && true === $rejection->payload()['captcha_required'] );
+	signa_check( 'a request with no token is rejected', 'captcha_missing' === $rejection->errorCode() );
+	signa_check( 'and the visitor is asked for a challenge, not accused', false !== strpos( $rejection->getMessage(), 'ربات' ) && true === $rejection->payload()['captcha_required'] );
 }
 
-tisa_check( 'nothing was let through without a challenge', ! in_array( 'captcha.fail_open', tisa_captcha_events(), true ) );
+signa_check( 'nothing was let through without a challenge', ! in_array( 'captcha.fail_open', signa_captcha_events(), true ) );
 
 /* -------------------------------------------------------------------------
  * 2. The browser's report is honoured only with «باز ماندن ورود» on
  */
 
-$GLOBALS['tisa_options'] = array();
+$GLOBALS['signa_options'] = array();
 $GLOBALS['wpdb']->writes = array();
 
-list( $guard, $logs ) = tisa_captcha_guard( array( 'captcha_fail_open' => '0' ) );
+list( $guard, $logs ) = signa_captcha_guard( array( 'captcha_fail_open' => '0' ) );
 
 $claimed = false;
 
 try {
-	$guard->inspect( tisa_captcha_request( array( 'captcha_state' => 'unavailable' ) ), 'send' );
+	$guard->inspect( signa_captcha_request( array( 'captcha_state' => 'unavailable' ) ), 'send' );
 	$claimed = true;
 } catch ( Rejection $rejection ) {
 	$claimed = false;
 }
 
-tisa_check( 'the claim is worth nothing while fail-open is off', false === $claimed );
-tisa_check( 'and it is not logged as an outage either', ! in_array( 'captcha.fail_open', tisa_captcha_events(), true ) );
+signa_check( 'the claim is worth nothing while fail-open is off', false === $claimed );
+signa_check( 'and it is not logged as an outage either', ! in_array( 'captcha.fail_open', signa_captcha_events(), true ) );
 
-$GLOBALS['tisa_options'] = array();
+$GLOBALS['signa_options'] = array();
 $GLOBALS['wpdb']->writes = array();
 
-list( $guard, $logs ) = tisa_captcha_guard();
+list( $guard, $logs ) = signa_captcha_guard();
 
 $passed = true;
 
 try {
-	$guard->inspect( tisa_captcha_request( array( 'captcha_state' => 'unavailable' ) ), 'send' );
+	$guard->inspect( signa_captcha_request( array( 'captcha_state' => 'unavailable' ) ), 'send' );
 } catch ( Rejection $rejection ) {
 	$passed = false;
 }
 
-tisa_check( 'with fail-open on, the browser’s outage lets the visitor through', $passed );
-tisa_check( 'and it is recorded as a fail-open', in_array( 'captcha.fail_open', tisa_captcha_events(), true ) );
-tisa_check( 'with its own reason, so it is not confused with a dead service', 'browser_unavailable' === LogStore::metaOf( tisa_captcha_context( 'captcha.fail_open' ), 'reason' ) );
-tisa_check( 'and the browser is identified in the record', false !== strpos( LogStore::metaOf( tisa_captcha_context( 'captcha.fail_open' ), 'ua' ), 'Mozilla' ) );
+signa_check( 'with fail-open on, the browser’s outage lets the visitor through', $passed );
+signa_check( 'and it is recorded as a fail-open', in_array( 'captcha.fail_open', signa_captcha_events(), true ) );
+signa_check( 'with its own reason, so it is not confused with a dead service', 'browser_unavailable' === LogStore::metaOf( signa_captcha_context( 'captcha.fail_open' ), 'reason' ) );
+signa_check( 'and the browser is identified in the record', false !== strpos( LogStore::metaOf( signa_captcha_context( 'captcha.fail_open' ), 'ua' ), 'Mozilla' ) );
 
 /* -------------------------------------------------------------------------
  * 3. A real token still goes to the provider — the flag is not a shortcut
  */
 
-$GLOBALS['tisa_options'] = array();
+$GLOBALS['signa_options'] = array();
 $GLOBALS['wpdb']->writes = array();
-tisa_reply( array( 'response' => array( 'code' => 200 ), 'body' => '{"success":true,"score":0.9,"action":"tisa_otp_send"}' ) );
+signa_reply( array( 'response' => array( 'code' => 200 ), 'body' => '{"success":true,"score":0.9,"action":"signa_send"}' ) );
 
-list( $guard, $logs ) = tisa_captcha_guard();
+list( $guard, $logs ) = signa_captcha_guard();
 
 $passed = true;
 
 try {
-	$guard->inspect( tisa_captcha_request( array( 'captcha_token' => 'real-token-from-google' ) ), 'send' );
+	$guard->inspect( signa_captcha_request( array( 'captcha_token' => 'real-token-from-google' ) ), 'send' );
 } catch ( Rejection $rejection ) {
 	$passed = false;
 }
 
-tisa_check( 'a real token is verified with the provider', $passed );
-tisa_check( 'and no outage is recorded for it', ! in_array( 'captcha.fail_open', tisa_captcha_events(), true ) );
+signa_check( 'a real token is verified with the provider', $passed );
+signa_check( 'and no outage is recorded for it', ! in_array( 'captcha.fail_open', signa_captcha_events(), true ) );
 
-$urls = array_column( tisa_requests(), 'url' );
-tisa_check( 'the verification went to the provider, not around it', 1 === count( array_filter( $urls, function ( $url ) {
+$urls = array_column( signa_requests(), 'url' );
+signa_check( 'the verification went to the provider, not around it', 1 === count( array_filter( $urls, function ( $url ) {
 	return false !== strpos( (string) $url, 'recaptcha' ) || false !== strpos( (string) $url, 'google' ) || false !== strpos( (string) $url, 'recaptcha.net' );
 } ) ) );
 
@@ -226,7 +226,7 @@ tisa_check( 'the verification went to the provider, not around it', 1 === count(
  * 4. ARCaptcha's contract, which this plugin has had wrong before
  */
 
-tisa_start( 'ARCaptcha is offered every host the vendor documents' );
+signa_start( 'ARCaptcha is offered every host the vendor documents' );
 
 /*
  * The widget bundle has lived on three hosts over the years, and which one a
@@ -236,7 +236,7 @@ tisa_start( 'ARCaptcha is offered every host the vendor documents' );
  * started with. The two kinds never cross: a v3 site key cannot render a v2
  * widget.
  */
-$widget = tisa_captcha_manager(
+$widget = signa_captcha_manager(
 	array(
 		'captcha_provider'     => 'arcaptcha',
 		'captcha_site_key'     => 'ARC-SITE',
@@ -247,13 +247,13 @@ $widget = tisa_captcha_manager(
 
 $widgetScripts = implode( "\n", (array) $widget['scripts'] );
 
-tisa_check( 'the host the current docs use is offered', false !== strpos( $widgetScripts, 'nwidget.arcaptcha.ir/1/api.js' ) );
-tisa_check( 'and the host this plugin used first is still offered', false !== strpos( $widgetScripts, 'widget.arcaptcha.ir/1/api.js' ) );
-tisa_check( 'and the outside-Iran mirror', false !== strpos( $widgetScripts, 'widget.arcaptcha.co/1/api.js' ) );
-tisa_check( 'a v2 key is never sent a v3 bundle', false === strpos( $widgetScripts, '/3/api.js' ) );
-tisa_check( 'the widget is asked for in Persian, right to left', 'fa' === $widget['config']['lang'] && 'rtl' === $widget['config']['dir'] );
+signa_check( 'the host the current docs use is offered', false !== strpos( $widgetScripts, 'nwidget.arcaptcha.ir/1/api.js' ) );
+signa_check( 'and the host this plugin used first is still offered', false !== strpos( $widgetScripts, 'widget.arcaptcha.ir/1/api.js' ) );
+signa_check( 'and the outside-Iran mirror', false !== strpos( $widgetScripts, 'widget.arcaptcha.co/1/api.js' ) );
+signa_check( 'a v2 key is never sent a v3 bundle', false === strpos( $widgetScripts, '/3/api.js' ) );
+signa_check( 'the widget is asked for in Persian, right to left', 'fa' === $widget['config']['lang'] && 'rtl' === $widget['config']['dir'] );
 
-$score = tisa_captcha_manager(
+$score = signa_captcha_manager(
 	array(
 		'captcha_provider'     => 'arcaptcha',
 		'captcha_site_key'     => 'ARC-SITE',
@@ -264,17 +264,17 @@ $score = tisa_captcha_manager(
 
 $scoreScripts = implode( "\n", (array) $score['scripts'] );
 
-tisa_check( 'a v3 key gets the score bundle, with the key in the URL', false !== strpos( $scoreScripts, '/3/api.js?render=ARC-SITE' ) );
-tisa_check( 'and never the widget bundle', false === strpos( $scoreScripts, '/1/api.js' ) );
-tisa_check( 'the score kind travels with it', 'score' === $score['kind'] );
+signa_check( 'a v3 key gets the score bundle, with the key in the URL', false !== strpos( $scoreScripts, '/3/api.js?render=ARC-SITE' ) );
+signa_check( 'and never the widget bundle', false === strpos( $scoreScripts, '/1/api.js' ) );
+signa_check( 'the score kind travels with it', 'score' === $score['kind'] );
 
-$front = (string) file_get_contents( TISA_OTP_PATH . 'assets/js/front.js' );
+$front = (string) file_get_contents( SIGNA_PATH . 'assets/js/front.js' );
 
-tisa_check( 'the token is read the way the library documents it', false !== strpos( $front, 'getArcToken' ) );
-tisa_check( 'the documented hidden field is read as well', false !== strpos( $front, 'arcaptcha-token' ) );
-tisa_check( 'and the object shape from the docs is unwrapped', false !== strpos( $front, 'arcaptcha_token' ) );
+signa_check( 'the token is read the way the library documents it', false !== strpos( $front, 'getArcToken' ) );
+signa_check( 'the documented hidden field is read as well', false !== strpos( $front, 'arcaptcha-token' ) );
+signa_check( 'and the object shape from the docs is unwrapped', false !== strpos( $front, 'arcaptcha_token' ) );
 
-$GLOBALS['tisa_options'] = array();
+$GLOBALS['signa_options'] = array();
 
 /* -------------------------------------------------------------------------
  * 4. The words the administrator reads
@@ -285,14 +285,14 @@ $GLOBALS['tisa_options'] = array();
  * pipeline is the thing that has to be exercised — a guard called on its own
  * would leave the claim untested.
  */
-$GLOBALS['tisa_options'] = array();
+$GLOBALS['signa_options'] = array();
 $GLOBALS['wpdb']->writes = array();
 /*
  * The throttle is switched off for these two runs: its reservation is a lock in
  * the state table, and this test is about which guard speaks and what it says —
  * a `cooldown` from the guard before it would hide the answer.
  */
-$settings = tisa_captcha_settings( array( 'throttle_enabled' => '0' ) );
+$settings = signa_captcha_settings( array( 'throttle_enabled' => '0' ) );
 
 $pipeline = new Pipeline(
 	$settings,
@@ -303,32 +303,32 @@ $pipeline = new Pipeline(
 );
 
 try {
-	$pipeline->run( Pipeline::STAGE_SEND, tisa_captcha_request( array() ) );
-	tisa_check( 'the pipeline stops a token-less request', false );
+	$pipeline->run( Pipeline::STAGE_SEND, signa_captcha_request( array() ) );
+	signa_check( 'the pipeline stops a token-less request', false );
 } catch ( Rejection $rejection ) {
-	tisa_check( 'the pipeline stops a token-less request', 'captcha_missing' === $rejection->errorCode() );
+	signa_check( 'the pipeline stops a token-less request', 'captcha_missing' === $rejection->errorCode() );
 }
 
-$row = tisa_captcha_context( 'guard.rejected' );
+$row = signa_captcha_context( 'guard.rejected' );
 
-tisa_check( 'the rejection is recorded', array() !== $row );
-tisa_check( 'with the user agent, so a robot can be told from a person', false !== strpos( LogStore::metaOf( $row, 'ua' ), 'Mozilla' ) );
+signa_check( 'the rejection is recorded', array() !== $row );
+signa_check( 'with the user agent, so a robot can be told from a person', false !== strpos( LogStore::metaOf( $row, 'ua' ), 'Mozilla' ) );
 
-$GLOBALS['tisa_options'] = array();
+$GLOBALS['signa_options'] = array();
 $GLOBALS['wpdb']->writes = array();
-$settings = tisa_captcha_settings( array( 'throttle_enabled' => '0' ) );
+$settings = signa_captcha_settings( array( 'throttle_enabled' => '0' ) );
 
 $pipeline = new Pipeline( $settings, new Throttle( new StateStore(), $settings ), new Manager( $settings, new Logger( $settings, new Redactor(), $logs ) ), new Logger( $settings, new Redactor(), $logs ), new Blocklist() );
 
 try {
-	$pipeline->run( Pipeline::STAGE_SEND, tisa_captcha_request( array(), 'curl/8.4.0' ) );
+	$pipeline->run( Pipeline::STAGE_SEND, signa_captcha_request( array(), 'curl/8.4.0' ) );
 } catch ( Rejection $rejection ) {
 	// expected: no token
 }
 
-$row = tisa_captcha_context( 'guard.rejected' );
+$row = signa_captcha_context( 'guard.rejected' );
 
-tisa_check( 'and a script is recorded as a script', 0 === strpos( LogStore::metaOf( $row, 'ua' ), 'curl/' ) );
-tisa_check( 'and nothing in the guard blames the visitor for an outage', strpos( file_get_contents( dirname( __DIR__, 2 ) . '/tisa-otp/src/Guard/CaptchaGuard.php' ), 'ویجت در مرورگر' ) === false );
+signa_check( 'and a script is recorded as a script', 0 === strpos( LogStore::metaOf( $row, 'ua' ), 'curl/' ) );
+signa_check( 'and nothing in the guard blames the visitor for an outage', strpos( file_get_contents( dirname( __DIR__, 2 ) . '/signa/src/Guard/CaptchaGuard.php' ), 'ویجت در مرورگر' ) === false );
 
-tisa_finish();
+signa_finish();

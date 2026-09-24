@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const CSS = path.join(__dirname, '..', 'tisa-otp', 'assets', 'css', 'front.css');
+const CSS = path.join(__dirname, '..', 'signa', 'assets', 'css', 'front.css');
 const css = fs.readFileSync(CSS, 'utf8');
 
 /** Pull a `--token: value;` out of a given selector block. */
@@ -94,64 +94,64 @@ function ratio(a, b, scope, backdrop) {
 	return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-const ADMIN_CSS = path.join(__dirname, '..', 'tisa-otp', 'assets', 'css', 'admin.css');
+const ADMIN_CSS = path.join(__dirname, '..', 'signa', 'assets', 'css', 'admin.css');
 const adminCss = fs.readFileSync(ADMIN_CSS, 'utf8');
 
-const light = tokens('.tisa-otp');
-const slate = tokens('.tisa-skin-slate');
+const light = tokens('.signa');
+const slate = tokens('.signa-skin-slate');
 const dark = Object.assign({}, light, slate);
 
 // The dashboard has its own token block, and its own way to fail a contrast
 // check: an accent that reads fine on a card but not on the soft tint behind a
 // table cell.
-const adminRaw = tokens('.tisa-wrap', adminCss);
+const adminRaw = tokens('.signa-wrap', adminCss);
 const admin = Object.assign(
 	{
-		'--tisa-card': '#ffffff',
-		'--tisa-white': '#ffffff',
-		'--tisa-accent-wash': 'rgba(15, 118, 110, 0.1)',
+		'--signa-card': '#ffffff',
+		'--signa-white': '#ffffff',
+		'--signa-accent-wash': 'rgba(15, 118, 110, 0.1)',
 	},
 	adminRaw
 );
-admin['--tisa-bg'] = adminRaw['--tisa-bg'] || '#f7f8fa';
-admin['--tisa-white'] = '#ffffff';
+admin['--signa-bg'] = adminRaw['--signa-bg'] || '#f7f8fa';
+admin['--signa-white'] = '#ffffff';
 
 // [label, foreground, background, minimum, scope]
 const checks = [
-	['light: body text on surface', light['--tisa-text'], light['--tisa-surface'], 4.5],
-	['light: muted text on surface', light['--tisa-muted'], light['--tisa-surface'], 4.5],
-	['light: accent on surface', light['--tisa-accent'], light['--tisa-surface'], 4.5],
-	['light: placeholder on surface', light['--tisa-placeholder'], light['--tisa-surface'], 4.5],
-	['light: danger on surface', light['--tisa-danger'], light['--tisa-surface'], 4.5],
-	['light: success on surface', light['--tisa-success'], light['--tisa-surface'], 4.5],
-	['light: info on surface', light['--tisa-info'], light['--tisa-surface'], 4.5],
-	['light: button label on accent', light['--tisa-accent-contrast'], light['--tisa-accent'], 4.5],
-	['light: button label on accent hover', light['--tisa-accent-contrast'], light['--tisa-accent-strong'], 4.5],
-	['light: input border on surface', light['--tisa-input-line'], light['--tisa-surface'], 3],
-	['light: focus ring on surface', light['--tisa-focus'], light['--tisa-surface'], 3, light],
+	['light: body text on surface', light['--signa-text'], light['--signa-surface'], 4.5],
+	['light: muted text on surface', light['--signa-muted'], light['--signa-surface'], 4.5],
+	['light: accent on surface', light['--signa-accent'], light['--signa-surface'], 4.5],
+	['light: placeholder on surface', light['--signa-placeholder'], light['--signa-surface'], 4.5],
+	['light: danger on surface', light['--signa-danger'], light['--signa-surface'], 4.5],
+	['light: success on surface', light['--signa-success'], light['--signa-surface'], 4.5],
+	['light: info on surface', light['--signa-info'], light['--signa-surface'], 4.5],
+	['light: button label on accent', light['--signa-accent-contrast'], light['--signa-accent'], 4.5],
+	['light: button label on accent hover', light['--signa-accent-contrast'], light['--signa-accent-strong'], 4.5],
+	['light: input border on surface', light['--signa-input-line'], light['--signa-surface'], 3],
+	['light: focus ring on surface', light['--signa-focus'], light['--signa-surface'], 3, light],
 
-	['slate: body text on surface', dark['--tisa-text'], dark['--tisa-surface'], 4.5],
-	['slate: muted text on surface', dark['--tisa-muted'], dark['--tisa-surface'], 4.5],
-	['slate: placeholder on surface', dark['--tisa-placeholder'], dark['--tisa-surface'], 4.5],
-	['slate: danger on surface', dark['--tisa-danger'], dark['--tisa-surface'], 4.5],
-	['slate: success on success-soft', dark['--tisa-success'], dark['--tisa-success-soft'], 4.5],
-	['slate: input border on surface', dark['--tisa-input-line'], dark['--tisa-surface'], 3],
-	['slate: focus ring on surface', dark['--tisa-focus'], dark['--tisa-surface'], 3, dark],
+	['slate: body text on surface', dark['--signa-text'], dark['--signa-surface'], 4.5],
+	['slate: muted text on surface', dark['--signa-muted'], dark['--signa-surface'], 4.5],
+	['slate: placeholder on surface', dark['--signa-placeholder'], dark['--signa-surface'], 4.5],
+	['slate: danger on surface', dark['--signa-danger'], dark['--signa-surface'], 4.5],
+	['slate: success on success-soft', dark['--signa-success'], dark['--signa-success-soft'], 4.5],
+	['slate: input border on surface', dark['--signa-input-line'], dark['--signa-surface'], 3],
+	['slate: focus ring on surface', dark['--signa-focus'], dark['--signa-surface'], 3, dark],
 
 	// The admin screens: same tokens, white cards on a grey page.
-	['admin: body text on card', admin['--tisa-ink'], admin['--tisa-white'], 4.5, admin],
-	['admin: muted text on card', admin['--tisa-muted'], admin['--tisa-white'], 4.5, admin],
-	['admin: muted text on page', admin['--tisa-muted'], admin['--tisa-bg'], 4.5, admin],
-	['admin: accent on card', admin['--tisa-accent'], admin['--tisa-white'], 4.5, admin],
-	['admin: accent on its own soft tint (table codes)', admin['--tisa-accent'], admin['--tisa-accent-soft'], 4.5, admin],
-	['admin: danger on card (failed bar legend, numbers)', admin['--tisa-danger'], admin['--tisa-white'], 4.5, admin],
-	['admin: success on card (sent legend, numbers)', admin['--tisa-success'], admin['--tisa-white'], 4.5, admin],
-	['admin: card border on page', admin['--tisa-line'], admin['--tisa-bg'], 1],
+	['admin: body text on card', admin['--signa-ink'], admin['--signa-white'], 4.5, admin],
+	['admin: muted text on card', admin['--signa-muted'], admin['--signa-white'], 4.5, admin],
+	['admin: muted text on page', admin['--signa-muted'], admin['--signa-bg'], 4.5, admin],
+	['admin: accent on card', admin['--signa-accent'], admin['--signa-white'], 4.5, admin],
+	['admin: accent on its own soft tint (table codes)', admin['--signa-accent'], admin['--signa-accent-soft'], 4.5, admin],
+	['admin: danger on card (failed bar legend, numbers)', admin['--signa-danger'], admin['--signa-white'], 4.5, admin],
+	['admin: success on card (sent legend, numbers)', admin['--signa-success'], admin['--signa-white'], 4.5, admin],
+	['admin: card border on page', admin['--signa-line'], admin['--signa-bg'], 1],
 	// The screen switcher: the current pill is filled with the accent.
-	['admin: current screen pill (white on accent)', admin['--tisa-white'], admin['--tisa-accent'], 4.5, admin],
-	['admin: screen pill label on card', admin['--tisa-ink'], admin['--tisa-white'], 4.5, admin],
-	['admin: warning text on card (test rows)', admin['--tisa-warning'], admin['--tisa-white'], 4.5, admin],
-	['admin: modal result state on its tint', admin['--tisa-danger'], admin['--tisa-white'], 4.5, admin],
+	['admin: current screen pill (white on accent)', admin['--signa-white'], admin['--signa-accent'], 4.5, admin],
+	['admin: screen pill label on card', admin['--signa-ink'], admin['--signa-white'], 4.5, admin],
+	['admin: warning text on card (test rows)', admin['--signa-warning'], admin['--signa-white'], 4.5, admin],
+	['admin: modal result state on its tint', admin['--signa-danger'], admin['--signa-white'], 4.5, admin],
 ];
 
 let failed = 0;

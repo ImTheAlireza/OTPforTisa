@@ -20,7 +20,7 @@
  *   2. every class the boot sequence resolves is bound (no "not registered");
  *   3. every `$c->make()` inside a binding points at something bound, too.
  *
- * @package TisaOtp\Tests
+ * @package Signa\Tests
  */
 
 require __DIR__ . '/bootstrap.php';
@@ -31,7 +31,7 @@ require __DIR__ . '/bootstrap.php';
  * @param string $inner Text between the parentheses.
  * @return string[]
  */
-function tisa_split_args( string $inner ): array {
+function signa_split_args( string $inner ): array {
 	$args  = array();
 	$depth = 0;
 	$quote = '';
@@ -90,7 +90,7 @@ function tisa_split_args( string $inner ): array {
  * @param string $source Full source text.
  * @param int    $start  Index of the opening parenthesis.
  */
-function tisa_inside( string $source, int $start ): string {
+function signa_inside( string $source, int $start ): string {
 	$depth = 0;
 	$quote = '';
 
@@ -135,7 +135,7 @@ function tisa_inside( string $source, int $start ): string {
  * @param string $source Plugin source text.
  * @return string[]
  */
-function tisa_bootables( string $source ): array {
+function signa_bootables( string $source ): array {
 	$start = strpos( $source, 'private function bootables()' );
 	$end   = strpos( $source, 'private function register()' );
 
@@ -151,15 +151,15 @@ function tisa_bootables( string $source ): array {
 
 	return array_map(
 		static function ( $id ) {
-			return 'TisaOtp\\' . str_replace( '::class', '', $id );
+			return 'Signa\\' . str_replace( '::class', '', $id );
 		},
 		array_unique( $found[1] )
 	);
 }
 
-$source = file_get_contents( TISA_OTP_PATH . 'src/Plugin.php' );
+$source = file_get_contents( SIGNA_PATH . 'src/Plugin.php' );
 
-tisa_start( 'every binding feeds its class exactly what it asks for' );
+signa_start( 'every binding feeds its class exactly what it asks for' );
 
 /*
  * `$c->bind( Something::class, static function ( Container $c ) { ... } )`
@@ -172,24 +172,24 @@ preg_match_all(
 	PREG_SET_ORDER
 );
 
-tisa_check( 'the bindings were found at all', count( $bindings ) > 20 );
+signa_check( 'the bindings were found at all', count( $bindings ) > 20 );
 
 $bound = array();
 
 preg_match_all( '/\$c->bind\(\s*([A-Za-z][A-Za-z0-9_\\\\]*)::class\s*,/', $source, $registered );
 
 foreach ( $registered[1] as $id ) {
-	$bound[ 'TisaOtp\\' . $id ] = true;
+	$bound[ 'Signa\\' . $id ] = true;
 }
 
 $wiring = array();
 
 foreach ( $bindings as $binding ) {
-	$bound[ 'TisaOtp\\' . $binding[1] ] = true;
+	$bound[ 'Signa\\' . $binding[1] ] = true;
 }
 
 foreach ( $bindings as $binding ) {
-	$id   = 'TisaOtp\\' . $binding[1];
+	$id   = 'Signa\\' . $binding[1];
 	$body = $binding[2];
 
 	// The service this binding returns, which is what the arguments must match.
@@ -198,9 +198,9 @@ foreach ( $bindings as $binding ) {
 		continue;
 	}
 
-	$class = 'TisaOtp\\' . $created[1];
+	$class = 'Signa\\' . $created[1];
 	$from  = strpos( $body, 'return new ' . $created[1] . '(' );
-	$args  = tisa_split_args( tisa_inside( $body, $from + strlen( 'return new ' . $created[1] ) ) );
+	$args  = signa_split_args( signa_inside( $body, $from + strlen( 'return new ' . $created[1] ) ) );
 
 	$reflection = null;
 
@@ -209,7 +209,7 @@ foreach ( $bindings as $binding ) {
 	}
 
 	if ( null === $reflection || ! $reflection->getConstructor() ) {
-		tisa_check( $class . ' exists and has a constructor', false );
+		signa_check( $class . ' exists and has a constructor', false );
 		continue;
 	}
 
@@ -217,7 +217,7 @@ foreach ( $bindings as $binding ) {
 	$total  = $reflection->getConstructor()->getNumberOfParameters();
 	$given  = count( $args );
 
-	tisa_check(
+	signa_check(
 		$class . ' is given every argument it requires' . ( $given < $needed || $given > $total ? ' (' . $given . ' given, ' . $needed . '–' . $total . ' expected)' : '' ),
 		$given >= $needed && $given <= $total
 	);
@@ -228,13 +228,13 @@ foreach ( $bindings as $binding ) {
 	);
 }
 
-tisa_start( 'nothing the boot sequence resolves is missing' );
+signa_start( 'nothing the boot sequence resolves is missing' );
 
-foreach ( tisa_bootables( $source ) as $id ) {
-	tisa_check( $id . ' is bound before it is resolved', isset( $bound[ $id ] ) );
+foreach ( signa_bootables( $source ) as $id ) {
+	signa_check( $id . ' is bound before it is resolved', isset( $bound[ $id ] ) );
 }
 
-tisa_start( 'and neither is anything a binding asks for' );
+signa_start( 'and neither is anything a binding asks for' );
 
 foreach ( $wiring as $id => $call ) {
 	foreach ( $call['args'] as $arg ) {
@@ -242,13 +242,13 @@ foreach ( $wiring as $id => $call ) {
 			continue;
 		}
 
-		$target = 'TisaOtp\\' . $made[1];
+		$target = 'Signa\\' . $made[1];
 
-		tisa_check( $target . ' (wanted by ' . $call['class'] . ') is bound', isset( $bound[ $target ] ) );
+		signa_check( $target . ' (wanted by ' . $call['class'] . ') is bound', isset( $bound[ $target ] ) );
 	}
 }
 
-tisa_start( 'the arguments arrive in the order the constructors declare' );
+signa_start( 'the arguments arrive in the order the constructors declare' );
 
 foreach ( $wiring as $call ) {
 	$constructor = ( new ReflectionClass( $call['class'] ) )->getConstructor();
@@ -259,7 +259,7 @@ foreach ( $wiring as $call ) {
 
 		if ( $hint instanceof ReflectionNamedType && ! $hint->isBuiltin() ) {
 			$name    = str_replace( 'self', $call['class'], $hint->getName() );
-			$types[] = 0 === strpos( $name, 'TisaOtp' ) ? $name : 'TisaOtp\\' . ltrim( $name, '\\' );
+			$types[] = 0 === strpos( $name, 'Signa' ) ? $name : 'Signa\\' . ltrim( $name, '\\' );
 		} else {
 			$types[] = '';
 		}
@@ -271,7 +271,7 @@ foreach ( $wiring as $call ) {
 		$given = '';
 
 		if ( preg_match( '/\$c->make\(\s*([A-Za-z][A-Za-z0-9_\\\\]*)::class\s*\)/', $arg, $made ) ) {
-			$given = 'TisaOtp\\' . $made[1];
+			$given = 'Signa\\' . $made[1];
 		} else {
 			continue;
 		}
@@ -281,10 +281,10 @@ foreach ( $wiring as $call ) {
 		}
 	}
 
-	tisa_same( $call['class'] . ' is wired in order', array(), $mismatch );
+	signa_same( $call['class'] . ' is wired in order', array(), $mismatch );
 }
 
-tisa_start( 'the exact failure of 1.3.2 is reproduced here, and it is caught' );
+signa_start( 'the exact failure of 1.3.2 is reproduced here, and it is caught' );
 
 /*
  * On 2026-09-22 the container handed AdminController nine arguments while the
@@ -293,15 +293,15 @@ tisa_start( 'the exact failure of 1.3.2 is reproduced here, and it is caught' );
  * the throw what Plugin::start() does with it: hands it to the guard.
  */
 $nine = array(
-	TisaOtp\Config\Settings::class,
-	TisaOtp\Channel\Dispatcher::class,
-	TisaOtp\Otp\OtpService::class,
-	TisaOtp\Throttle\Throttle::class,
-	TisaOtp\Log\Logger::class,
-	TisaOtp\Log\LogStore::class,
-	TisaOtp\Import\Runner::class,
-	TisaOtp\Gateway\Registry::class,
-	TisaOtp\Captcha\Manager::class,
+	Signa\Config\Settings::class,
+	Signa\Channel\Dispatcher::class,
+	Signa\Otp\OtpService::class,
+	Signa\Throttle\Throttle::class,
+	Signa\Log\Logger::class,
+	Signa\Log\LogStore::class,
+	Signa\Import\Runner::class,
+	Signa\Gateway\Registry::class,
+	Signa\Captcha\Manager::class,
 );
 
 $objects = array();
@@ -313,31 +313,31 @@ foreach ( $nine as $type ) {
 $caught = null;
 
 try {
-	$constructor = ( new ReflectionClass( TisaOtp\Http\AdminController::class ) )->getConstructor();
-	( new ReflectionClass( TisaOtp\Http\AdminController::class ) )->newInstanceArgs( $objects );
+	$constructor = ( new ReflectionClass( Signa\Http\AdminController::class ) )->getConstructor();
+	( new ReflectionClass( Signa\Http\AdminController::class ) )->newInstanceArgs( $objects );
 	unset( $constructor );
 } catch ( \Throwable $error ) {
 	$caught = $error;
 }
 
-tisa_check( 'nine arguments where ten are required throws', $caught instanceof ArgumentCountError );
-tisa_check( 'and the message is the one the site showed', null !== $caught && false !== strpos( $caught->getMessage(), 'Too few arguments' ) );
+signa_check( 'nine arguments where ten are required throws', $caught instanceof ArgumentCountError );
+signa_check( 'and the message is the one the site showed', null !== $caught && false !== strpos( $caught->getMessage(), 'Too few arguments' ) );
 
 if ( null !== $caught ) {
-	TisaOtp\Install\Guard::record( TisaOtp\Http\AdminController::class, $caught );
+	Signa\Install\Guard::record( Signa\Http\AdminController::class, $caught );
 }
 
-tisa_check( 'the guard takes it instead of the site dying', TisaOtp\Install\Guard::failed( TisaOtp\Http\AdminController::class ) );
+signa_check( 'the guard takes it instead of the site dying', Signa\Install\Guard::failed( Signa\Http\AdminController::class ) );
 
-$notice = new ReflectionMethod( TisaOtp\Install\Guard::class, 'printFailures' );
+$notice = new ReflectionMethod( Signa\Install\Guard::class, 'printFailures' );
 $notice->setAccessible( true );
 
 ob_start();
-$notice->invoke( new TisaOtp\Install\Guard() );
+$notice->invoke( new Signa\Install\Guard() );
 $markup = (string) ob_get_clean();
 
-tisa_check( 'and the administrator sees which service did not start', false !== strpos( $markup, 'AdminController' ) );
-tisa_check( 'with the way out of it', false !== strpos( $markup, 'جایگزینی با نسخهٔ بارگذاری‌شده' ) );
+signa_check( 'and the administrator sees which service did not start', false !== strpos( $markup, 'AdminController' ) );
+signa_check( 'with the way out of it', false !== strpos( $markup, 'جایگزینی با نسخهٔ بارگذاری‌شده' ) );
 
 /* -------------------------------------------------------------------------
  * The same accident, one size smaller
@@ -358,7 +358,7 @@ tisa_check( 'with the way out of it', false !== strpos( $markup, 'جایگزین
  *
  * @return int[]
  */
-function tisa_name_tokens(): array {
+function signa_name_tokens(): array {
 	$kinds = array( T_STRING );
 
 	if ( defined( 'T_NAME_QUALIFIED' ) ) {
@@ -373,9 +373,9 @@ function tisa_name_tokens(): array {
  *
  * @return array<string,string>
  */
-function tisa_plugin_sources(): array {
-	$root    = rtrim( TISA_OTP_PATH, '/' ) . '/src';
-	$files   = tisa_php_files( $root, 2 );
+function signa_plugin_sources(): array {
+	$root    = rtrim( SIGNA_PATH, '/' ) . '/src';
+	$files   = signa_php_files( $root, 2 );
 	$sources = array();
 
 	foreach ( $files as $file ) {
@@ -395,7 +395,7 @@ function tisa_plugin_sources(): array {
  *
  * @return string[]
  */
-function tisa_php_files( string $dir, int $depth ): array {
+function signa_php_files( string $dir, int $depth ): array {
 	$found = array();
 
 	foreach ( (array) glob( rtrim( $dir, '/' ) . '/*.php' ) as $file ) {
@@ -404,7 +404,7 @@ function tisa_php_files( string $dir, int $depth ): array {
 
 	if ( $depth > 0 ) {
 		foreach ( (array) glob( rtrim( $dir, '/' ) . '/*', GLOB_ONLYDIR ) as $sub ) {
-			$found = array_merge( $found, tisa_php_files( (string) $sub, $depth - 1 ) );
+			$found = array_merge( $found, signa_php_files( (string) $sub, $depth - 1 ) );
 		}
 	}
 
@@ -416,7 +416,7 @@ function tisa_php_files( string $dir, int $depth ): array {
  *
  * @return array{classes:string[],calls:array<int,array{method:string,args:int,line:int}>}
  */
-function tisa_self_calls( string $source ): array {
+function signa_self_calls( string $source ): array {
 	$tokens = token_get_all( $source );
 	$count  = count( $tokens );
 	$namespace = '';
@@ -435,7 +435,7 @@ function tisa_self_calls( string $source ): array {
 					continue;
 				}
 
-				if ( is_array( $tokens[ $j ] ) && in_array( $tokens[ $j ][0], tisa_name_tokens(), true ) ) {
+				if ( is_array( $tokens[ $j ] ) && in_array( $tokens[ $j ][0], signa_name_tokens(), true ) ) {
 					$namespace .= $tokens[ $j ][1];
 					continue;
 				}
@@ -560,13 +560,13 @@ function tisa_self_calls( string $source ): array {
 	return array( 'classes' => $classes, 'calls' => $calls );
 }
 
-tisa_start( 'no call inside the plugin passes fewer arguments than the method requires' );
+signa_start( 'no call inside the plugin passes fewer arguments than the method requires' );
 
 $thin = array();
 $checked = 0;
 
-foreach ( tisa_plugin_sources() as $relative => $source ) {
-	$parsed = tisa_self_calls( $source );
+foreach ( signa_plugin_sources() as $relative => $source ) {
+	$parsed = signa_self_calls( $source );
 
 	foreach ( $parsed['calls'] as $call ) {
 		foreach ( $parsed['classes'] as $candidate ) {
@@ -599,8 +599,8 @@ foreach ( tisa_plugin_sources() as $relative => $source ) {
  * walk: it turns a green gate into a false promise. So the counter is checked
  * against a call that is deliberately one argument short.
  */
-$control = "<?php\nnamespace TisaOtp\\Probe;\n\nclass Sample {\n\tprivate function needs_two( string $a, string $b ): void {}\n\tpublic function run(): void {\n\t\t\$this->needs_two( 'one' );\n\t\t\$this->needs_two( 'one', 'two' );\n\t}\n}\n";
-$seen    = tisa_self_calls( $control );
+$control = "<?php\nnamespace Signa\\Probe;\n\nclass Sample {\n\tprivate function needs_two( string $a, string $b ): void {}\n\tpublic function run(): void {\n\t\t\$this->needs_two( 'one' );\n\t\t\$this->needs_two( 'one', 'two' );\n\t}\n}\n";
+$seen    = signa_self_calls( $control );
 $counts  = array();
 
 foreach ( $seen['calls'] as $call ) {
@@ -609,13 +609,13 @@ foreach ( $seen['calls'] as $call ) {
 	}
 }
 
-tisa_same( 'the walk counts the arguments of a call, including the short one', array( 1, 2 ), $counts );
+signa_same( 'the walk counts the arguments of a call, including the short one', array( 1, 2 ), $counts );
 
-tisa_check( 'the walk found calls to check', $checked > 100, 'checked ' . $checked . ' calls in ' . count( tisa_plugin_sources() ) . ' files' );
+signa_check( 'the walk found calls to check', $checked > 100, 'checked ' . $checked . ' calls in ' . count( signa_plugin_sources() ) . ' files' );
 foreach ( array_slice( $thin, 0, 8 ) as $short ) {
 	echo '        short: ' . $short . "\n";
 }
 
-tisa_check( 'and none of them is short of an argument', array() === $thin, implode( '; ', array_slice( $thin, 0, 4 ) ) );
+signa_check( 'and none of them is short of an argument', array() === $thin, implode( '; ', array_slice( $thin, 0, 4 ) ) );
 
-tisa_finish();
+signa_finish();

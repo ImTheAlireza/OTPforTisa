@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تیسا OTP — پیش‌نمایش پیشخوان (نسخهٔ ۱.۷.۲)</title>
+<title>سیگنا — پیش‌نمایش پیشخوان (نسخهٔ ۱.۷.۲)</title>
 <!-- Same stylesheet the plugin loads in wp-admin. -->
 <link rel="stylesheet" href="/plugin-assets/css/admin.css">
 <style>
@@ -20,80 +20,80 @@
 		font-size: 13px;
 	}
 	.demo-bar a { color: #72aee6; }
-	body.tisa-app .demo-bar { display: none; }
-	body.tisa-app .tisa-wrap { max-width: 1320px; margin-inline: auto; padding-inline: 28px; }
-	body.tisa-app .tisa-screens { position: sticky; top: 0; z-index: 30; padding: 8px 12px; background: #fff; border-block: 1px solid var(--tisa-line); }
+	body.signa-app .demo-bar { display: none; }
+	body.signa-app .signa-wrap { max-width: 1320px; margin-inline: auto; padding-inline: 28px; }
+	body.signa-app .signa-screens { position: sticky; top: 0; z-index: 30; padding: 8px 12px; background: #fff; border-block: 1px solid var(--signa-line); }
 	.demo-bar strong { color: #fff; }
-	.tisa-wrap { margin-inline-start: 20px; }
+	.signa-wrap { margin-inline-start: 20px; }
 </style>
 </head>
 <body>
 
 <div class="demo-bar">
-	<strong>پیش‌نمایش پیشخوان تیسا OTP (۱.۷.۲)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
+	<strong>پیش‌نمایش پیشخوان سیگنا (۱.۷.۲)</strong> — این صفحه فقط برای دیدن ظاهر و رفتار است؛
 	داده‌ها از سرور آزمایشی همین پیش‌نمایش می‌آیند.
 	<a href="/">فرم ورود</a> · <a href="/account">پنل کاربری</a> · <a href="/woodmart">سایدبار وودمارت</a> · <a href="/admin">پیشخوان</a> · <a href="#reports">گزارش‌ها</a>
 </div>
 
-<div class="wrap tisa-wrap" dir="rtl">
+<div class="wrap signa-wrap" dir="rtl">
 
-	<div class="tisa-header">
-		<div class="tisa-header__title">
+	<div class="signa-header">
+		<div class="signa-header__title">
 			<h1>ابزارها و وضعیت</h1>
-			<p class="tisa-note">نسخهٔ ۱.۷.۲ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
+			<p class="signa-note">نسخهٔ ۱.۷.۲ — فرم داخل Shadow DOM: هیچ استایل یا فونتی از وردپرس خوانده نمی‌شود</p>
 		</div>
-		<div class="tisa-header__meta">
-			<span class="tisa-badge is-on">فعال</span>
-			<span class="tisa-badge">نسخه 1.7.2</span>
+		<div class="signa-header__meta">
+			<span class="signa-badge is-on">فعال</span>
+			<span class="signa-badge">نسخه 1.7.2</span>
 		</div>
 	</div>
 
 	<!-- ScreenNav::render() ----------------------------------------------- -->
-	<nav class="tisa-screens" aria-label="صفحه‌های افزونه"><ul>
-		<li><a href="/admin" class="tisa-screen">تنظیمات</a></li>
-		<li><a href="#reports" class="tisa-screen">گزارش‌ها و آمار</a></li>
-		<li><a href="/admin" class="tisa-screen">رویدادها</a></li>
-		<li><a href="/admin" class="tisa-screen is-current" aria-current="page">ابزارها</a></li>
-		<li><a href="/admin" class="tisa-screen">دسترسی و مسدودی</a></li>
+	<nav class="signa-screens" aria-label="صفحه‌های افزونه"><ul>
+		<li><a href="/admin" class="signa-screen">تنظیمات</a></li>
+		<li><a href="#reports" class="signa-screen">گزارش‌ها و آمار</a></li>
+		<li><a href="/admin" class="signa-screen">رویدادها</a></li>
+		<li><a href="/admin" class="signa-screen is-current" aria-current="page">ابزارها</a></li>
+		<li><a href="/admin" class="signa-screen">دسترسی و مسدودی</a></li>
 	</ul>
 	<!-- In the plugin this is a form post to admin-post.php; the demo only needs the look. -->
-	<form class="tisa-appmode" aria-label="حالت نمایش" onsubmit="return false">
-		<button type="button" class="button tisa-appmode__button" data-tisa-app-demo>حالت اپ</button>
-		<span class="tisa-appmode__hint">تمام‌صفحه، بدون منو و نوار مدیریت.</span>
+	<form class="signa-appmode" aria-label="حالت نمایش" onsubmit="return false">
+		<button type="button" class="button signa-appmode__button" data-signa-app-demo>حالت اپ</button>
+		<span class="signa-appmode__hint">تمام‌صفحه، بدون منو و نوار مدیریت.</span>
 	</form>
 	</nav>
 
 	<!-- overview() — the seven-day strip the settings screen shows --------- -->
-	<div class="tisa-overview">
-		<div class="tisa-notice tisa-notice--warning"><p>این سایت اجازهٔ درخواست خروجی به api.sms.ir را نمی‌دهد؛ تا آن خط عوض نشود هیچ پیامکی فرستاده نمی‌شود. یا در wp-config.php خط WP_HTTP_BLOCK_EXTERNAL را false کنید، یا در سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید.</p></div>
+	<div class="signa-overview">
+		<div class="signa-notice signa-notice--warning"><p>این سایت اجازهٔ درخواست خروجی به api.sms.ir را نمی‌دهد؛ تا آن خط عوض نشود هیچ پیامکی فرستاده نمی‌شود. یا در wp-config.php خط WP_HTTP_BLOCK_EXTERNAL را false کنید، یا در سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید.</p></div>
 
-		<div class="tisa-kpis">
-			<div class="tisa-kpi "><span class="tisa-kpi__value">۱۳۴</span><span class="tisa-kpi__label">درخواست‌ها</span></div>
-			<div class="tisa-kpi is-good"><span class="tisa-kpi__value">۱۲۸</span><span class="tisa-kpi__label">موفق</span></div>
-			<div class="tisa-kpi is-bad"><span class="tisa-kpi__value">۶</span><span class="tisa-kpi__label">ناموفق</span></div>
-			<div class="tisa-kpi is-rate"><span class="tisa-kpi__value">۹۵٫۵٪</span><span class="tisa-kpi__label">نرخ موفقیت</span></div>
+		<div class="signa-kpis">
+			<div class="signa-kpi "><span class="signa-kpi__value">۱۳۴</span><span class="signa-kpi__label">درخواست‌ها</span></div>
+			<div class="signa-kpi is-good"><span class="signa-kpi__value">۱۲۸</span><span class="signa-kpi__label">موفق</span></div>
+			<div class="signa-kpi is-bad"><span class="signa-kpi__value">۶</span><span class="signa-kpi__label">ناموفق</span></div>
+			<div class="signa-kpi is-rate"><span class="signa-kpi__value">۹۵٫۵٪</span><span class="signa-kpi__label">نرخ موفقیت</span></div>
 		</div>
-		<div class="tisa-overview__side">
+		<div class="signa-overview__side">
 			<a class="button" href="#reports">گزارش‌ها</a>
-			<p class="tisa-muted">آمار ۷ روز گذشته. صفحهٔ گزارش‌ها بازهٔ ۷، ۱۴ و ۳۰ روز، نمودار روزانه، دلیل‌های شکست و خروجی CSV دارد.</p>
+			<p class="signa-muted">آمار ۷ روز گذشته. صفحهٔ گزارش‌ها بازهٔ ۷، ۱۴ و ۳۰ روز، نمودار روزانه، دلیل‌های شکست و خروجی CSV دارد.</p>
 		</div>
 	</div>
 
 	<!-- statusCards() ---------------------------------------------------- -->
-	<div class="tisa-statbar">
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">سالم</span><span class="tisa-stat__label">جدول‌های افزونه</span></div>
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">8.2</span><span class="tisa-stat__label">نسخه PHP</span></div>
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">6.9</span><span class="tisa-stat__label">نسخه وردپرس</span></div>
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">جدول</span><span class="tisa-stat__label">کد یکبارمصرف</span></div>
-		<div class="tisa-stat is-bad"><span class="tisa-stat__value">غیرفعال</span><span class="tisa-stat__label">کش شیء پایدار</span></div>
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">ثبت شده</span><span class="tisa-stat__label">زمان‌بند cron</span></div>
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">۱۲</span><span class="tisa-stat__label">محدودیت‌های فعال</span></div>
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">۴۰۲</span><span class="tisa-stat__label">رویدادهای ثبت‌شده</span></div>
-		<div class="tisa-stat is-good"><span class="tisa-stat__value">باز</span><span class="tisa-stat__label">ارتباط خروجی</span></div>
+	<div class="signa-statbar">
+		<div class="signa-stat is-good"><span class="signa-stat__value">سالم</span><span class="signa-stat__label">جدول‌های افزونه</span></div>
+		<div class="signa-stat is-good"><span class="signa-stat__value">8.2</span><span class="signa-stat__label">نسخه PHP</span></div>
+		<div class="signa-stat is-good"><span class="signa-stat__value">6.9</span><span class="signa-stat__label">نسخه وردپرس</span></div>
+		<div class="signa-stat is-good"><span class="signa-stat__value">جدول</span><span class="signa-stat__label">کد یکبارمصرف</span></div>
+		<div class="signa-stat is-bad"><span class="signa-stat__value">غیرفعال</span><span class="signa-stat__label">کش شیء پایدار</span></div>
+		<div class="signa-stat is-good"><span class="signa-stat__value">ثبت شده</span><span class="signa-stat__label">زمان‌بند cron</span></div>
+		<div class="signa-stat is-good"><span class="signa-stat__value">۱۲</span><span class="signa-stat__label">محدودیت‌های فعال</span></div>
+		<div class="signa-stat is-good"><span class="signa-stat__value">۴۰۲</span><span class="signa-stat__label">رویدادهای ثبت‌شده</span></div>
+		<div class="signa-stat is-good"><span class="signa-stat__value">باز</span><span class="signa-stat__label">ارتباط خروجی</span></div>
 	</div>
 
-	<div class="tisa-panel">
-		<table class="widefat striped tisa-diag"><tbody>
+	<div class="signa-panel">
+		<table class="widefat striped signa-diag"><tbody>
 			<tr><th>جدول‌های افزونه</th><td>سالم</td></tr>
 			<tr><th>کد یکبارمصرف</th><td>جدول <em>۵ رقم / ۱۲۰ ثانیه</em></td></tr>
 			<tr><th>زمان‌بند cron</th><td>ثبت شده</td></tr>
@@ -103,341 +103,341 @@
 	</div>
 
 	<!-- gatewaySection(): the two controls the block answer needs --------- -->
-	<section class="tisa-panel tisa-card">
+	<section class="signa-panel signa-card">
 		<h2>انتخاب سامانه</h2>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">سامانه اصلی</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">سامانه اصلی</div>
+			<div class="signa-row__control">
 				<select><option>SMS.ir</option><option>کاوه‌نگار</option><option>ملی‌پیامک</option><option>آی‌پی‌پنل</option><option>فراز اس‌ام‌اس</option></select>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">سامانه پشتیبان</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">سامانه پشتیبان</div>
+			<div class="signa-row__control">
 				<select><option>بدون پشتیبان</option><option>SMS.ir</option><option>کاوه‌نگار</option></select>
-				<p class="tisa-row__hint">فقط برای خطاهای موقت (تایم‌اوت، خطای ۵xx، اتمام اعتبار) استفاده می‌شود.</p>
+				<p class="signa-row__hint">فقط برای خطاهای موقت (تایم‌اوت، خطای ۵xx، اتمام اعتبار) استفاده می‌شود.</p>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">ارسال مستقیم</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle"><input type="checkbox"><span>نادیده گرفتن WP_HTTP_BLOCK_EXTERNAL برای پیامک</span></label>
-				<p class="tisa-row__hint">افزونه درخواست را با cURL مستقیم می‌فرستد؛ فقط اگر به wp-config.php دسترسی ندارید.</p>
+		<div class="signa-row">
+			<div class="signa-row__label">ارسال مستقیم</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle"><input type="checkbox"><span>نادیده گرفتن WP_HTTP_BLOCK_EXTERNAL برای پیامک</span></label>
+				<p class="signa-row__hint">افزونه درخواست را با cURL مستقیم می‌فرستد؛ فقط اگر به wp-config.php دسترسی ندارید.</p>
 			</div>
 		</div>
 	</section>
 
 	<!-- doctorCard() ------------------------------------------------------ -->
-	<section class="tisa-panel tisa-card" data-tisa-doctor>
+	<section class="signa-panel signa-card" data-signa-doctor>
 		<h2>سلامت ارسال و کپچا</h2>
-		<p class="tisa-card__intro">مسیر ارسال، شماره خط، آخرین خطا و دسترسی خروجی سرور.</p>
-		<p class="tisa-inline">
-			<button type="button" class="button button-primary" data-tisa-doctor-refresh>بررسی سلامت</button>
-			<span class="tisa-note">هیچ پیامکی در این بخش ارسال نمی‌شود.</span>
+		<p class="signa-card__intro">مسیر ارسال، شماره خط، آخرین خطا و دسترسی خروجی سرور.</p>
+		<p class="signa-inline">
+			<button type="button" class="button button-primary" data-signa-doctor-refresh>بررسی سلامت</button>
+			<span class="signa-note">هیچ پیامکی در این بخش ارسال نمی‌شود.</span>
 		</p>
-		<div class="tisa-doctor" data-tisa-doctor-report hidden></div>
-		<p class="tisa-result" data-tisa-doctor-result hidden></p>
+		<div class="signa-doctor" data-signa-doctor-report hidden></div>
+		<p class="signa-result" data-signa-doctor-result hidden></p>
 	</section>
 
 	<!-- testSendCard() ---------------------------------------------------- -->
-	<section class="tisa-panel tisa-card">
+	<section class="signa-panel signa-card">
 		<h2>ارسال آزمایشی</h2>
-		<p class="tisa-card__intro">یک کد واقعی به این شماره فرستاده می‌شود. برای دیدن «رد تلاش‌ها»، شمارهٔ <code dir="ltr">09120000000</code> را امتحان کنید.</p>
-		<div class="tisa-inline">
-			<input type="tel" class="regular-text" dir="ltr" data-tisa-test-phone placeholder="09xxxxxxxxx" value="09121234567">
-			<select data-tisa-test-channel>
+		<p class="signa-card__intro">یک کد واقعی به این شماره فرستاده می‌شود. برای دیدن «رد تلاش‌ها»، شمارهٔ <code dir="ltr">09120000000</code> را امتحان کنید.</p>
+		<div class="signa-inline">
+			<input type="tel" class="regular-text" dir="ltr" data-signa-test-phone placeholder="09xxxxxxxxx" value="09121234567">
+			<select data-signa-test-channel>
 				<option value="sms">پیامک</option>
 				<option value="email">ایمیل</option>
 			</select>
-			<button type="button" class="button button-primary" data-tisa-test-send>ارسال کد آزمایشی</button>
+			<button type="button" class="button button-primary" data-signa-test-send>ارسال کد آزمایشی</button>
 		</div>
-		<p class="tisa-result" data-tisa-test-result hidden></p>
+		<p class="signa-result" data-signa-test-result hidden></p>
 	</section>
 
 	<!-- security tab: trusted numbers (1.3.0) ----------------------------- -->
-	<section class="tisa-panel tisa-card">
+	<section class="signa-panel signa-card">
 		<h2>شماره‌های مورد اعتماد</h2>
-		<p class="tisa-card__intro">برای شماره خودتان و حساب‌های کارکنان: ورود همچنان با کد تأیید انجام می‌شود، فقط چالش ربات و سقف ارسال کنار می‌رود.</p>
+		<p class="signa-card__intro">برای شماره خودتان و حساب‌های کارکنان: ورود همچنان با کد تأیید انجام می‌شود، فقط چالش ربات و سقف ارسال کنار می‌رود.</p>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">فعال بودن فهرست</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>شماره‌های این فهرست از کپچا و محدودیت‌ها معاف باشند</span></label>
+		<div class="signa-row">
+			<div class="signa-row__label">فعال بودن فهرست</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle is-on"><input type="checkbox" checked><span>شماره‌های این فهرست از کپچا و محدودیت‌ها معاف باشند</span></label>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">شماره‌ها</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">شماره‌ها</div>
+			<div class="signa-row__control">
 				<textarea rows="4" dir="ltr">09121234567
 0912*
 0935*4567</textarea>
-				<p class="tisa-row__hint">هر خط یک شماره، پیش‌شماره (۰۹۱۲) یا الگو (۰۹۳۵*۴۵۶۷).</p>
+				<p class="signa-row__hint">هر خط یک شماره، پیش‌شماره (۰۹۱۲) یا الگو (۰۹۳۵*۴۵۶۷).</p>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">معافیت از</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">معافیت از</div>
+			<div class="signa-row__control">
 				<input type="text" dir="ltr" value="captcha,throttle">
-				<p class="tisa-row__hint">نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود.</p>
+				<p class="signa-row__hint">نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود.</p>
 			</div>
 		</div>
 	</section>
 
 	<!-- the 1.7.0 hardening rows (settings › security, and data › events) -->
-	<section class="tisa-panel tisa-card" id="hardening">
+	<section class="signa-panel signa-card" id="hardening">
 		<h2>ضد ضربه</h2>
-		<p class="tisa-card__intro">چهار کنترل تازه که هر کدام یک راه نفوذ یا یک راه اتلاف را می‌بندد. هیچ‌کدام پیش‌فرض سایت را قفل نمی‌کند.</p>
+		<p class="signa-card__intro">چهار کنترل تازه که هر کدام یک راه نفوذ یا یک راه اتلاف را می‌بندد. هیچ‌کدام پیش‌فرض سایت را قفل نمی‌کند.</p>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">ورود فقط با کد</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>ورود با نام کاربری و گذرواژه بسته شود</span></label>
+		<div class="signa-row">
+			<div class="signa-row__label">ورود فقط با کد</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle is-on"><input type="checkbox" checked><span>ورود با نام کاربری و گذرواژه بسته شود</span></label>
 			</div>
-			<p class="tisa-row__hint">جلوی ارسال گذرواژه به wp-login.php را می‌گیرد، نه فقط پنهان‌کردن فرم. راه بازگشت: کد اضطراری.</p>
+			<p class="signa-row__hint">جلوی ارسال گذرواژه به wp-login.php را می‌گیرد، نه فقط پنهان‌کردن فرم. راه بازگشت: کد اضطراری.</p>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">ماندن در حساب</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>کاربر بعد از ورود، در حساب بماند</span></label>
+		<div class="signa-row">
+			<div class="signa-row__label">ماندن در حساب</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle is-on"><input type="checkbox" checked><span>کاربر بعد از ورود، در حساب بماند</span></label>
 			</div>
-			<p class="tisa-row__hint">خاموش یعنی نشست تا بسته شدن مرورگر. ورود با کد رویداد wp_login را هم صدا می‌زند، پس افزونه‌های دیگر آن را می‌بینند.</p>
+			<p class="signa-row__hint">خاموش یعنی نشست تا بسته شدن مرورگر. ورود با کد رویداد wp_login را هم صدا می‌زند، پس افزونه‌های دیگر آن را می‌بینند.</p>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">سقف روزانهٔ کل سایت</div>
-			<div class="tisa-row__control">
-				<span class="tisa-number"><input class="small-text tisa-input" type="number" value="300" min="0" max="100000" dir="ltr"><em>ارسال در روز</em></span>
+		<div class="signa-row">
+			<div class="signa-row__label">سقف روزانهٔ کل سایت</div>
+			<div class="signa-row__control">
+				<span class="signa-number"><input class="small-text signa-input" type="number" value="300" min="0" max="100000" dir="ltr"><em>ارسال در روز</em></span>
 			</div>
-			<p class="tisa-row__hint">سقف‌های بالا برای هر شماره و هر IP است؛ این یکی برای خود سایت است. صفر = بی‌سقف.</p>
+			<p class="signa-row__hint">سقف‌های بالا برای هر شماره و هر IP است؛ این یکی برای خود سایت است. صفر = بی‌سقف.</p>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">سقف تعداد ردیف‌ها</div>
-			<div class="tisa-row__control">
-				<span class="tisa-number"><input class="small-text tisa-input" type="number" value="200000" min="0" max="5000000" dir="ltr"><em>ردیف</em></span>
+		<div class="signa-row">
+			<div class="signa-row__label">سقف تعداد ردیف‌ها</div>
+			<div class="signa-row__control">
+				<span class="signa-number"><input class="small-text signa-input" type="number" value="200000" min="0" max="5000000" dir="ltr"><em>ردیف</em></span>
 			</div>
-			<p class="tisa-row__hint">نگهداری «هفت روز» زیر حمله می‌تواند میلیون‌ها ردیف شود. این سقف قدیمی‌ترین‌ها را حذف می‌کند. صفر = بی‌سقف.</p>
+			<p class="signa-row__hint">نگهداری «هفت روز» زیر حمله می‌تواند میلیون‌ها ردیف شود. این سقف قدیمی‌ترین‌ها را حذف می‌کند. صفر = بی‌سقف.</p>
 		</div>
 	</section>
 
 	<!-- what the security self-test now reports ---------------------------- -->
-	<section class="tisa-panel tisa-card">
+	<section class="signa-panel signa-card">
 		<h2>آزمایش امنیت، چهار ردیف تازه</h2>
-		<div class="tisa-doctor">
-			<div class="tisa-doctor__row is-good">
-				<p class="tisa-doctor__title">ورود با گذرواژه: بسته</p>
-				<p class="tisa-doctor__line">گذرواژه از wp-login.php پذیرفته نمی‌شود؛ گذرواژهٔ برنامه و REST کار می‌کنند. راه بازگشت: کد اضطراری.</p>
+		<div class="signa-doctor">
+			<div class="signa-doctor__row is-good">
+				<p class="signa-doctor__title">ورود با گذرواژه: بسته</p>
+				<p class="signa-doctor__line">گذرواژه از wp-login.php پذیرفته نمی‌شود؛ گذرواژهٔ برنامه و REST کار می‌کنند. راه بازگشت: کد اضطراری.</p>
 			</div>
-			<div class="tisa-doctor__row is-good">
-				<p class="tisa-doctor__title">مدت نشست: ۱۴ روز</p>
-				<p class="tisa-doctor__line">با خاموش شدن کلید «ماندن در حساب»، نشست تا بسته شدن مرورگر می‌ماند.</p>
+			<div class="signa-doctor__row is-good">
+				<p class="signa-doctor__title">مدت نشست: ۱۴ روز</p>
+				<p class="signa-doctor__line">با خاموش شدن کلید «ماندن در حساب»، نشست تا بسته شدن مرورگر می‌ماند.</p>
 			</div>
-			<div class="tisa-doctor__row is-good">
-				<p class="tisa-doctor__title">سقف روزانهٔ کل سایت: ۳۰۰ ارسال</p>
-				<p class="tisa-doctor__line">بی‌سقف بودن هشدار می‌گیرد، چون حمله از هزاران آدرس آن‌وقت بی‌مانع است.</p>
+			<div class="signa-doctor__row is-good">
+				<p class="signa-doctor__title">سقف روزانهٔ کل سایت: ۳۰۰ ارسال</p>
+				<p class="signa-doctor__line">بی‌سقف بودن هشدار می‌گیرد، چون حمله از هزاران آدرس آن‌وقت بی‌مانع است.</p>
 			</div>
-			<div class="tisa-doctor__row is-good">
-				<p class="tisa-doctor__title">سقف ردیف‌های رویدادها: ۲۰۰٬۰۰۰</p>
-				<p class="tisa-doctor__line">خانه‌تکانی قدیمی‌ترین ردیف‌ها را در بسته‌های ۵۰۰۰ تایی حذف می‌کند.</p>
+			<div class="signa-doctor__row is-good">
+				<p class="signa-doctor__title">سقف ردیف‌های رویدادها: ۲۰۰٬۰۰۰</p>
+				<p class="signa-doctor__line">خانه‌تکانی قدیمی‌ترین ردیف‌ها را در بسته‌های ۵۰۰۰ تایی حذف می‌کند.</p>
 			</div>
 		</div>
-		<p class="tisa-row__hint">هر چهار ردیف در تب «ابزارها» کنار بقیهٔ ردیف‌های امنیتی می‌آیند و سبز/زرد/قرمز می‌شوند.</p>
+		<p class="signa-row__hint">هر چهار ردیف در تب «ابزارها» کنار بقیهٔ ردیف‌های امنیتی می‌آیند و سبز/زرد/قرمز می‌شوند.</p>
 	</section>
 
 	<!-- storeSection(), the WoodMart card (SettingsScreen) ---------------- -->
-	<section class="tisa-panel tisa-card">
+	<section class="signa-panel signa-card">
 		<h2>وودمارت</h2>
-		<p class="tisa-card__intro">
+		<p class="signa-card__intro">
 			پنل ورود وودمارت همان کشوی حساب کاربری در هدر است. افزونه همان فراخوانی پوسته را قاب می‌گیرد و فقط
 			فرم نام کاربری/گذرواژهٔ داخل پنل را با فرم OTP عوض می‌کند؛ هیچ فایلی از قالب تغییر نمی‌کند.
 		</p>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">پوسته</div>
-			<div class="tisa-row__control"><span class="tisa-badge is-on">وودمارت شناسایی شد</span></div>
+		<div class="signa-row">
+			<div class="signa-row__label">پوسته</div>
+			<div class="signa-row__control"><span class="signa-badge is-on">وودمارت شناسایی شد</span></div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">فرم در سایدبار ورود</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>فرم OTP در پنل ورود وودمارت رندر شود</span></label>
+		<div class="signa-row">
+			<div class="signa-row__label">فرم در سایدبار ورود</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle is-on"><input type="checkbox" checked><span>فرم OTP در پنل ورود وودمارت رندر شود</span></label>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">فرم رمز عبور وودمارت</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">فرم رمز عبور وودمارت</div>
+			<div class="signa-row__control">
 				<select><option selected>جایگزین شود</option><option>بماند (فرم OTP زیرش بیاید)</option></select>
 			</div>
-			<p class="tisa-row__hint">هیچ فایلی از پوسته تغییر نمی‌کند؛ فرم در همان جای پنل جایگزین می‌شود.</p>
+			<p class="signa-row__hint">هیچ فایلی از پوسته تغییر نمی‌کند؛ فرم در همان جای پنل جایگزین می‌شود.</p>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">بخش «ساخت حساب» وودمارت</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>آیکن، متن و لینک «ساخت حساب» وودمارت هم برداشته شود</span></label>
+		<div class="signa-row">
+			<div class="signa-row__label">بخش «ساخت حساب» وودمارت</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle is-on"><input type="checkbox" checked><span>آیکن، متن و لینک «ساخت حساب» وودمارت هم برداشته شود</span></label>
 			</div>
-			<p class="tisa-row__hint">فرم خود افزونه عضویت دارد. اگر عضویت افزونه خاموش باشد، این بخش می‌ماند تا راه ثبت‌نام باز بماند.</p>
+			<p class="signa-row__hint">فرم خود افزونه عضویت دارد. اگر عضویت افزونه خاموش باشد، این بخش می‌ماند تا راه ثبت‌نام باز بماند.</p>
 		</div>
 
-		<div class="tisa-inline">
+		<div class="signa-inline">
 			<a class="button" href="/woodmart">دیدن همین پنل در پیش‌نمایش</a>
 		</div>
 	</section>
 
 	<!-- housekeepingCard() ------------------------------------------------ -->
-	<section class="tisa-panel tisa-card">
+	<section class="signa-panel signa-card">
 		<h2>خانه‌تکانی</h2>
-		<p class="tisa-card__intro">پاک‌کردن شمارنده‌های محدودیت تا کاربرانی که موقتاً قفل شده‌اند دوباره بتوانند کد بگیرند.</p>
-		<div class="tisa-inline">
-			<button type="button" class="button" data-tisa-reset-throttle>صفر کردن محدودیت‌ها</button>
+		<p class="signa-card__intro">پاک‌کردن شمارنده‌های محدودیت تا کاربرانی که موقتاً قفل شده‌اند دوباره بتوانند کد بگیرند.</p>
+		<div class="signa-inline">
+			<button type="button" class="button" data-signa-reset-throttle>صفر کردن محدودیت‌ها</button>
 		</div>
-		<p class="tisa-result" data-tisa-house-result hidden></p>
+		<p class="signa-result" data-signa-house-result hidden></p>
 	</section>
 
 	<!-- captcha card (SettingsScreen, tab «امنیت») ------------------------ -->
-	<section class="tisa-panel tisa-card">
+	<section class="signa-panel signa-card">
 		<h2>کپچا</h2>
-		<p class="tisa-card__intro">اگر سرویس کپچا در دسترس نباشد و «باز ماندن ورود» روشن باشد، کاربر پشت چالشی که نمایش داده نمی‌شود گیر نمی‌کند.</p>
+		<p class="signa-card__intro">اگر سرویس کپچا در دسترس نباشد و «باز ماندن ورود» روشن باشد، کاربر پشت چالشی که نمایش داده نمی‌شود گیر نمی‌کند.</p>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">سرویس</div>
-			<div class="tisa-row__control">
-				<div class="tisa-cards">
-					<label class="tisa-card"><input type="radio" name="captcha_provider" checked><span class="tisa-card__title">ARCaptcha</span><span class="tisa-card__desc">ویجت داخلی، مناسب کاربران ایرانی</span></label>
-					<label class="tisa-card"><input type="radio" name="captcha_provider"><span class="tisa-card__title">hCaptcha</span><span class="tisa-card__desc">نسخهٔ بین‌المللی</span></label>
-					<label class="tisa-card is-selected"><input type="radio" name="captcha_provider"><span class="tisa-card__title">reCAPTCHA v3</span><span class="tisa-card__desc">بدون ویجت، امتیازی</span></label>
+		<div class="signa-row">
+			<div class="signa-row__label">سرویس</div>
+			<div class="signa-row__control">
+				<div class="signa-cards">
+					<label class="signa-card"><input type="radio" name="captcha_provider" checked><span class="signa-card__title">ARCaptcha</span><span class="signa-card__desc">ویجت داخلی، مناسب کاربران ایرانی</span></label>
+					<label class="signa-card"><input type="radio" name="captcha_provider"><span class="signa-card__title">hCaptcha</span><span class="signa-card__desc">نسخهٔ بین‌المللی</span></label>
+					<label class="signa-card is-selected"><input type="radio" name="captcha_provider"><span class="signa-card__title">reCAPTCHA v3</span><span class="signa-card__desc">بدون ویجت، امتیازی</span></label>
 				</div>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">حالت نمایش</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">حالت نمایش</div>
+			<div class="signa-row__control">
 				<select><option>همیشه</option><option>پس از چند تلاش</option></select>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">باز ماندن ورود در قطعی سرویس</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle is-on"><input type="checkbox" checked><span>فعال</span></label>
-				<p class="tisa-row__hint">اگر سرویس کپچا پاسخ ندهد، کاربر رد نمی‌شود؛ رویداد در گزارش‌ها ثبت می‌شود.</p>
+		<div class="signa-row">
+			<div class="signa-row__label">باز ماندن ورود در قطعی سرویس</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle is-on"><input type="checkbox" checked><span>فعال</span></label>
+				<p class="signa-row__hint">اگر سرویس کپچا پاسخ ندهد، کاربر رد نمی‌شود؛ رویداد در گزارش‌ها ثبت می‌شود.</p>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">مهلت بارگذاری (میلی‌ثانیه)</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">مهلت بارگذاری (میلی‌ثانیه)</div>
+			<div class="signa-row__control">
 				<input type="number" value="8000" min="3000" max="20000">
-				<p class="tisa-row__hint">بین ۳ تا ۲۰ ثانیه؛ پس از این مهلت، نشانی بعدی امتحان می‌شود.</p>
+				<p class="signa-row__hint">بین ۳ تا ۲۰ ثانیه؛ پس از این مهلت، نشانی بعدی امتحان می‌شود.</p>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">اسکریپت جایگزین</div>
-			<div class="tisa-row__control">
+		<div class="signa-row">
+			<div class="signa-row__label">اسکریپت جایگزین</div>
+			<div class="signa-row__control">
 				<input type="url" dir="ltr" placeholder="https://cdn.example.com/api.js">
-				<p class="tisa-row__hint">برای سایت‌ها و کاربرانی که دامنهٔ اصلی سرویس برایشان بسته است.</p>
+				<p class="signa-row__hint">برای سایت‌ها و کاربرانی که دامنهٔ اصلی سرویس برایشان بسته است.</p>
 			</div>
 		</div>
 
-		<div class="tisa-row">
-			<div class="tisa-row__label">ARCaptcha نسخهٔ ۳</div>
-			<div class="tisa-row__control">
-				<label class="tisa-toggle"><input type="checkbox"><span>امتیازی (بدون ویجت)</span></label>
+		<div class="signa-row">
+			<div class="signa-row__label">ARCaptcha نسخهٔ ۳</div>
+			<div class="signa-row__control">
+				<label class="signa-toggle"><input type="checkbox"><span>امتیازی (بدون ویجت)</span></label>
 			</div>
 		</div>
 	</section>
 
 	<!-- testCard(): one of these sits at the end of every settings section ------- -->
-	<section class="tisa-card">
+	<section class="signa-card">
 		<h2>نمونهٔ «آزمایش این بخش»</h2>
-		<p class="tisa-card__intro">همین کارت در پایان <strong>هر هشت بخش</strong> تنظیمات هست (عمومی، کد و کانال‌ها، سامانه‌های پیامکی، امنیت و محدودیت، فرم عضویت، ظاهر فرم، فروشگاه، داده و رویدادها) — یک دکمه، و نتیجه در یک پنجرهٔ مودال باز می‌شود، بدون ترک همین صفحه. سه نمونه:</p>
-		<p class="tisa-inline">
-			<button type="button" class="button" data-tisa-check="gateways">آزمایش سامانه‌های پیامکی</button>
-			<button type="button" class="button" data-tisa-check="security" data-tisa-captcha-test>آزمایش نمایش کپچا</button>
-			<button type="button" class="button button-primary" data-tisa-sms-test>ارسال پیامک آزمایشی</button>
+		<p class="signa-card__intro">همین کارت در پایان <strong>هر هشت بخش</strong> تنظیمات هست (عمومی، کد و کانال‌ها، سامانه‌های پیامکی، امنیت و محدودیت، فرم عضویت، ظاهر فرم، فروشگاه، داده و رویدادها) — یک دکمه، و نتیجه در یک پنجرهٔ مودال باز می‌شود، بدون ترک همین صفحه. سه نمونه:</p>
+		<p class="signa-inline">
+			<button type="button" class="button" data-signa-check="gateways">آزمایش سامانه‌های پیامکی</button>
+			<button type="button" class="button" data-signa-check="security" data-signa-captcha-test>آزمایش نمایش کپچا</button>
+			<button type="button" class="button button-primary" data-signa-sms-test>ارسال پیامک آزمایشی</button>
 		</p>
 	</section>
 
 	<!-- ReportScreen: the same cards, chart and table the plugin renders --- -->
-	<div class="tisa-header" id="reports" style="margin-top:28px">
-		<div class="tisa-header__title">
+	<div class="signa-header" id="reports" style="margin-top:28px">
+		<div class="signa-header__title">
 			<h1>گزارش‌ها</h1>
-			<p class="tisa-note">درخواست‌ها، موفق‌ها، ناموفق‌ها و دلیل‌ها — ۱۴ روز گذشته</p>
+			<p class="signa-note">درخواست‌ها، موفق‌ها، ناموفق‌ها و دلیل‌ها — ۱۴ روز گذشته</p>
 		</div>
-		<div class="tisa-header__actions">
-			<div class="tisa-range">
-				<a class="tisa-range__item" href="#reports">۷ روز</a>
-				<a class="tisa-range__item is-active" href="#reports">۱۴ روز</a>
-				<a class="tisa-range__item" href="#reports">۳۰ روز</a>
+		<div class="signa-header__actions">
+			<div class="signa-range">
+				<a class="signa-range__item" href="#reports">۷ روز</a>
+				<a class="signa-range__item is-active" href="#reports">۱۴ روز</a>
+				<a class="signa-range__item" href="#reports">۳۰ روز</a>
 			</div>
 		</div>
 	</div>
 
-	<div class="tisa-kpis">
-		<div class="tisa-kpi "><span class="tisa-kpi__value">۴۴</span><span class="tisa-kpi__label">درخواست‌ها</span><span class="tisa-kpi__hint">هر بار که کاربر کد خواست</span></div>
-		<div class="tisa-kpi is-good"><span class="tisa-kpi__value">۳۷۶</span><span class="tisa-kpi__label">موفق</span><span class="tisa-kpi__hint">کد ارسال شد</span></div>
-		<div class="tisa-kpi is-bad"><span class="tisa-kpi__value">۲۴</span><span class="tisa-kpi__label">ناموفق</span><span class="tisa-kpi__hint">ارسال نشد یا رد شد</span></div>
-		<div class="tisa-kpi is-rate"><span class="tisa-kpi__value">۹۴٫۰٪</span><span class="tisa-kpi__label">نرخ موفقیت</span><span class="tisa-kpi__hint">از درخواست‌ها</span></div>
-		<div class="tisa-kpi "><span class="tisa-kpi__value">۲۹۱</span><span class="tisa-kpi__label">حساب تازه</span><span class="tisa-kpi__hint">عضویت کامل‌شده</span></div>
-		<div class="tisa-kpi "><span class="tisa-kpi__value">۱۹</span><span class="tisa-kpi__label">رد محافظ‌ها</span><span class="tisa-kpi__hint">محدودیت، ربات، مسدودی</span></div>
+	<div class="signa-kpis">
+		<div class="signa-kpi "><span class="signa-kpi__value">۴۴</span><span class="signa-kpi__label">درخواست‌ها</span><span class="signa-kpi__hint">هر بار که کاربر کد خواست</span></div>
+		<div class="signa-kpi is-good"><span class="signa-kpi__value">۳۷۶</span><span class="signa-kpi__label">موفق</span><span class="signa-kpi__hint">کد ارسال شد</span></div>
+		<div class="signa-kpi is-bad"><span class="signa-kpi__value">۲۴</span><span class="signa-kpi__label">ناموفق</span><span class="signa-kpi__hint">ارسال نشد یا رد شد</span></div>
+		<div class="signa-kpi is-rate"><span class="signa-kpi__value">۹۴٫۰٪</span><span class="signa-kpi__label">نرخ موفقیت</span><span class="signa-kpi__hint">از درخواست‌ها</span></div>
+		<div class="signa-kpi "><span class="signa-kpi__value">۲۹۱</span><span class="signa-kpi__label">حساب تازه</span><span class="signa-kpi__hint">عضویت کامل‌شده</span></div>
+		<div class="signa-kpi "><span class="signa-kpi__value">۱۹</span><span class="signa-kpi__label">رد محافظ‌ها</span><span class="signa-kpi__hint">محدودیت، ربات، مسدودی</span></div>
 	</div>
-	<p class="tisa-muted">بازه: ۱۴ روز گذشته.</p>
+	<p class="signa-muted">بازه: ۱۴ روز گذشته.</p>
 
-	<div class="tisa-panel" style="padding:4px;margin-top:14px">
-		<h2 class="tisa-panel__title">ارسال‌ها و خطاها، روز به روز</h2>
-		<div class="tisa-chart" role="img" aria-label="نمودار ارسال و خطا در ۱۴ روز گذشته">
-			<div class="tisa-chart__col"><span class="tisa-chart__count">25</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:2.56%"></span><span class="tisa-chart__bar is-sent" style="height:61.54%"></span></div><span class="tisa-chart__day" dir="ltr">09-09</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">33</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:5.13%"></span><span class="tisa-chart__bar is-sent" style="height:79.49%"></span></div><span class="tisa-chart__day" dir="ltr">09-10</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">28</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:0.0%"></span><span class="tisa-chart__bar is-sent" style="height:71.79%"></span></div><span class="tisa-chart__day" dir="ltr">09-11</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">36</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:2.56%"></span><span class="tisa-chart__bar is-sent" style="height:89.74%"></span></div><span class="tisa-chart__day" dir="ltr">09-12</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">30</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:0.0%"></span><span class="tisa-chart__bar is-sent" style="height:76.92%"></span></div><span class="tisa-chart__day" dir="ltr">09-13</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">21</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:7.69%"></span><span class="tisa-chart__bar is-sent" style="height:46.15%"></span></div><span class="tisa-chart__day" dir="ltr">09-14</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">21</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:23.08%"></span><span class="tisa-chart__bar is-sent" style="height:30.77%"></span></div><span class="tisa-chart__day" dir="ltr">09-15</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">28</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:5.13%"></span><span class="tisa-chart__bar is-sent" style="height:66.67%"></span></div><span class="tisa-chart__day" dir="ltr">09-16</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">34</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:2.56%"></span><span class="tisa-chart__bar is-sent" style="height:84.62%"></span></div><span class="tisa-chart__day" dir="ltr">09-17</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">29</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:0.0%"></span><span class="tisa-chart__bar is-sent" style="height:74.36%"></span></div><span class="tisa-chart__day" dir="ltr">09-18</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">39</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:2.56%"></span><span class="tisa-chart__bar is-sent" style="height:97.44%"></span></div><span class="tisa-chart__day" dir="ltr">09-19</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">35</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:2.56%"></span><span class="tisa-chart__bar is-sent" style="height:87.18%"></span></div><span class="tisa-chart__day" dir="ltr">09-20</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">27</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:0.0%"></span><span class="tisa-chart__bar is-sent" style="height:69.23%"></span></div><span class="tisa-chart__day" dir="ltr">09-21</span></div>
-			<div class="tisa-chart__col"><span class="tisa-chart__count">33</span><div class="tisa-chart__stack"><span class="tisa-chart__bar is-failed" style="height:5.13%"></span><span class="tisa-chart__bar is-sent" style="height:79.49%"></span></div><span class="tisa-chart__day" dir="ltr">09-22</span></div>
+	<div class="signa-panel" style="padding:4px;margin-top:14px">
+		<h2 class="signa-panel__title">ارسال‌ها و خطاها، روز به روز</h2>
+		<div class="signa-chart" role="img" aria-label="نمودار ارسال و خطا در ۱۴ روز گذشته">
+			<div class="signa-chart__col"><span class="signa-chart__count">25</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:2.56%"></span><span class="signa-chart__bar is-sent" style="height:61.54%"></span></div><span class="signa-chart__day" dir="ltr">09-09</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">33</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:5.13%"></span><span class="signa-chart__bar is-sent" style="height:79.49%"></span></div><span class="signa-chart__day" dir="ltr">09-10</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">28</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:0.0%"></span><span class="signa-chart__bar is-sent" style="height:71.79%"></span></div><span class="signa-chart__day" dir="ltr">09-11</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">36</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:2.56%"></span><span class="signa-chart__bar is-sent" style="height:89.74%"></span></div><span class="signa-chart__day" dir="ltr">09-12</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">30</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:0.0%"></span><span class="signa-chart__bar is-sent" style="height:76.92%"></span></div><span class="signa-chart__day" dir="ltr">09-13</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">21</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:7.69%"></span><span class="signa-chart__bar is-sent" style="height:46.15%"></span></div><span class="signa-chart__day" dir="ltr">09-14</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">21</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:23.08%"></span><span class="signa-chart__bar is-sent" style="height:30.77%"></span></div><span class="signa-chart__day" dir="ltr">09-15</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">28</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:5.13%"></span><span class="signa-chart__bar is-sent" style="height:66.67%"></span></div><span class="signa-chart__day" dir="ltr">09-16</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">34</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:2.56%"></span><span class="signa-chart__bar is-sent" style="height:84.62%"></span></div><span class="signa-chart__day" dir="ltr">09-17</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">29</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:0.0%"></span><span class="signa-chart__bar is-sent" style="height:74.36%"></span></div><span class="signa-chart__day" dir="ltr">09-18</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">39</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:2.56%"></span><span class="signa-chart__bar is-sent" style="height:97.44%"></span></div><span class="signa-chart__day" dir="ltr">09-19</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">35</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:2.56%"></span><span class="signa-chart__bar is-sent" style="height:87.18%"></span></div><span class="signa-chart__day" dir="ltr">09-20</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">27</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:0.0%"></span><span class="signa-chart__bar is-sent" style="height:69.23%"></span></div><span class="signa-chart__day" dir="ltr">09-21</span></div>
+			<div class="signa-chart__col"><span class="signa-chart__count">33</span><div class="signa-chart__stack"><span class="signa-chart__bar is-failed" style="height:5.13%"></span><span class="signa-chart__bar is-sent" style="height:79.49%"></span></div><span class="signa-chart__day" dir="ltr">09-22</span></div>
 		</div>
-		<p class="tisa-legend"><span class="tisa-legend__item"><span class="tisa-dot is-sent"></span>ارسال‌شده</span><span class="tisa-legend__item"><span class="tisa-dot is-failed"></span>ناموفق</span></p>
+		<p class="signa-legend"><span class="signa-legend__item"><span class="signa-dot is-sent"></span>ارسال‌شده</span><span class="signa-legend__item"><span class="signa-dot is-failed"></span>ناموفق</span></p>
 	</div>
 
-	<div class="tisa-panel" style="padding:4px">
-		<h2 class="tisa-panel__title">بیشترین دلیل‌های شکست</h2>
-		<table class="widefat tisa-report-table"><thead><tr><th>رویداد</th><th>کد خطا</th><th>تعداد</th><th>سهم</th></tr></thead><tbody>
-			<tr><td>خطای سامانه پیامکی</td><td dir="ltr"><code>gateway_error</code></td><td>11</td><td><span class="tisa-meter"><span class="tisa-meter__fill" style="width:100%"></span></span></td></tr>
-			<tr><td>ارسال ناموفق</td><td dir="ltr"><code>no_channel</code></td><td>6</td><td><span class="tisa-meter"><span class="tisa-meter__fill" style="width:54.5%"></span></span></td></tr>
-			<tr><td>رد توسط محافظ‌ها</td><td dir="ltr"><code>throttled</code></td><td>5</td><td><span class="tisa-meter"><span class="tisa-meter__fill" style="width:45.5%"></span></span></td></tr>
-			<tr><td>کپچا رد شد</td><td dir="ltr"><code>invalid-input-response</code></td><td>3</td><td><span class="tisa-meter"><span class="tisa-meter__fill" style="width:27.3%"></span></span></td></tr>
-			<tr><td>رد توسط محافظ‌ها</td><td dir="ltr"><code>blocked</code></td><td>2</td><td><span class="tisa-meter"><span class="tisa-meter__fill" style="width:18.2%"></span></span></td></tr>
+	<div class="signa-panel" style="padding:4px">
+		<h2 class="signa-panel__title">بیشترین دلیل‌های شکست</h2>
+		<table class="widefat signa-report-table"><thead><tr><th>رویداد</th><th>کد خطا</th><th>تعداد</th><th>سهم</th></tr></thead><tbody>
+			<tr><td>خطای سامانه پیامکی</td><td dir="ltr"><code>gateway_error</code></td><td>11</td><td><span class="signa-meter"><span class="signa-meter__fill" style="width:100%"></span></span></td></tr>
+			<tr><td>ارسال ناموفق</td><td dir="ltr"><code>no_channel</code></td><td>6</td><td><span class="signa-meter"><span class="signa-meter__fill" style="width:54.5%"></span></span></td></tr>
+			<tr><td>رد توسط محافظ‌ها</td><td dir="ltr"><code>throttled</code></td><td>5</td><td><span class="signa-meter"><span class="signa-meter__fill" style="width:45.5%"></span></span></td></tr>
+			<tr><td>کپچا رد شد</td><td dir="ltr"><code>invalid-input-response</code></td><td>3</td><td><span class="signa-meter"><span class="signa-meter__fill" style="width:27.3%"></span></span></td></tr>
+			<tr><td>رد توسط محافظ‌ها</td><td dir="ltr"><code>blocked</code></td><td>2</td><td><span class="signa-meter"><span class="signa-meter__fill" style="width:18.2%"></span></span></td></tr>
 		</tbody></table>
 	</div>
 
-	<div class="tisa-panel tisa-panel--foot">
-		<p class="tisa-muted">۶۲۴۱ رویداد ثبت شده است؛ ۲۱۱ موردش خطا بوده. رویدادها ۷ روز نگه داشته می‌شوند. <a href="/admin#log">دیدن تک‌تک رویدادها</a></p>
+	<div class="signa-panel signa-panel--foot">
+		<p class="signa-muted">۶۲۴۱ رویداد ثبت شده است؛ ۲۱۱ موردش خطا بوده. رویدادها ۷ روز نگه داشته می‌شوند. <a href="/admin#log">دیدن تک‌تک رویدادها</a></p>
 		<p><a class="button" href="#">دانلود گزارش این بازه (CSV)</a></p>
 	</div>
 
 	<!-- The captcha load test, driven by assets/js/admin.js -------------- -->
-	<div class="tisa-card" id="captcha-test">
+	<div class="signa-card" id="captcha-test">
 		<h2>کپچا</h2>
-		<p class="tisa-card__intro">همان اسکریپتی که فرم ورود می‌گیرد، در همین مرورگر امتحان می‌شود.</p>
-		<div class="tisa-row">
-			<div class="tisa-row__label">آزمایش بارگذاری</div>
-			<div class="tisa-row__control">
-				<button type="button" class="button" data-tisa-captcha-test>آزمایش کپچا در مرورگر</button>
-				<p class="tisa-result" data-tisa-captcha-result hidden></p>
+		<p class="signa-card__intro">همان اسکریپتی که فرم ورود می‌گیرد، در همین مرورگر امتحان می‌شود.</p>
+		<div class="signa-row">
+			<div class="signa-row__label">آزمایش بارگذاری</div>
+			<div class="signa-row__control">
+				<button type="button" class="button" data-signa-captcha-test>آزمایش کپچا در مرورگر</button>
+				<p class="signa-result" data-signa-captcha-result hidden></p>
 			</div>
 		</div>
 	</div>
@@ -445,9 +445,9 @@
 </div>
 
 <script>
-	/* Stands in for wp_localize_script( 'tisa-otp-admin', 'tisaOtpAdmin', ... ) */
-	window.tisaOtpAdmin = {
-		restUrl: '/mock/tisa-otp/v1/',
+	/* Stands in for wp_localize_script( 'signa-admin', 'signaOtpAdmin', ... ) */
+	window.signaOtpAdmin = {
+		restUrl: '/mock/signa/v1/',
 		nonce: 'demo-nonce',
 		i18n: {
 			working: 'در حال بررسی…',
@@ -497,12 +497,12 @@
 <script>
 	/* Demo only: the plugin posts this switch to admin-post.php. */
 	document.addEventListener('click', function (event) {
-		const button = event.target.closest('[data-tisa-app-demo]');
+		const button = event.target.closest('[data-signa-app-demo]');
 		if (!button) {
 			return;
 		}
-		const on = document.body.classList.toggle('tisa-app');
-		document.documentElement.classList.toggle('tisa-app', on);
+		const on = document.body.classList.toggle('signa-app');
+		document.documentElement.classList.toggle('signa-app', on);
 		button.textContent = on ? 'نمای پیشخوان' : 'حالت اپ';
 	});
 </script>

@@ -57,11 +57,11 @@
 |---|---|---|---|
 | ۱ | ARCaptcha با API موهوم صدا زده می‌شد | `front.js` قدیمی: `window.arcaptcha.widget.render(...)`؛ مستندات رسمی: `arcaptcha.render(container,{site_key})` و `arcaptcha.getToken(widgetID)` — شیئی به نام `widget` وجود ندارد | بازنویسی کامل ماژول `Captcha` با API درست هر سرویس |
 | ۲ | فرض «اسکریپت همین حالا هست» | `render()` بدون انتظار و بدون `onerror` صدا زده می‌شد؛ اسکریپت کند/مسدود = حفرهٔ خالی | پیمایش فهرست `scripts[]` با مهلت هر تلاش (`captcha_timeout`) |
-| ۳ | نبود اسکریپت جایگزین | دامنهٔ گوگل روی برخی کاربران ایرانی بسته است | `src/Captcha/ScriptFallbacks.php` + فیلتر `tisa_otp_captcha_script_urls` + فیلد «اسکریپت جایگزین» در تنظیمات |
+| ۳ | نبود اسکریپت جایگزین | دامنهٔ گوگل روی برخی کاربران ایرانی بسته است | `src/Captcha/ScriptFallbacks.php` + فیلتر `signa_captcha_script_urls` + فیلد «اسکریپت جایگزین» در تنظیمات |
 | ۴ | نوع چالش نادیده گرفته می‌شد | reCAPTCHA v3 چالش «امتیازی» است (`grecaptcha.execute`) و ویجت ندارد؛ hCaptcha و ARCaptcha v2 ویجتی‌اند | `kind: widget\|score` با دو مسیر جدا + `captcha_arcaptcha_v3` |
 | ۵ | زبان hCaptcha نادرست | `hl` باید کد زبان خالی باشد (`fa`)، نه `fa_IR` | نرمال‌سازی زبان در `render()` |
 | ۶ | شکست، نامرئی بود | توکن خالی ⇒ سرور «تأیید کنید ربات نیستید» می‌گفت و روی صفحه چیزی برای تأیید نبود | کارت خطای دیدنی + «تلاش دوباره» + پیام fail-open |
-| ۷ | هر قطعی سرویس، کل سایت را می‌بست | خطای انتقالی (`captcha_unreachable`) مثل «ربات» تلقی می‌شد | `captcha_fail_open` (پیش‌فرض روشن) + لاگ `captcha.fail_open` + اکشن `tisa_otp_captcha_fail_open` |
+| ۷ | هر قطعی سرویس، کل سایت را می‌بست | خطای انتقالی (`captcha_unreachable`) مثل «ربات» تلقی می‌شد | `captcha_fail_open` (پیش‌فرض روشن) + لاگ `captcha.fail_open` + اکشن `signa_captcha_fail_open` |
 | ۸ | مدیر هیچ راهی برای دیدن علت نداشت | صفحهٔ ابزار فقط «تست ارسال» داشت | کارت «سلامت سیستم» + `/admin/doctor` + `/admin/probe` |
 
 ### ۱.۲ رفتار جدید در مرورگر
@@ -84,7 +84,7 @@
 
 ```
 مرورگر: POST /start  →  Guard\Pipeline::STAGE_SEND
-   ├─ Blocklist  ├─ BotGuard (tisa_ft + honeypot)  ├─ Throttle  └─ CaptchaGuard
+   ├─ Blocklist  ├─ BotGuard (signa_ft + honeypot)  ├─ Throttle  └─ CaptchaGuard
 → OtpService::generate() → HMAC store → Channel\Dispatcher
    → SmsChannel::available() → Gateway\FailoverChain → Driver → سامانهٔ پیامک
 ```
@@ -96,7 +96,7 @@
 | # | علت | توضیح | اصلاح |
 |---|---|---|---|
 | ۱ | **کپچا دروازه را می‌بست** | با provider تنظیم‌شده ولی ویجت لودنشده، هر `/start` رد می‌شد و **هیچ‌وقت** به لایهٔ پیامک نمی‌رسید | بخش ۱ + fail-open سمت سرور؛ حالا `captcha_required` با `recoverable` برمی‌گردد و کلاینت یک‌بار خودکار تلاش می‌کند |
-| ۲ | **توکن فرم در کش صفحه کهنه می‌شد** | `tisa_ts` زمان رندر *سمت سرور* را حمل می‌کرد؛ با کش ۲۴ساعته هر بازدیدکننده `stale_form` می‌گرفت و راه بازیابی هم نبود | `src/Support/FormToken.php` (توکن امضاشدهٔ `tisa_ft`) + تازه‌سازی از `/form-config` + یک تلاش دوبارهٔ خودکار |
+| ۲ | **توکن فرم در کش صفحه کهنه می‌شد** | `signa_ts` زمان رندر *سمت سرور* را حمل می‌کرد؛ با کش ۲۴ساعته هر بازدیدکننده `stale_form` می‌گرفت و راه بازیابی هم نبود | `src/Support/FormToken.php` (توکن امضاشدهٔ `signa_ft`) + تازه‌سازی از `/form-config` + یک تلاش دوبارهٔ خودکار |
 | ۳ | پیکربندی نیمه‌کاره بی‌صدا بود | کانال «در دسترس» گزارش می‌شد ولی ارسال شکست می‌خورد (مثلاً شمارهٔ فرستنده یا کد الگو خالی بود) | `ready()/missing()/plan()` روی همهٔ درایورها + `Registry::report()` با mode/sender/template/issues/notes |
 | ۴ | دو درایور با API ناسازگار | IPPanel و FarazSms بر پایهٔ نسخه‌های قدیمی نوشته شده بودند | بازنویسی: IPPanel روی `POST https://edge.ippanel.com/v1/api/send` با هدر `Authorization` و `sending_type` (`webservice|pattern`)؛ FarazSms با سه مسیر (Pattern/Text/Bridge) |
 | ۵ | failover نامرئی و غیرقابل‌اتکا | یک شکست، همه‌چیز را تمام می‌کرد و اثری از «کدام دروازه، چه خطایی» نبود | `FailoverChain` برای **هر تلاش** یک ردیف رد (trace) و به‌روزرسانی `Gateway\Health` ثبت می‌کند؛ دروازهٔ بیمار موقتاً کنار می‌رود و پشتیبان امتحان می‌شود |
@@ -105,7 +105,7 @@
 
 ### ۲.۳ پس از ارسال
 
-موفق: کد ذخیره، cooldown، اکشن `tisa_otp_code_sent` و payload `{step:'verify', masked, channel, via, cooldown, expires_in, code_length}`.
+موفق: کد ذخیره، cooldown، اکشن `signa_code_sent` و payload `{step:'verify', masked, channel, via, cooldown, expires_in, code_length}`.
 ناموفق: `revoke()` + `releaseReservation()` + `delivery_failed` با `{gateway, error_code}` تا در گزارش‌ها علت دقیق دیده شود.
 
 ### ۲.۴ فایل‌ها
@@ -121,7 +121,7 @@
 | # | بهبود | چرا |
 |---|---|---|
 | U1 | ردیف اعتماد («بدون رمز عبور»، «ورود در چند ثانیه»، «شماره محفوظ می‌ماند») | پاسخ به تردید کاربر پیش از تایپ شماره |
-| U2 | سرتیتر وضعیت (`data-tisa-status-title`) جدا از متن | چشم، پیام را سریع‌تر پیدا می‌کند |
+| U2 | سرتیتر وضعیت (`data-signa-status-title`) جدا از متن | چشم، پیام را سریع‌تر پیدا می‌کند |
 | U3 | کارت خطای کپچا با «تلاش دوباره» + جملهٔ fail-open | به‌جای حفرهٔ خالی و بن‌بست |
 | U4 | نشانگر شمارهٔ مقصد روی گام کد + «ویرایش شماره» | کاربر می‌داند کد به کجا رفته |
 | U5 | «چسباندن کد از پیامک» (کلیپ‌بورد → خانه‌ها، ارقام فارسی → لاتین) | روی دسکتاپ و iOS جای WebOTP را می‌گیرد |
@@ -143,7 +143,7 @@
 | خط روی دایره‌های گام | دایره و خط رابط دو عنصر مستقل با موقعیت‌یابی جدا بودند | نوار سه‌قسمتی ۴ پیکسلی؛ یک بخش نمی‌تواند روی همسایه‌اش بیفتد |
 | «رفتن به فرم ورود» روی صفحه | پیوند با `translateY(-150%)` بیرون فرستاده شده بود که با اسکرول و `overflow` برمی‌گشت | `opacity: 0; pointer-events: none` تا `:focus` |
 
-کل `front.css` روی یک بلوک توکن بازنویسی شد (رنگ، ریتم ۴ پیکسلی، شعاع/سایه، حرکت، تایپوگرافی، `--tisa-width`)، پوسته‌های `line|card|glass|slate|pill` همگی «فقط توکن» ماندند، و سه بلوک رسانه برای `prefers-reduced-motion`، `prefers-contrast: more` و `forced-colors` اضافه شد. `docs/UI-PLAN.fa.md` §۳ و §۴ با کد هم‌گام شدند.
+کل `front.css` روی یک بلوک توکن بازنویسی شد (رنگ، ریتم ۴ پیکسلی، شعاع/سایه، حرکت، تایپوگرافی، `--signa-width`)، پوسته‌های `line|card|glass|slate|pill` همگی «فقط توکن» ماندند، و سه بلوک رسانه برای `prefers-reduced-motion`، `prefers-contrast: more` و `forced-colors` اضافه شد. `docs/UI-PLAN.fa.md` §۳ و §۴ با کد هم‌گام شدند.
 
 دروازه‌ها پس از بازنویسی: `tests/front.js` تست‌های تازه برای chip، placeholder، `canonicalPhone` و نبودِ انتخاب‌گرِ قدیمیِ نوار گام؛ `php-static-check` ۱۳۴/۰.
 
@@ -154,7 +154,7 @@
 | بازخورد | ریشه | راه‌حل |
 |---|---|---|
 | «placeholder بیاد چپ» | نشانگر داخل فیلد راست‌چین بود ولی chip سمت چپ؛ فیلد مثل دو نیمه دیده می‌شد | کنترل شماره به‌صورت یک جزیرهٔ LTR قفل شد: chip و ارقام پشت سر هم از چپ |
-| «گرادیانت با تغییر رنگ کامل عوض شه» + «هاور سبز می‌شود» | گرادیان و hover روی توکن ثابت `--tisa-accent-strong: #0b5c56` بسته بودند، پس دکمهٔ سرخ به سبز می‌رسید | گرادیان حالا یک لایهٔ نیمه‌شفاف روی خودِ accent است (هیچ‌وقت ناهم‌خوان نمی‌شود)، `--tisa-accent-strong` در PHP از accent ساخته می‌شود (`mix($accent,'#000',0.22)`) و سایه/هاور هم همان را می‌گیرند |
+| «گرادیانت با تغییر رنگ کامل عوض شه» + «هاور سبز می‌شود» | گرادیان و hover روی توکن ثابت `--signa-accent-strong: #0b5c56` بسته بودند، پس دکمهٔ سرخ به سبز می‌رسید | گرادیان حالا یک لایهٔ نیمه‌شفاف روی خودِ accent است (هیچ‌وقت ناهم‌خوان نمی‌شود)، `--signa-accent-strong` در PHP از accent ساخته می‌شود (`mix($accent,'#000',0.22)`) و سایه/هاور هم همان را می‌گیرند |
 | «کادرهای کد وسط‌چین» | `justify-content: flex-start` داخل ظرف LTR | وسط‌چین شد |
 | «پیام پیامک نرسید خوشگل نیست» | فقط یک خط متن و دو پیوند لخت | کارت با آیکون، عنوان، یک جملهٔ راهنما و دکمهٔ اصلی واقعی |
 | «دکمهٔ ویرایش شماره توی ارور غیرمنطقیه» | شماره هم همان‌جا قابل ویرایش است (chip بالای کادرها) | `edit-phone` از همهٔ action های پیام خطا حذف شد |
@@ -164,7 +164,7 @@
 
 | درخواست | اجرا | فایل‌ها |
 |---|---|---|
-| آدرس و کد پستی در فرم عضویت، مستقیم در پروفایل کاربر | دو فیلد تازه در مجموعهٔ «هویت» (`tisa_postcode`, `tisa_address`)، اعتبارسنجی ۱۰ رقمی با پذیرش ارقام فارسی، نمایش و ویرایش در صفحهٔ پروفایل کاربر، و آینه‌سازی یک‌بارهٔ فیلدهای صورتحساب ووکامرس | `Registration/FieldCatalog.php`, `Registration/FieldValidator.php`, `User/AccountFactory.php`, `User/ProfileField.php`, `templates/partials/step-fields.php` |
+| آدرس و کد پستی در فرم عضویت، مستقیم در پروفایل کاربر | دو فیلد تازه در مجموعهٔ «هویت» (`signa_postcode`, `signa_address`)، اعتبارسنجی ۱۰ رقمی با پذیرش ارقام فارسی، نمایش و ویرایش در صفحهٔ پروفایل کاربر، و آینه‌سازی یک‌بارهٔ فیلدهای صورتحساب ووکامرس | `Registration/FieldCatalog.php`, `Registration/FieldValidator.php`, `User/AccountFactory.php`, `User/ProfileField.php`, `templates/partials/step-fields.php` |
 | گزارش‌ها: درخواست‌ها، موفق‌ها، ناموفق‌ها، لاگ‌ها | صفحهٔ «گزارش‌ها» با شش کارت KPI، نمودار میله‌ای روزانه (۷/۱۴/۳۰ روز)، جدول بیشترین دلیل‌های شکست، خروجی CSV و پیوند به رویدادها. ریاضیات گزارش در کلاس خالص `Log\Report` است تا تست‌پذیر بماند | `Log/Report.php`, `Log/LogStore.php`, `Admin/ReportScreen.php`, `Admin/Menu.php`, `assets/css/admin.css` |
 | راهی برای تست کپچا و سامانهٔ پیامک | «آزمایش کپچا در مرورگر» در کارت کپچا: همان اسکریپت‌ها، به همان ترتیب، با مهلت ۸ ثانیه و بررسی وجود API در `window`. آزمون ارسال و رد کامل تلاش‌ها از قبل در «ابزارها» بود | `Front/Assets.php`, `assets/js/admin.js`, `Admin/SettingsScreen.php` |
 | پنل کاربری (پیش‌نمایش) | صفحهٔ `/account` در پیش‌نمایش: خلاصهٔ حساب، شمارهٔ تأییدشده، آدرس/کد پستی ذخیره‌شده و فرم زندهٔ تغییر شماره | `preview/public/account.html`, `preview/server.js` |
@@ -184,8 +184,8 @@
 | مهلت بارگذاری کپچا | `captcha_timeout` (۳ تا ۲۰ ثانیه) |
 | اسکریپت کپچای خودمیزبان | `captcha_script_override` |
 | پشتیبانی ARCaptcha v3 | `captcha_arcaptcha_v3` |
-| توکن فرم ضدفشرده‌سازی کش | `tisa_ft` + `Support\FormToken::issue/inspect/minAge` |
-| سلامت دروازه‌ها | `Gateway\Health` روی گزینهٔ `tisa_otp_gateway_health` (تاریخچهٔ ۵ رویداد) |
+| توکن فرم ضدفشرده‌سازی کش | `signa_ft` + `Support\FormToken::issue/inspect/minAge` |
+| سلامت دروازه‌ها | `Gateway\Health` روی گزینهٔ `signa_gateway_health` (تاریخچهٔ ۵ رویداد) |
 | رد کامل تلاش‌های ارسال | `FailoverChain::trace()` + `SmsChannel::trace()` |
 | گزارش آمادگی درایورها | `plan()/ready()/missing()` روی هر سامانه |
 | بازنویسی IPPanel و FarazSms | طبق مستندات جاری سازندگان |
@@ -202,10 +202,10 @@
 |---|---|---|
 | رفتار مرورگر | `node tests/front.js` | **۶۲ بررسی، همه سبز** (شامل سه سناریوی تازه: کپچای مسدود، توکن فرم کهنه، چسباندن کد) |
 | کنتراست WCAG | `node tests/contrast.js` | ۱۸/۱۸ |
-| بررسی ایستای PHP | `node tools/php-static-check.js tisa-otp` | ۱۳۳ فایل، ۰ ایراد |
+| بررسی ایستای PHP | `node tools/php-static-check.js signa` | ۱۳۳ فایل، ۰ ایراد |
 | آزمون منطقی PHP | `php tests/php/{breaker,trusted}-test.php` (CI) | قطع‌کن مدار و فهرست شماره‌های مورد اعتماد |
 | اجرای همان آزمون‌ها بدون PHP نصب‌شده | `node tools/php-test.js --lint` + اجرای تست‌ها | PHP ۷٫۴/۸٫۳ از راه WebAssembly: ۱۳۳ فایل سالم، همهٔ آزمون‌ها سبز |
-| بستهٔ نصب | مقایسهٔ sha1 با `tisa-otp.zip` | ۱۳۹ فایل، هم‌خوان |
+| بستهٔ نصب | مقایسهٔ sha1 با `signa.zip` | ۱۳۹ فایل، هم‌خوان |
 
 سناریوهای تازهٔ آزمون عیناً همان شکایت‌ها را می‌سنجند:
 

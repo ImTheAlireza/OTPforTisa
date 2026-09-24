@@ -58,7 +58,7 @@ jobs:
               echo "::error file=${file}::$(echo "$output" | head -n1)"
               echo "$output"
             fi
-          done < <(find tisa-otp -name '*.php' | sort)
+          done < <(find signa -name '*.php' | sort)
           echo "checked ${count} files, ${failures} failed"
           test "$failures" -eq 0
 
@@ -72,13 +72,13 @@ jobs:
           node-version: '20'
       - name: Syntax
         run: |
-          node --check tisa-otp/assets/js/front.js
-          node --check tisa-otp/assets/js/admin.js
+          node --check signa/assets/js/front.js
+          node --check signa/assets/js/admin.js
           node --check preview/server.js
       - name: PHP compile-level checks (duplicate members, bad bodies)
         run: |
           npm install --no-save php-parser
-          node tools/php-static-check.js tisa-otp
+          node tools/php-static-check.js signa
       - name: Stylesheets parse, stay namespaced, and ship their fonts
         run: |
           npm install --no-save css-tree
@@ -89,6 +89,24 @@ jobs:
         run: |
           npm install --no-save jsdom
           node tests/front.js
+
+  brand:
+    name: Brand
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No trace of the former client's name
+        # The product ships under its own name only. The pattern is written
+        # with a character class so this file does not match itself.
+        run: |
+          if git grep -nIiE 't[i]sa|ت[ی]سا' -- . ; then
+            echo "::error::the former client's name is still in the tree"
+            exit 1
+          fi
+          if unzip -l signa.zip | grep -iE 't[i]sa'; then
+            echo "::error::the package still carries the former name"
+            exit 1
+          fi
 
   package:
     name: Package

@@ -12,45 +12,45 @@
  * PHP error. It is the difference between "the file compiles" and "the screen
  * works", and the setting screen is the first page an owner sees.
  *
- * @package TisaOtp\Tests
+ * @package Signa\Tests
  */
 
 require __DIR__ . '/bootstrap.php';
 
-use TisaOtp\Admin\Controls;
-use TisaOtp\Admin\ReportScreen;
-use TisaOtp\Admin\SettingsScreen;
-use TisaOtp\Captcha\Manager;
-use TisaOtp\Config\Settings;
-use TisaOtp\Gateway\Registry;
-use TisaOtp\Log\Logger;
-use TisaOtp\Log\LogStore;
-use TisaOtp\Log\Redactor;
-use TisaOtp\Admin\AccessScreen;
-use TisaOtp\Admin\LogsScreen;
-use TisaOtp\Admin\ToolsScreen;
-use TisaOtp\Access\EmergencyToken;
-use TisaOtp\Blocklist\Blocklist;
-use TisaOtp\Import\Runner;
-use TisaOtp\Install\Schema;
-use TisaOtp\Registration\FieldSchema;
-use TisaOtp\State\StateStore;
-use TisaOtp\Throttle\Throttle;
-use TisaOtp\User\PhoneLocator;
+use Signa\Admin\Controls;
+use Signa\Admin\ReportScreen;
+use Signa\Admin\SettingsScreen;
+use Signa\Captcha\Manager;
+use Signa\Config\Settings;
+use Signa\Gateway\Registry;
+use Signa\Log\Logger;
+use Signa\Log\LogStore;
+use Signa\Log\Redactor;
+use Signa\Admin\AccessScreen;
+use Signa\Admin\LogsScreen;
+use Signa\Admin\ToolsScreen;
+use Signa\Access\EmergencyToken;
+use Signa\Blocklist\Blocklist;
+use Signa\Import\Runner;
+use Signa\Install\Schema;
+use Signa\Registration\FieldSchema;
+use Signa\State\StateStore;
+use Signa\Throttle\Throttle;
+use Signa\User\PhoneLocator;
 
 // The screen refuses to draw for anyone who cannot manage the site.
-$GLOBALS['tisa_may_manage'] = true;
+$GLOBALS['signa_may_manage'] = true;
 
-$tisa_settings = new Settings();
-$tisa_logs     = new LogStore( $tisa_settings );
-$tisa_screen   = new SettingsScreen(
-	$tisa_settings,
-	new Controls( $tisa_settings ),
-	new Registry( $tisa_settings ),
-	new FieldSchema( $tisa_settings ),
-	new Manager( $tisa_settings, new Logger( $tisa_settings, new Redactor(), $tisa_logs ) ),
-	$tisa_logs,
-	new ReportScreen( $tisa_logs, $tisa_settings )
+$signa_settings = new Settings();
+$signa_logs     = new LogStore( $signa_settings );
+$signa_screen   = new SettingsScreen(
+	$signa_settings,
+	new Controls( $signa_settings ),
+	new Registry( $signa_settings ),
+	new FieldSchema( $signa_settings ),
+	new Manager( $signa_settings, new Logger( $signa_settings, new Redactor(), $signa_logs ) ),
+	$signa_logs,
+	new ReportScreen( $signa_logs, $signa_settings )
 );
 
 /**
@@ -58,7 +58,7 @@ $tisa_screen   = new SettingsScreen(
  *
  * @return array{html:string,error:string}
  */
-function tisa_render_tab( SettingsScreen $screen, string $tab ): array {
+function signa_render_tab( SettingsScreen $screen, string $tab ): array {
 	$_GET['tab'] = $tab;
 
 	ob_start();
@@ -78,7 +78,7 @@ function tisa_render_tab( SettingsScreen $screen, string $tab ): array {
 /**
  * Anything PHP itself would print when something is wrong.
  */
-function tisa_php_noise( string $html ): string {
+function signa_php_noise( string $html ): string {
 	foreach ( array( 'Fatal error', 'Parse error', 'Warning:', 'Notice:', 'Deprecated:', 'Uncaught' ) as $needle ) {
 		if ( false !== strpos( $html, $needle ) ) {
 			return $needle;
@@ -88,9 +88,9 @@ function tisa_php_noise( string $html ): string {
 	return '';
 }
 
-tisa_start( 'every tab of the settings screen renders' );
+signa_start( 'every tab of the settings screen renders' );
 
-$tisa_tabs = array(
+$signa_tabs = array(
 	'general'      => 'رفتار ورود',
 	'code'         => 'طول کد',
 	'gateways'     => 'سامانه‌های پیامکی',
@@ -102,94 +102,94 @@ $tisa_tabs = array(
 	'reports'      => 'گزارش‌ها',
 );
 
-foreach ( $tisa_tabs as $tisa_tab => $tisa_marker ) {
-	$tisa_result = tisa_render_tab( $tisa_screen, $tisa_tab );
+foreach ( $signa_tabs as $signa_tab => $signa_marker ) {
+	$signa_result = signa_render_tab( $signa_screen, $signa_tab );
 
-	if ( '' !== $tisa_result['error'] ) {
-		echo '        threw: ' . $tisa_result['error'] . "\n";
+	if ( '' !== $signa_result['error'] ) {
+		echo '        threw: ' . $signa_result['error'] . "\n";
 	}
 
-	tisa_check( 'the "' . $tisa_tab . '" tab renders without an error', '' === $tisa_result['error'] );
+	signa_check( 'the "' . $signa_tab . '" tab renders without an error', '' === $signa_result['error'] );
 
-	$tisa_noise = tisa_php_noise( $tisa_result['html'] );
+	$signa_noise = signa_php_noise( $signa_result['html'] );
 
-	if ( '' !== $tisa_noise ) {
-		echo '        printed: ' . $tisa_noise . "\n";
+	if ( '' !== $signa_noise ) {
+		echo '        printed: ' . $signa_noise . "\n";
 	}
 
 	// The reports tab is a report rather than a form of cards, so it is the
 	// numbers it prints that say it drew.
-	$tisa_body = 'reports' === $tisa_tab ? 'tisa-kpis' : 'tisa-card';
+	$signa_body = 'reports' === $signa_tab ? 'signa-kpis' : 'signa-card';
 
-	if ( '' !== $tisa_result['html'] && false === strpos( $tisa_result['html'], $tisa_body ) ) {
-		echo '        printed no ' . $tisa_body . "\n";
+	if ( '' !== $signa_result['html'] && false === strpos( $signa_result['html'], $signa_body ) ) {
+		echo '        printed no ' . $signa_body . "\n";
 	}
 
-	tisa_check(
+	signa_check(
 		'and it prints the markup an administrator is looking for',
-		'' !== $tisa_result['html']
-			&& false !== strpos( $tisa_result['html'], $tisa_body )
-			&& '' === $tisa_noise
+		'' !== $signa_result['html']
+			&& false !== strpos( $signa_result['html'], $signa_body )
+			&& '' === $signa_noise
 	);
 }
 
-tisa_start( 'the screen around the tabs is intact' );
+signa_start( 'the screen around the tabs is intact' );
 
-$tisa_general = tisa_render_tab( $tisa_screen, 'general' )['html'];
+$signa_general = signa_render_tab( $signa_screen, 'general' )['html'];
 
-tisa_check( 'the switcher is on the page', false !== strpos( $tisa_general, 'tisa-screens' ) );
-tisa_check( 'the running version is in the header', false !== strpos( $tisa_general, TISA_OTP_VERSION ) );
-tisa_check( 'the seven-day strip is drawn', false !== strpos( $tisa_general, 'tisa-kpis' ) );
-tisa_check( 'the form posts to the settings API', false !== strpos( $tisa_general, 'options.php' ) );
-tisa_check( 'and there is a save button', false !== strpos( $tisa_general, 'ذخیره تنظیمات' ) );
-tisa_check( 'the release-notes card is gone', false === strpos( $tisa_general, 'تازه در نسخهٔ' ) && false === strpos( $tisa_general, 'tisa-bullets' ) );
+signa_check( 'the switcher is on the page', false !== strpos( $signa_general, 'signa-screens' ) );
+signa_check( 'the running version is in the header', false !== strpos( $signa_general, SIGNA_VERSION ) );
+signa_check( 'the seven-day strip is drawn', false !== strpos( $signa_general, 'signa-kpis' ) );
+signa_check( 'the form posts to the settings API', false !== strpos( $signa_general, 'options.php' ) );
+signa_check( 'and there is a save button', false !== strpos( $signa_general, 'ذخیره تنظیمات' ) );
+signa_check( 'the release-notes card is gone', false === strpos( $signa_general, 'تازه در نسخهٔ' ) && false === strpos( $signa_general, 'signa-bullets' ) );
 
-tisa_start( 'the test card of every section is present and complete' );
+signa_start( 'the test card of every section is present and complete' );
 
 /*
  * This is the assertion the 1.3.5 bug needed. Each section's test card has to
  * carry a button that names its kind — and the kind has to be one the self-test
  * actually knows, or the panel opens a modal that cannot answer.
  */
-$tisa_kinds = array( 'general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data' );
+$signa_kinds = array( 'general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data' );
 
-foreach ( $tisa_tabs as $tisa_tab => $tisa_marker ) {
-	if ( 'reports' === $tisa_tab ) {
+foreach ( $signa_tabs as $signa_tab => $signa_marker ) {
+	if ( 'reports' === $signa_tab ) {
 		continue;
 	}
 
-	$tisa_html = tisa_render_tab( $tisa_screen, $tisa_tab )['html'];
+	$signa_html = signa_render_tab( $signa_screen, $signa_tab )['html'];
 
-	tisa_check(
-		'the "' . $tisa_tab . '" tab has a test card for its own kind',
-		false !== strpos( $tisa_html, 'آزمایش این بخش' )
-			&& false !== strpos( $tisa_html, 'data-tisa-check="' . $tisa_tab . '"' ),
-		$tisa_tab
+	signa_check(
+		'the "' . $signa_tab . '" tab has a test card for its own kind',
+		false !== strpos( $signa_html, 'آزمایش این بخش' )
+			&& false !== strpos( $signa_html, 'data-signa-check="' . $signa_tab . '"' ),
+		$signa_tab
 	);
 
-	tisa_check(
+	signa_check(
 		'and a heading an owner can find it by',
-		false !== strpos( $tisa_html, 'tisa-card__title' ) || false !== strpos( $tisa_html, '<h2>' ),
-		$tisa_tab
+		false !== strpos( $signa_html, 'signa-card__title' ) || false !== strpos( $signa_html, '<h2>' ),
+		$signa_tab
 	);
 }
 
-tisa_check( 'every kind the panel offers is one the self-test runs', count( array_diff( $tisa_kinds, $tisa_kinds ) ) === 0 );
+signa_check( 'every kind the panel offers is one the self-test runs', count( array_diff( $signa_kinds, $signa_kinds ) ) === 0 );
 
-tisa_start( 'the gateways tab carries the two controls that send nothing' );
+signa_start( 'the gateways tab carries the two controls that send nothing' );
 
-$tisa_gateways = tisa_render_tab( $tisa_screen, 'gateways' )['html'];
+$signa_gateways = signa_render_tab( $signa_screen, 'gateways' )['html'];
 
-tisa_check( 'there is a button for a real test message', false !== strpos( $tisa_gateways, 'data-tisa-sms-test' ) );
-tisa_check( 'and the card says what it costs', false !== strpos( $tisa_gateways, 'آزمایش این بخش' ) );
+signa_check( 'there is a button for a real test message', false !== strpos( $signa_gateways, 'data-signa-sms-test' ) );
+signa_check( 'and the card says what it costs', false !== strpos( $signa_gateways, 'آزمایش این بخش' ) );
 
-tisa_start( 'the security tab hands the captcha test to the browser' );
+signa_start( 'the security tab hands the captcha test to the browser' );
 
-$tisa_security = tisa_render_tab( $tisa_screen, 'security' )['html'];
+$signa_security = signa_render_tab( $signa_screen, 'security' )['html'];
 
-tisa_check( 'with the attribute admin.js looks for', false !== strpos( $tisa_security, 'data-tisa-captcha-test' ) );
+signa_check( 'with the attribute admin.js looks for', false !== strpos( $signa_security, 'data-signa-captcha-test' ) );
 
-tisa_start( 'the store tab has a second face when WooCommerce is there' );
+signa_start( 'the store tab has a second face when WooCommerce is there' );
 
 /*
  * The store section branches on `class_exists( 'WooCommerce' )` — one shape for a
@@ -199,17 +199,17 @@ tisa_start( 'the store tab has a second face when WooCommerce is there' );
  */
 eval( 'class WooCommerce { public function __construct() {} }' );
 
-$tisa_woo = tisa_render_tab( $tisa_screen, 'store' );
+$signa_woo = signa_render_tab( $signa_screen, 'store' );
 
-if ( '' !== $tisa_woo['error'] ) {
-	echo '        threw: ' . $tisa_woo['error'] . "\n";
+if ( '' !== $signa_woo['error'] ) {
+	echo '        threw: ' . $signa_woo['error'] . "\n";
 }
 
-tisa_check( 'with WooCommerce present, the store tab still renders', '' === $tisa_woo['error'] );
-tisa_check( 'and it prints the shop controls', false !== strpos( $tisa_woo['html'], 'tisa-card' ) );
-tisa_check( 'and no PHP noise', '' === tisa_php_noise( $tisa_woo['html'] ) );
+signa_check( 'with WooCommerce present, the store tab still renders', '' === $signa_woo['error'] );
+signa_check( 'and it prints the shop controls', false !== strpos( $signa_woo['html'], 'signa-card' ) );
+signa_check( 'and no PHP noise', '' === signa_php_noise( $signa_woo['html'] ) );
 
-tisa_start( 'the other four admin screens open too' );
+signa_start( 'the other four admin screens open too' );
 
 /*
  * The settings screen is not the only page an owner clicks. The tools, logs,
@@ -217,51 +217,51 @@ tisa_start( 'the other four admin screens open too' );
  * and a page that throws is a page the plugin is judged by. Same rule as above:
  * it has to draw, and it has to draw quietly.
  */
-$tisa_state    = new StateStore();
-$tisa_throttle = new Throttle( $tisa_state, $tisa_settings );
-$tisa_logger   = new Logger( $tisa_settings, new Redactor(), $tisa_logs );
+$signa_state    = new StateStore();
+$signa_throttle = new Throttle( $signa_state, $signa_settings );
+$signa_logger   = new Logger( $signa_settings, new Redactor(), $signa_logs );
 
-$tisa_other = array(
+$signa_other = array(
 	'ابزارها'  => new ToolsScreen(
-		$tisa_settings,
-		new Runner( $tisa_settings, $tisa_state, new PhoneLocator( $tisa_settings, $tisa_logger ), $tisa_logger ),
-		$tisa_throttle,
-		$tisa_logs,
+		$signa_settings,
+		new Runner( $signa_settings, $signa_state, new PhoneLocator( $signa_settings, $signa_logger ), $signa_logger ),
+		$signa_throttle,
+		$signa_logs,
 		new Schema()
 	),
-	'رویدادها' => new LogsScreen( $tisa_logs, $tisa_settings ),
+	'رویدادها' => new LogsScreen( $signa_logs, $signa_settings ),
 	'دسترسی'   => new AccessScreen(
-		$tisa_settings,
+		$signa_settings,
 		new Blocklist(),
 		new EmergencyToken(),
-		$tisa_logger
+		$signa_logger
 	),
-	'گزارش‌ها' => new ReportScreen( $tisa_logs, $tisa_settings ),
+	'گزارش‌ها' => new ReportScreen( $signa_logs, $signa_settings ),
 );
 
-foreach ( $tisa_other as $tisa_name => $tisa_page ) {
+foreach ( $signa_other as $signa_name => $signa_page ) {
 	$_GET = array();
 
 	ob_start();
 
-	$tisa_error = '';
+	$signa_error = '';
 
 	try {
-		$tisa_page->render();
-		$tisa_html = (string) ob_get_clean();
+		$signa_page->render();
+		$signa_html = (string) ob_get_clean();
 	} catch ( \Throwable $error ) {
 		ob_end_clean();
 
-		$tisa_html  = '';
-		$tisa_error = get_class( $error ) . ': ' . $error->getMessage();
+		$signa_html  = '';
+		$signa_error = get_class( $error ) . ': ' . $error->getMessage();
 	}
 
-	if ( '' !== $tisa_error ) {
-		echo '        threw: ' . $tisa_error . "\n";
+	if ( '' !== $signa_error ) {
+		echo '        threw: ' . $signa_error . "\n";
 	}
 
-	tisa_check( 'the ' . $tisa_name . ' screen renders without an error', '' === $tisa_error && '' !== $tisa_html );
-	tisa_check( 'and prints its own body quietly', '' === tisa_php_noise( $tisa_html ) );
+	signa_check( 'the ' . $signa_name . ' screen renders without an error', '' === $signa_error && '' !== $signa_html );
+	signa_check( 'and prints its own body quietly', '' === signa_php_noise( $signa_html ) );
 }
 
-tisa_finish();
+signa_finish();

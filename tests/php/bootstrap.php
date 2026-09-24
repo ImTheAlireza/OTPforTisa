@@ -9,34 +9,34 @@
  *
  * Usage:  php tests/php/blocklist-test.php
  *
- * @package TisaOtp\Tests
+ * @package Signa\Tests
  */
 
 define( 'ABSPATH', __DIR__ );
-define( 'TISA_OTP_PATH', dirname( __DIR__, 2 ) . '/tisa-otp/' );
-// The plugin's public URL, which `TISA_OTP_URL` carries on a real install.
-define( 'TISA_OTP_URL', 'https://example.test/wp-content/plugins/tisa-otp/' );
-define( 'TISA_OTP_FILE', TISA_OTP_PATH . 'tisa-otp.php' );
+define( 'SIGNA_PATH', dirname( __DIR__, 2 ) . '/signa/' );
+// The plugin's public URL, which `SIGNA_URL` carries on a real install.
+define( 'SIGNA_URL', 'https://example.test/wp-content/plugins/signa/' );
+define( 'SIGNA_FILE', SIGNA_PATH . 'signa.php' );
 
 /*
  * The plugin's own version, read the way WordPress reads it. Tests compare it
  * with the package manifest, so a release that forgets one of the two fails
  * here rather than on somebody's site.
  */
-$GLOBALS['tisa_plugin_source'] = is_readable( TISA_OTP_FILE ) ? (string) file_get_contents( TISA_OTP_FILE ) : '';
-$GLOBALS['tisa_version_match'] = array();
-preg_match( "/define\(\s*'TISA_OTP_VERSION',\s*'([^']+)'\s*\)/", $GLOBALS['tisa_plugin_source'], $GLOBALS['tisa_version_match'] );
-define( 'TISA_OTP_VERSION', isset( $GLOBALS['tisa_version_match'][1] ) ? $GLOBALS['tisa_version_match'][1] : '0.0.0' );
+$GLOBALS['signa_plugin_source'] = is_readable( SIGNA_FILE ) ? (string) file_get_contents( SIGNA_FILE ) : '';
+$GLOBALS['signa_version_match'] = array();
+preg_match( "/define\(\s*'SIGNA_VERSION',\s*'([^']+)'\s*\)/", $GLOBALS['signa_plugin_source'], $GLOBALS['signa_version_match'] );
+define( 'SIGNA_VERSION', isset( $GLOBALS['signa_version_match'][1] ) ? $GLOBALS['signa_version_match'][1] : '0.0.0' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
 define( 'DAY_IN_SECONDS', 86400 );
 
-$GLOBALS['tisa_options']    = array();
-$GLOBALS['tisa_transients'] = array();
-$GLOBALS['tisa_checks']     = 0;
-$GLOBALS['tisa_failures']   = 0;
-$GLOBALS['tisa_actions']    = array();
-$GLOBALS['tisa_user_meta']  = array();
+$GLOBALS['signa_options']    = array();
+$GLOBALS['signa_transients'] = array();
+$GLOBALS['signa_checks']     = 0;
+$GLOBALS['signa_failures']   = 0;
+$GLOBALS['signa_actions']    = array();
+$GLOBALS['signa_user_meta']  = array();
 
 /* -------------------------------------------------------------------------
  * WordPress stand-ins
@@ -47,7 +47,7 @@ $GLOBALS['tisa_user_meta']  = array();
  * @return mixed
  */
 function get_option( $key, $default = false ) {
-	return array_key_exists( $key, $GLOBALS['tisa_options'] ) ? $GLOBALS['tisa_options'][ $key ] : $default;
+	return array_key_exists( $key, $GLOBALS['signa_options'] ) ? $GLOBALS['signa_options'][ $key ] : $default;
 }
 
 /**
@@ -55,13 +55,13 @@ function get_option( $key, $default = false ) {
  * @return bool
  */
 function update_option( $key, $value, $autoload = null ) {
-	$GLOBALS['tisa_options'][ $key ] = $value;
+	$GLOBALS['signa_options'][ $key ] = $value;
 
 	return true;
 }
 
 function delete_option( $key ): bool {
-	unset( $GLOBALS['tisa_options'][ $key ] );
+	unset( $GLOBALS['signa_options'][ $key ] );
 
 	return true;
 }
@@ -70,7 +70,7 @@ function delete_option( $key ): bool {
  * @param mixed $value
  */
 function set_transient( $key, $value, $ttl = 0 ): bool {
-	$GLOBALS['tisa_transients'][ $key ] = $value;
+	$GLOBALS['signa_transients'][ $key ] = $value;
 
 	return true;
 }
@@ -79,11 +79,11 @@ function set_transient( $key, $value, $ttl = 0 ): bool {
  * @return mixed
  */
 function get_transient( $key ) {
-	return array_key_exists( $key, $GLOBALS['tisa_transients'] ) ? $GLOBALS['tisa_transients'][ $key ] : false;
+	return array_key_exists( $key, $GLOBALS['signa_transients'] ) ? $GLOBALS['signa_transients'][ $key ] : false;
 }
 
 function delete_transient( $key ): bool {
-	unset( $GLOBALS['tisa_transients'][ $key ] );
+	unset( $GLOBALS['signa_transients'][ $key ] );
 
 	return true;
 }
@@ -96,7 +96,7 @@ function delete_transient( $key ): bool {
  * numbers that come from it. Rendering a screen in a test therefore needs a
  * database that returns empty rows rather than a fatal on `null->get_results()`.
  */
-class Tisa_Wpdb_Stub {
+class Signa_Wpdb_Stub {
 
 	/** @var string */
 	public $prefix = 'wp_';
@@ -188,7 +188,7 @@ class Tisa_Wpdb_Stub {
 	 * The `state_key` value a statement carries, if it carries one.
 	 */
 	private function stateKey( string $query ): string {
-		if ( false === strpos( $query, 'tisa_otp_state' ) ) {
+		if ( false === strpos( $query, 'signa_state' ) ) {
 			return '';
 		}
 
@@ -227,7 +227,7 @@ class Tisa_Wpdb_Stub {
 	}
 }
 
-$GLOBALS['wpdb'] = new Tisa_Wpdb_Stub();
+$GLOBALS['wpdb'] = new Signa_Wpdb_Stub();
 
 /**
  * @param string $text
@@ -279,11 +279,11 @@ function esc_attr__( $text, $domain = null ) {
 function apply_filters( $tag, $value ) {
 	$extra = array_slice( func_get_args(), 2 );
 
-	if ( empty( $GLOBALS['tisa_hooks'][ $tag ] ) ) {
+	if ( empty( $GLOBALS['signa_hooks'][ $tag ] ) ) {
 		return $value;
 	}
 
-	foreach ( (array) $GLOBALS['tisa_hooks'][ $tag ] as $callback ) {
+	foreach ( (array) $GLOBALS['signa_hooks'][ $tag ] as $callback ) {
 		$value = call_user_func_array( $callback, array_merge( array( $value ), $extra ) );
 	}
 
@@ -291,7 +291,7 @@ function apply_filters( $tag, $value ) {
 }
 
 function do_action( $tag ) {
-	$GLOBALS['tisa_actions'][] = $tag;
+	$GLOBALS['signa_actions'][] = $tag;
 }
 
 /**
@@ -303,7 +303,7 @@ function current_time( $type, $gmt = 0 ) {
 }
 
 function wp_salt( $scheme = 'auth' ): string {
-	return hash( 'sha256', 'tisa-otp-test-' . $scheme );
+	return hash( 'sha256', 'signa-test-' . $scheme );
 }
 
 /**
@@ -381,7 +381,7 @@ class WP_Theme { // phpcs:ignore Squiz.Classes.ValidClassName.NotCamelCaps -- Wo
 	/** @var string */
 	private $name;
 
-	public function __construct( string $name = 'Tisa Test Theme' ) {
+	public function __construct( string $name = 'Signa Test Theme' ) {
 		$this->name = $name;
 	}
 
@@ -412,7 +412,7 @@ class WP_Theme { // phpcs:ignore Squiz.Classes.ValidClassName.NotCamelCaps -- Wo
  * The template (parent theme) directory name, as WordPress reports it.
  */
 function get_template(): string {
-	return isset( $GLOBALS['tisa_template'] ) ? (string) $GLOBALS['tisa_template'] : 'tisa-test-theme';
+	return isset( $GLOBALS['signa_template'] ) ? (string) $GLOBALS['signa_template'] : 'signa-test-theme';
 }
 
 function wp_get_theme( $stylesheet = '' ) {
@@ -464,7 +464,7 @@ function is_email( $email ) {
  * @return mixed
  */
 function get_user_meta( $userId, $key, $single = false ) {
-	$bag = isset( $GLOBALS['tisa_user_meta'][ (int) $userId ] ) ? $GLOBALS['tisa_user_meta'][ (int) $userId ] : array();
+	$bag = isset( $GLOBALS['signa_user_meta'][ (int) $userId ] ) ? $GLOBALS['signa_user_meta'][ (int) $userId ] : array();
 
 	return array_key_exists( $key, $bag ) ? $bag[ $key ] : '';
 }
@@ -475,7 +475,7 @@ function get_user_meta( $userId, $key, $single = false ) {
  * @param mixed  $value
  */
 function update_user_meta( $userId, $key, $value ) {
-	$GLOBALS['tisa_user_meta'][ (int) $userId ][ $key ] = $value;
+	$GLOBALS['signa_user_meta'][ (int) $userId ][ $key ] = $value;
 
 	return true;
 }
@@ -501,22 +501,22 @@ function wp_unslash( $value ) {
  * Is somebody signed in? Read from the same global the other stubs use.
  */
 function is_user_logged_in(): bool {
-	return isset( $GLOBALS['tisa_current_user'] ) && (int) $GLOBALS['tisa_current_user'] > 0;
+	return isset( $GLOBALS['signa_current_user'] ) && (int) $GLOBALS['signa_current_user'] > 0;
 }
 
 function get_current_user_id(): int {
-	return isset( $GLOBALS['tisa_current_user'] ) ? (int) $GLOBALS['tisa_current_user'] : 0;
+	return isset( $GLOBALS['signa_current_user'] ) ? (int) $GLOBALS['signa_current_user'] : 0;
 }
 
 function current_user_can( $capability ): bool {
-	return ! empty( $GLOBALS['tisa_may_manage'] );
+	return ! empty( $GLOBALS['signa_may_manage'] );
 }
 
 function add_filter( $tag, $callback, $priority = 10, $accepted = 1 ) {
-	$GLOBALS['tisa_hooks'][ $tag ][] = $callback;
+	$GLOBALS['signa_hooks'][ $tag ][] = $callback;
 
 	// Recorded alongside, so a test can ask *when* something runs.
-	$GLOBALS['tisa_hook_priorities'][ $tag ][] = array(
+	$GLOBALS['signa_hook_priorities'][ $tag ][] = array(
 		'priority' => (int) $priority,
 		'callback' => $callback,
 	);
@@ -532,7 +532,7 @@ function add_action( $tag, $callback, $priority = 10, $accepted = 1 ) {
  * @param string $action
  */
 function check_admin_referer( $action = -1, $query_arg = '_wpnonce' ) {
-	if ( empty( $GLOBALS['tisa_nonce_ok'] ) ) {
+	if ( empty( $GLOBALS['signa_nonce_ok'] ) ) {
 		throw new RuntimeException( 'nonce' );
 	}
 
@@ -557,7 +557,7 @@ function wp_safe_redirect( $location = '', $status = 302 ) {
  * @return string
  */
 function wp_get_referer() {
-	return isset( $GLOBALS['tisa_referer'] ) ? $GLOBALS['tisa_referer'] : '';
+	return isset( $GLOBALS['signa_referer'] ) ? $GLOBALS['signa_referer'] : '';
 }
 
 /**
@@ -645,49 +645,49 @@ function is_wp_error( $thing ): bool {
 	return $thing instanceof WP_Error;
 }
 
-$GLOBALS['tisa_http_requests'] = array();
-$GLOBALS['tisa_http_reply']    = null;
+$GLOBALS['signa_http_requests'] = array();
+$GLOBALS['signa_http_reply']    = null;
 
 /**
  * The next answer any wp_remote_* call will get.
  *
  * @param mixed $reply Array with 'response' => array( 'code' => int ), 'body' => string, or a WP_Error.
  */
-function tisa_reply( $reply ): void {
-	$GLOBALS['tisa_http_reply'] = $reply;
+function signa_reply( $reply ): void {
+	$GLOBALS['signa_http_reply'] = $reply;
 }
 
 /**
  * @return array<int,array{method:string,url:string,args:array<string,mixed>}>
  */
-function tisa_requests(): array {
-	return $GLOBALS['tisa_http_requests'];
+function signa_requests(): array {
+	return $GLOBALS['signa_http_requests'];
 }
 
-function tisa_forget_requests(): void {
-	$GLOBALS['tisa_http_requests'] = array();
+function signa_forget_requests(): void {
+	$GLOBALS['signa_http_requests'] = array();
 }
 
 /**
  * Drop every filter a test registered, so one group cannot change the next.
  */
-function tisa_forget_filters(): void {
-	$GLOBALS['tisa_hooks']           = array();
-	$GLOBALS['tisa_hook_priorities'] = array();
+function signa_forget_filters(): void {
+	$GLOBALS['signa_hooks']           = array();
+	$GLOBALS['signa_hook_priorities'] = array();
 }
 
 /**
  * @param mixed $reply
  * @return array|WP_Error
  */
-function tisa_http( string $method, string $url, array $args = array() ) {
-	$GLOBALS['tisa_http_requests'][] = array(
+function signa_http( string $method, string $url, array $args = array() ) {
+	$GLOBALS['signa_http_requests'][] = array(
 		'method' => $method,
 		'url'    => $url,
 		'args'   => $args,
 	);
 
-	$reply = $GLOBALS['tisa_http_reply'];
+	$reply = $GLOBALS['signa_http_reply'];
 
 	if ( $reply instanceof WP_Error ) {
 		return $reply;
@@ -715,14 +715,14 @@ function tisa_http( string $method, string $url, array $args = array() ) {
  * @return array|WP_Error
  */
 function wp_remote_post( string $url, array $args = array() ) {
-	return tisa_http( 'POST', $url, $args );
+	return signa_http( 'POST', $url, $args );
 }
 
 /**
  * @return array|WP_Error
  */
 function wp_remote_get( string $url, array $args = array() ) {
-	return tisa_http( 'GET', $url, $args );
+	return signa_http( 'GET', $url, $args );
 }
 
 /**
@@ -783,11 +783,11 @@ function get_locale(): string {
 
 spl_autoload_register(
 	static function ( string $class ): void {
-		if ( 0 !== strpos( $class, 'TisaOtp\\' ) ) {
+		if ( 0 !== strpos( $class, 'Signa\\' ) ) {
 			return;
 		}
 
-		$file = TISA_OTP_PATH . 'src/' . str_replace( '\\', '/', substr( $class, 8 ) ) . '.php';
+		$file = SIGNA_PATH . 'src/' . str_replace( '\\', '/', substr( $class, 6 ) ) . '.php';
 
 		if ( is_readable( $file ) ) {
 			require_once $file;
@@ -799,15 +799,15 @@ spl_autoload_register(
  * Tiny assertions
  * ---------------------------------------------------------------------- */
 
-function tisa_check( string $label, bool $ok ): void {
-	++$GLOBALS['tisa_checks'];
+function signa_check( string $label, bool $ok ): void {
+	++$GLOBALS['signa_checks'];
 
 	if ( $ok ) {
 		echo "  ok    {$label}\n";
 		return;
 	}
 
-	++$GLOBALS['tisa_failures'];
+	++$GLOBALS['signa_failures'];
 	echo "  FAIL  {$label}\n";
 }
 
@@ -815,8 +815,8 @@ function tisa_check( string $label, bool $ok ): void {
  * @param mixed $expected
  * @param mixed $actual
  */
-function tisa_same( string $label, $expected, $actual ): void {
-	tisa_check(
+function signa_same( string $label, $expected, $actual ): void {
+	signa_check(
 		$label,
 		$expected === $actual
 	);
@@ -826,15 +826,15 @@ function tisa_same( string $label, $expected, $actual ): void {
 	}
 }
 
-function tisa_start( string $name ): void {
+function signa_start( string $name ): void {
 	echo "\n== {$name} ==\n";
-	$GLOBALS['tisa_options']    = array();
-	$GLOBALS['tisa_transients'] = array();
+	$GLOBALS['signa_options']    = array();
+	$GLOBALS['signa_transients'] = array();
 }
 
-function tisa_finish(): void {
-	$checks   = (int) $GLOBALS['tisa_checks'];
-	$failures = (int) $GLOBALS['tisa_failures'];
+function signa_finish(): void {
+	$checks   = (int) $GLOBALS['signa_checks'];
+	$failures = (int) $GLOBALS['signa_failures'];
 
 	echo "\n{$checks} checks, {$failures} failed\n";
 
@@ -923,7 +923,7 @@ function settings_fields( $group ): void {
 }
 
 function add_settings_error( $setting, $code, $message, $type = 'error' ): void {
-	$GLOBALS['tisa_settings_errors'][] = array( $setting, $code, $message, $type );
+	$GLOBALS['signa_settings_errors'][] = array( $setting, $code, $message, $type );
 }
 
 function date_i18n( $format, $timestamp = null, $gmt = false ): string {
@@ -945,7 +945,7 @@ function wp_localize_script( ...$args ): void {}
  * Late CSS, collected the way `wp_add_inline_style()` collects it.
  */
 function wp_add_inline_style( $handle, $data ): bool {
-	$GLOBALS['tisa_inline_styles'][ $handle ][] = (string) $data;
+	$GLOBALS['signa_inline_styles'][ $handle ][] = (string) $data;
 
 	return true;
 }
@@ -977,7 +977,7 @@ function wp_unique_id( $prefix = '' ) {
  * The queried object, when a test sets one.
  */
 function get_queried_object() {
-	return isset( $GLOBALS['tisa_queried_object'] ) ? $GLOBALS['tisa_queried_object'] : null;
+	return isset( $GLOBALS['signa_queried_object'] ) ? $GLOBALS['signa_queried_object'] : null;
 }
 
 /** Does the queried content contain a shortcode? */
@@ -989,11 +989,11 @@ function has_shortcode( $content, $tag ) {
 
 /** WooCommerce page checks — no WooCommerce pages exist in these tests. */
 function is_account_page(): bool {
-	return ! empty( $GLOBALS['tisa_is_account_page'] );
+	return ! empty( $GLOBALS['signa_is_account_page'] );
 }
 
 function is_checkout(): bool {
-	return ! empty( $GLOBALS['tisa_is_checkout'] );
+	return ! empty( $GLOBALS['signa_is_checkout'] );
 }
 
 /** A signed-in user, as far as templates are concerned. */
@@ -1030,7 +1030,7 @@ function sanitize_html_class( $class, $fallback = '' ) {
 
 /** Is this an admin request? Nothing in these tests is. */
 function is_admin(): bool {
-	return ! empty( $GLOBALS['tisa_admin_screen'] );
+	return ! empty( $GLOBALS['signa_admin_screen'] );
 }
 
 function wp_add_inline_script( ...$args ): void {}
@@ -1058,7 +1058,7 @@ function get_editable_roles(): array {
 
 /* --- a role list, a login URL and an escaped query ------------------------ */
 
-class Tisa_Wp_Roles_Stub {
+class Signa_Wp_Roles_Stub {
 
 	/** @var array<string,string> */
 	private $names = array(
@@ -1073,8 +1073,8 @@ class Tisa_Wp_Roles_Stub {
 	}
 }
 
-function wp_roles(): Tisa_Wp_Roles_Stub {
-	return new Tisa_Wp_Roles_Stub();
+function wp_roles(): Signa_Wp_Roles_Stub {
+	return new Signa_Wp_Roles_Stub();
 }
 
 function wp_login_url( $redirect = '' ): string {

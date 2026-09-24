@@ -15,7 +15,7 @@
  *     do not
  *   - `use` imports that collide on the same short name
  *
- * Usage:  node tools/php-static-check.js [dir]     (default: tisa-otp)
+ * Usage:  node tools/php-static-check.js [dir]     (default: signa)
  */
 'use strict';
 
@@ -30,7 +30,7 @@ try {
 	process.exit(2);
 }
 
-const root = process.argv[2] || 'tisa-otp';
+const root = process.argv[2] || 'signa';
 const parser = new Engine({ parser: { extractDoc: false }, ast: { withPositions: true } });
 
 const files = [];

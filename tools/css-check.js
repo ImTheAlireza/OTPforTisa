@@ -32,7 +32,7 @@ try {
 }
 
 const REPO = path.join(__dirname, '..');
-const FILES = ['tisa-otp/assets/css/front.css', 'tisa-otp/assets/css/admin.css'];
+const FILES = ['signa/assets/css/front.css', 'signa/assets/css/admin.css'];
 
 /**
  * Split a selector list on its own commas.
@@ -122,7 +122,7 @@ for (const file of FILES) {
 			selectorParts(selector).forEach((part) => {
 				const trimmed = part.trim();
 
-				if ('' === trimmed || trimmed.indexOf('.tisa') >= 0 || trimmed.indexOf(':host') >= 0) {
+				if ('' === trimmed || trimmed.indexOf('.signa') >= 0 || trimmed.indexOf(':host') >= 0) {
 					return;
 				}
 
@@ -189,11 +189,11 @@ for (const file of FILES) {
 }
 
 /* The fonts themselves: a truncated download is a 404 in every browser. */
-const FONT_DIR = path.join(REPO, 'tisa-otp/assets/fonts');
+const FONT_DIR = path.join(REPO, 'signa/assets/fonts');
 const fonts = fs.existsSync(FONT_DIR) ? fs.readdirSync(FONT_DIR).filter((name) => name.endsWith('.woff2')) : [];
 
 if (0 === fonts.length) {
-	console.log('  FAIL  no font files in tisa-otp/assets/fonts');
+	console.log('  FAIL  no font files in signa/assets/fonts');
 	problems++;
 }
 

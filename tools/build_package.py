@@ -3,7 +3,7 @@
 
 Two things went wrong in this repository that this script exists to prevent:
 
-1. `tisa-otp.zip` was committed several releases out of date, so the file
+1. `signa.zip` was committed several releases out of date, so the file
    somebody downloaded was not the code that had just been written.
 2. A file was added to a constructor without updating the container binding.
    Everything in the repository was consistent, so no test noticed — but the
@@ -33,8 +33,8 @@ import time
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(ROOT, 'tisa-otp')
-ARCHIVE = os.path.join(ROOT, 'tisa-otp.zip')
+PLUGIN = os.path.join(ROOT, 'signa')
+ARCHIVE = os.path.join(ROOT, 'signa.zip')
 MANIFEST = os.path.join(PLUGIN, 'build.json')
 
 # A fixed stamp keeps the archive reproducible; the release version, not the
@@ -43,13 +43,13 @@ STAMP = time.localtime(time.mktime(time.strptime('2026-09-22 05:36:00', '%Y-%m-%
 
 
 def plugin_version():
-    with open(os.path.join(PLUGIN, 'tisa-otp.php'), encoding='utf-8') as handle:
+    with open(os.path.join(PLUGIN, 'signa.php'), encoding='utf-8') as handle:
         source = handle.read()
 
-    match = re.search(r"define\(\s*'TISA_OTP_VERSION',\s*'([^']+)'\s*\)", source)
+    match = re.search(r"define\(\s*'SIGNA_VERSION',\s*'([^']+)'\s*\)", source)
 
     if not match:
-        raise SystemExit('tisa-otp.php does not declare TISA_OTP_VERSION')
+        raise SystemExit('signa.php does not declare SIGNA_VERSION')
 
     return match.group(1)
 
@@ -81,7 +81,7 @@ def digest(path):
 def manifest(write=False):
     """The manifest the package should have, and the one it has."""
     wanted = {
-        'name': 'tisa-otp',
+        'name': 'signa',
         'version': plugin_version(),
         'files': {},
     }
@@ -115,7 +115,7 @@ def archive_entries(write=False):
         for name in [n for n in names if os.path.isdir(os.path.join(directory, n))]:
             walk(os.path.join(directory, name), prefix + '/' + name)
 
-    walk(PLUGIN, 'tisa-otp')
+    walk(PLUGIN, 'signa')
 
     if not write:
         return entries
@@ -139,7 +139,7 @@ def archive_entries(write=False):
 
 def in_zip(entry):
     """Plugin-relative name inside the archive for an archive entry."""
-    return entry[len('tisa-otp/'):] if entry.startswith('tisa-otp/') else entry
+    return entry[len('signa/'):] if entry.startswith('signa/') else entry
 
 
 def check():
@@ -149,7 +149,7 @@ def check():
     wanted = manifest()
 
     if not os.path.exists(MANIFEST):
-        problems.append('tisa-otp/build.json is missing — run tools/build_package.py')
+        problems.append('signa/build.json is missing — run tools/build_package.py')
         committed = {'files': {}, 'version': '?'}
     else:
         with open(MANIFEST, encoding='utf-8') as handle:
@@ -170,7 +170,7 @@ def check():
 
     # 2. The committed archive holds the committed tree, byte for byte.
     if not os.path.exists(ARCHIVE):
-        problems.append('tisa-otp.zip is missing — run tools/build_package.py')
+        problems.append('signa.zip is missing — run tools/build_package.py')
         return problems
 
     with zipfile.ZipFile(ARCHIVE) as zf:

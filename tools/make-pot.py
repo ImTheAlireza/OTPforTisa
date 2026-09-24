@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build `tisa-otp/languages/tisa-otp.pot` from the plugin sources.
+Build `signa/languages/signa.pot` from the plugin sources.
 
 WP-CLI is not available in every environment, so this is a small, dependency-free
 stand-in that understands the gettext calls this plugin actually uses:
@@ -20,16 +20,16 @@ import sys
 from collections import OrderedDict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(ROOT, 'tisa-otp')
-OUT = os.path.join(PLUGIN, 'languages', 'tisa-otp.pot')
-DOMAIN = 'tisa-otp'
+PLUGIN = os.path.join(ROOT, 'signa')
+OUT = os.path.join(PLUGIN, 'languages', 'signa.pot')
+DOMAIN = 'signa'
 
-HEADER = '''# Copyright (C) {year} Tisa
+HEADER = '''# Copyright (C) {year} Signa
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Tisa OTP {version}\\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/tisa-otp\\n"
+"Project-Id-Version: Signa {version}\\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/signa\\n"
 "POT-Creation-Date: {date}\\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\\n"
@@ -39,7 +39,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\\n"
 "Content-Transfer-Encoding: 8bit\\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\\n"
-"X-Generator: Tisa OTP pot builder 1.2\\n"
+"X-Generator: Signa pot builder 1.2\\n"
 "X-Domain: {domain}\\n"
 '''
 
@@ -158,7 +158,7 @@ def collect():
 
 
 def plugin_meta():
-    with open(os.path.join(PLUGIN, 'tisa-otp.php'), encoding='utf-8') as handle:
+    with open(os.path.join(PLUGIN, 'signa.php'), encoding='utf-8') as handle:
         head = handle.read(4000)
     version = re.search(r'^\s*\*\s*Version:\s*(.+)$', head, re.M)
     return version.group(1).strip() if version else '0.0.0'

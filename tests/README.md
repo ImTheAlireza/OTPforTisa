@@ -39,7 +39,7 @@ npm install --no-save @php-wasm/node
 node tools/php-test.js breaker-test.php               # one test file
 node tools/php-test.js blocklist-test.php emergency-test.php screens-test.php
 node tools/php-test.js --lint                         # compile every plugin file
-TISA_PHP_VERSION=8.3 node tools/php-test.js --lint    # the version CI also runs
+SIGNA_PHP_VERSION=8.3 node tools/php-test.js --lint    # the version CI also runs
 ```
 
 `--lint` compiles each file with `token_get_all( $source, TOKEN_PARSE )`, which
@@ -56,5 +56,5 @@ colliding `use` imports. It exists because a real
 lint and was only caught once CI ran `php -l`.
 
 ```bash
-npm install --no-save php-parser && node tools/php-static-check.js tisa-otp
+npm install --no-save php-parser && node tools/php-static-check.js signa
 ```

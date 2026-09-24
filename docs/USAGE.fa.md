@@ -1,33 +1,33 @@
-# راهنمای استفاده از افزونه «تیسا OTP»
+# راهنمای استفاده از افزونه «سیگنا»
 
 نسخه ۱.۱.۰ · وردپرس ۶.۱ یا جدیدتر · PHP ۷.۴ یا جدیدتر
 
-دانلود بسته نصب: <https://github.com/ImTheAlireza/OTPforTisa/raw/refs/heads/arena/01a0b0f7-otpfortisa/tisa-otp.zip>
+دانلود بسته نصب: <signa.zip (از صفحهٔ دانلود حساب کاربری شما)>
 
 ---
 
 ## شروع سریع (۵ دقیقه)
 
 1. zip را نصب و فعال کنید.
-2. **تیسا OTP ← تنظیمات ← سامانه‌های پیامکی**: سامانه را انتخاب و کلید API/الگو را وارد کنید.
-3. **تیسا OTP ← ابزارها**: «ارسال کد آزمایشی» را با شماره خودتان بزنید.
-4. شورت‌کد `[tisa_otp_form]` را در صفحه ورود بگذارید.
+2. **سیگنا ← تنظیمات ← سامانه‌های پیامکی**: سامانه را انتخاب و کلید API/الگو را وارد کنید.
+3. **سیگنا ← ابزارها**: «ارسال کد آزمایشی» را با شماره خودتان بزنید.
+4. شورت‌کد `[signa_form]` را در صفحه ورود بگذارید.
 
 ---
 
 ## ۱) نصب و فعال‌سازی
 
-پیشخوان وردپرس ← **افزونه‌ها ← افزودن ← بارگذاری افزونه** ← انتخاب `tisa-otp.zip` ← **نصب** ← **فعال‌سازی**.
+پیشخوان وردپرس ← **افزونه‌ها ← افزودن ← بارگذاری افزونه** ← انتخاب `signa.zip` ← **نصب** ← **فعال‌سازی**.
 
-نصب دستی هم ممکن است: پوشه `tisa-otp` را در `wp-content/plugins/` بگذارید و فعالش کنید.
+نصب دستی هم ممکن است: پوشه `signa` را در `wp-content/plugins/` بگذارید و فعالش کنید.
 
-هنگام فعال‌سازی افزونه خودکار: جدول‌های اختصاصی (کدها، تلاش‌ها، رویدادها) را می‌سازد، زمان‌بند cron پاک‌سازی را ثبت می‌کند و منوی **تیسا OTP** را به پیشخوان اضافه می‌کند.
+هنگام فعال‌سازی افزونه خودکار: جدول‌های اختصاصی (کدها، تلاش‌ها، رویدادها) را می‌سازد، زمان‌بند cron پاک‌سازی را ثبت می‌کند و منوی **سیگنا** را به پیشخوان اضافه می‌کند.
 
 ---
 
 ## ۲) اتصال سامانه پیامکی
 
-مسیر: **تیسا OTP ← تنظیمات ← برگه «سامانه‌های پیامکی»**
+مسیر: **سیگنا ← تنظیمات ← برگه «سامانه‌های پیامکی»**
 
 سامانه فعال را از فهرست انتخاب کنید و فقط فیلدهای همان را پر کنید (کلیدهای تنظیمات داخل پرانتز):
 
@@ -52,7 +52,7 @@
 
 ## ۳) تست
 
-مسیر: **تیسا OTP ← ابزارها و وضعیت**
+مسیر: **سیگنا ← ابزارها و وضعیت**
 
 - **«ارسال کد آزمایشی»**: شماره را وارد کنید؛ یک کد واقعی ساخته و ارسال می‌شود و پاسخ سامانه (موفق/خطا + کد خطا) نمایش داده می‌شود.
 - **بخش «وضعیت»**: نسخه PHP و وردپرس، سلامت جدول‌ها، فعال بودن زمان‌بند cron، تعداد حساب‌های دارای شماره، تعداد رویدادها و محدودیت‌های فعال.
@@ -65,23 +65,23 @@
 ### شورت‌کد
 
 ```text
-[tisa_otp_form]
+[signa_form]
 ```
 
-`[tisa_otp]` هم دقیقاً همان است؛ `[tisa_otp_hint]` یک راهنمای کوتاه چاپ می‌کند.
+`[signa]` هم دقیقاً همان است؛ `[signa_hint]` یک راهنمای کوتاه چاپ می‌کند.
 
 ویژگی‌های اختیاری (مقادیر تنظیمات عمومی را برای همان یک فرم بازنویسی می‌کنند):
 `title` · `description` · `redirect` · `skin` · `accent` · `width` · `radius` · `align` · `code_input` · `show_brand` · `logo` · `custom_class`
 
 ```text
-[tisa_otp_form title="ورود به حساب" skin="card" accent="#1d4ed8" width="460" code_input="single" redirect="https://example.com/dashboard/"]
+[signa_form title="ورود به حساب" skin="card" accent="#1d4ed8" width="460" code_input="single" redirect="https://example.com/dashboard/"]
 ```
 
 مقادیر مجاز: `skin` = `line|card|glass|slate|pill` · `code_input` = `boxes|single` · `align` = `center|start|end`.
 
 ### ویجت المنتور
 
-ویجت **«فرم ورود پیامکی تیسا»** (شناسه `tisa-otp-form`) در ویرایشگر المنتور، با همان ویژگی‌ها به‌صورت فیلد گرافیکی.
+ویجت **«فرم ورود پیامکی سیگنا»** (شناسه `signa-form`) در ویرایشگر المنتور، با همان ویژگی‌ها به‌صورت فیلد گرافیکی.
 
 ### جایگزینی صفحه ورود وردپرس
 
@@ -140,7 +140,7 @@
 
 ### برگه «داده و رویدادها»
 
-`logs_enabled` · `logs_keep_days` (۷) · `debug` · `phone_meta_key` (`tisa_phone`) · `lookup_meta_keys` (کلیدهایی که افزونه برای یافتن شماره‌های قدیمی می‌گردد: `billing_phone,digits_phone,digits_phone_no`) · `wipe_on_uninstall`.
+`logs_enabled` · `logs_keep_days` (۷) · `debug` · `phone_meta_key` (`signa_phone`) · `lookup_meta_keys` (کلیدهایی که افزونه برای یافتن شماره‌های قدیمی می‌گردد: `billing_phone,digits_phone,digits_phone_no`) · `wipe_on_uninstall`.
 
 ### آنچه در ۱.۱.۰ به رابط کاربری اضافه شد
 
@@ -148,7 +148,7 @@
 
 | ویژگی | رفتار |
 |---|---|
-| نوار گام‌ها | فقط وقتی فرم عضویت روشن است (جریان سه‌گامی) دیده می‌شود. ترتیب آن از `registration_flow` می‌آید و با فیلتر `tisa_otp_form_steps` قابل تغییر است. |
+| نوار گام‌ها | فقط وقتی فرم عضویت روشن است (جریان سه‌گامی) دیده می‌شود. ترتیب آن از `registration_flow` می‌آید و با فیلتر `signa_form_steps` قابل تغییر است. |
 | دکمهٔ اقدام در خطاها | بر پایهٔ کد خطای سرور ساخته می‌شود؛ متن دکمه‌ها قابل ترجمه است. در حالت «محدود شده» عمداً دکمه‌ای نشان داده نمی‌شود. |
 | «پیامک نرسید؟» | ۳۰ ثانیه پس از ورود به گام کد ظاهر می‌شود. |
 | تلاش باقی‌مانده | فقط وقتی سرور مقدار `attempts_left` بفرستد نمایش داده می‌شود. |
@@ -158,10 +158,10 @@
 برای سفارشی‌سازی ظاهر، به‌جای بازنویسی انتخابگرها **توکن‌ها را عوض کنید** — فهرست کامل در بالای `assets/css/front.css` و در بخش ۳ سند [`UI-PLAN.fa.md`](UI-PLAN.fa.md) آمده است:
 
 ```css
-.tisa-otp {
-    --tisa-accent: #7c3aed;
-    --tisa-input-line: #6b7280; /* باید دست‌کم ۳:۱ با پس‌زمینه کنتراست داشته باشد */
-    --tisa-radius: 8px;
+.signa {
+    --signa-accent: #7c3aed;
+    --signa-input-line: #6b7280; /* باید دست‌کم ۳:۱ با پس‌زمینه کنتراست داشته باشد */
+    --signa-radius: 8px;
 }
 ```
 
@@ -171,7 +171,7 @@
 
 ## ۵.۵) صفحه «دسترسی و مسدودی»
 
-دو اهرم اضطراری که در صفحه تنظیمات جا نمی‌شوند، اینجا هستند. از منوی «تیسا OTP ← دسترسی و مسدودی» یا از میان‌بر انتهای برگه «امنیت و محدودیت» بازش کنید.
+دو اهرم اضطراری که در صفحه تنظیمات جا نمی‌شوند، اینجا هستند. از منوی «سیگنا ← دسترسی و مسدودی» یا از میان‌بر انتهای برگه «امنیت و محدودیت» بازش کنید.
 
 ### کد اضطراری
 
@@ -198,13 +198,13 @@
 
 ## ۶) ابزارها و رویدادها
 
-**تیسا OTP ← ابزارها و وضعیت**
+**سیگنا ← ابزارها و وضعیت**
 
-- **واردسازی شماره‌های قدیمی**: شماره‌های ذخیره‌شده توسط ووکامرس (`woo_billing`)، افزونه Digits (`digits`) یا یک کلید متای دلخواه (`custom:کلید`) را به کلید اصلی تیسا منتقل می‌کند. اجرا دسته‌ای است (بدون تایم‌اوت روی سایت بزرگ)، حالت **«اجرای آزمایشی (بدون تغییر داده)»** دارد، برای تضاد بین **«بازنویسی»** و **«رد کردن»** انتخاب می‌کنید و دکمه **«بازگشت آخرین کار»** واگرد می‌کند.
+- **واردسازی شماره‌های قدیمی**: شماره‌های ذخیره‌شده توسط ووکامرس (`woo_billing`)، افزونه Digits (`digits`) یا یک کلید متای دلخواه (`custom:کلید`) را به کلید اصلی سیگنا منتقل می‌کند. اجرا دسته‌ای است (بدون تایم‌اوت روی سایت بزرگ)، حالت **«اجرای آزمایشی (بدون تغییر داده)»** دارد، برای تضاد بین **«بازنویسی»** و **«رد کردن»** انتخاب می‌کنید و دکمه **«بازگشت آخرین کار»** واگرد می‌کند.
 - **نگهداری**: پاک‌سازی کدها و رویدادهای قدیمی.
 - **بازسازی جدول‌ها**: وقتی در بخش وضعیت جدولی «نیاز به بازسازی» داشت.
 
-**تیسا OTP ← رویدادها**: فهرست رویدادها با فیلتر و جست‌وجو و دکمه **خروجی CSV**.
+**سیگنا ← رویدادها**: فهرست رویدادها با فیلتر و جست‌وجو و دکمه **خروجی CSV**.
 
 ---
 
@@ -215,7 +215,7 @@
 | کد ارسال نمی‌شود | اعتبارنامه و الگو درست است؟ «ارسال کد آزمایشی» در ابزارها چه خطایی می‌دهد؟ اگر `WP_HTTP_BLOCK_EXTERNAL` فعال است دامنه سامانه را در `WP_ACCESSIBLE_HOSTS` بگذارید. |
 | «محدود شده‌اید» | شمارنده‌ها در برگه «امنیت»؛ برای تست از ابزارها «صفر کردن محدودیت‌ها». |
 | همه کاربران با یک IP محدود می‌شوند | سایت پشت Cloudflare/پروکسی است → `proxy_mode` را تنظیم کنید. |
-| فرم هست ولی دکمه کار نمی‌کند | کش JS قدیمی یا تداخل قالب؛ کش را خالی کنید، خطای کنسول را ببینید و مطمئن شوید `/wp-json/tisa-otp/v1/form-config` باز می‌شود. |
+| فرم هست ولی دکمه کار نمی‌کند | کش JS قدیمی یا تداخل قالب؛ کش را خالی کنید، خطای کنسول را ببینید و مطمئن شوید `/wp-json/signa/v1/form-config` باز می‌شود. |
 | خطای ۴۰۳ یا «nonce نامعتبر» روی سایت کش‌دار | `cache_mode` را روی `auto` بگذارید (پیش‌فرض) تا nonce در لحظهٔ تعامل تازه شود. اگر مسیر `/wp-json/` در کش یا CDN کش می‌شود، آن را استثنا کنید؛ پاسخ `/form-config` با `Cache-Control: no-store` فرستاده می‌شود. |
 | دکمه تا ابد «در حال ارسال» می‌ماند | از ۱.۰.۱ هر درخواست مهلت دارد (`request_timeout`)؛ اگر سامانه پیامک کند است این عدد را بالاتر بگذارید و علت کندی سامانه را بررسی کنید. |
 | کد در اندروید خودکار پر نمی‌شود | `webotp_enabled` خاموش است (پیش‌فرض)، یا سامانه الگودار است و خط `@domain #code` داخل الگو نیست، یا مرورگر پشتیبانی نمی‌کند (iOS/Safari پشتیبانی نمی‌کند). |
@@ -228,7 +228,7 @@
 
 ## ۸) توسعه‌دهنده‌ها
 
-### REST (فضای نام `tisa-otp/v1`)
+### REST (فضای نام `signa/v1`)
 
 | مسیر | ورودی | خروجی |
 |---|---|---|
@@ -243,27 +243,27 @@
 
 ### اکشن‌ها
 
-`tisa_otp_booted` · `tisa_otp_activated` · `tisa_otp_deactivated` · `tisa_otp_code_sent` · `tisa_otp_signed_in` · `tisa_otp_user_created` · `tisa_otp_registration_failed` · `tisa_otp_phone_updated` · `tisa_otp_phone_changed` · `tisa_otp_phone_removed` · `tisa_otp_order_linked` · `tisa_otp_settings_saved` · `tisa_otp_log` · `tisa_otp_maintenance_done` · `tisa_otp_assets_enqueued` · `tisa_otp_emergency_issued` · `tisa_otp_emergency_revoked` · `tisa_otp_emergency_login`
+`signa_booted` · `signa_activated` · `signa_deactivated` · `signa_code_sent` · `signa_signed_in` · `signa_user_created` · `signa_registration_failed` · `signa_phone_updated` · `signa_phone_changed` · `signa_phone_removed` · `signa_order_linked` · `signa_settings_saved` · `signa_log` · `signa_maintenance_done` · `signa_assets_enqueued` · `signa_emergency_issued` · `signa_emergency_revoked` · `signa_emergency_login`
 
 ### فیلترها
 
-`tisa_otp_redirect` · `tisa_otp_registration_fields` · `tisa_otp_field_presets` · `tisa_otp_form_steps` · `tisa_otp_message_tokens` · `tisa_otp_gateway_credentials` · `tisa_otp_channels` · `tisa_otp_delivery_order` · `tisa_otp_guards` · `tisa_otp_guarded_roles` · `tisa_otp_allows_user` · `tisa_otp_default_role` · `tisa_otp_new_user_args` · `tisa_otp_code_length` · `tisa_otp_code_ttl` · `tisa_otp_client_ip` · `tisa_otp_http_timeout` · `tisa_otp_http_retry_delay` · `tisa_otp_lookup_meta_keys` · `tisa_otp_digits_meta_keys` · `tisa_otp_import_sources` · `tisa_otp_captcha_providers` · `tisa_otp_should_load_assets` · `tisa_otp_ambiguous_phone` · `tisa_otp_phone_valid` · `tisa_otp_selectable_roles` · `tisa_otp_faraz_pattern_key` · `tisa_otp_blocked_message`
+`signa_redirect` · `signa_registration_fields` · `signa_field_presets` · `signa_form_steps` · `signa_message_tokens` · `signa_gateway_credentials` · `signa_channels` · `signa_delivery_order` · `signa_guards` · `signa_guarded_roles` · `signa_allows_user` · `signa_default_role` · `signa_new_user_args` · `signa_code_length` · `signa_code_ttl` · `signa_client_ip` · `signa_http_timeout` · `signa_http_retry_delay` · `signa_lookup_meta_keys` · `signa_digits_meta_keys` · `signa_import_sources` · `signa_captcha_providers` · `signa_should_load_assets` · `signa_ambiguous_phone` · `signa_phone_valid` · `signa_selectable_roles` · `signa_faraz_pattern_key` · `signa_blocked_message`
 
 نمونه‌ها (امضاهای واقعی):
 
 ```php
 // مقصد ورود را عوض کنید: ($url, $userId, $context)
-add_filter( 'tisa_otp_redirect', function ( $url, $userId, $context ) {
+add_filter( 'signa_redirect', function ( $url, $userId, $context ) {
     return 'login' === $context ? home_url( '/dashboard/' ) : $url;
 }, 10, 3 );
 
 // نقش پیش‌فرض کاربر تازه: ($role)
-add_filter( 'tisa_otp_default_role', function ( $role ) {
+add_filter( 'signa_default_role', function ( $role ) {
     return 'customer';
 } );
 
 // جای‌نمای تازه به متن پیامک: ($replacements, DeliveryRequest $request)
-add_filter( 'tisa_otp_message_tokens', function ( $replacements, $request ) {
+add_filter( 'signa_message_tokens', function ( $replacements, $request ) {
     $replacements['{year}'] = '1404';
     return $replacements;
 }, 10, 2 );

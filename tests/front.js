@@ -25,7 +25,7 @@ try {
 
 const REPO = path.join(__dirname, '..');
 const PAGE = path.join(REPO, 'preview', 'public', 'index.html');
-const SCRIPT = path.join(REPO, 'tisa-otp', 'assets', 'js', 'front.js');
+const SCRIPT = path.join(REPO, 'signa', 'assets', 'js', 'front.js');
 
 const scriptSource = fs.readFileSync(SCRIPT, 'utf8');
 const pageSource = fs.readFileSync(PAGE, 'utf8');
@@ -54,7 +54,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * Boot the harness page with the real script.
  *
  * `html` lets a test change markup (data-* attributes outrank the global config
- * by design, so those scenarios must edit the HTML, not `window.tisaOtp`).
+ * by design, so those scenarios must edit the HTML, not `window.signaOtp`).
  */
 function boot(options) {
 	const opts = options || {};
@@ -71,8 +71,8 @@ function boot(options) {
 	 * page's own block keeps the test honest: it exercises the same i18n strings
 	 * and labels the plugin ships.
 	 */
-	const config = html.match(/window\.tisaOtp\s*=\s*\{[\s\S]*?\n\t\};/);
-	if (!config) throw new Error('could not find the tisaOtp config block in the harness page');
+	const config = html.match(/window\.signaOtp\s*=\s*\{[\s\S]*?\n\t\};/);
+	if (!config) throw new Error('could not find the signaOtp config block in the harness page');
 	win.eval(config[0]);
 
 	/*
@@ -85,8 +85,8 @@ function boot(options) {
 	 * on and waits for the swap, and the PHP suite pins the shipped default.
 	 */
 	const overrides = Object.assign({ isolate: false }, opts.config || {});
-	win.eval('window.__tisaOverride = ' + JSON.stringify(overrides) + ';');
-	win.eval('window.tisaOtp = Object.assign({}, window.tisaOtp, window.__tisaOverride);');
+	win.eval('window.__signaOverride = ' + JSON.stringify(overrides) + ';');
+	win.eval('window.signaOtp = Object.assign({}, window.signaOtp, window.__signaOverride);');
 
 	const calls = [];
 	win.fetch = function (url, init) {
@@ -134,13 +134,13 @@ function boot(options) {
 		win.document.dispatchEvent(new win.Event('DOMContentLoaded', { bubbles: true }));
 	}
 
-	const root = win.document.querySelector('[data-tisa-form]');
+	const root = win.document.querySelector('[data-signa-form]');
 
-	if (!root || (!root.tisaForm && !opts.deferred)) {
+	if (!root || (!root.signaForm && !opts.deferred)) {
 		throw new Error('front.js did not mount the form');
 	}
 
-	return { win, doc: win.document, root, form: root.tisaForm, calls };
+	return { win, doc: win.document, root, form: root.signaForm, calls };
 }
 
 /**
@@ -154,11 +154,11 @@ async function bootIsolated(options) {
 	const opts = Object.assign({ deferred: true }, options || {});
 	const ctx = boot(opts);
 
-	for (let i = 0; i < 60 && !ctx.root.tisaForm; i++) {
+	for (let i = 0; i < 60 && !ctx.root.signaForm; i++) {
 		await wait(5);
 	}
 
-	ctx.form = ctx.root.tisaForm;
+	ctx.form = ctx.root.signaForm;
 
 	if (!ctx.form) {
 		throw new Error('the isolated form never mounted');
@@ -213,14 +213,14 @@ async function testStepBar() {
 				: ok({ step: 'register_form', message: 'اطلاعات را کامل کنید.', masked: '0912***567' }),
 	});
 
-	const markers = Array.from(ctx.doc.querySelectorAll('[data-tisa-step-marker]'));
-	const announce = ctx.doc.querySelector('[data-tisa-steps-text]');
+	const markers = Array.from(ctx.doc.querySelectorAll('[data-signa-step-marker]'));
+	const announce = ctx.doc.querySelector('[data-signa-steps-text]');
 
 	check('three markers rendered', 3 === markers.length, markers.length + ' found');
 	check('first marker starts current', markers[0].classList.contains('is-current'));
 	check('announcement starts at step 1', text(announce).indexOf('۱') >= 0, text(announce));
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
@@ -232,7 +232,7 @@ async function testStepBar() {
 		text(announce).indexOf('۲') >= 0 && text(announce).indexOf('اطلاعات') >= 0,
 		text(announce)
 	);
-	check('list itself stays hidden from screen readers', 'true' === ctx.doc.querySelector('[data-tisa-steps]').getAttribute('aria-hidden'));
+	check('list itself stays hidden from screen readers', 'true' === ctx.doc.querySelector('[data-signa-steps]').getAttribute('aria-hidden'));
 }
 
 async function testActionableErrors() {
@@ -246,7 +246,7 @@ async function testActionableErrors() {
 		},
 	});
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
@@ -256,25 +256,25 @@ async function testActionableErrors() {
 	await tick();
 	await tick();
 
-	const status = ctx.doc.querySelector('[data-tisa-status]');
-	const actions = Array.from(ctx.doc.querySelectorAll('.tisa-otp__status-action'));
+	const status = ctx.doc.querySelector('[data-signa-status]');
+	const actions = Array.from(ctx.doc.querySelectorAll('.signa__status-action'));
 
 	check('status is an assertive alert', 'alert' === status.getAttribute('role') && 'assertive' === status.getAttribute('aria-live'));
 	check('invalid_code offers exactly one action', 1 === actions.length, actions.length + ' buttons');
 	check('that action is "new code"', text(actions[0]).indexOf('کد تازه') >= 0, text(actions[0]));
-	check('remaining attempts are shown', text(ctx.doc.querySelector('[data-tisa-attempts]')).indexOf('۳') >= 0, text(ctx.doc.querySelector('[data-tisa-attempts]')));
-	check('code boxes are marked invalid', 'true' === ctx.doc.querySelector('[data-tisa-box]').getAttribute('aria-invalid'));
+	check('remaining attempts are shown', text(ctx.doc.querySelector('[data-signa-attempts]')).indexOf('۳') >= 0, text(ctx.doc.querySelector('[data-signa-attempts]')));
+	check('code boxes are marked invalid', 'true' === ctx.doc.querySelector('[data-signa-box]').getAttribute('aria-invalid'));
 
 	// A network failure should offer a retry that repeats the last action.
 	const ctx2 = boot({
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : Promise.reject(new Error('down'))),
 	});
-	ctx2.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx2.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx2.form.act('start');
 	await tick();
 	await tick();
 
-	const retry = ctx2.doc.querySelector('.tisa-otp__status-action');
+	const retry = ctx2.doc.querySelector('.signa__status-action');
 	check('network error offers a retry button', !!retry && text(retry).indexOf('تلاش دوباره') >= 0, text(retry));
 
 	const before = ctx2.calls.length;
@@ -294,13 +294,13 @@ async function testThrottleHasNoFalseHope() {
 				: reject('throttled', 'برای امنیت شما، ارسال کد موقتاً متوقف شده است.', { retry_after: 600 }),
 	});
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
 
-	check('no action buttons offered', 0 === ctx.doc.querySelectorAll('.tisa-otp__status-action').length);
-	check('message still reaches the user', text(ctx.doc.querySelector('[data-tisa-status-text]')).length > 0);
+	check('no action buttons offered', 0 === ctx.doc.querySelectorAll('.signa__status-action').length);
+	check('message still reaches the user', text(ctx.doc.querySelector('[data-signa-status-text]')).length > 0);
 }
 
 async function testCodeLengthRebuild() {
@@ -311,16 +311,16 @@ async function testCodeLengthRebuild() {
 			req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep({ code_length: 6 })),
 	});
 
-	check('starts with five boxes', 5 === ctx.doc.querySelectorAll('[data-tisa-box]').length);
+	check('starts with five boxes', 5 === ctx.doc.querySelectorAll('[data-signa-box]').length);
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
 
-	const boxes = Array.from(ctx.doc.querySelectorAll('[data-tisa-box]'));
+	const boxes = Array.from(ctx.doc.querySelectorAll('[data-signa-box]'));
 	check('rebuilt to six boxes', 6 === boxes.length, boxes.length + ' boxes');
-	check('bulk input maxlength follows', 6 === ctx.doc.querySelector('[data-tisa-code-bulk]').maxLength);
+	check('bulk input maxlength follows', 6 === ctx.doc.querySelector('[data-signa-code-bulk]').maxLength);
 	check('only the first box advertises autofill', 'one-time-code' === boxes[0].getAttribute('autocomplete') && 'off' === boxes[1].getAttribute('autocomplete'));
 	check('every rebuilt box is labelled', boxes.every((box) => (box.getAttribute('aria-label') || '').length > 0));
 
@@ -339,10 +339,10 @@ async function testRescuePanel() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
 	});
 
-	const rescue = ctx.doc.querySelector('[data-tisa-rescue]');
+	const rescue = ctx.doc.querySelector('[data-signa-rescue]');
 	check('hidden before the code step', rescue.hidden);
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
@@ -363,22 +363,22 @@ async function testCooldownAndPersianDigits() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep({ cooldown: 45 }))),
 	});
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
 
-	const label = text(ctx.doc.querySelector('[data-tisa-resend-label]'));
-	const bar = ctx.doc.querySelector('[data-tisa-cooldown]');
+	const label = text(ctx.doc.querySelector('[data-signa-resend-label]'));
+	const bar = ctx.doc.querySelector('[data-signa-cooldown]');
 
 	check('countdown uses Persian digits', /[۰-۹]/.test(label) && !/[0-9]/.test(label), label);
-	check('resend is disabled while it runs', ctx.doc.querySelector('[data-tisa-action="resend"]').disabled);
+	check('resend is disabled while it runs', ctx.doc.querySelector('[data-signa-action="resend"]').disabled);
 	check('progress bar is shown', !bar.hidden);
-	check('bar duration matches the cooldown', '45s' === bar.style.getPropertyValue('--tisa-cooldown'), bar.style.getPropertyValue('--tisa-cooldown'));
+	check('bar duration matches the cooldown', '45s' === bar.style.getPropertyValue('--signa-cooldown'), bar.style.getPropertyValue('--signa-cooldown'));
 	check('bar is decorative for screen readers', 'true' === bar.getAttribute('aria-hidden'));
 
 	// The phone value itself must stay Latin, or the server cannot parse it.
-	check('phone field keeps Latin digits', /^[0-9]+$/.test(ctx.doc.querySelector('[data-tisa-phone]').value));
+	check('phone field keeps Latin digits', /^[0-9]+$/.test(ctx.doc.querySelector('[data-signa-phone]').value));
 }
 
 async function testFocusMovesToTheProblem() {
@@ -389,7 +389,7 @@ async function testFocusMovesToTheProblem() {
 	});
 
 	// Client-side validation: empty required fields.
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
@@ -398,7 +398,7 @@ async function testFocusMovesToTheProblem() {
 	await tick();
 
 	const active = ctx.doc.activeElement;
-	check('focus is on an invalid field', 'true' === (active.getAttribute && active.getAttribute('aria-invalid')), active.tagName + '/' + (active.getAttribute ? active.getAttribute('data-tisa-input') : ''));
+	check('focus is on an invalid field', 'true' === (active.getAttribute && active.getAttribute('aria-invalid')), active.tagName + '/' + (active.getAttribute ? active.getAttribute('data-signa-input') : ''));
 	check('the invalid field names its error', !!(active.getAttribute('aria-describedby') || '').length);
 }
 
@@ -409,10 +409,10 @@ async function testSkipLink() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
 	});
 
-	const skip = ctx.doc.querySelector('[data-tisa-skip]');
+	const skip = ctx.doc.querySelector('[data-signa-skip]');
 	check('skip link is the first focusable element in the form', !!skip);
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
@@ -420,7 +420,7 @@ async function testSkipLink() {
 	skip.dispatchEvent(new ctx.win.MouseEvent('click', { bubbles: true, cancelable: true }));
 
 	const active = ctx.doc.activeElement;
-	const codeStep = ctx.doc.querySelector('[data-tisa-step="code"]');
+	const codeStep = ctx.doc.querySelector('[data-signa-step="code"]');
 	check('focus stays inside the visible step', codeStep.contains(active), active.tagName);
 }
 
@@ -431,7 +431,7 @@ async function testExpiry() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep({ expires_in: 1 }))),
 	});
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
@@ -439,8 +439,8 @@ async function testExpiry() {
 	await wait(1200);
 
 	check('form is marked expired', ctx.root.classList.contains('is-expired'));
-	check('a message explains why', text(ctx.doc.querySelector('[data-tisa-status-text]')).indexOf('منقضی') >= 0, text(ctx.doc.querySelector('[data-tisa-status-text]')));
-	const labels = Array.from(ctx.doc.querySelectorAll('.tisa-otp__status-action')).map(text);
+	check('a message explains why', text(ctx.doc.querySelector('[data-signa-status-text]')).indexOf('منقضی') >= 0, text(ctx.doc.querySelector('[data-signa-status-text]')));
+	const labels = Array.from(ctx.doc.querySelectorAll('.signa__status-action')).map(text);
 	check('a way to get a new code is offered', labels.some((l) => l.indexOf('کد تازه') >= 0), labels.join(' | '));
 }
 
@@ -468,13 +468,13 @@ async function testStaleNonceStillRecovers() {
 	await tick();
 	check('a fresh nonce is fetched on mount', served >= 1);
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	for (let i = 0; i < 8; i++) await tick();
 
 	check('the rejected call is retried after refreshing', served >= 2, 'config fetched ' + served + 'x');
-	check('the visitor ends up on the code step', ctx.doc.querySelector('[data-tisa-step="code"]').classList.contains('is-current'));
-	check('no error is left on screen', ctx.doc.querySelector('[data-tisa-status]').className.indexOf('is-error') < 0);
+	check('the visitor ends up on the code step', ctx.doc.querySelector('[data-signa-step="code"]').classList.contains('is-current'));
+	check('no error is left on screen', ctx.doc.querySelector('[data-signa-status]').className.indexOf('is-error') < 0);
 }
 
 async function testCaptchaFailureIsVisible() {
@@ -496,23 +496,23 @@ async function testCaptchaFailureIsVisible() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
 	});
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 
 	await wait(500);
 
-	const box = ctx.doc.querySelector('.tisa-captcha__error');
+	const box = ctx.doc.querySelector('.signa-captcha__error');
 	check('an error card fills the gap the widget left', !!box);
 	check('it says the challenge did not load', !!box && text(box).indexOf('بارگذاری نشد') >= 0, box ? text(box) : 'no card');
-	check('it offers a retry', !!ctx.doc.querySelector('[data-tisa-captcha-retry]'));
-	check('it says the visitor may continue', !!ctx.doc.querySelector('.tisa-captcha__error-hint'));
+	check('it offers a retry', !!ctx.doc.querySelector('[data-signa-captcha-retry]'));
+	check('it says the visitor may continue', !!ctx.doc.querySelector('.signa-captcha__error-hint'));
 
 	for (let i = 0; i < 8; i++) await tick();
 
 	check(
 		'fail-open still sends the code',
-		ctx.doc.querySelector('[data-tisa-step="code"]').classList.contains('is-current'),
-		'status: ' + text(ctx.doc.querySelector('[data-tisa-status-text]'))
+		ctx.doc.querySelector('[data-signa-step="code"]').classList.contains('is-current'),
+		'status: ' + text(ctx.doc.querySelector('[data-signa-status-text]'))
 	);
 	check(
 		'the request went out without a captcha token',
@@ -526,7 +526,7 @@ async function testCaptchaFailureIsVisible() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
 	});
 
-	strict.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	strict.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	strict.form.act('start');
 	await wait(500);
 	for (let i = 0; i < 8; i++) await tick();
@@ -534,8 +534,8 @@ async function testCaptchaFailureIsVisible() {
 	check('with fail-open off nothing is sent', !strict.calls.some((call) => call.url.indexOf('/start') >= 0));
 	check(
 		'and the visitor gets an explanation',
-		text(strict.doc.querySelector('[data-tisa-status-text]')).indexOf('بارگذاری نشد') >= 0,
-		text(strict.doc.querySelector('[data-tisa-status-text]'))
+		text(strict.doc.querySelector('[data-signa-status-text]')).indexOf('بارگذاری نشد') >= 0,
+		text(strict.doc.querySelector('[data-signa-status-text]'))
 	);
 }
 
@@ -555,9 +555,9 @@ async function testStaleFormTokenRecovers() {
 			}
 
 			if (req.url.indexOf('/start') >= 0) {
-				tokens.push(req.body.tisa_ft);
+				tokens.push(req.body.signa_ft);
 
-				if ('stale-form-token' === req.body.tisa_ft) {
+				if ('stale-form-token' === req.body.signa_ft) {
 					return reject('stale_form', 'این فرم مدت‌ها پیش ساخته شده است.', { recoverable: true });
 				}
 
@@ -568,7 +568,7 @@ async function testStaleFormTokenRecovers() {
 		},
 	});
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 
 	for (let i = 0; i < 10; i++) await tick();
@@ -576,13 +576,13 @@ async function testStaleFormTokenRecovers() {
 	check('the first attempt carries the cached token', 'stale-form-token' === tokens[0], String(tokens[0]));
 	check('the client pulls a fresh configuration', configs >= 1, configs + ' fetch(es)');
 	check('the retry carries the fresh token', !!tokens[1] && 'stale-form-token' !== tokens[1], String(tokens[1]));
-	check('the hidden timestamp moves with it', '1800000000' === ctx.doc.querySelector('input[name="tisa_ts"]').value, ctx.doc.querySelector('input[name="tisa_ts"]').value);
-	check('the visitor ends up on the code step', ctx.doc.querySelector('[data-tisa-step="code"]').classList.contains('is-current'));
-	check('no error is left on screen', ctx.doc.querySelector('[data-tisa-status]').className.indexOf('is-error') < 0);
+	check('the hidden timestamp moves with it', '1800000000' === ctx.doc.querySelector('input[name="signa_ts"]').value, ctx.doc.querySelector('input[name="signa_ts"]').value);
+	check('the visitor ends up on the code step', ctx.doc.querySelector('[data-signa-step="code"]').classList.contains('is-current'));
+	check('no error is left on screen', ctx.doc.querySelector('[data-signa-status]').className.indexOf('is-error') < 0);
 
-	const chip = ctx.doc.querySelector('[data-tisa-phone-chip]');
+	const chip = ctx.doc.querySelector('[data-signa-phone-chip]');
 	check('the code step names the number the code went to', !!chip && !chip.hidden, 'hidden=' + (chip ? chip.hidden : 'missing'));
-	check('with the masked number in it', !!chip && text(ctx.doc.querySelector('[data-tisa-phone-chip-value]')).indexOf('***') >= 0, chip ? text(chip) : '');
+	check('with the masked number in it', !!chip && text(ctx.doc.querySelector('[data-signa-phone-chip-value]')).indexOf('***') >= 0, chip ? text(chip) : '');
 }
 
 async function testPasteFromSms() {
@@ -598,19 +598,19 @@ async function testPasteFromSms() {
 		},
 	});
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	await tick();
 	await tick();
 
-	const paste = ctx.doc.querySelector('[data-tisa-paste]');
+	const paste = ctx.doc.querySelector('[data-signa-paste]');
 	check('the code step offers a paste button', !!paste && !paste.hidden);
 
 	paste.click();
 	await tick();
 	await tick();
 
-	const boxes = Array.from(ctx.doc.querySelectorAll('[data-tisa-box]')).map((box) => box.value);
+	const boxes = Array.from(ctx.doc.querySelectorAll('[data-signa-box]')).map((box) => box.value);
 	check('Persian digits from the SMS are written as Latin digits', '12345' === boxes.join(''), boxes.join(''));
 
 	await wait(260);
@@ -624,20 +624,20 @@ async function testPasteWithoutAClipboard() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
 	});
 
-	const paste = ctx.doc.querySelector('[data-tisa-paste]');
+	const paste = ctx.doc.querySelector('[data-signa-paste]');
 	check('the clipboard button is hidden when readText() does not exist', !!paste && paste.hidden, paste ? 'hidden=' + paste.hidden : 'missing');
 
 	// The box still accepts a normal paste, which is the path the help text sends people to.
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	for (let i = 0; i < 4; i++) await tick();
 
 	const event = new ctx.win.Event('paste', { bubbles: true, cancelable: true });
 	event.clipboardData = { getData: () => '۱۲۳۴۵' };
-	ctx.doc.querySelector('[data-tisa-box]').dispatchEvent(event);
+	ctx.doc.querySelector('[data-signa-box]').dispatchEvent(event);
 	await tick();
 
-	const boxes = Array.from(ctx.doc.querySelectorAll('[data-tisa-box]')).map((box) => box.value);
+	const boxes = Array.from(ctx.doc.querySelectorAll('[data-signa-box]')).map((box) => box.value);
 	check('pasting into the first box still fills them all', '12345' === boxes.join(''), boxes.join(''));
 }
 
@@ -648,20 +648,20 @@ async function testPhoneFieldHasOneTruth() {
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
 	});
 
-	const phone = ctx.doc.querySelector('[data-tisa-phone]');
-	const dial = ctx.doc.querySelector('.tisa-phone__dial');
-	const css = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'front.css'), 'utf8');
+	const phone = ctx.doc.querySelector('[data-signa-phone]');
+	const dial = ctx.doc.querySelector('.signa-phone__dial');
+	const css = fs.readFileSync(path.join(REPO, 'signa', 'assets', 'css', 'front.css'), 'utf8');
 
 	/*
 	 * A fixed "09" chip while the error says "start with 09" is a field arguing
 	 * with itself. The chip is gone; the placeholder shows the whole number.
 	 */
 	check('no fixed prefix is printed inside the field', !dial, 'the chip is back');
-	check('and no rule paints one either', css.indexOf('.tisa-phone__dial') < 0);
+	check('and no rule paints one either', css.indexOf('.signa-phone__dial') < 0);
 	check('the placeholder shows the whole number', '09121234567' === phone.placeholder, phone.placeholder);
 	// What the placeholder demonstrates and what the error asks for must be the
 	// same rule: eleven digits, beginning with 09.
-	const copy = fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'Assets.php'), 'utf8');
+	const copy = fs.readFileSync(path.join(REPO, 'signa', 'src', 'Front', 'Assets.php'), 'utf8');
 	check('the error still states the 09 / 11-digit rule', /\u06f0\u06f9/.test(copy) && copy.indexOf('\u06f1\u06f1 \u0631\u0642\u0645') >= 0);
 	check('the example in the field obeys that same rule', /^09\d{9}$/.test(phone.placeholder));
 	check('a plain eleven-digit number needs no fixing', phone.value === '' || /^09\d{9}$/.test(phone.value));
@@ -695,7 +695,7 @@ async function testPhoneFieldHasOneTruth() {
 			fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'n' }) : ok(verifyStep())),
 		});
 
-		one.doc.querySelector('[data-tisa-phone]').value = typed;
+		one.doc.querySelector('[data-signa-phone]').value = typed;
 		one.form.act('start');
 		for (let i = 0; i < 6; i++) await tick();
 
@@ -707,91 +707,91 @@ async function testPhoneFieldHasOneTruth() {
 async function testTheLookOfTheTwoReportedBugs() {
 	scenario('The progress bar and the skip link stay fixed');
 
-	const css = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'front.css'), 'utf8');
-	const skip = css.slice(css.indexOf('.tisa-otp__skip {'), css.indexOf('.tisa-otp__skip:focus'));
+	const css = fs.readFileSync(path.join(REPO, 'signa', 'assets', 'css', 'front.css'), 'utf8');
+	const skip = css.slice(css.indexOf('.signa__skip {'), css.indexOf('.signa__skip:focus'));
 
 	check('the skip link is invisible until it is focused', /opacity:\s*0/.test(skip) && /pointer-events:\s*none/.test(skip), skip.split('\n')[1] || '');
-	check('and it is still the first tab stop', /^\.tisa-otp__skip:focus/m.test(css) || /\.tisa-otp__skip:focus,/.test(css));
+	check('and it is still the first tab stop', /^\.signa__skip:focus/m.test(css) || /\.signa__skip:focus,/.test(css));
 
-	check('no connector line is drawn across the progress bar', !/tisa-otp__steps li \+ li::after/.test(css));
-	check('progress is three filled segments instead', /\.tisa-otp__steps li::before \{/.test(css));
-	check('the phone field has one border, from the shared input rule', /\.tisa-field__input,\n\.tisa-field__select,\n\.tisa-phone__input/.test(css));
+	check('no connector line is drawn across the progress bar', !/signa__steps li \+ li::after/.test(css));
+	check('progress is three filled segments instead', /\.signa__steps li::before \{/.test(css));
+	check('the phone field has one border, from the shared input rule', /\.signa-field__input,\n\.signa-field__select,\n\.signa-phone__input/.test(css));
 	const page = new JSDOM(pageSource, { runScripts: 'outside-only' });
-	const shown = page.window.document.querySelector('.tisa-otp').textContent;
+	const shown = page.window.document.querySelector('.signa').textContent;
 
 	check('nothing on screen prints a fake «09xxxxxxxxx» hint', !/09x{3,}/i.test(shown), (shown.match(/09x{3,}/i) || [''])[0]);
 
-	const trust = page.window.document.querySelector('[data-tisa-step="phone"] .tisa-otp__trust');
+	const trust = page.window.document.querySelector('[data-signa-step="phone"] .signa__trust');
 	check('the reassurance row sits under the send button', !!trust, 'not inside step 1');
 }
 
 function testPreviewMirrorsTheTemplate() {
 	scenario('The demo page still mirrors the template it claims to show');
 
-	const template = fs.readFileSync(path.join(REPO, 'tisa-otp', 'templates', 'partials', 'step-phone.php'), 'utf8');
-	const renderer = fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'FormRenderer.php'), 'utf8');
-	const step = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-tisa-step="phone"]');
+	const template = fs.readFileSync(path.join(REPO, 'signa', 'templates', 'partials', 'step-phone.php'), 'utf8');
+	const renderer = fs.readFileSync(path.join(REPO, 'signa', 'src', 'Front', 'FormRenderer.php'), 'utf8');
+	const step = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-signa-step="phone"]');
 
-	for (const name of ['tisa-phone', 'tisa-phone__input', 'tisa-otp__trust']) {
+	for (const name of ['signa-phone', 'signa-phone__input', 'signa__trust']) {
 		check('the template renders .' + name, template.indexOf(name) >= 0);
 		check('the demo shows .' + name, !!step.querySelector('.' + name));
 	}
 
-	check('the template prints no prefix chip at all', template.indexOf('tisa-phone__dial') < 0);
-	check('the demo prints none either', !step.querySelector('.tisa-phone__dial'));
+	check('the template prints no prefix chip at all', template.indexOf('signa-phone__dial') < 0);
+	check('the demo prints none either', !step.querySelector('.signa-phone__dial'));
 	check('the placeholder comes from the renderer', /\$phonePlaceholder/.test(template) && /'09121234567'/.test(renderer));
-	check('the demo placeholder matches the renderer', step.querySelector('[data-tisa-phone]').placeholder === '09121234567');
+	check('the demo placeholder matches the renderer', step.querySelector('[data-signa-phone]').placeholder === '09121234567');
 
-	const trustTemplate = template.slice(template.indexOf('tisa-otp__trust'));
-	check('the demo trust items are the ones the PHP filter ships', trustTemplate.indexOf("__(") < 0 && step.querySelectorAll('.tisa-otp__trust-item').length >= 3);
+	const trustTemplate = template.slice(template.indexOf('signa__trust'));
+	check('the demo trust items are the ones the PHP filter ships', trustTemplate.indexOf("__(") < 0 && step.querySelectorAll('.signa__trust-item').length >= 3);
 }
 
 function testTheAccentIsTheOnlyColour() {
 	scenario('The button belongs to the accent, and so does its hover');
 
-	const css = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'front.css'), 'utf8');
-	const script = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'js', 'front.js'), 'utf8');
-	const php = fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'Assets.php'), 'utf8');
+	const css = fs.readFileSync(path.join(REPO, 'signa', 'assets', 'css', 'front.css'), 'utf8');
+	const script = fs.readFileSync(path.join(REPO, 'signa', 'assets', 'js', 'front.js'), 'utf8');
+	const php = fs.readFileSync(path.join(REPO, 'signa', 'src', 'Front', 'Assets.php'), 'utf8');
 
-	const primary = css.slice(css.indexOf('.tisa-btn--primary {'), css.indexOf('.tisa-btn--ghost {'));
-	const resting = primary.slice(0, primary.indexOf('.tisa-btn--primary:hover'));
+	const primary = css.slice(css.indexOf('.signa-btn--primary {'), css.indexOf('.signa-btn--ghost {'));
+	const resting = primary.slice(0, primary.indexOf('.signa-btn--primary:hover'));
 
-	check('the button is painted with the accent', /background-color:\s*var\(--tisa-accent\)/.test(resting));
+	check('the button is painted with the accent', /background-color:\s*var\(--signa-accent\)/.test(resting));
 	check('its depth is a translucent sheen, not a second colour', /linear-gradient\(180deg, rgba\(255, 255, 255/.test(resting));
 	check('no fixed teal is left in the resting rule', resting.indexOf('11, 92, 86') < 0, resting.split('\n').find((line) => line.indexOf('11, 92, 86') >= 0) || '');
-	check('hover darkens the very same accent', /\.tisa-btn--primary:hover[\s\S]{0,220}rgba\(0, 0, 0/.test(primary));
-	check('the button shadow follows the accent', /--tisa-elev-button:\s*0 12px 26px -16px var\(--tisa-accent-strong\)/.test(css));
+	check('hover darkens the very same accent', /\.signa-btn--primary:hover[\s\S]{0,220}rgba\(0, 0, 0/.test(primary));
+	check('the button shadow follows the accent', /--signa-elev-button:\s*0 12px 26px -16px var\(--signa-accent-strong\)/.test(css));
 	check('PHP derives the darker shade from the accent', /mix\( \$accent, '#000000', 0\.22 \)/.test(php));
 	check(
 		'the accent wash is translucent, so the dark skin keeps it',
-		/'tisa-accent-soft'\s*=>\s*\$this->rgba\( \$accent, 0\.14 \)/.test(php) && /sprintf\( 'rgba\(%d, %d, %d, %s\)'/.test(php)
+		/'signa-accent-soft'\s*=>\s*\$this->rgba\( \$accent, 0\.14 \)/.test(php) && /sprintf\( 'rgba\(%d, %d, %d, %s\)'/.test(php)
 	);
 	check('the demo derives the same shade when a swatch is clicked', /shade\(accent, 0\.22\)/.test(pageSource));
 
 	// Two complaints from the same screenshot batch.
-	check('the code boxes are centred', /\.tisa-code__boxes \{[\s\S]{0,240}justify-content: center/.test(css));
-	check('the phone control is one left-to-right island', /\.tisa-phone \{[\s\S]{0,600}direction: ltr/.test(css));
-	check('so the placeholder starts where the chip ends', /\.tisa-phone__input,\n\.tisa-phone__input:focus \{[\s\S]{0,320}text-align: left/.test(css));
+	check('the code boxes are centred', /\.signa-code__boxes \{[\s\S]{0,240}justify-content: center/.test(css));
+	check('the phone control is one left-to-right island', /\.signa-phone \{[\s\S]{0,600}direction: ltr/.test(css));
+	check('so the placeholder starts where the chip ends', /\.signa-phone__input,\n\.signa-phone__input:focus \{[\s\S]{0,320}text-align: left/.test(css));
 
 	const actions = script.slice(script.indexOf('Form.prototype.actionsFor'), script.indexOf('Form.prototype.clearStatus'));
 	check('errors no longer offer a second way to edit the number', actions.indexOf("'edit-phone'") < 0, (actions.match(/'edit-phone'/) || [''])[0]);
 
-	const template = fs.readFileSync(path.join(REPO, 'tisa-otp', 'templates', 'partials', 'step-code.php'), 'utf8');
-	const rescue = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-tisa-rescue]');
+	const template = fs.readFileSync(path.join(REPO, 'signa', 'templates', 'partials', 'step-code.php'), 'utf8');
+	const rescue = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document.querySelector('[data-signa-rescue]');
 
 	/*
 	 * Callout rules this panel is held to (see docs/UI-PLAN.fa.md §4.10):
 	 * one message, no duplicate actions, nothing centred, no second primary
 	 * button competing with the one that submits the code.
 	 */
-	check('the rescue panel is a callout with an icon and a title', !!rescue.querySelector('.tisa-code__rescue-icon svg') && !!rescue.querySelector('.tisa-code__rescue-title'));
+	check('the rescue panel is a callout with an icon and a title', !!rescue.querySelector('.signa-code__rescue-icon svg') && !!rescue.querySelector('.signa-code__rescue-title'));
 	check('it carries no button at all', !rescue.querySelector('button'));
-	check('and therefore no second primary button', !rescue.querySelector('.tisa-btn'));
-	check('it explains in at most two short lines', rescue.querySelectorAll('.tisa-code__rescue-list li').length === 2);
+	check('and therefore no second primary button', !rescue.querySelector('.signa-btn'));
+	check('it explains in at most two short lines', rescue.querySelectorAll('.signa-code__rescue-list li').length === 2);
 	check('each line points at a control that already exists', /ارسال دوبارهٔ کد/.test(rescue.textContent) && /ویرایش شماره/.test(rescue.textContent));
-	check('the text is never centred', /\.tisa-code__rescue \{[\s\S]{0,600}text-align: start/.test(css));
-	check('and no rule centres the panel contents', !/\.tisa-code__rescue[\s-][^{]*\{[^}]*text-align: center/.test(css));
-	check('the template prints the same panel', /tisa-code__rescue-icon/.test(template) && /tisa-code__rescue-list/.test(template) && template.indexOf('tisa-code__rescue-note') < 0);
+	check('the text is never centred', /\.signa-code__rescue \{[\s\S]{0,600}text-align: start/.test(css));
+	check('and no rule centres the panel contents', !/\.signa-code__rescue[\s-][^{]*\{[^}]*text-align: center/.test(css));
+	check('the template prints the same panel', /signa-code__rescue-icon/.test(template) && /signa-code__rescue-list/.test(template) && template.indexOf('signa-code__rescue-note') < 0);
 }
 
 function testTheThreeDemoPages() {
@@ -799,7 +799,7 @@ function testTheThreeDemoPages() {
 
 	const account = fs.readFileSync(path.join(REPO, 'preview', 'public', 'account.html'), 'utf8');
 	const admin = fs.readFileSync(path.join(REPO, 'preview', 'public', 'admin.html'), 'utf8');
-	const adminCss = fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'css', 'admin.css'), 'utf8');
+	const adminCss = fs.readFileSync(path.join(REPO, 'signa', 'assets', 'css', 'admin.css'), 'utf8');
 	const server = fs.readFileSync(path.join(REPO, 'preview', 'server.js'), 'utf8');
 	const demo = new JSDOM(pageSource, { runScripts: 'outside-only' }).window.document;
 
@@ -807,34 +807,34 @@ function testTheThreeDemoPages() {
 	check('the account demo is routed', /'\/account'/.test(server));
 	check('it loads the plugin stylesheet', /\/plugin-assets\/css\/front\.css/.test(account));
 	check('and the plugin script, so the form is live there too', /\/plugin-assets\/js\/front\.js/.test(account));
-	check('with a form for changing the number', /data-tisa-form/.test(account) && /data-tisa-action="start"/.test(account));
+	check('with a form for changing the number', /data-signa-form/.test(account) && /data-signa-action="start"/.test(account));
 	check('the saved address and postcode are shown as profile data', /کد پستی/.test(account) && /آدرس/.test(account));
 
 	// The signup step mirrors the identity preset the PHP now ships.
-	const fields = demo.querySelector('[data-tisa-step="fields"]');
+	const fields = demo.querySelector('[data-signa-step="fields"]');
 
 	for (const id of ['postcode', 'address']) {
-		const field = fields.querySelector('[data-tisa-field="' + id + '"]');
+		const field = fields.querySelector('[data-signa-field="' + id + '"]');
 		check('the demo signup asks for ' + id, !!field, 'missing');
 	}
 
-	const postcode = fields.querySelector('[data-tisa-input="postcode"]');
+	const postcode = fields.querySelector('[data-signa-input="postcode"]');
 	check('the postal code box is numeric and LTR like the template', postcode && 'numeric' === postcode.getAttribute('inputmode') && 'ltr' === postcode.getAttribute('dir') && '10' === postcode.getAttribute('maxlength'));
 	check('and it has the same placeholder as the preset', '1234567890' === postcode.placeholder, postcode.placeholder);
-	check('the address is a textarea with its hint', 'textarea' === fields.querySelector('[data-tisa-input="address"]').tagName.toLowerCase() && /\.$/.test(text(fields.querySelector('.tisa-field__hint'))));
+	check('the address is a textarea with its hint', 'textarea' === fields.querySelector('[data-signa-input="address"]').tagName.toLowerCase() && /\.$/.test(text(fields.querySelector('.signa-field__hint'))));
 
-	const template = fs.readFileSync(path.join(REPO, 'tisa-otp', 'templates', 'partials', 'step-fields.php'), 'utf8');
+	const template = fs.readFileSync(path.join(REPO, 'signa', 'templates', 'partials', 'step-fields.php'), 'utf8');
 	check('the template handles the postcode type the way the demo shows', /'postcode' === \$field\['type'\]/.test(template) && /postal-code/.test(template));
 
 	// The admin demo shows the report screen the plugin renders.
-	for (const name of ['tisa-kpi', 'tisa-chart__col', 'tisa-report-table', 'tisa-range__item']) {
+	for (const name of ['signa-kpi', 'signa-chart__col', 'signa-report-table', 'signa-range__item']) {
 		check('the admin demo has .' + name, admin.indexOf(name) >= 0);
 		check('and the real admin stylesheet defines .' + name, adminCss.indexOf('.' + name) >= 0);
 	}
 
-	check('the report screen is a real admin page', /class ReportScreen/.test(fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Admin', 'ReportScreen.php'), 'utf8')));
-	check('the captcha test is wired in the demo, with the keys the plugin localizes', /data-tisa-captcha-test/.test(admin) && /captcha: \{/.test(admin) && /'global'/.test(fs.readFileSync(path.join(REPO, 'tisa-otp', 'src', 'Front', 'Assets.php'), 'utf8')));
-	check('and admin.js implements it', /testCaptcha/.test(fs.readFileSync(path.join(REPO, 'tisa-otp', 'assets', 'js', 'admin.js'), 'utf8')));
+	check('the report screen is a real admin page', /class ReportScreen/.test(fs.readFileSync(path.join(REPO, 'signa', 'src', 'Admin', 'ReportScreen.php'), 'utf8')));
+	check('the captcha test is wired in the demo, with the keys the plugin localizes', /data-signa-captcha-test/.test(admin) && /captcha: \{/.test(admin) && /'global'/.test(fs.readFileSync(path.join(REPO, 'signa', 'src', 'Front', 'Assets.php'), 'utf8')));
+	check('and admin.js implements it', /testCaptcha/.test(fs.readFileSync(path.join(REPO, 'signa', 'assets', 'js', 'admin.js'), 'utf8')));
 }
 
 /*
@@ -847,11 +847,11 @@ function testEveryScreenIsReachable() {
 	scenario('Every screen is reachable from every screen');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const nav = read('tisa-otp', 'src', 'Admin', 'ScreenNav.php');
-	const settings = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
-	const menu = read('tisa-otp', 'src', 'Admin', 'Menu.php');
+	const nav = read('signa', 'src', 'Admin', 'ScreenNav.php');
+	const settings = read('signa', 'src', 'Admin', 'SettingsScreen.php');
+	const menu = read('signa', 'src', 'Admin', 'Menu.php');
 	const admin = read('preview', 'public', 'admin.html');
-	const adminCss = read('tisa-otp', 'assets', 'css', 'admin.css');
+	const adminCss = read('signa', 'assets', 'css', 'admin.css');
 
 	check('the switcher knows all five screens', ['Menu::ROOT', 'ReportScreen::SLUG', 'LogsScreen::SLUG', 'ToolsScreen::SLUG', 'AccessScreen::SLUG'].every((slug) => nav.indexOf(slug) >= 0));
 
@@ -862,28 +862,28 @@ function testEveryScreenIsReachable() {
 		['ToolsScreen', 'ScreenNav::render( self::SLUG )'],
 		['AccessScreen', 'ScreenNav::render( self::SLUG )'],
 	]) {
-		check(file + ' prints the switcher', read('tisa-otp', 'src', 'Admin', file + '.php').indexOf(marker) >= 0);
+		check(file + ' prints the switcher', read('signa', 'src', 'Admin', file + '.php').indexOf(marker) >= 0);
 	}
 
 	check('the menu and the switcher share one slug per screen', /LogsScreen::SLUG/.test(menu) && /ToolsScreen::SLUG/.test(menu) && menu.indexOf("self::ROOT . '-logs'") < 0 && menu.indexOf("self::ROOT . '-tools'") < 0);
-	check('the tools screen owns its slug like the others', /const SLUG = 'tisa-otp-tools'/.test(read('tisa-otp', 'src', 'Admin', 'ToolsScreen.php')));
+	check('the tools screen owns its slug like the others', /const SLUG = 'signa-tools'/.test(read('signa', 'src', 'Admin', 'ToolsScreen.php')));
 
 	// The settings screen counts the last week and names the page that explains it.
 	check('the settings screen shows a seven-day overview', /private function overview\(\)/.test(settings) && /const OVERVIEW_DAYS = 7/.test(settings));
-	check('with the four numbers the reports screen also shows', /tisa-kpis/.test(settings) && /'requests'/.test(settings) && /'rate'/.test(settings));
+	check('with the four numbers the reports screen also shows', /signa-kpis/.test(settings) && /'requests'/.test(settings) && /'rate'/.test(settings));
 	check('and a way into the reports tab', /self::tabUrl\( 'reports' \)/.test(settings) && /گزارش\u200cها/.test(settings));
 	check('it says so instead of showing zeros when logging is off', /logs_enabled/.test(settings) && /notice\(/.test(settings));
 
-	check('the css defines the switcher', /\.tisa-screens \{/.test(adminCss) && /\.tisa-screen\.is-current/.test(adminCss));
-	check('and the overview strip', /\.tisa-overview \.tisa-kpis \{/.test(adminCss));
-	check('the demo mirrors both', admin.indexOf('tisa-screens') >= 0 && admin.indexOf('tisa-overview') >= 0);
+	check('the css defines the switcher', /\.signa-screens \{/.test(adminCss) && /\.signa-screen\.is-current/.test(adminCss));
+	check('and the overview strip', /\.signa-overview \.signa-kpis \{/.test(adminCss));
+	check('the demo mirrors both', admin.indexOf('signa-screens') >= 0 && admin.indexOf('signa-overview') >= 0);
 
 	// "Which build is on my site?" must be answerable from the dashboard header.
-	const plugin = read('tisa-otp', 'tisa-otp.php');
-	const readme = read('tisa-otp', 'readme.txt');
+	const plugin = read('signa', 'signa.php');
+	const readme = read('signa', 'readme.txt');
 	const version = (plugin.match(/Version:\s*([0-9.]+)/) || [])[1];
 
-	check('the header version and the constant agree', !!version && plugin.indexOf("TISA_OTP_VERSION', '" + version + "'") >= 0, version);
+	check('the header version and the constant agree', !!version && plugin.indexOf("SIGNA_VERSION', '" + version + "'") >= 0, version);
 	check('the readme advertises the same version', !!version && readme.indexOf('Stable tag: ' + version) >= 0);
 	check('the demo shows the same version', !!version && admin.indexOf('نسخه ' + version) >= 0);
 	check('and the changelog has an entry for it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
@@ -898,21 +898,21 @@ function testThePanelKeepsItsOwnPromises() {
 	scenario('Reports and stats live in the panel, and every section can test itself');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const settings = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
-	const report = read('tisa-otp', 'src', 'Admin', 'ReportScreen.php');
-	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
-	const adminJs = read('tisa-otp', 'assets', 'js', 'admin.js');
-	const adminCss = read('tisa-otp', 'assets', 'css', 'admin.css');
-	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
-	const api = read('tisa-otp', 'src', 'Http', 'Api.php');
-	const controller = read('tisa-otp', 'src', 'Http', 'AdminController.php');
-	const nav = read('tisa-otp', 'src', 'Admin', 'ScreenNav.php');
+	const settings = read('signa', 'src', 'Admin', 'SettingsScreen.php');
+	const report = read('signa', 'src', 'Admin', 'ReportScreen.php');
+	const selfTest = read('signa', 'src', 'Diagnostics', 'SelfTest.php');
+	const adminJs = read('signa', 'assets', 'js', 'admin.js');
+	const adminCss = read('signa', 'assets', 'css', 'admin.css');
+	const assets = read('signa', 'src', 'Front', 'Assets.php');
+	const api = read('signa', 'src', 'Http', 'Api.php');
+	const controller = read('signa', 'src', 'Http', 'AdminController.php');
+	const nav = read('signa', 'src', 'Admin', 'ScreenNav.php');
 	const admin = read('preview', 'public', 'admin.html');
 	const server = read('preview', 'server.js');
-	const appMode = read('tisa-otp', 'src', 'Admin', 'AppMode.php');
-	const pluginSource = read('tisa-otp', 'src', 'Plugin.php');
-	const bootstrap = read('tisa-otp', 'tisa-otp.php');
-	const readme = read('tisa-otp', 'readme.txt');
+	const appMode = read('signa', 'src', 'Admin', 'AppMode.php');
+	const pluginSource = read('signa', 'src', 'Plugin.php');
+	const bootstrap = read('signa', 'signa.php');
+	const readme = read('signa', 'readme.txt');
 
 	// --- reports as a tab of the settings panel ------------------------------
 	check('the settings panel has a reports tab', /'reports'\s+=> __\(/.test(settings));
@@ -938,8 +938,8 @@ function testThePanelKeepsItsOwnPromises() {
 	// every tab, so it is on screen before a single setting is read — and it is
 	// the only place a release is described: a card of release notes in front of
 	// the settings was prose the owner did not ask for.
-	check('the running version is printed in the header of every tab', /tisa-header__meta/.test(settings) && /نسخه %s/.test(settings) && /TISA_OTP_VERSION/.test(settings));
-	check('and no card of release notes stands in front of the settings', settings.indexOf('whatsNew') < 0 && settings.indexOf('تازه در نسخهٔ') < 0 && settings.indexOf('tisa-bullets') < 0);
+	check('the running version is printed in the header of every tab', /signa-header__meta/.test(settings) && /نسخه %s/.test(settings) && /SIGNA_VERSION/.test(settings));
+	check('and no card of release notes stands in front of the settings', settings.indexOf('whatsNew') < 0 && settings.indexOf('تازه در نسخهٔ') < 0 && settings.indexOf('signa-bullets') < 0);
 
 	// --- the text diet -------------------------------------------------------
 	// The request was literal: "توضیحات اضافه رو از پلاگین حذف کن". A sentence an
@@ -951,27 +951,27 @@ function testThePanelKeepsItsOwnPromises() {
 	check('the release-notes card is gone from the panel', settings.indexOf('private function whatsNew') < 0);
 	check('and the settings tab starts with settings', /private function generalSection\(\): void \{\s*\n\s*\$c = \$this->controls;\s*\n\s*\$this->card\(/.test(settings));
 
-	const version = (bootstrap.match(/define\( 'TISA_OTP_VERSION', '([0-9.]+)' \)/) || [])[1];
+	const version = (bootstrap.match(/define\( 'SIGNA_VERSION', '([0-9.]+)' \)/) || [])[1];
 	// Persian digits, for the places a release is named to a person.
 	const faVersion = !!version && version.replace(/[0-9]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[digit]);
 	check('the package declares one version, and the file header agrees', !!version && bootstrap.indexOf('Version:           ' + version) >= 0);
 	check('the readme ships that same version as its stable tag', !!version && readme.indexOf('Stable tag: ' + version) >= 0);
 	check('and the readme explains what changed in it', !!version && readme.indexOf('= ' + version + ' =') >= 0);
 	check('the preview says which version it is showing', admin.indexOf(version) >= 0);
-	check('and the preview shows no release-notes card either', admin.indexOf('تازه در نسخهٔ ' + faVersion) < 0 && admin.indexOf('tisa-bullets') < 0);
+	check('and the preview shows no release-notes card either', admin.indexOf('تازه در نسخهٔ ' + faVersion) < 0 && admin.indexOf('signa-bullets') < 0);
 	check('but it still leads into the reports section', /class="button" href="#reports"/.test(admin) || admin.indexOf('#reports') >= 0);
 
 	// --- a broken install must not take the site down -----------------------
 	// 1.3.2 shipped a constructor that had grown a tenth argument while the
 	// binding still passed nine. Every gate was green and the site died on every
 	// request. Three things now stand in the way of that happening again.
-	const guard = read('tisa-otp', 'src', 'Install', 'Guard.php');
-	const packageFile = read('tisa-otp', 'src', 'Install', 'Package.php');
-	const transport = read('tisa-otp', 'src', 'Support', 'Transport.php');
-	const failover = read('tisa-otp', 'src', 'Gateway', 'FailoverChain.php');
-	const httpGateway = read('tisa-otp', 'src', 'Gateway', 'HttpGateway.php');
-	const dispatcherFile = read('tisa-otp', 'src', 'Channel', 'Dispatcher.php');
-	const manifest = JSON.parse(read('tisa-otp', 'build.json'));
+	const guard = read('signa', 'src', 'Install', 'Guard.php');
+	const packageFile = read('signa', 'src', 'Install', 'Package.php');
+	const transport = read('signa', 'src', 'Support', 'Transport.php');
+	const failover = read('signa', 'src', 'Gateway', 'FailoverChain.php');
+	const httpGateway = read('signa', 'src', 'Gateway', 'HttpGateway.php');
+	const dispatcherFile = read('signa', 'src', 'Channel', 'Dispatcher.php');
+	const manifest = JSON.parse(read('signa', 'build.json'));
 	const builder = read('tools', 'build_package.py');
 	const wiring = read('tests', 'php', 'wiring-test.php');
 
@@ -1024,29 +1024,29 @@ function testThePanelKeepsItsOwnPromises() {
 	// The panel sits inside somebody else's page. This is the opt-in that hides
 	// the frame, and the rules are: only the person who asked for it, always one
 	// click from leaving it, and never hide feedback while hiding furniture.
-	check('app mode is a user preference, not a site setting', /const META\s+= 'tisa_otp_app_mode'/.test(appMode) && /get_user_meta\( \$user_id, self::META/.test(appMode));
-	check('the body is marked before it is painted', /add_filter\( 'admin_body_class'/.test(appMode) && /' tisa-app'/.test(appMode));
+	check('app mode is a user preference, not a site setting', /const META\s+= 'signa_app_mode'/.test(appMode) && /get_user_meta\( \$user_id, self::META/.test(appMode));
+	check('the body is marked before it is painted', /add_filter\( 'admin_body_class'/.test(appMode) && /' signa-app'/.test(appMode));
 	check('the switch is a form post with a nonce and a capability check', /admin_post_/.test(appMode) && /check_admin_referer\( self::ACTION \)/.test(appMode) && /current_user_can\( Menu::CAPABILITY \)/.test(appMode));
 	check('and it lands back on the page it was pressed from', /wp_safe_redirect\( \$back/.test(appMode));
 	check('the switch rides in the screen row, so all five screens have it', /private static function appToggle\(\)/.test(nav) && /self::appToggle\(\);/.test(nav));
 	check('the button names where it goes, not what it is', /'نمای پیشخوان'/.test(nav) && /'حالت اپ'/.test(nav));
-	check('the stylesheet takes the chrome away', /body\.tisa-app #adminmenumain/.test(adminCss) && /body\.tisa-app #wpadminbar/.test(adminCss) && /body\.tisa-app #wpfooter/.test(adminCss));
-	check('and keeps the notices, because a save message is feedback', adminCss.indexOf('body.tisa-app .notice') < 0);
-	check('the toolbar room is given back on html as well', /html:has\(body\.tisa-app\)/.test(adminCss) && /initAppMode\(\)/.test(adminJs));
-	check('the demo shows the switch and what it does', /data-tisa-app-demo/.test(admin) && /body\.tisa-app \.demo-bar \{ display: none; \}/.test(admin));
+	check('the stylesheet takes the chrome away', /body\.signa-app #adminmenumain/.test(adminCss) && /body\.signa-app #wpadminbar/.test(adminCss) && /body\.signa-app #wpfooter/.test(adminCss));
+	check('and keeps the notices, because a save message is feedback', adminCss.indexOf('body.signa-app .notice') < 0);
+	check('the toolbar room is given back on html as well', /html:has\(body\.signa-app\)/.test(adminCss) && /initAppMode\(\)/.test(adminJs));
+	check('the demo shows the switch and what it does', /data-signa-app-demo/.test(admin) && /body\.signa-app \.demo-bar \{ display: none; \}/.test(admin));
 
 	// --- one self-test per section ------------------------------------------
 	const kinds = (selfTest.match(/return array\( '([a-z]+)'(?:, '[a-z]+')* \);/) || [])[1];
 	check('the self-test knows which sections exist', !!kinds && ['general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data'].every((kind) => selfTest.indexOf("'" + kind + "'") >= 0));
 
 	for (const kind of ['general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data']) {
-		check('the ' + kind + ' section has a test button', settings.indexOf('data-tisa-check="' + kind + '"') >= 0 || new RegExp("'" + kind + "',").test(settings));
+		check('the ' + kind + ' section has a test button', settings.indexOf('data-signa-check="' + kind + '"') >= 0 || new RegExp("'" + kind + "',").test(settings));
 		check('and the test really exists', new RegExp('private function ' + kind + '\\(\\)').test(selfTest));
 	}
 
 	check('the test card is what prints the buttons', /private function testCard\(/.test(settings) && (settings.match(/\$this->testCard\(/g) || []).length === 8);
-	check('the gateways section offers a real send too', /data-tisa-sms-test/.test(settings));
-	check('the captcha button kept its old hook', /data-tisa-captcha-test/.test(settings) && settings.indexOf('data-tisa-captcha-result') < 0);
+	check('the gateways section offers a real send too', /data-signa-sms-test/.test(settings));
+	check('the captcha button kept its old hook', /data-signa-captcha-test/.test(settings) && settings.indexOf('data-signa-captcha-result') < 0);
 
 	// --- what the tests are allowed to do ------------------------------------
 	check('the tests never send a message of their own', selfTest.indexOf('deliver(') < 0 && selfTest.indexOf('dispatcher') < 0);
@@ -1063,20 +1063,20 @@ function testThePanelKeepsItsOwnPromises() {
 	check('admin.js asks for the check route', /api\('admin\/check', \{ kind: kind \}\)/.test(adminJs));
 	check('a result row carries the status as text, not only as a colour', /screen-reader-text/.test(adminJs) && /statusWord\(/.test(adminJs));
 	check('the captcha test reports into the modal', /function testCaptcha\(report\)/.test(adminJs) && /testCaptcha\(function \(row\)/.test(adminJs));
-	check('the send test opens its own modal with the administrator number', /data-tisa-sms-test/.test(adminJs) && /cfg\.myPhone/.test(adminJs));
+	check('the send test opens its own modal with the administrator number', /data-signa-sms-test/.test(adminJs) && /cfg\.myPhone/.test(adminJs));
 	check('and the plugin localises that number', /'myPhone' => \$this->ownPhone\(\)/.test(assets) && /private function ownPhone\(\): string/.test(assets));
 
-	check('the css defines the modal', /\.tisa-modal \{/.test(adminCss) && /\.tisa-modal::backdrop \{/.test(adminCss));
-	check('an engine without <dialog> still gets an overlay, not a thrown error', /typeof dialog\.showModal/.test(adminJs) && /\.tisa-modal--fallback/.test(adminCss));
+	check('the css defines the modal', /\.signa-modal \{/.test(adminCss) && /\.signa-modal::backdrop \{/.test(adminCss));
+	check('an engine without <dialog> still gets an overlay, not a thrown error', /typeof dialog\.showModal/.test(adminJs) && /\.signa-modal--fallback/.test(adminCss));
 	check('and closing the overlay by hand still returns the focus', /function finish\(\)/.test(adminJs) && /opener\.focus\(\)/.test(adminJs));
-	check('and the result rows', /\.tisa-test-row \{/.test(adminCss) && /\.tisa-test-row\.is-fail \.tisa-test-row__dot \{/.test(adminCss));
+	check('and the result rows', /\.signa-test-row \{/.test(adminCss) && /\.signa-test-row\.is-fail \.signa-test-row__dot \{/.test(adminCss));
 
 	// --- the demo can be clicked through -------------------------------------
-	check('the demo can run a section test', /data-tisa-check="(gateways|data|general)"/.test(admin));
-	check('the demo can show the captcha test', /data-tisa-check="security" data-tisa-captcha-test/.test(admin));
-	check('the demo can send a test message', admin.indexOf('data-tisa-sms-test') >= 0);
+	check('the demo can run a section test', /data-signa-check="(gateways|data|general)"/.test(admin));
+	check('the demo can show the captcha test', /data-signa-check="security" data-signa-captcha-test/.test(admin));
+	check('the demo can send a test message', admin.indexOf('data-signa-sms-test') >= 0);
 	check('and the demo names all eight sections in one place', ['عمومی', 'کد و کانال\u200cها', 'سامانه‌های پیامکی', 'امنیت و محدودیت', 'فرم عضویت', 'ظاهر فرم', 'فروشگاه', 'داده و رویدادها'].every((label) => admin.indexOf(label) >= 0));
-	check('the demo shows the reports tab in the same pill row', /class="tisa-screen">گزارش\u200cها و آمار<\/a>/.test(admin) || /href="#reports" class="tisa-screen">گزارش\u200cها و آمار<\/a>/.test(admin));
+	check('the demo shows the reports tab in the same pill row', /class="signa-screen">گزارش\u200cها و آمار<\/a>/.test(admin) || /href="#reports" class="signa-screen">گزارش\u200cها و آمار<\/a>/.test(admin));
 	check('the demo api answers the check route', /case 'admin\/check':/.test(server) && /function checkPayload\(/.test(server));
 	check('with a failing row in it, so the modal is seen doing its job', /status: 'warn'/.test(server) || /status: 'fail'/.test(server));
 }
@@ -1095,10 +1095,10 @@ function testSmsIrAgainstItsDocumentation() {
 	scenario('sms.ir is read the way sms.ir documents itself');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const smsIr = read('tisa-otp', 'src', 'Gateway', 'Drivers', 'SmsIr.php');
-	const probeInterface = read('tisa-otp', 'src', 'Gateway', 'AccountProbe.php');
-	const result = read('tisa-otp', 'src', 'Gateway', 'GatewayResult.php');
-	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
+	const smsIr = read('signa', 'src', 'Gateway', 'Drivers', 'SmsIr.php');
+	const probeInterface = read('signa', 'src', 'Gateway', 'AccountProbe.php');
+	const result = read('signa', 'src', 'Gateway', 'GatewayResult.php');
+	const selfTest = read('signa', 'src', 'Diagnostics', 'SelfTest.php');
 	const suite = read('tests', 'php', 'smsir-test.php');
 	const ci = read('.github', 'workflows', 'ci.yml');
 	const admin = read('preview', 'public', 'admin.html');
@@ -1138,7 +1138,7 @@ function testSmsIrAgainstItsDocumentation() {
 	check('a driver may be asked about its account, without sending anything', /interface AccountProbe/.test(probeInterface) && /probe\(\): array/.test(probeInterface));
 	check('sms.ir answers with credit and lines, and nothing else', /CREDIT_ENDPOINT/.test(smsIr) && /LINE_ENDPOINT/.test(smsIr) && /function probe\(\): array/.test(smsIr) && smsIr.indexOf('wp_remote_post') < 0);
 	check('the self-test shows that as its own row', /کلید API و اعتبار/.test(selfTest) && /شماره خط/.test(selfTest));
-	check('and the driver interface stays optional for other drivers', !/interface SmsGateway[\s\S]{0,400}probe\(/.test(read('tisa-otp', 'src', 'Gateway', 'SmsGateway.php')));
+	check('and the driver interface stays optional for other drivers', !/interface SmsGateway[\s\S]{0,400}probe\(/.test(read('signa', 'src', 'Gateway', 'SmsGateway.php')));
 
 	// Who is allowed to fail over.
 	check('an empty account is a transient failure, not a configuration one', /if \( '' !== \$this->errorCode && \$this->isTransient\(\) \) \{\s*\n\s*return false;/.test(result));
@@ -1151,7 +1151,7 @@ function testSmsIrAgainstItsDocumentation() {
 	// The demo can be clicked through to the same rows.
 	check('the demo answers the gateways test with the two new rows', server.indexOf('کلید API و اعتبار') >= 0 && server.indexOf('شماره خط') >= 0);
 	check('and with a reachability row that carries a cause', server.indexOf('دسترسی این سرور به سامانه') >= 0 && server.indexOf('CONNECT') >= 0);
-	const pluginVersion = (read('tisa-otp', 'tisa-otp.php').match(/Version:\s*([0-9.]+)/) || [])[1];
+	const pluginVersion = (read('signa', 'signa.php').match(/Version:\s*([0-9.]+)/) || [])[1];
 	const faPluginVersion = !!pluginVersion && pluginVersion.replace(/[0-9]/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[digit]);
 	check('the demo version follows the plugin', !!pluginVersion && admin.indexOf(faPluginVersion) >= 0 && admin.indexOf(pluginVersion) >= 0, pluginVersion);
 }
@@ -1172,12 +1172,12 @@ function testBlockedOutboundHttpIsNamedAndNotDressedUpAsSuccess() {
 	scenario('a blocked outbound request is named, and a fallback is not a success');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const transport = read('tisa-otp', 'src', 'Support', 'Transport.php');
-	const gateway = read('tisa-otp', 'src', 'Gateway', 'HttpGateway.php');
-	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
-	const controller = read('tisa-otp', 'src', 'Http', 'AdminController.php');
-	const adminJs = read('tisa-otp', 'assets', 'js', 'admin.js');
-	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
+	const transport = read('signa', 'src', 'Support', 'Transport.php');
+	const gateway = read('signa', 'src', 'Gateway', 'HttpGateway.php');
+	const selfTest = read('signa', 'src', 'Diagnostics', 'SelfTest.php');
+	const controller = read('signa', 'src', 'Http', 'AdminController.php');
+	const adminJs = read('signa', 'assets', 'js', 'admin.js');
+	const assets = read('signa', 'src', 'Front', 'Assets.php');
 	const server = read('preview', 'server.js');
 	const transportTest = read('tests', 'php', 'transport-test.php');
 
@@ -1215,16 +1215,16 @@ function testTheBlockHasAnAnswer() {
 	scenario('a blocked site is given the answers it can act on');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const transport = read('tisa-otp', 'src', 'Support', 'Transport.php');
-	const gateway = read('tisa-otp', 'src', 'Gateway', 'HttpGateway.php');
-	const registry = read('tisa-otp', 'src', 'Gateway', 'Registry.php');
-	const controller = read('tisa-otp', 'src', 'Http', 'AdminController.php');
-	const adminJs = read('tisa-otp', 'assets', 'js', 'admin.js');
-	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
-	const css = read('tisa-otp', 'assets', 'css', 'admin.css');
-	const settingsScreen = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
-	const settings = read('tisa-otp', 'src', 'Config', 'Settings.php');
-	const sanitizer = read('tisa-otp', 'src', 'Config', 'Sanitizer.php');
+	const transport = read('signa', 'src', 'Support', 'Transport.php');
+	const gateway = read('signa', 'src', 'Gateway', 'HttpGateway.php');
+	const registry = read('signa', 'src', 'Gateway', 'Registry.php');
+	const controller = read('signa', 'src', 'Http', 'AdminController.php');
+	const adminJs = read('signa', 'assets', 'js', 'admin.js');
+	const assets = read('signa', 'src', 'Front', 'Assets.php');
+	const css = read('signa', 'assets', 'css', 'admin.css');
+	const settingsScreen = read('signa', 'src', 'Admin', 'SettingsScreen.php');
+	const settings = read('signa', 'src', 'Config', 'Settings.php');
+	const sanitizer = read('signa', 'src', 'Config', 'Sanitizer.php');
 	const server = read('preview', 'server.js');
 	const adminHtml = read('preview', 'public', 'admin.html');
 	const ci = read('.github', 'workflows', 'ci.yml');
@@ -1240,7 +1240,7 @@ function testTheBlockHasAnAnswer() {
 	check('and the switch says what it bypasses', /ارسال مستقیم/.test(settingsScreen) && /WP_HTTP_BLOCK_EXTERNAL/.test(settingsScreen));
 	check('the direct path keeps TLS checked', /CURLOPT_SSL_VERIFYPEER => true/.test(gateway) && /CURLOPT_SSL_VERIFYHOST => 2/.test(gateway));
 	check('and it fails in the shape the drivers already read', /'response' => array\( 'code' => \$status/.test(gateway));
-	check('the self-test stops predicting the block once the switch is on', /\$this->settings->bool\( 'direct_send', false \) \? null : Transport::blockFailure/.test(read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php')));
+	check('the self-test stops predicting the block once the switch is on', /\$this->settings->bool\( 'direct_send', false \) \? null : Transport::blockFailure/.test(read('signa', 'src', 'Diagnostics', 'SelfTest.php')));
 
 	// 3. The plan card: about the SMS gateway, and about this installation.
 	check('the plan card reports the block as a configuration problem', /Transport::egressBlocked\( \$host \)/.test(registry));
@@ -1252,7 +1252,7 @@ function testTheBlockHasAnAnswer() {
 	check('the plan belongs to the SMS gateway, not to the channel that rescued it', /function smsPlan\(/.test(controller) && /'plan'\s*=> \$this->smsPlan\(\)/.test(controller));
 	check('a fix is offered when the plugin has one', /private function fixFor/.test(controller) && /'fix'\s*=> \$this->fixFor/.test(controller));
 	check('and it is the plugin’s own switch, not a homework assignment', /ارسال مستقیم/.test(controller) && controller.indexOf('لازم نیست wp-config.php را عوض کنید') >= 0);
-	check('the modal prints the server sentence on its own line', /tisa-test-row__why/.test(adminJs) && /\.tisa-test-row__why \{/.test(css));
+	check('the modal prints the server sentence on its own line', /signa-test-row__why/.test(adminJs) && /\.signa-test-row__why \{/.test(css));
 	check('and that line is a left-to-right one', /why\.dir = 'ltr'/.test(adminJs) && /direction: ltr/.test(css));
 	check('the fix row has a word for itself', /'fix'\s*=> __\(/.test(assets) && /i18n\.fix/.test(adminJs));
 	check('the hint sentence that explained the modal is gone', adminJs.indexOf('smsHint') < 0 && assets.indexOf('smsHint') < 0);
@@ -1261,10 +1261,10 @@ function testTheBlockHasAnAnswer() {
 	check('the demo has the switch and the fix', /ارسال مستقیم/.test(adminHtml) && /fix: 'راه‌حل'/.test(adminHtml));
 	check('and its mock answers with the Persian channel label', /carrier_label: 'ایمیل'/.test(server) && /fix: '/.test(server));
 	// 6. Who is told what: the administrator's sentence stays in the panel.
-	const auth = read('tisa-otp', 'src', 'Http', 'AuthController.php');
-	const result = read('tisa-otp', 'src', 'Gateway', 'GatewayResult.php');
-	const health = read('tisa-otp', 'src', 'Gateway', 'Health.php');
-	const chain = read('tisa-otp', 'src', 'Gateway', 'FailoverChain.php');
+	const auth = read('signa', 'src', 'Http', 'AuthController.php');
+	const result = read('signa', 'src', 'Gateway', 'GatewayResult.php');
+	const health = read('signa', 'src', 'Gateway', 'Health.php');
+	const chain = read('signa', 'src', 'Gateway', 'FailoverChain.php');
 
 	check('the visitor is never handed the administrator’s diagnosis', /\$result->visitorMessage\(\)/.test(auth) && auth.indexOf("'delivery_failed',\n\t\t\t\t$result->message()") < 0);
 	check('and the sentence exists for both visitors', /public function visitorMessage\(\): string/.test(result) && /rate_limited/.test(result));
@@ -1297,11 +1297,11 @@ function testTheCaptchaKnowsWhoItIsTalkingTo() {
 	scenario('a captcha that cannot load is not the visitor’s fault');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const front = read('tisa-otp', 'assets', 'js', 'front.js');
-	const guard = read('tisa-otp', 'src', 'Guard', 'CaptchaGuard.php');
-	const pipeline = read('tisa-otp', 'src', 'Guard', 'Pipeline.php');
-	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
-	const store = read('tisa-otp', 'src', 'Log', 'LogStore.php');
+	const front = read('signa', 'assets', 'js', 'front.js');
+	const guard = read('signa', 'src', 'Guard', 'CaptchaGuard.php');
+	const pipeline = read('signa', 'src', 'Guard', 'Pipeline.php');
+	const selfTest = read('signa', 'src', 'Diagnostics', 'SelfTest.php');
+	const store = read('signa', 'src', 'Log', 'LogStore.php');
 	const ci = read('.github', 'workflows', 'ci.yml');
 	const readme = read('tests', 'README.md');
 
@@ -1316,7 +1316,7 @@ function testTheCaptchaKnowsWhoItIsTalkingTo() {
 	check('the guard reads the browser’s state', /const STATE_UNAVAILABLE = 'unavailable'/.test(guard) && /function browserOutage/.test(guard));
 	check('it refuses the claim while fail-open is off', /if \( ! \$this\->captcha\->failOpen\(\) \) \{\s*return false;/.test(guard));
 	check('an accepted outage is logged as a fail-open with its own reason', /'reason'\s*=> 'browser_unavailable'/.test(guard));
-	check('and the guard still asks the provider for a real token', /return \$provider->verify\( \$token, \$ip \)/.test(read('tisa-otp', 'src', 'Captcha', 'Manager.php')));
+	check('and the guard still asks the provider for a real token', /return \$provider->verify\( \$token, \$ip \)/.test(read('signa', 'src', 'Captcha', 'Manager.php')));
 
 	// 3. The evidence the diagnosis needs.
 	check('rejections record the user agent', /'ua'\s*=> substr\( trim\( \$request->userAgent\(\) \), 0, 200 \)/.test(pipeline));
@@ -1334,7 +1334,7 @@ function testTheCaptchaKnowsWhoItIsTalkingTo() {
 /*
  * Round 13: «ظاهر فرمم با پیش‌نمایش فرق داره … وردپرس چیزیو سرخود عوض می‌کنه؟»
  * — no. Two other things did: the preview borrowed Vazirmatn from a CDN while
- * the form said `--tisa-font: inherit`, and a theme's own selectors outrank a
+ * the form said `--signa-font: inherit`, and a theme's own selectors outrank a
  * stylesheet that names one class each. The captcha question has its own
  * answer, and it belongs in the panel rather than in a reply.
  */
@@ -1342,12 +1342,12 @@ function testTheFormLooksLikeItself() {
 	scenario('the form brings its own font, and the panel answers the captcha question');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const css = read('tisa-otp', 'assets', 'css', 'front.css');
-	const renderer = read('tisa-otp', 'src', 'Front', 'FormRenderer.php');
-	const sanitizer = read('tisa-otp', 'src', 'Config', 'Sanitizer.php');
-	const selfTest = read('tisa-otp', 'src', 'Diagnostics', 'SelfTest.php');
-	const settings = read('tisa-otp', 'src', 'Config', 'Settings.php');
-	const screen = read('tisa-otp', 'src', 'Admin', 'SettingsScreen.php');
+	const css = read('signa', 'assets', 'css', 'front.css');
+	const renderer = read('signa', 'src', 'Front', 'FormRenderer.php');
+	const sanitizer = read('signa', 'src', 'Config', 'Sanitizer.php');
+	const selfTest = read('signa', 'src', 'Diagnostics', 'SelfTest.php');
+	const settings = read('signa', 'src', 'Config', 'Settings.php');
+	const screen = read('signa', 'src', 'Admin', 'SettingsScreen.php');
 	const index = read('preview', 'public', 'index.html');
 	const server = read('preview', 'server.js');
 	const ci = read('.github', 'workflows', 'ci.yml');
@@ -1358,25 +1358,25 @@ function testTheFormLooksLikeItself() {
 	check('each one claims its own codepoints', (css.match(/unicode-range:/g) || []).length === 6);
 	check('the Persian digits come from the Arabic file', /arabic-400-normal\.woff2\)[^}]*U\+06F0-06F9/s.test(css));
 	check('and ASCII from the Latin one', /latin-400-normal\.woff2\)[^}]*U\+0020-007E/s.test(css));
-	check('the two files are really in the package', ['arabic', 'latin'].every((s) => [400, 600, 700].every((w) => fs.existsSync(path.join(REPO, 'tisa-otp', 'assets', 'fonts', `vazirmatn-${s}-${w}-normal.woff2`)))));
-	check('with the licence that allows it', fs.existsSync(path.join(REPO, 'tisa-otp', 'assets', 'fonts', 'OFL.txt')));
-	check('the default font is the shipped one', /--tisa-font: 'Vazirmatn'/.test(css));
+	check('the two files are really in the package', ['arabic', 'latin'].every((s) => [400, 600, 700].every((w) => fs.existsSync(path.join(REPO, 'signa', 'assets', 'fonts', `vazirmatn-${s}-${w}-normal.woff2`)))));
+	check('with the licence that allows it', fs.existsSync(path.join(REPO, 'signa', 'assets', 'fonts', 'OFL.txt')));
+	check('the default font is the shipped one', /--signa-font: 'Vazirmatn'/.test(css));
 
 	// 2. The preview stops borrowing the font it now ships.
 	check('the preview no longer calls a font CDN', !/fonts\.googleapis\.com|fonts\.gstatic\.com/.test(index));
 	check('and serves woff2 as a font', /'\.woff2': 'font\/woff2'/.test(server));
 
 	// 3. A theme cannot take the form over.
-	check('controls are declared again with the form in front', /\.tisa-otp \.tisa-field__input,/.test(css) && /\.tisa-otp \.tisa-btn \{/.test(css));
-	check('the font of a control is not the theme\'s to choose', /\.tisa-otp \.tisa-btn \{\s*font-family: inherit;/.test(css));
-	check('and the digits-only field keeps its tracking', css.indexOf('.tisa-code-single .tisa-code__bulk') > css.indexOf('.tisa-otp .tisa-code__box,'));
+	check('controls are declared again with the form in front', /\.signa \.signa-field__input,/.test(css) && /\.signa \.signa-btn \{/.test(css));
+	check('the font of a control is not the theme\'s to choose', /\.signa \.signa-btn \{\s*font-family: inherit;/.test(css));
+	check('and the digits-only field keeps its tracking', css.indexOf('.signa-code-single .signa-code__bulk') > css.indexOf('.signa .signa-code__box,'));
 
 	// 4. The setting exists end to end.
 	check('the setting has a default', /'form_font'\s*=> 'vazirmatn'/.test(settings));
-	check('it is sanitised as a font, not as text', /'form_font_custom'\s*=> array\( 'type' => 'font' \)/.test(read('tisa-otp', 'src', 'Config', 'Sanitizer.php')));
+	check('it is sanitised as a font, not as text', /'form_font_custom'\s*=> array\( 'type' => 'font' \)/.test(read('signa', 'src', 'Config', 'Sanitizer.php')));
 	check('and a font value cannot end its own declaration', /function fontFamily/.test(sanitizer) && /preg_replace\( '\/\[\^A-Za-z0-9 ,/.test(sanitizer));
-	check('the form prints it on the element', /--tisa-font:' \. \$font/.test(renderer));
-	check('and the surface colour too, which used to be printed where nothing read it', /--tisa-surface:' \. \$surface/.test(renderer));
+	check('the form prints it on the element', /--signa-font:' \. \$font/.test(renderer));
+	check('and the surface colour too, which used to be printed where nothing read it', /--signa-surface:' \. \$surface/.test(renderer));
 	check('the settings screen offers it', /'form_font',/.test(screen) && /form_font_custom/.test(screen));
 
 	// 5. The two questions the owner actually asked get answers in the panel.
@@ -1406,7 +1406,7 @@ async function testVendorStylesInsideShadow() {
 	scenario("a third-party widget's own stylesheet reaches the form inside its own tree");
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const cssFile = read('tisa-otp', 'assets', 'css', 'front.css');
+	const cssFile = read('signa', 'assets', 'css', 'front.css');
 
 	/*
 	 * This is the screenshot that came back from a live site: ARCaptcha's
@@ -1444,7 +1444,7 @@ async function testVendorStylesInsideShadow() {
 	ctx.win.arcaptcha = { render: () => 7, getArcToken: () => 'ARC-TOKEN-1' };
 
 	const shadow = ctx.root.shadowRoot;
-	const host = shadow && shadow.querySelector('[data-tisa-captcha]');
+	const host = shadow && shadow.querySelector('[data-signa-captcha]');
 
 	check('the widget is mounted inside the shadow tree', !!host);
 	check(
@@ -1452,7 +1452,7 @@ async function testVendorStylesInsideShadow() {
 		!!host && host.getRootNode() === shadow
 	);
 
-	const copies = () => [...shadow.querySelectorAll('style[data-tisa-vendor-style], link[data-tisa-vendor-style]')]
+	const copies = () => [...shadow.querySelectorAll('style[data-signa-vendor-style], link[data-signa-vendor-style]')]
 		.map((node) => node.textContent)
 		.join('\n');
 
@@ -1474,7 +1474,7 @@ async function testVendorStylesInsideShadow() {
 	const shadowStyles = [...shadow.querySelectorAll('style')];
 	const vendorLast = shadowStyles[shadowStyles.length - 1];
 
-	check('the copy lands last, after the plugin stylesheet, so the vendor wins a tie', '1' === (vendorLast && vendorLast.getAttribute('data-tisa-vendor-style')));
+	check('the copy lands last, after the plugin stylesheet, so the vendor wins a tie', '1' === (vendorLast && vendorLast.getAttribute('data-signa-vendor-style')));
 
 	// A widget may also append its sheet to the body, or to a wrapper of its
 	// own; the copy still has to arrive.
@@ -1493,22 +1493,22 @@ async function testVendorStylesInsideShadow() {
 	 * layout — which is the promise isolation makes.
 	 */
 	const theme = ctx.doc.createElement('style');
-	theme.textContent = '.tisa-otp .tisa-btn { background: #ff0000 !important; }';
+	theme.textContent = '.signa .signa-btn { background: #ff0000 !important; }';
 	ctx.doc.head.appendChild(theme);
 
 	await tick();
 	await tick();
 
 	const order = [...shadow.querySelectorAll('style')];
-	const pluginAt = order.findIndex((node) => '1' === node.getAttribute('data-tisa-shadow-style'));
-	const pageAt = order.findIndex((node) => '1' === node.getAttribute('data-tisa-page-style'));
+	const pluginAt = order.findIndex((node) => '1' === node.getAttribute('data-signa-shadow-style'));
+	const pageAt = order.findIndex((node) => '1' === node.getAttribute('data-signa-page-style'));
 
 	check('a theme sheet that loads late is copied in below the plugin rules, not above them', pageAt >= 0 && pluginAt >= 0 && pageAt < pluginAt);
 
 	// And the fallback: a widget that never gets its stylesheet must not be
 	// able to blow the form apart in the first place.
-	check('the plugin caps runaway media inside the captcha slot', /\.tisa-captcha :where\(img, svg, canvas, video\) \{[^}]*max-height: 96px;/.test(cssFile));
-	check('and caps an embedded frame by width', /\.tisa-captcha :where\(iframe\) \{[^}]*max-width: 100%;/.test(cssFile));
+	check('the plugin caps runaway media inside the captcha slot', /\.signa-captcha :where\(img, svg, canvas, video\) \{[^}]*max-height: 96px;/.test(cssFile));
+	check('and caps an embedded frame by width', /\.signa-captcha :where\(iframe\) \{[^}]*max-width: 100%;/.test(cssFile));
 	check('in the light DOM nothing is mirrored, because the head already applies', !!(await (async () => {
 		const plain = boot({
 			config: { isolate: false, captcha: bundle },
@@ -1517,7 +1517,7 @@ async function testVendorStylesInsideShadow() {
 
 		await tick();
 
-		return plain.root.querySelector('[data-tisa-captcha]') && false === plain.root.querySelector('[data-tisa-captcha]').tisaVendorStyles.shadow;
+		return plain.root.querySelector('[data-signa-captcha]') && false === plain.root.querySelector('[data-signa-captcha]').signaVendorStyles.shadow;
 	})()));
 }
 
@@ -1525,14 +1525,14 @@ async function testStyleIsolation() {
 	scenario('the form renders in its own tree, so the theme cannot restyle it');
 
 	const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
-	const cssFile = read('tisa-otp', 'assets', 'css', 'front.css');
-	const assets = read('tisa-otp', 'src', 'Front', 'Assets.php');
+	const cssFile = read('signa', 'assets', 'css', 'front.css');
+	const assets = read('signa', 'src', 'Front', 'Assets.php');
 	const index = read('preview', 'public', 'index.html');
 
 	/* --- it is the shipped default, and the panel says so ---------------- */
 	check('isolation is on unless a site turns it off', /'isolate'\s*=> \$this->settings->bool\( 'style_isolation', true \)/.test(assets));
-	check('the stylesheet URL is the one the <link> already loaded, so the fetch is a cache hit', /add_query_arg\( 'ver', TISA_OTP_VERSION, TISA_OTP_URL \. 'assets\/css\/front.css' \)/.test(assets));
-	check('the font base travels with it', /'assets'\s*=> esc_url_raw\( TISA_OTP_URL \. 'assets\/' \)/.test(assets));
+	check('the stylesheet URL is the one the <link> already loaded, so the fetch is a cache hit', /add_query_arg\( 'ver', SIGNA_VERSION, SIGNA_URL \. 'assets\/css\/front.css' \)/.test(assets));
+	check('the font base travels with it', /'assets'\s*=> esc_url_raw\( SIGNA_URL \. 'assets\/' \)/.test(assets));
 	check('and the computed variables travel as values, not as a :root block', /'vars'\s*=> \$this->variables\(\)/.test(assets));
 
 	/* --- the stylesheet is self-sufficient inside a shadow tree ---------- */
@@ -1554,39 +1554,39 @@ async function testStyleIsolation() {
 
 	const host = booted.root;
 	const shadow = host.shadowRoot;
-	const style = shadow && shadow.querySelector('style[data-tisa-shadow-style]');
-	const inner = shadow && shadow.querySelector('.tisa-otp');
+	const style = shadow && shadow.querySelector('style[data-signa-shadow-style]');
+	const inner = shadow && shadow.querySelector('.signa');
 
 	check('the form is moved into a shadow root', !!shadow && 'open' === shadow.mode);
 	check('the plugin stylesheet is injected there', !!style && style.textContent.length > 30000);
 	check('with the font URLs made absolute, because a <style> resolves against the page', !!style && style.textContent.indexOf('url(/plugin-assets/fonts/vazirmatn-arabic-400-normal.woff2)') >= 0);
 	check(
 		'the markup moved in, and nothing was left behind to be restyled',
-		inner ? inner.querySelectorAll('[data-tisa-step]').length === 3 && !!inner.querySelector('[data-tisa-phone]') && 0 === host.children.length : false
+		inner ? inner.querySelectorAll('[data-signa-step]').length === 3 && !!inner.querySelector('[data-signa-phone]') && 0 === host.children.length : false
 	);
-	check('the inner element carries the same classes, so the skin still applies', inner ? 'tisa-otp' === inner.className.split(' ')[0] && inner.classList.contains('tisa-skin-line') : false);
+	check('the inner element carries the same classes, so the skin still applies', inner ? 'signa' === inner.className.split(' ')[0] && inner.classList.contains('signa-skin-line') : false);
 	check(
 		'the plugin\'s own variables are inline on it, where a theme cannot outrank them',
-		inner ? '#0f766e' === inner.style.getPropertyValue('--tisa-accent') && 'rgba(15, 118, 110, 0.14)' === inner.style.getPropertyValue('--tisa-accent-soft') : false
+		inner ? '#0f766e' === inner.style.getPropertyValue('--signa-accent') && 'rgba(15, 118, 110, 0.14)' === inner.style.getPropertyValue('--signa-accent-soft') : false
 	);
 	check('the form object was built on the inner element', booted.form.root === inner);
-	check('and it is interactive: the phone step is the current one', inner ? inner.querySelector('[data-tisa-step="phone"]').classList.contains('is-current') : false);
-	check('the host records that it was isolated', '1' === host.getAttribute('data-tisa-isolated'));
+	check('and it is interactive: the phone step is the current one', inner ? inner.querySelector('[data-signa-step="phone"]').classList.contains('is-current') : false);
+	check('the host records that it was isolated', '1' === host.getAttribute('data-signa-isolated'));
 	check('the stylesheet was fetched once, not per form', booted.calls.filter((call) => call.url.indexOf('.css') > 0).length === 1);
 	check('and it is the same URL the page already loaded', booted.calls.some((call) => call.url === '/plugin-assets/css/front.css'));
 
 	/* --- a site that recolours the form from outside still works --------- */
-	host.style.setProperty('--tisa-accent', '#b91c1c');
-	host.classList.add('tisa-skin-card');
+	host.style.setProperty('--signa-accent', '#b91c1c');
+	host.classList.add('signa-skin-card');
 	await wait(10);
 
-	check('changing the accent on the host reaches the form', inner.style.getPropertyValue('--tisa-accent') === '#b91c1c');
-	check('and so does changing the skin class', inner.classList.contains('tisa-skin-card'));
+	check('changing the accent on the host reaches the form', inner.style.getPropertyValue('--signa-accent') === '#b91c1c');
+	check('and so does changing the skin class', inner.classList.contains('signa-skin-card'));
 
 	/* --- events still reach the page ------------------------------------- */
 	let heard = 0;
-	booted.doc.addEventListener('tisa:sent', () => { heard++; });
-	inner.dispatchEvent(new booted.win.CustomEvent('tisa:sent', { bubbles: true, composed: true, detail: {} }));
+	booted.doc.addEventListener('signa:sent', () => { heard++; });
+	inner.dispatchEvent(new booted.win.CustomEvent('signa:sent', { bubbles: true, composed: true, detail: {} }));
 	check('an event crosses the shadow boundary, so a site still hears it', heard === 1);
 
 	/* --- the fallback: no stylesheet text, no isolation, form still works - */
@@ -1609,14 +1609,14 @@ async function testStyleIsolation() {
 	});
 
 	check('and something that is not the stylesheet is not injected as one', !wrongBody.root.shadowRoot);
-	check('with the form still mounted and usable', !!wrongBody.root.tisaForm && !!wrongBody.root.tisaForm.phoneInput);
-	check('and the form is mounted and usable anyway', !!broken.root.tisaForm && !!broken.root.tisaForm.phoneInput);
-	check('nothing claims it was isolated', !broken.root.getAttribute('data-tisa-isolated'));
+	check('with the form still mounted and usable', !!wrongBody.root.signaForm && !!wrongBody.root.signaForm.phoneInput);
+	check('and the form is mounted and usable anyway', !!broken.root.signaForm && !!broken.root.signaForm.phoneInput);
+	check('nothing claims it was isolated', !broken.root.getAttribute('data-signa-isolated'));
 
 	/* --- no CSS URL at all: do not fetch the page and call it a stylesheet */
 	const bare = await bootIsolated({ config: { isolate: true, css: '' } });
 
-	check('without a stylesheet URL there is no swap at all', !bare.root.shadowRoot && !!bare.root.tisaForm);
+	check('without a stylesheet URL there is no swap at all', !bare.root.shadowRoot && !!bare.root.signaForm);
 
 	/* --- the demo shows it, with a theme trying to get in ---------------- */
 	check('the demo can switch a hostile theme on around the form', /id="demo-hostile"/.test(index) && /demo-page\.is-hostile/.test(index));
@@ -1665,7 +1665,7 @@ async function testArcaptchaWidget() {
 		getArcToken: (id) => (7 === id ? 'ARC-TOKEN-123' : ''),
 	};
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	for (let i = 0; i < 10; i++) await tick();
 
@@ -1702,8 +1702,8 @@ async function testArcaptchaHiddenField() {
 	const ctx = boot({
 		config: { captcha: bundle },
 		html: (source) => source.replace(
-			'<div class="tisa-captcha" data-tisa-captcha hidden></div>',
-			'<div class="tisa-captcha" data-tisa-captcha hidden></div>' +
+			'<div class="signa-captcha" data-signa-captcha hidden></div>',
+			'<div class="signa-captcha" data-signa-captcha hidden></div>' +
 				'<input type="hidden" name="arcaptcha-token" value="FIELD-TOKEN-456">'
 		),
 		fetch: (req) => (req.url.indexOf('form-config') >= 0 ? ok({ nonce: 'fresh' }) : ok(verifyStep())),
@@ -1717,7 +1717,7 @@ async function testArcaptchaHiddenField() {
 		!!ctx.root.querySelector('input[name="arcaptcha-token"]')
 	);
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	for (let i = 0; i < 10; i++) await tick();
 
@@ -1738,7 +1738,7 @@ async function testArcaptchaObjectToken() {
 		kind: 'score',
 		scripts: [],
 		failOpen: false,
-		config: { siteKey: 'arc-site-key', kind: 'score', action: 'tisa_otp_send' },
+		config: { siteKey: 'arc-site-key', kind: 'score', action: 'signa_send' },
 	};
 
 	const ctx = boot({
@@ -1752,7 +1752,7 @@ async function testArcaptchaObjectToken() {
 		execute: () => Promise.resolve({ arcaptcha_token: 'OBJECT-TOKEN-789' }),
 	};
 
-	ctx.doc.querySelector('[data-tisa-phone]').value = '09121234567';
+	ctx.doc.querySelector('[data-signa-phone]').value = '09121234567';
 	ctx.form.act('start');
 	for (let i = 0; i < 12; i++) await tick();
 

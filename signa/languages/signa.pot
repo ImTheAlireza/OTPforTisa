@@ -1,0 +1,4261 @@
+# Copyright (C) 2026 Signa
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Signa 1.7.2\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/signa\n"
+"POT-Creation-Date: 2026-09-24 21:02+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fa_IR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Signa pot builder 1.2\n"
+"X-Domain: signa\n"
+
+
+#. translators: %s: minimum PHP version
+#: signa.php:39
+msgid "سیگنا به PHP نسخه %s یا جدیدتر نیاز دارد و فعلاً غیرفعال است."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:61
+#: src/Admin/Menu.php:70
+#: src/Admin/Menu.php:70
+#: src/Admin/ScreenNav.php:37
+msgid "دسترسی و مسدودی"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:62
+msgid "دو اهرم اضطراری: کدی برای روزی که پیامک قطع است، و فهرستی از شماره‌هایی که اجازه ورود ندارند."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:82
+msgid "کد اضطراری"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:83
+msgid "برای وقتی که پیامک قطع است. فقط برای حساب‌های موجود؛ کاربر تازه نمی‌سازد."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:86
+msgid "کد تازه شما (فقط همین یک‌بار نمایش داده می‌شود)"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:108
+msgid "زمان باقی‌مانده"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:109
+msgid "استفاده باقی‌مانده"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:111
+#: src/Admin/SettingsScreen.php:128
+#: src/Admin/ToolsScreen.php:136
+#: src/Diagnostics/SelfTest.php:254
+#: src/Diagnostics/SelfTest.php:268
+msgid "غیرفعال"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:111
+msgid "وضعیت"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:114
+msgid "فقط IP سازنده"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:114
+msgid "بدون قید IP"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:114
+msgid "قید شبکه"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:119
+msgid "همه حساب‌ها"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:120
+msgid "محدوده شماره"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:123
+msgid "تلاش ناموفق"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:128
+msgid "محدود به: "
+msgstr ""
+
+#: src/Admin/AccessScreen.php:149
+msgid "کد ۶ تا ۱۲ رقمی"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:151
+msgid "تولید تصادفی"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:158
+msgid "اعتبار"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:159
+#: src/Admin/SettingsScreen.php:564
+msgid "دقیقه"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:164
+msgid "تعداد استفاده"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:165
+#: src/Admin/SettingsScreen.php:370
+msgid "بار"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:168
+msgid "فقط از همین IP کار کند"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:174
+msgid "محدود به این شماره‌ها"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:175
+msgid "خالی بگذارید تا روی هر حساب موجود کار کند."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:178
+msgid "ساخت کد اضطراری"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:186
+msgid "لغو فوری کد اضطراری"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:259
+msgid "فهرست مسدود"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:260
+msgid "پیش از هر بررسی دیگری رد می‌شوند و هزینه‌ای مصرف نمی‌شود. پیش‌شماره: چند رقم؛ بازه: ستاره (۰۹۱۲*۴۵)."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:268
+msgid "شماره‌ها یا پیش‌شماره‌ها"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:269
+msgid "هر مورد در یک خط؛ با کاما هم می‌شود."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:276
+#: src/Admin/AccessScreen.php:299
+msgid "یادداشت"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:277
+msgid "مثلاً: اسپم ثبت‌نام"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:282
+msgid "مدت"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:283
+msgid "روز (۰ = همیشگی)"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:286
+msgid "افزودن"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:290
+msgid "هنوز چیزی مسدود نشده است."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:297
+#: src/Blocklist/Rule.php:196
+msgid "الگو"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:298
+#: src/Admin/SettingsScreen.php:839
+msgid "نوع"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:300
+msgid "انقضا"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:301
+msgid "افزوده شده"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:314
+msgid "پاک کردن کل فهرست"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:327
+msgid "همیشگی"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:333
+#: src/Admin/SettingsScreen.php:893
+msgid "حذف"
+msgstr ""
+
+#: src/Admin/AccessScreen.php:386
+#: src/Admin/AppMode.php:69
+#: src/Admin/LogsScreen.php:193
+#: src/Admin/LogsScreen.php:242
+#: src/Admin/ToolsScreen.php:273
+#: src/Admin/ToolsScreen.php:289
+msgid "دسترسی غیرمجاز."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:416
+msgid "کد اضطراری ساخته شد. همین حالا آن را جایی امن یادداشت کنید؛ کد ذخیره نمی‌شود و دوباره نمایش داده نخواهد شد."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:417
+msgid "کد اضطراری باطل شد."
+msgstr ""
+
+#. translators: %d: minimum digits
+#: src/Admin/AccessScreen.php:418
+msgid "کد باید دست‌کم %d رقم باشد."
+msgstr ""
+
+#. translators: 1: added, 2: skipped
+#: src/Admin/AccessScreen.php:419
+msgid "%1$d مورد اضافه شد و %2$d مورد تکراری یا نامعتبر بود."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:420
+msgid "مورد از فهرست حذف شد."
+msgstr ""
+
+#. translators: %d: count
+#: src/Admin/AccessScreen.php:421
+msgid "%d مورد از فهرست پاک شد."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:422
+msgid "چنین موردی در فهرست نبود."
+msgstr ""
+
+#: src/Admin/AccessScreen.php:447
+msgid "پایان‌یافته"
+msgstr ""
+
+#. translators: %d: seconds
+#: src/Admin/AccessScreen.php:452
+msgid "%d ثانیه"
+msgstr ""
+
+#. translators: %d: minutes
+#: src/Admin/AccessScreen.php:457
+msgid "%d دقیقه"
+msgstr ""
+
+#. translators: %d: hours
+#: src/Admin/AccessScreen.php:461
+msgid "%d ساعت"
+msgstr ""
+
+#: src/Admin/Controls.php:75
+msgid "مقدار ذخیره شده است؛ برای تغییر، مقدار تازه را وارد کنید."
+msgstr ""
+
+#: src/Admin/LogsScreen.php:55
+#: src/Admin/Menu.php:68
+#: src/Admin/Menu.php:68
+#: src/Admin/ScreenNav.php:35
+#: src/Admin/SettingsScreen.php:1261
+msgid "رویدادها"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:64
+msgid "زمان"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:64
+msgid "سطح"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:64
+#: src/Admin/ReportScreen.php:237
+msgid "رویداد"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:64
+msgid "کانال/سامانه"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:64
+#: src/Diagnostics/SelfTest.php:879
+#: src/Front/Assets.php:131
+#: src/Front/FormRenderer.php:201
+msgid "شماره"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:64
+msgid "خطا"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:64
+#: src/Elementor/FormWidget.php:63
+msgid "توضیح"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:71
+msgid "رویدادی ثبت نشده است."
+msgstr ""
+
+#: src/Admin/LogsScreen.php:101
+msgid "کل رویدادها"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:102
+msgid "۲۴ ساعت گذشته"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:103
+msgid "خطاها"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:104
+msgid "روزهای نگهداری"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:119
+msgid "همه سطح‌ها"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:125
+msgid "همه رویدادها"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:131
+msgid "جست‌وجو در پیام، شماره یا خطا"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:134
+msgid "همه بازه‌ها"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:134
+msgid "۱ ساعت"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:134
+msgid "۶ ساعت"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:134
+msgid "۲۴ ساعت"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:134
+msgid "۳ روز"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:134
+msgid "۷ روز"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:139
+msgid "فیلتر"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:147
+msgid "خروجی CSV"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:152
+msgid "پاک کردن همه"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:165
+msgid "صفحه قبل"
+msgstr ""
+
+#. translators: %d: page number
+#: src/Admin/LogsScreen.php:168
+msgid "صفحه %d"
+msgstr ""
+
+#: src/Admin/LogsScreen.php:171
+msgid "صفحه بعد"
+msgstr ""
+
+#: src/Admin/Menu.php:57
+#: src/Admin/Menu.php:58
+#: src/Admin/SettingsScreen.php:124
+#: src/Elementor/Module.php:50
+msgid "سیگنا"
+msgstr ""
+
+#: src/Admin/Menu.php:66
+#: src/Admin/Menu.php:66
+#: src/Admin/Menu.php:95
+#: src/Admin/ScreenNav.php:33
+msgid "تنظیمات"
+msgstr ""
+
+#: src/Admin/Menu.php:67
+#: src/Admin/Menu.php:67
+#: src/Admin/ReportScreen.php:82
+#: src/Admin/ScreenNav.php:34
+#: src/Admin/SettingsScreen.php:1196
+#: src/Admin/SettingsScreen.php:1295
+msgid "گزارش‌ها"
+msgstr ""
+
+#: src/Admin/Menu.php:69
+#: src/Admin/ToolsScreen.php:58
+msgid "ابزارها و وضعیت"
+msgstr ""
+
+#: src/Admin/Menu.php:69
+#: src/Admin/ScreenNav.php:36
+msgid "ابزارها"
+msgstr ""
+
+#: src/Admin/Menu.php:79
+msgid "تنظیمات افزونه سیگنا"
+msgstr ""
+
+#. translators: 1: number of events, 2: how many are errors, 3: days of retention
+#: src/Admin/ReportScreen.php:111
+msgid "%1$s رویداد ثبت شده است؛ %2$s موردش خطا بوده. رویدادها %3$s روز نگه داشته می‌شوند."
+msgstr ""
+
+#: src/Admin/ReportScreen.php:117
+msgid "دیدن تک‌تک رویدادها"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:122
+msgid "دانلود گزارش این بازه (CSV)"
+msgstr ""
+
+#. translators: %d: number of days
+#: src/Admin/ReportScreen.php:138
+msgid "%d روز"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:150
+#: src/Admin/SettingsScreen.php:1171
+msgid "درخواست‌ها"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:150
+msgid "هر بار که کاربر کد خواست"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:151
+#: src/Admin/SettingsScreen.php:1172
+msgid "موفق"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:151
+#: src/Log/Report.php:99
+msgid "کد ارسال شد"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:152
+#: src/Admin/ReportScreen.php:216
+#: src/Admin/ReportScreen.php:275
+#: src/Admin/SettingsScreen.php:1173
+#: src/Diagnostics/SelfTest.php:324
+#: src/Diagnostics/SelfTest.php:410
+#: src/Diagnostics/SelfTest.php:1480
+#: src/Front/Assets.php:111
+msgid "ناموفق"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:152
+msgid "ارسال نشد یا رد شد"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:153
+#: src/Admin/SettingsScreen.php:1174
+msgid "نرخ موفقیت"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:153
+msgid "از درخواست‌ها"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:154
+#: src/Log/Report.php:102
+msgid "حساب تازه"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:154
+msgid "عضویت کامل‌شده"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:155
+msgid "رد محافظ‌ها"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:155
+msgid "محدودیت، ربات، مسدودی"
+msgstr ""
+
+#. translators: %d: number of days
+#: src/Admin/ReportScreen.php:174
+msgid "بازه: %d روز گذشته."
+msgstr ""
+
+#: src/Admin/ReportScreen.php:193
+msgid "ارسال‌ها و خطاها، روز به روز"
+msgstr ""
+
+#. translators: %d: number of days
+#: src/Admin/ReportScreen.php:195
+msgid "نمودار ارسال و خطا در %d روز گذشته"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:215
+#: src/Admin/ReportScreen.php:275
+msgid "ارسال‌شده"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:226
+msgid "بیشترین دلیل‌های شکست"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:229
+msgid "در این بازه هیچ شکستی ثبت نشده است."
+msgstr ""
+
+#: src/Admin/ReportScreen.php:237
+#: src/Admin/ReportScreen.php:291
+msgid "کد خطا"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:237
+#: src/Admin/ReportScreen.php:291
+msgid "تعداد"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:237
+msgid "سهم"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:258
+msgid "دسترسی لازم را ندارید."
+msgstr ""
+
+#: src/Admin/ReportScreen.php:275
+#: src/Admin/SettingsScreen.php:1268
+#: src/Diagnostics/SelfTest.php:1464
+msgid "روز"
+msgstr ""
+
+#: src/Admin/ReportScreen.php:291
+msgid "دلیل"
+msgstr ""
+
+#: src/Admin/ScreenNav.php:62
+msgid "صفحه‌های افزونه"
+msgstr ""
+
+#: src/Admin/ScreenNav.php:92
+msgid "حالت نمایش"
+msgstr ""
+
+#: src/Admin/ScreenNav.php:96
+msgid "نمای پیشخوان"
+msgstr ""
+
+#: src/Admin/ScreenNav.php:96
+msgid "حالت اپ"
+msgstr ""
+
+#: src/Admin/ScreenNav.php:99
+msgid "بازگشت به چیدمان وردپرس."
+msgstr ""
+
+#: src/Admin/ScreenNav.php:99
+msgid "تمام‌صفحه، بدون منو و نوار مدیریت."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:113
+msgid "ذخیره تنظیمات"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:114
+msgid "ذخیره شد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:128
+#: src/Admin/ToolsScreen.php:136
+#: src/Diagnostics/SelfTest.php:254
+#: src/Diagnostics/SelfTest.php:268
+#: src/Diagnostics/SelfTest.php:1272
+#: src/Diagnostics/SelfTest.php:1279
+#: src/Diagnostics/SelfTest.php:1315
+#: src/Front/Assets.php:116
+msgid "فعال"
+msgstr ""
+
+#. translators: %s: plugin version
+#: src/Admin/SettingsScreen.php:129
+msgid "نسخه %s"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:144
+msgid "بخش‌های تنظیمات"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:168
+msgid "عمومی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:169
+msgid "کد و کانال‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:170
+msgid "سامانه‌های پیامکی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:171
+msgid "امنیت و محدودیت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:172
+#: src/Diagnostics/SelfTest.php:1091
+msgid "فرم عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:173
+msgid "ظاهر فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:174
+msgid "فروشگاه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:175
+msgid "داده و رویدادها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:176
+msgid "گزارش‌ها و آمار"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:231
+msgid "آزمایش این بخش"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:268
+msgid "رفتار ورود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:270
+msgid "فعال‌سازی افزونه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:271
+msgid "ورود و عضویت با کد یکبارمصرف فعال باشد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:274
+#: src/Diagnostics/SelfTest.php:260
+msgid "حالت احراز"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:278
+msgid "هوشمند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:278
+msgid "کاربر موجود وارد می‌شود و کاربر تازه عضو"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:279
+msgid "فقط ورود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:279
+msgid "عضویت خودکار بسته است"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:280
+msgid "فقط عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:280
+msgid "مناسب فرم‌های ثبت‌نام"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:285
+msgid "جایگزینی صفحه ورود وردپرس"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:286
+msgid "فرم OTP روی wp-login.php نمایش داده شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:286
+msgid "فرم کلاسیک وردپرس پنهان می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:290
+msgid "ورود فقط با کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:292
+msgid "ورود با نام کاربری و گذرواژه بسته شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:294
+msgid "جلوی ارسال گذرواژه به wp-login.php را می‌گیرد، نه فقط پنهان‌کردن فرم. راه بازگشت: کد اضطراری."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:298
+msgid "ماندن در حساب"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:300
+msgid "کاربر ۱۴ روز وارد بماند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:302
+msgid "اگر خاموش باشد، نشست با بسته‌شدن مرورگر تمام می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:305
+msgid "پنهان‌سازی وجود حساب"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:306
+msgid "پیام‌ها یکسان باشند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:306
+msgid "هیچ‌کس نمی‌فهمد شماره‌اش قبلاً ثبت شده یا نه."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:309
+msgid "سازگاری با کش صفحه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:314
+msgid "nonce تازه از سرور"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:315
+msgid "هنگام باز شدن فرم یک nonce تازه گرفته می‌شود و در صورت رد شدن، یک بار دیگر تلاش می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:318
+msgid "چاپ در صفحه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:319
+msgid "بدون درخواست اضافه؛ فقط وقتی کش صفحه و CDN خاموش است."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:323
+msgid "اگر کش صفحه، وارنیش یا Cloudflare دارید حالت «nonce تازه از سرور» را نگه دارید؛ وگرنه فرم خطای ۴۰۳ می‌گیرد."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:328
+#: src/Elementor/FormWidget.php:64
+msgid "مقصد پس از ورود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:330
+msgid "پس از ورود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:332
+msgid "خالی بگذارید تا کاربر به حساب کاربری (یا صفحه اصلی) برود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:334
+msgid "پس از عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:342
+msgid "آزمایش تنظیمات عمومی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:352
+msgid "دامنه شما"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:359
+#: src/Admin/ToolsScreen.php:129
+msgid "کد یکبارمصرف"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:361
+#: src/Diagnostics/SelfTest.php:300
+msgid "طول کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:362
+#: src/Diagnostics/SelfTest.php:300
+msgid "رقم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:365
+#: src/Diagnostics/SelfTest.php:301
+msgid "اعتبار کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:366
+#: src/Admin/SettingsScreen.php:374
+#: src/Admin/SettingsScreen.php:382
+#: src/Diagnostics/SelfTest.php:301
+msgid "ثانیه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:369
+msgid "حداکثر تلاش برای وارد کردن کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:373
+msgid "فاصله بین دو ارسال"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:377
+msgid "بررسی خودکار کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:378
+msgid "به‌محض کامل شدن کد، بدون زدن دکمه بررسی شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:381
+msgid "مهلت پاسخ سرور"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:385
+msgid "محل نگهداری کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:389
+#: src/Diagnostics/SelfTest.php:356
+msgid "جدول اختصاصی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:389
+msgid "پیش‌فرض؛ بدون نیاز به کش شیء"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:390
+#: src/Admin/ToolsScreen.php:130
+#: src/Diagnostics/SelfTest.php:267
+#: src/Diagnostics/SelfTest.php:352
+msgid "کش شیء"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:390
+msgid "سبک‌تر؛ فقط با Redis/Memcached پایدار"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:398
+msgid "کانال‌های ارسال"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:400
+msgid "کانال اصلی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:404
+#: src/Admin/SettingsScreen.php:414
+#: src/Admin/ToolsScreen.php:199
+#: src/Channel/SmsChannel.php:35
+#: src/Diagnostics/SelfTest.php:451
+#: src/Front/Assets.php:137
+msgid "پیامک"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:405
+#: src/Admin/SettingsScreen.php:415
+#: src/Admin/SettingsScreen.php:762
+#: src/Admin/ToolsScreen.php:199
+#: src/Channel/EmailChannel.php:35
+#: src/Diagnostics/SelfTest.php:451
+#: src/Front/Assets.php:138
+#: src/Registration/FieldCatalog.php:59
+#: src/Registration/FieldCatalog.php:82
+msgid "ایمیل"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:410
+msgid "کانال‌های فعال"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:418
+msgid "اگر کانال اصلی ناموفق باشد، به کانال فعال بعدی می‌رویم."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:420
+msgid "جابه‌جایی خودکار"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:421
+msgid "در صورت خطای موقت، کانال/سامانه بعدی امتحان شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:424
+msgid "متن پیامک"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:426
+msgid "نشانه‌ها: {code} {phone} {minutes} {site} {domain} {webotp}"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:428
+msgid "خواندن خودکار کد (WebOTP)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:429
+msgid "خط شناسایی به انتهای پیامک اضافه شود"
+msgstr ""
+
+#. translators: %s: the WebOTP binding line, for example @example.com #12345
+#: src/Admin/SettingsScreen.php:432
+msgid "خط %s به انتهای پیامک متنی اضافه می‌شود (هزینهٔ چند نویسه بیشتر). برای الگوها نشانهٔ {webotp}."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:439
+msgid "کانال ایمیل"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:441
+msgid "موضوع ایمیل"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:445
+msgid "متن ایمیل"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:447
+msgid "نشانه‌ها: {code} {minutes} {site}"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:449
+msgid "فرستنده"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:451
+msgid "خالی بگذارید تا از آدرس پیش‌فرض وردپرس استفاده شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:457
+msgid "آزمایش ساخت کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:458
+#: src/Diagnostics/SelfTest.php:343
+msgid "هیچ پیامکی ارسال نمی‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:472
+msgid "انتخاب سامانه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:474
+msgid "سامانه اصلی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:478
+msgid "سامانه پشتیبان"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:479
+msgid "بدون پشتیبان"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:480
+msgid "فقط برای خطاهای موقت (تایم‌اوت، خطای ۵xx، اتمام اعتبار) استفاده می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:489
+msgid "ارسال مستقیم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:490
+msgid "نادیده گرفتن WP_HTTP_BLOCK_EXTERNAL برای پیامک"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:491
+msgid "افزونه درخواست را با cURL مستقیم می‌فرستد؛ فقط اگر به wp-config.php دسترسی ندارید."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:521
+msgid "این سامانه در حال حاضر سامانه اصلی است."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:523
+msgid "این سامانه به‌عنوان پشتیبان انتخاب شده است."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:525
+msgid "اعتبارنامه این سامانه کامل نیست."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:529
+msgid "مستندات سامانه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:536
+msgid "اعتبارنامه‌ها را می‌توان در wp-config.php هم گذاشت: <code>SIGNA_SMSIR_API_KEY</code>."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:541
+#: src/Diagnostics/SelfTest.php:472
+msgid "آزمایش سامانه‌های پیامکی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:546
+#: src/Front/Assets.php:129
+msgid "ارسال پیامک آزمایشی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:557
+msgid "محدودیت ارسال"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:559
+msgid "فعال بودن محدودیت‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:560
+msgid "شمارنده‌های ارسال و تأیید اعمال شوند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:563
+msgid "بازه شمارش"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:567
+msgid "سقف هر شماره"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:568
+#: src/Admin/SettingsScreen.php:572
+msgid "ارسال در بازه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:571
+msgid "سقف هر آدرس IP"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:575
+msgid "سقف روزانه هر IP"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:576
+#: src/Admin/SettingsScreen.php:586
+msgid "ارسال در روز"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:579
+msgid "سقف تأیید کد هر IP"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:580
+msgid "تلاش در بازه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:584
+#: src/Diagnostics/SelfTest.php:751
+msgid "سقف روزانهٔ کل سایت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:588
+msgid "سقف‌های بالا برای هر شماره و هر IP است؛ این یکی برای خود سایت است. صفر = بی‌سقف."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:594
+msgid "شماره‌های مورد اعتماد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:596
+msgid "فعال بودن فهرست"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:597
+msgid "شماره‌های این فهرست از کپچا و محدودیت‌ها معاف باشند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:600
+msgid "شماره‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:602
+msgid "هر خط یک شماره، پیش‌شماره (۰۹۱۲) یا الگو (۰۹۳۵*۴۵۶۷)."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:604
+msgid "معافیت از"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:606
+msgid "نام گاردها با کاما: captcha و throttle. فهرست مسدود هرگز نادیده گرفته نمی‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:611
+msgid "پروکسی و IP واقعی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:613
+msgid "سرآشد معتبر"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:617
+msgid "هیچ (فقط REMOTE_ADDR)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:618
+msgid "کلادفلر (CF-Connecting-IP)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:619
+msgid "X-Forwarded-For"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:620
+msgid "X-Real-IP"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:623
+msgid "سرآشد تنها از پروکسی‌های مورد اعتماد پایین پذیرفته می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:625
+msgid "پروکسی‌های مورد اعتماد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:627
+msgid "IP یا CIDR، با کاما جدا کنید."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:632
+#: src/Front/Assets.php:113
+msgid "کپچا"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:636
+msgid "سرویس"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:640
+#: src/Diagnostics/SelfTest.php:707
+msgid "کلید سایت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:644
+msgid "کلید خصوصی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:648
+msgid "حداقل امتیاز (reCAPTCHA v3)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:652
+#: src/Diagnostics/SelfTest.php:765
+msgid "زمان نمایش"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:656
+#: src/Diagnostics/SelfTest.php:1056
+msgid "همیشه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:656
+msgid "هر درخواست ارسال کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:657
+msgid "پس از چند تلاش"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:657
+msgid "تجربه روان‌تر برای انسان‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:663
+msgid "وقتی سرویس کپچا در دسترس نیست"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:667
+msgid "ورود را نبند (پیشنهاد می‌شود)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:668
+msgid "هانی‌پات و سقف ارسال فعال می‌مانند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:671
+msgid "اگر سرویس کپچا در دسترس نباشد: روشن = کاربر رد نمی‌شود، خاموش = هر ورودی کپچا می‌خواهد."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:675
+#: src/Diagnostics/SelfTest.php:793
+msgid "نشانی جایگزین اسکریپت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:679
+msgid "اختیاری؛ برای وقتی دامنهٔ رسمی سرویس روی سایت شما باز نمی‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:682
+msgid "مهلت بارگذاری اسکریپت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:683
+#: src/Diagnostics/SelfTest.php:560
+msgid "میلی‌ثانیه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:686
+msgid "حالت آرکپچا"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:687
+msgid "نسخه ۳ (امتیازی/نامرئی)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:687
+msgid "اگر حساب آرکپچای شما v3 است روشن کنید"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:693
+msgid "نقش‌های محافظت‌شده"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:695
+msgid "مسدودسازی ورود پیامکی نقش‌های حساس"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:696
+msgid "این نقش‌ها فقط با رمز عبور وارد شوند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:699
+msgid "نقش‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:701
+msgid "نام نقش‌ها با کاما. مدیران کل همیشه مسدود هستند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:703
+msgid "نقش پیش‌فرض کاربران تازه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:713
+msgid "آزمایش کپچا در این مرورگر"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:726
+msgid "دسترسی اضطراری و فهرست مسدود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:732
+msgid "باز کردن صفحه دسترسی و مسدودی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:742
+msgid "عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:744
+msgid "فعال بودن عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:745
+msgid "شماره‌های تازه بتوانند حساب بسازند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:748
+msgid "عضویت خودکار"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:749
+msgid "پس از تأیید کد، حساب ساخته شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:752
+msgid "ترتیب مراحل"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:756
+msgid "اول فرم، بعد کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:756
+msgid "کمترین پیامک هدررفته"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:757
+msgid "اول کد، بعد فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:757
+msgid "شماره پیش از دریافت اطلاعات تأیید می‌شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:766
+msgid "جمع‌آوری نشود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:767
+#: src/Diagnostics/SelfTest.php:1330
+msgid "اختیاری"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:768
+#: src/Admin/SettingsScreen.php:839
+msgid "الزامی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:773
+#: src/Diagnostics/SelfTest.php:1155
+#: src/Gateway/Drivers/FarazSms.php:52
+#: src/Gateway/Drivers/MeliPayamak.php:35
+msgid "نام کاربری"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:777
+msgid "بر پایه شماره"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:778
+msgid "شماره با پیشوند user"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:779
+msgid "بر پایه ایمیل"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:784
+msgid "نام نمایشی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:788
+msgid "نام و نام خانوادگی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:789
+msgid "فقط نام"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:790
+msgid "شماره ماسک‌شده"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:795
+msgid "ایمیل خوش‌آمد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:796
+msgid "پس از عضویت ایمیل خوش‌آمد ارسال شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:799
+msgid "عنوان فرم عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:803
+msgid "توضیح فرم عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:810
+msgid "فیلدها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:812
+msgid "مجموعه آماده"
+msgstr ""
+
+#. translators: %d: number of active fields
+#: src/Admin/SettingsScreen.php:823
+msgid "اکنون %d فیلد در فرم عضویت فعال است."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:830
+#: src/Diagnostics/SelfTest.php:1162
+msgid "آزمایش فرم عضویت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:839
+msgid "شناسه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:839
+#: src/Admin/SettingsScreen.php:871
+msgid "برچسب"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:839
+msgid "کلید متا"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:850
+msgid "افزودن فیلد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:882
+msgid "متا"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:882
+msgid "هسته وردپرس"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:882
+#: src/Admin/SettingsScreen.php:1102
+#: src/Diagnostics/SelfTest.php:1314
+msgid "ووکامرس"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:902
+msgid "پوسته و رنگ"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:904
+#: src/Admin/SettingsScreen.php:1070
+#: src/Diagnostics/SelfTest.php:1297
+#: src/Elementor/FormWidget.php:76
+msgid "پوسته"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:908
+#: src/Elementor/FormWidget.php:81
+msgid "خطی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:908
+msgid "کمترین تزئین، سریع‌ترین بارگذاری"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:909
+#: src/Elementor/FormWidget.php:82
+msgid "کارت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:909
+msgid "کارت سایه‌دار روی پس‌زمینه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:910
+#: src/Elementor/FormWidget.php:83
+msgid "شیشه‌ای"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:910
+msgid "لایه نیمه‌شفاف و محو"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:911
+#: src/Elementor/FormWidget.php:84
+msgid "تیره"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:911
+msgid "مناسب صفحات تیره"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:912
+#: src/Elementor/FormWidget.php:85
+msgid "گرد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:912
+msgid "گوشه‌های کاملاً گرد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:917
+#: src/Elementor/FormWidget.php:90
+msgid "رنگ تأکیدی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:921
+msgid "رنگ زمینه فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:925
+#: src/Diagnostics/SelfTest.php:1223
+#: src/Elementor/FormWidget.php:92
+msgid "گردی گوشه‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:929
+#: src/Diagnostics/SelfTest.php:1224
+msgid "عرض فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:934
+#: src/Diagnostics/SelfTest.php:1243
+msgid "فونت فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:939
+#: src/Diagnostics/SelfTest.php:1306
+msgid "وزیرمتن (همراه افزونه)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:940
+msgid "فونت پوسته"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:941
+msgid "فونت دلخواه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:946
+msgid "«وزیرمتن» همان فونت پیش‌نمایش است و همراه افزونه می‌آید."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:950
+msgid "جداسازی استایل از پوسته"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:952
+msgid "فرم داخل Shadow DOM رندر شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:954
+msgid "روشن: قالب سایت نمی‌تواند فونت، رنگ و شکل کنترل‌های فرم را عوض کند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:957
+#: src/Elementor/FormWidget.php:97
+msgid "چینش"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:961
+#: src/Elementor/FormWidget.php:102
+msgid "مرکز"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:962
+#: src/Elementor/FormWidget.php:103
+msgid "ابتدا"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:963
+#: src/Elementor/FormWidget.php:104
+msgid "انتها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:968
+#: src/Elementor/FormWidget.php:112
+msgid "ورودی کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:972
+msgid "خانه‌های جدا"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:972
+msgid "هر رقم در یک کادر"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:973
+#: src/Elementor/FormWidget.php:118
+msgid "یک کادر"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:973
+msgid "ساده و فشرده"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:981
+msgid "برند و متن‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:983
+#: src/Elementor/FormWidget.php:126
+msgid "نمایش لوگو"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:984
+msgid "لوگو بالای فرم نمایش داده شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:987
+msgid "آدرس لوگو"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:989
+msgid "انتخاب از کتابخانه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:992
+msgid "عرض لوگو"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:996
+msgid "عنوان فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1000
+msgid "توضیح فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1004
+msgid "دکمه دریافت کد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1008
+msgid "دکمه ورود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1012
+msgid "ارسال دوباره"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1016
+#: src/Front/Assets.php:248
+#: src/Front/Assets.php:298
+#: src/Front/FormRenderer.php:132
+msgid "ویرایش شماره"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1020
+msgid "متن قوانین"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1021
+msgid "نمایش متن قوانین زیر فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1029
+msgid "CSS و JS دلخواه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1031
+msgid "محل اعمال"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1035
+msgid "فقط صفحات دارای فرم"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1036
+msgid "همه صفحات"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1041
+msgid "CSS دلخواه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1045
+msgid "JS دلخواه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1047
+msgid "فقط برای مدیران دارای دسترسی unfiltered_html ذخیره می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1053
+msgid "آزمایش رنگ‌ها و کنتراست"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1061
+msgid "ووکامرس فعال نیست؛ این تنظیمات فعلاً اثری ندارند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1065
+#: src/Diagnostics/SelfTest.php:1366
+msgid "وودمارت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1075
+msgid "وودمارت شناسایی شد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1075
+msgid "وودمارت فعال نیست"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1078
+msgid "این تنظیمات فقط روی سایت‌های وودمارت اثر دارند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1081
+msgid "فرم در سایدبار ورود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1082
+msgid "فرم OTP در پنل ورود وودمارت رندر شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1083
+msgid "پنل ورود همان کشوی حساب کاربری در هدر است؛ فرم داخل خودش، با همان AJAX و کپچا."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1085
+#: src/Diagnostics/SelfTest.php:1396
+msgid "فرم رمز عبور وودمارت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1089
+msgid "جایگزین شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1090
+msgid "بماند (فرم OTP زیرش بیاید)"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1093
+msgid "هیچ فایلی از پوسته تغییر نمی‌کند؛ فرم در همان جای پنل جایگزین می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1095
+#: src/Diagnostics/SelfTest.php:1385
+msgid "بخش «ساخت حساب» وودمارت"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1096
+msgid "آیکن، متن و لینک «ساخت حساب» وودمارت هم برداشته شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1097
+msgid "فرم خود افزونه عضویت دارد. اگر عضویت افزونه خاموش باشد، این بخش می‌ماند تا راه ثبت‌نام باز بماند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1104
+#: src/Diagnostics/SelfTest.php:1322
+msgid "فرم حساب کاربری"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1105
+msgid "فرم ورود «حساب کاربری» با فرم OTP جایگزین شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1108
+msgid "ورود اجباری پیش از تسویه حساب"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1109
+msgid "کاربر مهمان به صفحه تسویه حساب نرسد"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1112
+msgid "صفحه ورود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1116
+msgid "پیام صفحه تسویه حساب"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1120
+#: src/Diagnostics/SelfTest.php:1335
+msgid "همگام‌سازی شماره صورتحساب"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1121
+msgid "شماره تأییدشده در billing_phone هم ذخیره شود"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1124
+#: src/Diagnostics/SelfTest.php:1342
+msgid "اتصال سفارش‌های مهمان"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1125
+msgid "پس از عضویت، سفارش‌های مهمان با همان شماره به حساب متصل شوند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1131
+msgid "المنتور"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1134
+msgid "ویجت «فرم ورود پیامکی سیگنا» در دستهٔ سیگنا المنتور است."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1141
+#: src/Diagnostics/SelfTest.php:1407
+msgid "آزمایش فروشگاه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1161
+msgid "ثبت رویدادها خاموش است؛ آماری برای نمایش نیست."
+msgstr ""
+
+#. translators: %d: number of days
+#: src/Admin/SettingsScreen.php:1204
+msgid "آمار %d روز گذشته"
+msgstr ""
+
+#. translators: %s: the host this site refuses to reach
+#: src/Admin/SettingsScreen.php:1249
+msgid "این سایت اجازهٔ درخواست خروجی به %s را نمی‌دهد؛ تا آن خط عوض نشود هیچ پیامکی فرستاده نمی‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1252
+msgid "یا در wp-config.php خط WP_HTTP_BLOCK_EXTERNAL را false کنید، یا در سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1263
+#: src/Diagnostics/SelfTest.php:1438
+msgid "ثبت رویدادها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1264
+msgid "رویدادها در جدول اختصاصی ذخیره شوند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1267
+#: src/Admin/ToolsScreen.php:251
+#: src/Diagnostics/SelfTest.php:1463
+msgid "نگهداری"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1272
+msgid "سقف تعداد ردیف‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1274
+#: src/Diagnostics/SelfTest.php:759
+msgid "ردیف"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1276
+msgid "نگهداری «هفت روز» زیر حمله می‌تواند میلیون‌ها ردیف شود. این سقف قدیمی‌ترین‌ها را حذف می‌کند. صفر = بی‌سقف."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1279
+#: src/Diagnostics/SelfTest.php:1469
+msgid "حالت اشکال‌زدایی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1280
+msgid "رویدادها در error_log هم نوشته شوند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1280
+msgid "فقط وقتی WP_DEBUG فعال است."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1283
+msgid "شماره موبایل هرگز به‌صورت خام ذخیره نمی‌شود؛ فقط اثر انگشت HMAC و نسخه ماسک‌شده."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1287
+msgid "گزارش و رویدادها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1290
+msgid "صفحه‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1297
+msgid "تک‌تک رویدادها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1305
+msgid "کلیدهای داده"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1307
+msgid "کلید متای اصلی شماره"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1309
+msgid "تغییر این کلید، داده‌های موجود را منتقل نمی‌کند."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1311
+msgid "کلیدهای جست‌وجوی جانبی"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1313
+msgid "برای پیدا کردن حساب‌های قدیمی؛ با کاما جدا کنید."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1318
+msgid "حذف داده‌ها"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1320
+msgid "هنگام حذف افزونه"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1321
+msgid "جدول‌ها و تنظیمات هم پاک شوند"
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1321
+msgid "متای شماره کاربران در هر صورت نگه داشته می‌شود."
+msgstr ""
+
+#: src/Admin/SettingsScreen.php:1328
+msgid "آزمایش ثبت رویداد"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:111
+#: src/Diagnostics/SelfTest.php:233
+msgid "جدول‌های افزونه"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:112
+#: src/Diagnostics/SelfTest.php:235
+#: src/Front/Assets.php:123
+msgid "سالم"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:112
+msgid "نیاز به بازسازی"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:117
+#: src/Diagnostics/SelfTest.php:179
+msgid "نسخه PHP"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:123
+#: src/Diagnostics/SelfTest.php:189
+msgid "نسخه وردپرس"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:130
+msgid "جدول"
+msgstr ""
+
+#. translators: 1: length, 2: ttl
+#: src/Admin/ToolsScreen.php:132
+msgid "%1$d رقم / %2$d ثانیه"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:135
+msgid "کش شیء پایدار"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:138
+msgid "برای ذخیره کد در کش، Redis یا Memcached لازم است."
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:141
+msgid "زمان‌بند cron"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:142
+#: src/Diagnostics/SelfTest.php:715
+msgid "ثبت شده"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:142
+#: src/Diagnostics/SelfTest.php:245
+msgid "ثبت نشده"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:147
+msgid "محدودیت‌های فعال"
+msgstr ""
+
+#. translators: %d: limit per phone
+#: src/Admin/ToolsScreen.php:150
+msgid "سقف هر شماره در بازه: %d"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:153
+#: src/Diagnostics/SelfTest.php:1456
+msgid "رویدادهای ثبت‌شده"
+msgstr ""
+
+#. translators: %d: errors
+#: src/Admin/ToolsScreen.php:156
+msgid "%d خطا"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:159
+msgid "حساب‌های دارای شماره"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:165
+msgid "ارتباط خروجی"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:166
+#: src/Diagnostics/SelfTest.php:621
+msgid "محدود شده"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:166
+#: src/Diagnostics/SelfTest.php:735
+msgid "باز"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:168
+msgid "WP_HTTP_BLOCK_EXTERNAL فعال است؛ دامنه سامانه پیامکی را در WP_ACCESSIBLE_HOSTS اضافه کنید."
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:171
+msgid "پیشوند جدول‌ها"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:184
+msgid "سلامت ارسال و کپچا"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:185
+msgid "مسیر ارسال، شماره خط، آخرین خطا و دسترسی خروجی سرور."
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:186
+msgid "بررسی سلامت"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:187
+msgid "هیچ پیامکی در این بخش ارسال نمی‌شود."
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:194
+msgid "ارسال آزمایشی"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:195
+msgid "یک کد واقعی به این شماره فرستاده می‌شود."
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:200
+msgid "ارسال کد آزمایشی"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:210
+msgid "واردسازی شماره‌های قدیمی"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:211
+msgid "شماره‌های ووکامرس را به کلید اصلی سیگنا منتقل می‌کند؛ دسته‌ای و قابل بازگشت."
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:217
+msgid "منبعی با داده پیدا نشد"
+msgstr ""
+
+#. translators: %d: user count
+#: src/Admin/ToolsScreen.php:225
+msgid "%d کاربر"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:231
+msgid "کلید متای دلخواه"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:234
+msgid "در صورت تضاد: رد کردن"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:235
+msgid "در صورت تضاد: بازنویسی"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:238
+msgid "اجرای آزمایشی (بدون تغییر داده)"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:240
+msgid "شروع"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:241
+msgid "بازگشت آخرین کار"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:257
+msgid "پاک‌سازی کدها و رویدادهای قدیمی"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:263
+msgid "بازسازی جدول‌ها"
+msgstr ""
+
+#: src/Admin/ToolsScreen.php:266
+msgid "صفر کردن محدودیت‌ها"
+msgstr ""
+
+#: src/Blocklist/Rule.php:190
+msgid "شماره دقیق"
+msgstr ""
+
+#: src/Blocklist/Rule.php:193
+msgid "پیش‌شماره"
+msgstr ""
+
+#: src/Captcha/Arcaptcha.php:64
+msgid "آرکپچا"
+msgstr ""
+
+#: src/Captcha/Arcaptcha.php:141
+#: src/Captcha/Hcaptcha.php:77
+#: src/Captcha/RecaptchaV3.php:83
+msgid "ارتباط با سرویس کپچا برقرار نشد."
+msgstr ""
+
+#: src/Captcha/Arcaptcha.php:150
+msgid "پاسخ سرویس کپچا معتبر نبود."
+msgstr ""
+
+#: src/Captcha/Arcaptcha.php:160
+#: src/Captcha/Hcaptcha.php:96
+msgid "اعتبار کپچا منقضی شده است. لطفاً دوباره تأیید کنید."
+msgstr ""
+
+#: src/Captcha/Arcaptcha.php:163
+msgid "کپچا تأیید نشد. لطفاً دوباره حل کنید."
+msgstr ""
+
+#: src/Captcha/CaptchaResult.php:63
+msgid "اعتبارسنجی کپچا ناموفق بود. لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: src/Captcha/Hcaptcha.php:35
+msgid "hCaptcha"
+msgstr ""
+
+#: src/Captcha/Hcaptcha.php:83
+#: src/Captcha/RecaptchaV3.php:89
+msgid "پاسخ سرویس کپچا قابل خواندن نیست."
+msgstr ""
+
+#: src/Captcha/Hcaptcha.php:92
+msgid "کلیدهای hCaptcha درست نیستند. با مدیر سایت تماس بگیرید."
+msgstr ""
+
+#: src/Captcha/Hcaptcha.php:99
+#: src/Captcha/RecaptchaV3.php:105
+msgid "کپچا تأیید نشد. لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: src/Captcha/Manager.php:63
+#: src/Captcha/Manager.php:216
+msgid "بدون کپچا"
+msgstr ""
+
+#: src/Captcha/Manager.php:198
+msgid "لطفاً ابتدا تأیید کنید که ربات نیستید."
+msgstr ""
+
+#: src/Captcha/RecaptchaV3.php:46
+msgid "reCAPTCHA v3"
+msgstr ""
+
+#: src/Captcha/RecaptchaV3.php:98
+msgid "کلیدهای reCAPTCHA درست نیستند. با مدیر سایت تماس بگیرید."
+msgstr ""
+
+#: src/Captcha/RecaptchaV3.php:102
+msgid "اعتبار کپچا منقضی شده است. لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: src/Captcha/RecaptchaV3.php:114
+msgid "امتیاز امنیتی این درخواست پایین است."
+msgstr ""
+
+#: src/Channel/Dispatcher.php:105
+msgid "هیچ کانال ارسال فعالی پیکربندی نشده است."
+msgstr ""
+
+#: src/Channel/EmailChannel.php:43
+msgid "کانال ایمیل در تنظیمات فعال نشده است."
+msgstr ""
+
+#: src/Channel/EmailChannel.php:50
+msgid "آدرس ایمیلی برای این کاربر ثبت نشده است."
+msgstr ""
+
+#: src/Channel/EmailChannel.php:54
+msgid "کد ورود یکبارمصرف"
+msgstr ""
+
+#: src/Channel/EmailChannel.php:86
+msgid "ارسال ایمیل با خطا مواجه شد."
+msgstr ""
+
+#: src/Channel/SmsChannel.php:51
+msgid "کانال پیامک غیرفعال است."
+msgstr ""
+
+#: src/Channel/SmsChannel.php:59
+msgid "اعتبارنامه سامانه پیامکی کامل نیست."
+msgstr ""
+
+#: src/Channel/SmsChannel.php:72
+msgid "پیکربندی سامانه پیامکی کامل نیست:"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:113
+msgid "این آزمایش شناخته نشد."
+msgstr ""
+
+#. translators: %s: minimum PHP version
+#: src/Diagnostics/SelfTest.php:182
+msgid "افزونه به PHP %s یا بالاتر نیاز دارد."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:192
+msgid "روی ۶.۱ یا بالاتر آزمایش شده است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:205
+msgid "یکپارچگی بستهٔ نصب‌شده"
+msgstr ""
+
+#. translators: %d: number of files checked
+#: src/Diagnostics/SelfTest.php:207
+msgid "درست — %s فایل بررسی شد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:208
+msgid "ناقص"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:211
+msgid "بستهٔ کامل همین نسخه را از نو نصب کنید (جایگزینی، نه حذف)."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:223
+msgid "سرویس‌هایی که بالا نیامدند"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:226
+msgid "تا وقتی این پیام هست، بخشی از افزونه کار نمی‌کند. بستهٔ کامل را از نو نصب کنید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:236
+msgid "جدول نیست"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:238
+msgid "افزونه را یک‌بار غیرفعال و فعال کنید تا ساخته شوند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:244
+msgid "زمان‌بند پاک‌سازی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:247
+msgid "پاک‌سازی کدهای منقضی و رویدادهای قدیمی هنوز اجرا نشده است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:253
+msgid "وضعیت افزونه"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:256
+msgid "با افزونهٔ غیرفعال هیچ فرمی روی سایت کار نمی‌کند و API پاسخ نمی‌دهد."
+msgstr ""
+
+#. translators: 1: flow, 2: channel
+#: src/Diagnostics/SelfTest.php:263
+msgid "جریان: %1$s · کانال: %2$s"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:270
+msgid "انبار کدهای موقت روی همین کش نوشته می‌شود، نه در دیتابیس."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:274
+msgid "نشانی REST"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:277
+msgid "همین نشانی روی سایت باید از مرورگر کاربر قابل دسترس باشد."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:281
+msgid "آزمایش عمومی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:282
+msgid "نسخه‌ها، جدول‌ها و زمان‌بند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:300
+msgid "کد کمتر از چهار رقم قابل حدس است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:302
+msgid "انبار کد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:314
+msgid "ساخت کد"
+msgstr ""
+
+#. translators: %d: number of digits
+#: src/Diagnostics/SelfTest.php:317
+msgid "%d رقم، ساخته‌شده با همان تنظیمات همین صفحه."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:323
+msgid "ذخیره و بازخوانی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:324
+#: src/Diagnostics/SelfTest.php:1480
+msgid "درست"
+msgstr ""
+
+#. translators: 1: sample phone, 2: seconds
+#: src/Diagnostics/SelfTest.php:327
+msgid "برای شمارهٔ آزمایشی %1$s ذخیره و بی‌درنگ باطل شد؛ %2$s ثانیه اعتبار داشت."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:328
+msgid "کد ذخیره شد ولی بلافاصله پیدا نشد؛ انبار کد کار نمی‌کند. ورود کاربران در این وضعیت ممکن نیست."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:332
+msgid "شناسهٔ رکورد"
+msgstr ""
+
+#. translators: 1: fingerprint, 2: expiry
+#: src/Diagnostics/SelfTest.php:335
+msgid "اثر انگشت %1$s · انقضا %2$s"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:338
+msgid "کانال ارسال"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:338
+msgid "کانال آزمایشی همین حالا برای همین مقدار تنظیم شده است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:339
+msgid "پس از باطل کردن"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:339
+msgid "باز هم فعال"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:339
+msgid "پاک شد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:339
+msgid "کد آزمایشی نباید در انبار بماند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:342
+msgid "آزمایش کد یکبارمصرف"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:377
+msgid "اصلی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:381
+msgid "پشتیبان"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:387
+msgid "ناقص:"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:387
+msgid "پیکربندی کامل نیست"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:391
+msgid "در استراحت قطع‌کن مدار"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:399
+msgid "آماده"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:399
+msgid "آماده نیست"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:430
+msgid "سامانه‌ها"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:430
+msgid "هیچ سامانه‌ای ثبت نشده"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:430
+msgid "بدون سامانهٔ پیامکی هیچ کدی ارسال نمی‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:441
+msgid "ترتیب تلاش"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:442
+#: src/Diagnostics/SelfTest.php:708
+#: src/Diagnostics/SelfTest.php:715
+#: src/Diagnostics/SelfTest.php:794
+#: src/Diagnostics/SelfTest.php:1145
+msgid "خالی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:444
+msgid "اگر سامانهٔ اول خطا بدهد، بعدی امتحان می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:450
+msgid "کانال ارسال کد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:455
+msgid "کدها با ایمیل فرستاده می‌شوند؛ در بخش «کد و کانال‌ها» عوض می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:465
+msgid "ارسال واقعی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:466
+msgid "آزمایش جدا"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:468
+msgid "برای ارسال واقعی، دکمهٔ «ارسال پیامک آزمایشی»."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:473
+msgid "آماده / ناقص / خطای واقعی."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:503
+#: src/Diagnostics/SelfTest.php:515
+#: src/Diagnostics/SelfTest.php:557
+#: src/Diagnostics/SelfTest.php:567
+msgid "دسترسی این سرور به سامانه"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:504
+#: src/Diagnostics/SelfTest.php:607
+#: src/Diagnostics/SelfTest.php:628
+msgid "بررسی نشد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:506
+msgid "برای این سامانه نشانی قابل بررسی ثبت نشده است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:516
+msgid "بسته است"
+msgstr ""
+
+#. translators: 1: gateway host, 2: what WordPress answered
+#: src/Diagnostics/SelfTest.php:520
+msgid "%1$s — %2$s"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:523
+msgid "یا در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید."
+msgstr ""
+
+#. translators: 1: host, 2: outcome
+#: src/Diagnostics/SelfTest.php:545
+msgid "بررسی دسترسی به %1$s: %2$s"
+msgstr ""
+
+#. translators: 1: milliseconds, 2: HTTP status
+#: src/Diagnostics/SelfTest.php:572
+msgid "%1$d میلی‌ثانیه · پاسخ HTTP %2$d."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:606
+#: src/Diagnostics/SelfTest.php:627
+#: src/Diagnostics/SelfTest.php:637
+msgid "کلید API و اعتبار"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:609
+msgid "این سامانه امکان بررسی حساب را ندارد."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:618
+#: src/Diagnostics/SelfTest.php:650
+msgid "تنظیم نشده"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:619
+msgid "رد شد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:620
+msgid "اعتبار تمام"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:622
+msgid "وصل نشد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:639
+msgid "پذیرفته شد"
+msgstr ""
+
+#. translators: %s: account credit
+#: src/Diagnostics/SelfTest.php:640
+msgid "پذیرفته شد · اعتبار %s"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:649
+#: src/Diagnostics/SelfTest.php:665
+#: src/Gateway/Drivers/SmsIr.php:100
+msgid "شماره خط"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:652
+msgid "ارسال با الگو به شماره خط نیاز ندارد."
+msgstr ""
+
+#. translators: %s: line numbers of the account
+#: src/Diagnostics/SelfTest.php:661
+msgid "خط‌های این حساب: %s"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:699
+msgid "سرویس کپچا"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:702
+msgid "کپچا خاموش است؛ هانی‌پات و سقف ارسال همچنان کار می‌کنند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:710
+msgid "بدون کلید سایت، ویجت کپچا روی فرم ظاهر نمی‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:714
+msgid "کلید مخفی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:717
+msgid "بدون کلید مخفی، پاسخ کاربر در سرور تأیید نمی‌شود و همه رد می‌شوند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:722
+msgid "پیکربندی نیمه‌کاره"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:722
+#: src/Diagnostics/SelfTest.php:781
+msgid "بله"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:722
+msgid "تنها یکی از دو کلید پر شده است؛ ویجت و تأیید سروری هر دو می‌شکنند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:734
+msgid "ورود با گذرواژه"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:735
+msgid "بسته"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:738
+msgid "گذرواژه از wp-login.php پذیرفته نمی‌شود؛ گذرواژهٔ برنامه و REST کار می‌کنند. راه بازگشت: کد اضطراری."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:739
+msgid "ورود با گذرواژه باز است. اگر می‌خواهید فقط با کد وارد شوند، کلید «ورود فقط با کد» را روشن کنید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:743
+msgid "مدت نشست"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:744
+msgid "۱۴ روز"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:744
+msgid "تا بسته شدن مرورگر"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:752
+#: src/Front/Assets.php:133
+msgid "ارسال"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:752
+#: src/Diagnostics/SelfTest.php:759
+msgid "بی‌سقف"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:754
+msgid "بدون این سقف، حمله از هزاران آدرس می‌تواند اعتبار پیامک را در یک روز مصرف کند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:758
+msgid "سقف ردیف‌های رویدادها"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:761
+msgid "قدیمی‌ترین ردیف‌ها حذف می‌شوند تا جدول دیسک را پر نکند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:761
+msgid "بدون سقف، جدول رویدادها می‌تواند میلیون‌ها ردیف شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:769
+msgid "در این حالت دو تلاش اول هر شماره و سه تلاش اول هر IP بدون چالش رد می‌شوند؛ اگر همان لحظه چیزی ندیدید، علتش همین است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:770
+msgid "چالش از همان اولین درخواست خواسته می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:780
+msgid "چالش دیدنی است؟"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:781
+msgid "نه — بی‌صدا"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:784
+msgid "نسخهٔ ۳ بی‌صدا است و هیچ ویجتی نشان نمی‌دهد. برای چالشی که دیده شود، ARCaptcha یا hCaptcha را انتخاب کنید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:785
+msgid "کاربر چالش را می‌بیند و باید کاملش کند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:796
+msgid "اگر اسکریپت رسمی روی سایت باز نشود، می‌توانید آینهٔ خودتان را اینجا بگذارید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:796
+msgid "اول این نشانی امتحان می‌شود، بعد نشانی رسمی."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:800
+msgid "فهرست اسکریپت‌ها"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:801
+msgid "نشانی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:803
+msgid "هیچ نشانی‌ای برای بارگذاری نیست؛ یعنی ویجت هیچ‌وقت نمی‌آید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:807
+msgid "اگر سرویس قطع باشد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:808
+msgid "ورود بسته نمی‌شود"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:808
+msgid "ورود بسته می‌شود"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:811
+msgid "هانی‌پات و سقف ارسال فعال می‌مانند و رویداد captcha.fail_open ثبت می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:812
+msgid "با قطعی سرویس کپچا، هیچ ورودی‌ای پذیرفته نمی‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:829
+msgid "عبور بدون کپچا (۷ روز)"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:830
+#: src/Diagnostics/SelfTest.php:1018
+#: src/Diagnostics/SelfTest.php:1048
+msgid "درخواست"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:833
+msgid "سرویس کپچا از سمت سرور پاسخ نداد و «باز ماندن ورود» روشن است؛ هانی‌پات و سقف ارسال همچنان اعمال شدند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:834
+msgid "مرورگر این کاربران نتوانست کپچا را بیاورد و «باز ماندن ورود» روشن است؛ هانی‌پات و سقف ارسال همچنان اعمال شدند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:839
+msgid "نمایش در این مرورگر"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:840
+msgid "در همین پنجره ادامه دارد…"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:842
+msgid "ادامه در همین پنجره و در مرورگر شما."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:846
+msgid "آزمایش امنیت و کپچا"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:847
+msgid "از سمت سرور و در همین مرورگر."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:866
+#: src/Diagnostics/SelfTest.php:878
+msgid "فهرست معاف"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:867
+#: src/Diagnostics/SelfTest.php:1092
+#: src/Diagnostics/SelfTest.php:1235
+#: src/Diagnostics/SelfTest.php:1336
+#: src/Diagnostics/SelfTest.php:1343
+#: src/Diagnostics/SelfTest.php:1373
+#: src/Diagnostics/SelfTest.php:1439
+#: src/Diagnostics/SelfTest.php:1469
+msgid "خاموش"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:869
+msgid "هیچ شماره‌ای از کپچا معاف نیست."
+msgstr ""
+
+#. translators: %s: the administrator's own masked phone number
+#: src/Diagnostics/SelfTest.php:884
+msgid "شمارهٔ خودتان (%s) در این فهرست است؛ به همین دلیل کپچا از شما پرسیده نشد. برای آزمایش واقعی برداریدش."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:887
+msgid "شماره‌های این فهرست بدون کپچا و بدون محدودیت رد می‌شوند؛ بقیه نه."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1017
+#: src/Diagnostics/SelfTest.php:1047
+msgid "ردشدن به‌خاطر کپچا (۷ روز)"
+msgstr ""
+
+#. translators: %d: number of requests whose token the provider refused
+#: src/Diagnostics/SelfTest.php:1022
+msgid "کپچا نبود؛ %d درخواست توکن داشت و سرویس ردش کرد (امتیاز پایین یا توکن تکراری)."
+msgstr ""
+
+#. translators: %d: number of requests that carried no user agent of a browser
+#: src/Diagnostics/SelfTest.php:1033
+msgid "%d درخواست از ربات یا اسکریپت بود (بدون مرورگر)؛ کپچا کار خودش را کرد."
+msgstr ""
+
+#. translators: %d: number of requests that came from a real browser without a token
+#: src/Diagnostics/SelfTest.php:1041
+msgid "%d درخواست از مرورگر واقعی بود و توکن نرسید؛ اگر تکرار شد «باز ماندن ورود» یا نشانی جایگزین اسکریپت را ببینید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1057
+msgid "بعد از رفتار مشکوک"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1058
+msgid "خودکار"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1059
+msgid "هیچ‌وقت"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1092
+#: src/Diagnostics/SelfTest.php:1235
+#: src/Diagnostics/SelfTest.php:1336
+#: src/Diagnostics/SelfTest.php:1343
+#: src/Diagnostics/SelfTest.php:1373
+#: src/Diagnostics/SelfTest.php:1439
+#: src/Diagnostics/SelfTest.php:1469
+msgid "روشن"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1094
+msgid "شمارهٔ تازه، حساب جدید نمی‌سازد."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1098
+msgid "ترتیب گام‌ها"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1099
+msgid "اول کد، بعد مشخصات"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1099
+msgid "اول مشخصات، بعد کد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1126
+msgid "فیلدهای فعال"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1127
+msgid "هیچ فیلدی"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1129
+msgid "فرم عضویت بدون هیچ فیلد اضافه‌ای ثبت می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1132
+msgid "فیلدهای اجباری"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1132
+msgid "هیچ‌کدام"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1135
+msgid "کلید متای شماره"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1138
+msgid "شمارهٔ تأییدشده در همین کلید پروفایل ذخیره می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1144
+msgid "کلیدهای جست‌وجو"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1147
+msgid "برای پیدا کردن حساب‌های قدیمیِ همین سایت."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1147
+msgid "کاربر قدیمی با کلید دیگری پیدا نمی‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1151
+msgid "فیلد ناشناس"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1151
+msgid "این شناسه‌ها در فهرست فیلدهای شناخته‌شده نیستند و ممکن است ذخیره نشوند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1158
+msgid "ایمیل به‌عنوان نام کاربری یا برای بازیابی استفاده می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1163
+msgid "گام‌ها، فیلدها و مقصد ذخیره."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1182
+msgid "رنگ تأکید روی کارت سفید"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1185
+msgid "بلندی، پیوندها و دکمه‌های متن‌دار."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1188
+msgid "متن سفید روی رنگ تأکید"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1191
+msgid "دکمهٔ اصلی «دریافت کد» با همین رنگ ساخته می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1194
+msgid "متن روی پس‌زمینهٔ فرم"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1197
+msgid "پس‌زمینه‌ای که برای کارت فرم انتخاب کرده‌اید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1205
+msgid "قابل‌خواندن نبود"
+msgstr ""
+
+#. translators: 1: colour, 2: colour
+#: src/Diagnostics/SelfTest.php:1205
+msgid "رنگ‌های %1$s و %2$s شناسایی نشدند."
+msgstr ""
+
+#. translators: %s: minimum ratio
+#: src/Diagnostics/SelfTest.php:1217
+msgid "کمتر از %s:1 — متن سخت خوانده می‌شود. یک رنگ تأکید تیره‌تر انتخاب کنید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1221
+msgid "رنگ تأکید"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1221
+msgid "هم دکمه‌ها، هم گرادیان‌ها و هم حالت هاور از همین رنگ ساخته می‌شوند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1222
+msgid "پس‌زمینهٔ فرم"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1234
+msgid "جداسازی از پوسته"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1238
+msgid "فرم داخل Shadow DOM رندر می‌شود؛ CSS قالب به آن نمی‌رسد."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1239
+msgid "با خاموش بودن این گزینه، قالب سایت می‌تواند ظاهر فرم را عوض کند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1247
+msgid "فرم فونت پوسته را به ارث می‌برد؛ اگر پوسته فونت فارسی نداشته باشد، شکل فرم فرق می‌کند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1248
+msgid "همان فونتی که پیش‌نمایش با آن ساخته شده، همراه افزونه روی همین سایت سرو می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1252
+msgid "آزمایش ظاهر فرم"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1253
+msgid "رنگ‌های واقعی فرم و نسبت کنتراست."
+msgstr ""
+
+#. translators: %s: theme name
+#: src/Diagnostics/SelfTest.php:1296
+msgid "پوسته: %s"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1303
+msgid "وزیرمتن (خط دلخواه خالی است)"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1315
+msgid "فعال نیست"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1317
+msgid "تنظیمات این بخش تا نصب ووکامرس اثری ندارند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1323
+#: src/Diagnostics/SelfTest.php:1397
+msgid "جایگزین می‌شود"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1323
+msgid "دست‌نخورده"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1325
+msgid "فرم ورود ووکامرس در صفحهٔ «حساب کاربری» با فرم OTP عوض می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1329
+msgid "ورود پیش از تسویه"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1330
+msgid "اجباری"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1338
+msgid "شمارهٔ تأییدشده در billing_phone هم نوشته می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1345
+msgid "سفارش‌های قدیمی با همان شماره به حساب تازه وصل می‌شوند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1349
+msgid "شمارهٔ صورتحساب در سایت"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1350
+msgid "پیدا شد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1350
+msgid "پیدا نشد"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1352
+msgid "هیچ کاربری کلید billing_phone ندارد؛ اگر ووکامرس تازه نصب شده این طبیعی است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1372
+msgid "سایدبار ورود وودمارت"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1376
+msgid "فرم OTP داخل پنل ورود هدر رندر می‌شود؛ هیچ فایلی از پوسته تغییر نمی‌کند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1377
+msgid "پنل ورود وودمارت دست‌نخورده می‌ماند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1386
+msgid "برداشته می‌شود"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1386
+#: src/Diagnostics/SelfTest.php:1397
+msgid "می‌ماند"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1389
+msgid "آیکن، متن و لینک ساخت حساب وودمارت از پنل برداشته می‌شود؛ فرم افزونه خودش عضویت می‌سازد."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1391
+msgid "خودتان خواسته‌اید این بخش بماند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1392
+msgid "چون عضویت در فرم افزونه خاموش است، این بخش می‌ماند تا راه ثبت‌نام باز بماند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1400
+msgid "کاربر در پنل فقط شماره موبایل و کد را می‌بیند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1401
+msgid "ورود با رمز عبور هم در دسترس می‌ماند و فرم OTP زیرش می‌آید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1408
+msgid "وضعیت ووکامرس و اثر تنظیمات."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1441
+msgid "با ثبت خاموش، هیچ رویدادی نوشته نمی‌شود و گزارش‌ها خالی می‌مانند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1447
+msgid "جدول رویدادها"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1448
+msgid "ساخته نشده"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1448
+msgid "موجود"
+msgstr ""
+
+#. translators: %s: number of errors
+#: src/Diagnostics/SelfTest.php:1459
+msgid "%s موردش خطا بوده است."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1466
+msgid "رویدادهای قدیمی‌تر در پاک‌سازی روزانه حذف می‌شوند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1469
+msgid "در حالت روشن، هر رویداد در error_log هم نوشته می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1473
+msgid "آزمایش خودکار پیشخوان: اگر این خط را می‌بینید، ثبت رویداد کار می‌کند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1479
+msgid "نوشتن و خواندن"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1480
+msgid "اجرا نشد"
+msgstr ""
+
+#. translators: %s: event name
+#: src/Diagnostics/SelfTest.php:1483
+msgid "یک رویداد %s نوشته شد و بلافاصله پیدا شد؛ در فهرست رویدادها هم دیده می‌شود."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1484
+msgid "نوشتن رویداد در دیتابیس ناموفق بود؛ گزارش‌ها نمی‌توانند چیزی نشان دهند."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1484
+msgid "برای اجرای این آزمایش اول «ثبت رویدادها» را روشن کنید."
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1488
+msgid "آزمایش داده و رویدادها"
+msgstr ""
+
+#: src/Diagnostics/SelfTest.php:1489
+msgid "یک رویداد نوشته و بلافاصله خوانده می‌شود."
+msgstr ""
+
+#: src/Elementor/FormWidget.php:41
+msgid "فرم ورود پیامکی سیگنا"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:59
+msgid "محتوا"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:62
+msgid "عنوان"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:70
+msgid "ظاهر"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:80
+#: src/Elementor/FormWidget.php:101
+#: src/Elementor/FormWidget.php:116
+msgid "از تنظیمات افزونه"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:91
+msgid "عرض (پیکسل)"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:117
+msgid "خانه‌های جداگانه"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:133
+msgid "لوگو"
+msgstr ""
+
+#: src/Elementor/FormWidget.php:134
+msgid "کلاس CSS"
+msgstr ""
+
+#: src/Front/Assets.php:109
+msgid "در حال انجام…"
+msgstr ""
+
+#: src/Front/Assets.php:110
+#: src/Front/Assets.php:288
+msgid "انجام شد"
+msgstr ""
+
+#: src/Front/Assets.php:112
+msgid "این عملیات قابل بازگشت نیست. ادامه می‌دهید؟"
+msgstr ""
+
+#: src/Front/Assets.php:114
+msgid "مسیر تلاش برای ارسال:"
+msgstr ""
+
+#: src/Front/Assets.php:115
+#: src/Front/Assets.php:134
+msgid "ارسال شد"
+msgstr ""
+
+#: src/Front/Assets.php:117
+msgid "در حال آزمایش…"
+msgstr ""
+
+#: src/Front/Assets.php:118
+msgid "کپچا درست بارگذاری شد."
+msgstr ""
+
+#: src/Front/Assets.php:119
+msgid "نشانی اسکریپت خالی است. کلید سایت را در همین کارت وارد کنید."
+msgstr ""
+
+#: src/Front/Assets.php:120
+msgid "اسکریپت کپچا در مرورگر بارگذاری نشد. افزونهٔ مسدودکننده، DNS یا فیلترینگ را بررسی کنید؛ می‌توانید «نشانی جایگزین اسکریپت» را هم پر کنید."
+msgstr ""
+
+#: src/Front/Assets.php:121
+msgid "بستن"
+msgstr ""
+
+#: src/Front/Assets.php:122
+msgid "اجرای دوباره"
+msgstr ""
+
+#: src/Front/Assets.php:124
+msgid "هشدار"
+msgstr ""
+
+#: src/Front/Assets.php:125
+msgid "نیاز به رسیدگی"
+msgstr ""
+
+#: src/Front/Assets.php:126
+msgid "اطلاع"
+msgstr ""
+
+#: src/Front/Assets.php:127
+msgid "بارگذاری در مرورگر"
+msgstr ""
+
+#: src/Front/Assets.php:128
+msgid "اسکریپت‌هایی که امتحان می‌شوند"
+msgstr ""
+
+#: src/Front/Assets.php:130
+msgid "یک کد واقعی از مسیر واقعی ارسال می‌شود. شماره‌ای را وارد کنید که در دسترس خودتان است؛ هر سامانه‌ای که امتحان شود با پاسخش نشان داده می‌شود."
+msgstr ""
+
+#: src/Front/Assets.php:132
+msgid "بدون شماره، آزمایشی ارسال نمی‌شود."
+msgstr ""
+
+#: src/Front/Assets.php:135
+msgid "پیامک ارسال نشد"
+msgstr ""
+
+#: src/Front/Assets.php:136
+msgid "از طریق"
+msgstr ""
+
+#: src/Front/Assets.php:139
+msgid "راه‌حل"
+msgstr ""
+
+#: src/Front/Assets.php:140
+msgid "ایرادهای پیکربندی این سامانه"
+msgstr ""
+
+#: src/Front/Assets.php:245
+msgid "دریافت کد ورود"
+msgstr ""
+
+#: src/Front/Assets.php:246
+#: src/Front/FormRenderer.php:130
+msgid "ورود به حساب"
+msgstr ""
+
+#: src/Front/Assets.php:247
+msgid "ارسال دوبارهٔ کد"
+msgstr ""
+
+#: src/Front/Assets.php:256
+msgid "۰۹۱۲۳۴۵۶۷۸۹"
+msgstr ""
+
+#: src/Front/Assets.php:257
+msgid "کد ۵ رقمی"
+msgstr ""
+
+#: src/Front/Assets.php:258
+msgid "در حال ارسال کد…"
+msgstr ""
+
+#: src/Front/Assets.php:259
+msgid "در حال بررسی کد…"
+msgstr ""
+
+#: src/Front/Assets.php:260
+msgid "در حال ساخت حساب…"
+msgstr ""
+
+#: src/Front/Assets.php:261
+msgid "تا {s} ثانیهٔ دیگر می‌توانید کد تازه بگیرید"
+msgstr ""
+
+#: src/Front/Assets.php:262
+#: src/Front/Assets.php:269
+msgid "ارتباط با سرور برقرار نشد."
+msgstr ""
+
+#: src/Front/Assets.php:263
+msgid "شمارهٔ موبایل معتبر نیست. با ۰۹ شروع شود و ۱۱ رقم باشد."
+msgstr ""
+
+#: src/Front/Assets.php:264
+msgid "فیلدهای ستاره‌دار را کامل کنید."
+msgstr ""
+
+#: src/Front/Assets.php:265
+msgid "این فیلد الزامی است."
+msgstr ""
+
+#: src/Front/Assets.php:266
+msgid "قالب ایمیل معتبر نیست."
+msgstr ""
+
+#: src/Front/Assets.php:267
+msgid "کد را کامل وارد کنید."
+msgstr ""
+
+#: src/Front/Assets.php:268
+msgid "خوش آمدید. در حال انتقال…"
+msgstr ""
+
+#: src/Front/Assets.php:270
+msgid "به اینترنت وصل نیستید. اتصال را بررسی کنید."
+msgstr ""
+
+#: src/Front/Assets.php:271
+msgid "کد از پیامک خوانده شد."
+msgstr ""
+
+#: src/Front/Assets.php:272
+msgid "اکنون می‌توانید کد را دوباره ارسال کنید."
+msgstr ""
+
+#: src/Front/Assets.php:273
+msgid "این کد منقضی شده است."
+msgstr ""
+
+#: src/Front/Assets.php:274
+msgid "{n} تلاش دیگر باقی مانده."
+msgstr ""
+
+#: src/Front/Assets.php:275
+msgid "گام {n} از {total}: {name}"
+msgstr ""
+
+#: src/Front/Assets.php:276
+msgid "رقم {n}"
+msgstr ""
+
+#: src/Front/Assets.php:278
+msgid "تأیید امنیتی بارگذاری نشد. اگر افزونهٔ مسدودکننده دارید، آن را برای این سایت غیرفعال کنید."
+msgstr ""
+
+#: src/Front/Assets.php:279
+msgid "تلاش دوباره برای بارگذاری"
+msgstr ""
+
+#: src/Front/Assets.php:280
+msgid "می‌توانید بدون تأیید امنیتی ادامه دهید؛ سایت از روش‌های دیگر محافظت می‌کند."
+msgstr ""
+
+#: src/Front/Assets.php:281
+msgid "تأیید امنیتی در مرورگر شما بارگذاری نشد. صفحه را دوباره باز کنید یا افزونهٔ مسدودکننده را غیرفعال کنید."
+msgstr ""
+
+#: src/Front/Assets.php:282
+#: templates/partials/step-code.php:74
+msgid "چسباندن کد از پیامک"
+msgstr ""
+
+#: src/Front/Assets.php:283
+msgid "کد پیامک را دستی در خانه‌ها وارد کنید."
+msgstr ""
+
+#: src/Front/Assets.php:284
+msgid "کدی در حافظه پیدا نشد. پیامک را باز کنید و کد را کپی کنید."
+msgstr ""
+
+#: src/Front/Assets.php:285
+msgid "کد از حافظه چسبانده شد."
+msgstr ""
+
+#: src/Front/Assets.php:286
+msgid "مرورگر اجازهٔ خواندن حافظه را نداد. کد را در کادر اول بچسبانید (Ctrl+V)."
+msgstr ""
+
+#: src/Front/Assets.php:287
+msgid "یک مشکل پیش آمد"
+msgstr ""
+
+#: src/Front/Assets.php:289
+msgid "توجه"
+msgstr ""
+
+#: src/Front/Assets.php:290
+#: src/Front/FormRenderer.php:177
+msgid "بدون رمز عبور"
+msgstr ""
+
+#: src/Front/Assets.php:291
+#: src/Front/FormRenderer.php:181
+msgid "ورود در چند ثانیه"
+msgstr ""
+
+#: src/Front/Assets.php:292
+#: src/Front/FormRenderer.php:185
+msgid "شماره شما محفوظ می‌ماند"
+msgstr ""
+
+#: src/Front/Assets.php:296
+msgid "تلاش دوباره"
+msgstr ""
+
+#: src/Front/Assets.php:297
+msgid "دریافت کد تازه"
+msgstr ""
+
+#: src/Front/Assets.php:299
+msgid "تأیید امنیتی را کامل کنید"
+msgstr ""
+
+#: src/Front/FormRenderer.php:124
+#: src/User/ProfileField.php:79
+#: src/User/ProfileField.php:81
+#: src/User/ProfileField.php:163
+msgid "شماره موبایل"
+msgstr ""
+
+#: src/Front/FormRenderer.php:126
+msgid "09121234567"
+msgstr ""
+
+#: src/Front/FormRenderer.php:128
+msgid "کد تأیید"
+msgstr ""
+
+#: src/Front/FormRenderer.php:129
+msgid "دریافت کد تأیید"
+msgstr ""
+
+#: src/Front/FormRenderer.php:131
+msgid "ارسال دوباره کد"
+msgstr ""
+
+#: src/Front/FormRenderer.php:133
+msgid "ادامه"
+msgstr ""
+
+#: src/Front/FormRenderer.php:205
+msgid "کد"
+msgstr ""
+
+#: src/Front/FormRenderer.php:214
+msgid "اطلاعات"
+msgstr ""
+
+#. translators: %s: display name
+#: src/Front/FormRenderer.php:386
+msgid "وارد شده‌اید: %s"
+msgstr ""
+
+#: src/Front/LoginBridge.php:107
+msgid "ورود با گذرواژه در این سایت بسته است. با شماره موبایل و کد تأیید وارد شوید."
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:42
+msgid "فراز اس‌ام‌اس"
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:56
+#: src/Gateway/Drivers/MeliPayamak.php:39
+msgid "رمز عبور"
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:60
+#: src/Gateway/Drivers/Ippanel.php:55
+#: src/Gateway/Drivers/Kavenegar.php:44
+#: src/Gateway/Drivers/MeliPayamak.php:43
+msgid "شماره فرستنده"
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:64
+#: src/Gateway/Drivers/Ippanel.php:50
+msgid "کد پترن"
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:66
+msgid "در صورت تنظیم، ارسال از مسیر پترن انجام می‌شود."
+msgstr ""
+
+#. translators: %s: settings field label
+#: src/Gateway/Drivers/FarazSms.php:94
+#: src/Gateway/Drivers/MeliPayamak.php:71
+#: src/Gateway/HttpGateway.php:63
+msgid "مقدار «%s» تنظیم نشده است."
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:98
+msgid "برای ارسال متنی، شماره فرستنده لازم است؛ یا کد پترن را وارد کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:107
+msgid "نام متغیر داخل پترن باید با کلید ارسالی یکی باشد (پیش‌فرض: verification-code)."
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:113
+msgid "برای فراز اس‌ام‌اس نام کاربری و رمز را در تنظیمات کامل کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/FarazSms.php:126
+msgid "برای ارسال متنی، شماره فرستنده را وارد کنید یا کد پترن بگذارید."
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:36
+msgid "IPPanel"
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:46
+#: src/Gateway/Drivers/Kavenegar.php:35
+#: src/Gateway/Drivers/SmsIr.php:91
+msgid "کلید API"
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:52
+msgid "اگر خالی بماند، پیام متنی معمولی ارسال می‌شود."
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:57
+msgid "برای هر دو حالت لازم است؛ نمونه: +983000505"
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:75
+msgid "کلید API آی‌پی‌پنل تنظیم نشده است."
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:79
+msgid "شماره فرستنده خالی است؛ API آی‌پی‌پنل بدون شماره خط پیام را نمی‌پذیرد."
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:89
+msgid "متغیر پترن باید «code» باشد؛ در غیر این صورت نام متغیر را با فیلتر signa_ippanel_param عوض کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:98
+msgid "برای آی‌پی‌پنل کلید API را در تنظیمات کامل کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/Ippanel.php:105
+msgid "برای آی‌پی‌پنل شماره فرستنده را در تنظیمات وارد کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/Kavenegar.php:25
+msgid "کاوه‌نگار"
+msgstr ""
+
+#: src/Gateway/Drivers/Kavenegar.php:39
+msgid "نام الگوی تأیید"
+msgstr ""
+
+#: src/Gateway/Drivers/Kavenegar.php:41
+msgid "در صورت تنظیم، از سرویس Verify استفاده می‌شود."
+msgstr ""
+
+#: src/Gateway/Drivers/Kavenegar.php:63
+msgid "کلید API کاوه‌نگار تنظیم نشده است."
+msgstr ""
+
+#: src/Gateway/Drivers/Kavenegar.php:67
+msgid "برای ارسال متنی، شماره فرستنده لازم است؛ یا نام الگوی تأیید را وارد کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/Kavenegar.php:84
+msgid "برای کاوه‌نگار کلید API را در تنظیمات کامل کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/MeliPayamak.php:25
+msgid "ملی پیامک"
+msgstr ""
+
+#: src/Gateway/Drivers/MeliPayamak.php:75
+msgid "شماره فرستنده تنظیم نشده است؛ پنل ملی پیامک بدون آن پیام را رد می‌کند."
+msgstr ""
+
+#: src/Gateway/Drivers/MeliPayamak.php:84
+msgid "اگر حساب شما فقط الگو (Pattern) دارد، ارسال متنی آزاد کار نمی‌کند."
+msgstr ""
+
+#: src/Gateway/Drivers/MeliPayamak.php:90
+msgid "برای ملی پیامک نام کاربری و رمز را در تنظیمات کامل کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:81
+msgid "SMS.ir"
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:95
+msgid "شناسه الگوی تأیید"
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:97
+msgid "خالی بماند، پیامک متنی معمولی فرستاده می‌شود."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:102
+msgid "فقط برای پیامک متنی لازم است."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:137
+msgid "کلید API سرویس SMS.ir تنظیم نشده است."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:141
+msgid "شناسه الگو باید عدد باشد؛ همان عددی که در بخش «ارسال سریع» پنل SMS.ir آمده است."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:145
+msgid "شماره خط باید عدد باشد؛ همان شماره‌ای که در پنل SMS.ir برای شما فعال است."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:149
+msgid "نه شناسه الگو و نه شماره خط تنظیم شده است؛ SMS.ir بدون هیچ‌کدام پیامکی نمی‌پذیرد."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:166
+msgid "برای SMS.ir کلید API را در تنظیمات کامل کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:199
+msgid "نام پارامتر الگو خالی است؛ مقدار پیش‌فرض CODE را نگه دارید."
+msgstr ""
+
+#. translators: %d: maximum number of characters
+#: src/Gateway/Drivers/SmsIr.php:206
+msgid "کد تولیدشده بیش از %d نویسه است؛ SMS.ir آن را در الگو نمی‌پذیرد."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:242
+msgid "برای ارسال متنی SMS.ir شماره خط لازم است؛ در تنظیمات آن را وارد کنید."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:307
+msgid "سامانهٔ SMS.ir درخواست را نپذیرفت."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:317
+msgid "پاسخ SMS.ir قابل خواندن نبود."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:348
+msgid "کلید API سامانه SMS.ir تنظیم نشده است."
+msgstr ""
+
+#: src/Gateway/Drivers/SmsIr.php:381
+msgid "شماره خطی که در تنظیمات گذاشته‌اید در فهرست خطوط این حساب نیست؛ شماره را از پنل SMS.ir کپی کنید."
+msgstr ""
+
+#: src/Gateway/FailoverChain.php:69
+msgid "هیچ سامانه پیامکی پیکربندی نشده است."
+msgstr ""
+
+#: src/Gateway/FailoverChain.php:77
+msgid "سامانه پیامکی انتخاب‌شده شناخته نشده است."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:67
+msgid "کد با موفقیت ارسال شد."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:70
+msgid "ارسال کد ناموفق بود."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:90
+msgid "کد تأیید ارسال شد."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:94
+msgid "تعداد درخواست‌ها زیاد بود؛ یک دقیقه بعد دوباره تلاش کنید."
+msgstr ""
+
+#: src/Gateway/GatewayResult.php:97
+msgid "امکان ارسال کد در این لحظه نیست. کمی بعد دوباره تلاش کنید و اگر تکرار شد به مدیر سایت بگویید."
+msgstr ""
+
+#: src/Gateway/Health.php:198
+msgid "هنوز ارسالی ثبت نشده است."
+msgstr ""
+
+#. translators: 1: the sentence WordPress gave, 2: human readable time difference
+#: src/Gateway/Health.php:213
+msgid "خودِ سایت درخواست خروجی را می‌بندد (%1$s) — %2$s پیش. این سامانه خطا نداد؛ در wp-config.php دامنه را در WP_ACCESSIBLE_HOSTS بگذارید یا «ارسال مستقیم» را روشن کنید."
+msgstr ""
+
+#. translators: %s: human readable time difference
+#: src/Gateway/Health.php:219
+msgid "خودِ سایت درخواست خروجی را می‌بندد — %s پیش."
+msgstr ""
+
+#. translators: 1: failure count, 2: minutes until the next attempt, 3: last error
+#: src/Gateway/Health.php:227
+msgid "موقتاً کنار گذاشته شده است: %1$d شکست پیاپی، %2$d دقیقه دیگر دوباره امتحان می‌شود (آخرین خطا: %3$s)"
+msgstr ""
+
+#: src/Gateway/Health.php:230
+#: src/Gateway/Health.php:245
+#: src/Support/Transport.php:161
+msgid "نامشخص"
+msgstr ""
+
+#. translators: %s: human readable time difference
+#: src/Gateway/Health.php:237
+msgid "آخرین ارسال موفق: %s پیش"
+msgstr ""
+
+#. translators: 1: error code, 2: human readable time difference
+#: src/Gateway/Health.php:244
+msgid "آخرین خطا: %1$s — %2$s پیش"
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:95
+msgid "اعتبارنامه این سامانه پیامکی کامل نیست."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:194
+msgid "cURL روی این سرور فعال نیست. «ارسال مستقیم» را خاموش کنید و در wp-config.php دامنهٔ سامانه را در WP_ACCESSIBLE_HOSTS مجاز کنید."
+msgstr ""
+
+#: src/Gateway/HttpGateway.php:268
+msgid "پاسخ نامعتبر از سامانه پیامکی."
+msgstr ""
+
+#. translators: %s: gateway id read from the settings
+#: src/Gateway/Registry.php:133
+msgid "سامانهٔ «%s» در فهرست سامانه‌ها نیست؛ از تنظیمات › سامانه‌های پیامکی یکی از سامانه‌های موجود را انتخاب کنید."
+msgstr ""
+
+#. translators: %s: gateway host
+#: src/Gateway/Registry.php:155
+msgid "وردپرس درخواست‌های خروجی به %s را بسته است؛ در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید."
+msgstr ""
+
+#: src/Guard/BlocklistGuard.php:56
+#: src/Http/AuthController.php:436
+msgid "امکان ورود با این شماره وجود ندارد. در صورت نیاز با پشتیبانی سایت تماس بگیرید."
+msgstr ""
+
+#: src/Guard/BotGuard.php:46
+msgid "درخواست شما به‌عنوان ربات شناسایی شد."
+msgstr ""
+
+#: src/Guard/BotGuard.php:74
+#: src/Guard/BotGuard.php:102
+msgid "نشست فرم منقضی شده است. لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: src/Guard/BotGuard.php:82
+#: src/Guard/BotGuard.php:116
+msgid "فرم سریع‌تر از حد معمول ارسال شد. لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: src/Guard/BotGuard.php:124
+msgid "نشست فرم منقضی شده است. لطفاً صفحه را تازه کنید."
+msgstr ""
+
+#: src/Guard/Pipeline.php:94
+msgid "سرویس ورود پیامکی در حال حاضر غیرفعال است."
+msgstr ""
+
+#. translators: %d: seconds left
+#: src/Guard/ThrottleGuard.php:54
+msgid "برای دریافت کد جدید %d ثانیه صبر کنید."
+msgstr ""
+
+#: src/Guard/ThrottleGuard.php:64
+msgid "درخواست موازی دیگری برای این شماره در جریان است."
+msgstr ""
+
+#: src/Http/AdminController.php:100
+#: src/User/AccountFactory.php:59
+msgid "شماره موبایل معتبر نیست."
+msgstr ""
+
+#. translators: 1: channel, 2: gateway
+#: src/Http/AdminController.php:140
+msgid "کد آزمایشی از %1$s (%2$s) ارسال شد."
+msgstr ""
+
+#: src/Http/AdminController.php:176
+msgid "کد آزمایشی ارسال شد. اگر نرسید، رویدادها را ببینید."
+msgstr ""
+
+#. translators: %s: the channel that carried the code instead
+#: src/Http/AdminController.php:179
+msgid "کد آزمایشی از راه %s رفت؛ علت شکست پیامک در همین پنجره آمده است."
+msgstr ""
+
+#: src/Http/AdminController.php:230
+msgid "در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید."
+msgstr ""
+
+#: src/Http/AdminController.php:305
+msgid "سرویسی با این شناسه برای بررسی وجود ندارد."
+msgstr ""
+
+#. translators: 1: HTTP status code, 2: milliseconds
+#: src/Http/AdminController.php:361
+msgid "پاسخ %1$d در %2$d میلی‌ثانیه — مسیر خروجی باز است."
+msgstr ""
+
+#: src/Http/AdminController.php:402
+msgid "شمارنده‌ها، کدهای منقضی و سابقهٔ سلامت سامانه‌ها پاک شدند."
+msgstr ""
+
+#: src/Http/AdminController.php:445
+msgid "منبع واردسازی مشخص نشده است."
+msgstr ""
+
+#: src/Http/AdminController.php:456
+msgid "منبع انتخاب‌شده در دسترس نیست."
+msgstr ""
+
+#: src/Http/AdminController.php:466
+#: src/Http/AdminController.php:476
+msgid "کار واردسازی پیدا نشد."
+msgstr ""
+
+#: src/Http/Api.php:148
+msgid "خطای غیرمنتظره در پردازش درخواست. لطفاً دوباره تلاش کنید."
+msgstr ""
+
+#: src/Http/AuthController.php:107
+#: src/Http/AuthController.php:155
+#: src/Http/AuthController.php:216
+#: src/Http/AuthController.php:442
+msgid "این شماره به چند حساب متصل است. لطفاً با پشتیبانی سایت تماس بگیرید."
+msgstr ""
+
+#: src/Http/AuthController.php:112
+msgid "برای این شماره حساب کاربری وجود دارد. کد ورود برایتان ارسال شد."
+msgstr ""
+
+#: src/Http/AuthController.php:122
+msgid "برای این شماره حسابی یافت نشد و عضویت جدید غیرفعال است."
+msgstr ""
+
+#: src/Http/AuthController.php:126
+#: src/Http/AuthController.php:255
+#: src/Registration/RegistrationService.php:100
+msgid "عضویت جدید در حال حاضر غیرفعال است."
+msgstr ""
+
+#: src/Http/AuthController.php:137
+msgid "برای ساخت حساب کاربری، اطلاعات زیر را کامل کنید."
+msgstr ""
+
+#: src/Http/AuthController.php:226
+msgid "کد تأیید شد، اما عضویت جدید در این سایت غیرفعال است."
+msgstr ""
+
+#: src/Http/AuthController.php:237
+msgid "شماره تأیید شد. حالا اطلاعات حساب را کامل کنید."
+msgstr ""
+
+#: src/Http/AuthController.php:279
+msgid "لطفاً خطاهای فرم را اصلاح کنید."
+msgstr ""
+
+#: src/Http/AuthController.php:289
+msgid "این شماره از قبل ثبت شده است. از همین فرم وارد شوید."
+msgstr ""
+
+#: src/Http/AuthController.php:363
+msgid "کد تأیید ارسال شد. اگر پیامی دریافت نکردید، کمی بعد دوباره تلاش کنید."
+msgstr ""
+
+#: src/Http/AuthController.php:389
+msgid "ساخت حساب کاربری ناموفق بود."
+msgstr ""
+
+#: src/Http/AuthController.php:453
+#: src/Http/AuthController.php:498
+msgid "شماره موبایل معتبر نیست. نمونه درست: 09121234567"
+msgstr ""
+
+#: src/Http/AuthController.php:491
+msgid "عضویت انجام شد. در حال انتقال…"
+msgstr ""
+
+#: src/Http/AuthController.php:492
+msgid "ورود موفق. در حال انتقال…"
+msgstr ""
+
+#: src/Http/AuthController.php:514
+msgid "ورود یا عضویت"
+msgstr ""
+
+#: src/Http/AuthController.php:516
+msgid "تکمیل اطلاعات"
+msgstr ""
+
+#: src/Http/AuthController.php:527
+#: src/Http/AuthController.php:528
+#: src/Http/AuthController.php:529
+#: src/Http/AuthController.php:530
+msgid "در صورت معتبر بودن شماره، کد تأیید ارسال می‌شود."
+msgstr ""
+
+#. translators: %s: meta key
+#: src/Import/CustomMetaSource.php:28
+msgid "متای دلخواه: %s"
+msgstr ""
+
+#: src/Import/DigitsSource.php:22
+msgid "افزونه Digits"
+msgstr ""
+
+#: src/Import/WooBillingSource.php:19
+msgid "شماره صورتحساب ووکامرس"
+msgstr ""
+
+#: src/Install/Guard.php:108
+msgid "سیگنا نتوانست کامل بالا بیاید."
+msgstr ""
+
+#: src/Install/Guard.php:111
+msgid "این بخش‌ها شروع نشدند، پس تا وقتی این پیام هست بخشی از افزونه کار نمی‌کند:"
+msgstr ""
+
+#: src/Install/Guard.php:114
+msgid "نشانهٔ شناخته‌شدهٔ این خطا: فایل‌های افزونه از دو نسخهٔ مختلف‌اند (بستهٔ نصب‌شده کامل جایگزین نشده). بستهٔ کامل همان نسخه را از نو نصب کنید: افزونه‌ها ← افزودن ← بارگذاری افزونه ← «جایگزینی با نسخهٔ بارگذاری‌شده»."
+msgstr ""
+
+#: src/Install/Guard.php:136
+msgid "سیگنا: فایل‌های افزونه با هم نمی‌خوانند."
+msgstr ""
+
+#: src/Install/Guard.php:140
+msgid "فهرست بستهٔ افزونه (build.json) پیدا نشد، پس معلوم نیست کدام نسخه کامل نصب شده است."
+msgstr ""
+
+#. translators: 1: number of files, 2: plugin version
+#: src/Install/Guard.php:144
+msgid "%1$d فایل با نسخهٔ %2$s نمی‌خواند. اگر همین حالا بسته را به‌روز کرده‌اید، یعنی همهٔ فایل‌ها جایگزین نشده‌اند."
+msgstr ""
+
+#. translators: %d: number of files
+#: src/Install/Guard.php:160
+msgid " و %d فایل دیگر"
+msgstr ""
+
+#: src/Install/Guard.php:168
+msgid "راه‌حل: بستهٔ کامل نسخهٔ همین افزونه را از نو نصب کنید — افزونه‌ها ← افزودن ← بارگذاری افزونه ← «جایگزینی با نسخهٔ بارگذاری‌شده». با جایگزینی فایل‌ها هیچ تنظیمات یا داده‌ای پاک نمی‌شود؛ هرگز افزونه را «حذف» نکنید."
+msgstr ""
+
+#: src/Log/Report.php:100
+msgid "ارسال ناموفق"
+msgstr ""
+
+#: src/Log/Report.php:101
+msgid "رد توسط محافظ‌ها"
+msgstr ""
+
+#: src/Log/Report.php:103
+msgid "خطای سامانه پیامکی"
+msgstr ""
+
+#: src/Log/Report.php:104
+msgid "کپچا رد شد"
+msgstr ""
+
+#: src/Log/Report.php:105
+msgid "کپچا پاسخ نداد"
+msgstr ""
+
+#: src/Log/Report.php:106
+msgid "عضویت ناتمام"
+msgstr ""
+
+#: src/Log/Report.php:107
+msgid "ساخت حساب ناموفق"
+msgstr ""
+
+#: src/Log/Report.php:108
+msgid "شماره روی چند حساب"
+msgstr ""
+
+#: src/Log/Report.php:109
+msgid "استفاده از سامانه پشتیبان"
+msgstr ""
+
+#: src/Log/Report.php:110
+msgid "سامانه کنارگذاشته‌شده"
+msgstr ""
+
+#: src/Log/Report.php:111
+msgid "معافیت شماره مورد اعتماد"
+msgstr ""
+
+#: src/Log/Report.php:112
+msgid "نقش مسدود‌شده"
+msgstr ""
+
+#: src/Log/Report.php:113
+msgid "واردسازی تمام شد"
+msgstr ""
+
+#: src/Otp/VerificationResult.php:55
+msgid "کد تأیید پذیرفته شد."
+msgstr ""
+
+#: src/Otp/VerificationResult.php:59
+msgid "کد تأیید منقضی شده است. لطفاً کد تازه درخواست کنید."
+msgstr ""
+
+#: src/Otp/VerificationResult.php:62
+msgid "تلاش‌های مجاز برای این کد تمام شد. لطفاً کد تازه بگیرید."
+msgstr ""
+
+#: src/Otp/VerificationResult.php:65
+msgid "قالب کد واردشده درست نیست."
+msgstr ""
+
+#. translators: %d: remaining attempts
+#: src/Otp/VerificationResult.php:71
+msgid "کد واردشده درست نیست. %d تلاش باقی مانده است."
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:35
+msgid "کوچک (نام و نام خانوادگی)"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:36
+msgid "هویت (نام، ایمیل، شهر، آدرس، کد پستی)"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:37
+msgid "فروشگاهی (فیلدهای صورتحساب)"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:38
+msgid "دلخواه (فیلدهای تعریف‌شده در پایین)"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:47
+#: src/Registration/FieldCatalog.php:57
+#: src/Registration/FieldCatalog.php:80
+msgid "نام"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:48
+#: src/Registration/FieldCatalog.php:58
+#: src/Registration/FieldCatalog.php:81
+msgid "نام خانوادگی"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:59
+msgid "example@mail.com"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:60
+#: src/Registration/FieldCatalog.php:84
+msgid "شهر"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:66
+#: src/Registration/FieldCatalog.php:85
+msgid "کد پستی"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:67
+#: src/Registration/FieldCatalog.php:83
+msgid "آدرس"
+msgstr ""
+
+#: src/Registration/FieldCatalog.php:67
+msgid "خیابان، کوچه، پلاک و واحد را کامل بنویسید."
+msgstr ""
+
+#. translators: %s: field label
+#: src/Registration/FieldValidator.php:46
+msgid "وارد کردن «%s» الزامی است."
+msgstr ""
+
+#: src/Registration/FieldValidator.php:141
+msgid "قالب ایمیل درست نیست."
+msgstr ""
+
+#: src/Registration/FieldValidator.php:148
+msgid "شماره تماس معتبر نیست."
+msgstr ""
+
+#: src/Registration/FieldValidator.php:154
+msgid "مقدار باید عددی باشد."
+msgstr ""
+
+#: src/Registration/FieldValidator.php:160
+msgid "کد پستی باید ۱۰ رقم باشد."
+msgstr ""
+
+#: src/Registration/FieldValidator.php:166
+msgid "تاریخ معتبر نیست."
+msgstr ""
+
+#: src/Registration/FieldValidator.php:172
+msgid "گزینه انتخاب‌شده معتبر نیست."
+msgstr ""
+
+#: src/Registration/RegistrationService.php:106
+msgid "برای این شماره حساب کاربری وجود دارد. وارد شوید."
+msgstr ""
+
+#: src/Registration/RegistrationService.php:110
+#: src/User/AccountFactory.php:88
+msgid "این شماره به بیش از یک حساب متصل است. با پشتیبانی تماس بگیرید."
+msgstr ""
+
+#: src/Registration/RegistrationService.php:146
+msgid "فرصت تکمیل عضویت تمام شد. لطفاً از ابتدا شروع کنید."
+msgstr ""
+
+#: src/Registration/RegistrationService.php:150
+msgid "این پیوند عضویت به شماره دیگری تعلق دارد."
+msgstr ""
+
+#: src/Registration/RegistrationService.php:154
+msgid "ابتدا فرم عضویت را کامل کنید."
+msgstr ""
+
+#: src/Registration/RegistrationService.php:175
+msgid "اعتبار تأیید شماره تمام شد. لطفاً دوباره کد بگیرید."
+msgstr ""
+
+#: src/Registration/RegistrationService.php:181
+msgid "برخی فیلدهای فرم نیاز به اصلاح دارند."
+msgstr ""
+
+#: src/Support/Transport.php:139
+msgid "نام دامنهٔ سامانه پیامکی از این سرور حل نشد (خطای DNS). یا DNS هاست خراب است یا دامنه روی این سرور فیلتر/تحریم شده. با هاست تماس بگیرید یا DNS سرور را به ۱.۱.۱.۱ و ۸.۸.۸.۸ تغییر دهید."
+msgstr ""
+
+#: src/Support/Transport.php:142
+msgid "اتصال خروجی این سرور به سامانه پیامکی بسته است (پورت ۴۴۳ باز نمی‌شود). فایروال هاست باید دامنهٔ سامانه را برای این سایت باز کند؛ از پشتیبانی هاست بخواهید اتصال خروجی به این دامنه را باز کند."
+msgstr ""
+
+#: src/Support/Transport.php:145
+msgid "اتصال امن (TLS) با سامانه برقرار نشد. معمولاً بستهٔ گواهی‌های قدیمی روی سرور است؛ از هاست بخواهید بستهٔ CA را به‌روز کند، یا اگر مسیر اتصال دستکاری می‌شود از سامانهٔ دیگری استفاده کنید."
+msgstr ""
+
+#: src/Support/Transport.php:148
+msgid "پاسخ سامانه پیامکی در مهلت مقرر نرسید. یا سامانه کند است یا مسیر خروجی این سرور بسته است؛ چند دقیقه دیگر دوباره آزمایش کنید و اگر تکرار شد با هاست تماس بگیرید."
+msgstr ""
+
+#. translators: %s: the host that was refused, or the words «دامنهٔ سامانهٔ پیامکی» when the message did not name one
+#: src/Support/Transport.php:153
+msgid "خودِ وردپرس این درخواست را رد کرد، نه فایروال هاست: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و %s در WP_ACCESSIBLE_HOSTS نیست. یکی از این دو کار را بکنید — ۱) همان خط را false کنید: define( 'WP_HTTP_BLOCK_EXTERNAL', false ); ۲) یا دامنه را مجاز کنید: define( 'WP_ACCESSIBLE_HOSTS', '%1$s' );"
+msgstr ""
+
+#. translators: %s: transport error code
+#: src/Support/Transport.php:160
+msgid "ارتباط با سامانه پیامکی برقرار نشد (%s). میزبان، فایروال یا DNS این سرور را بررسی کنید."
+msgstr ""
+
+#: src/Support/Transport.php:208
+msgid "دامنهٔ سامانهٔ پیامکی"
+msgstr ""
+
+#: src/Throttle/Throttle.php:80
+msgid "سقف ارسال روزانهٔ این سایت تکمیل شده است. فردا دوباره تلاش کنید یا با مدیریت سایت تماس بگیرید."
+msgstr ""
+
+#: src/Throttle/Throttle.php:88
+msgid "سقف ارسال کد برای این شماره در بازه جاری پر شده است. کمی بعد دوباره تلاش کنید."
+msgstr ""
+
+#: src/Throttle/Throttle.php:96
+msgid "تعداد درخواست‌ها از آدرس شما بیش از حد مجاز است."
+msgstr ""
+
+#: src/Throttle/Throttle.php:104
+msgid "سقف روزانه ارسال کد از این آدرس تکمیل شده است."
+msgstr ""
+
+#: src/Throttle/Throttle.php:124
+msgid "تلاش‌های تأیید کد از این آدرس بیش از حد مجاز است."
+msgstr ""
+
+#: src/Throttle/Throttle.php:141
+msgid "تعداد درخواست‌های امنیتی از این آدرس بیش از حد مجاز است."
+msgstr ""
+
+#: src/User/AccessPolicy.php:63
+msgid "ورود با کد یکبارمصرف برای این نقش کاربری غیرفعال است. لطفاً از رمز عبور استفاده کنید."
+msgstr ""
+
+#: src/User/AccountFactory.php:71
+msgid "درخواست دیگری برای این شماره در حال پردازش است. چند لحظه صبر کنید."
+msgstr ""
+
+#: src/User/AccountFactory.php:94
+msgid "این ایمیل پیش‌تر ثبت شده است. ایمیل دیگری وارد کنید یا با همان حساب وارد شوید."
+msgstr ""
+
+#: src/User/AccountFactory.php:250
+msgid "امکان ساخت نام کاربری یکتا وجود ندارد."
+msgstr ""
+
+#. translators: %s: site name
+#: src/User/AccountFactory.php:313
+msgid "به %s خوش آمدید"
+msgstr ""
+
+#. translators: 1: display name, 2: site name, 3: masked phone number, 4: site URL
+#: src/User/AccountFactory.php:319
+msgid "سلام %1$s\n\nحساب شما در %2$s با شماره %3$s ساخته شد.\n%4$s"
+msgstr ""
+
+#: src/User/ProfileField.php:90
+msgid "این شماره برای ورود با کد یکبارمصرف استفاده می‌شود و باید بین کاربران یکتا باشد."
+msgstr ""
+
+#. translators: %s: meta key
+#: src/User/ProfileField.php:95
+msgid "شماره فعلی از کلید «%s» خوانده شده و پس از ذخیره به کلید اصلی منتقل می‌شود."
+msgstr ""
+
+#: src/User/ProfileField.php:125
+msgid "اطلاعات ثبت‌نام"
+msgstr ""
+
+#: src/User/ProfileField.php:166
+msgid "اختیاری؛ برای ورود با کد یکبارمصرف."
+msgstr ""
+
+#: src/User/ProfileField.php:243
+msgid "شماره موبایل واردشده معتبر نیست (نمونه درست: 09121234567)."
+msgstr ""
+
+#: src/User/ProfileField.php:258
+msgid "این شماره پیش‌تر به حساب کاربری دیگری متصل شده است."
+msgstr ""
+
+#: templates/form.php:38
+msgid "رفتن به فرم ورود"
+msgstr ""
+
+#. translators: 1: current step number, 2: total steps, 3: step name
+#: templates/form.php:70
+msgid "گام %1$s از %2$s: %3$s"
+msgstr ""
+
+#. translators: %s: masked phone number
+#: templates/partials/step-code.php:20
+msgid "کد ارسال‌شده به %s را وارد کنید."
+msgstr ""
+
+#: templates/partials/step-code.php:29
+msgid "کد ارسال‌شده به"
+msgstr ""
+
+#. translators: %d: digit position
+#: templates/partials/step-code.php:64
+msgid "رقم %d"
+msgstr ""
+
+#: templates/partials/step-code.php:110
+msgid "پیامک نرسید؟"
+msgstr ""
+
+#: templates/partials/step-code.php:113
+msgid "معمولاً تا یک دقیقه می‌رسد؛ اگر نرسید، «ارسال دوبارهٔ کد» را بزنید."
+msgstr ""
+
+#: templates/partials/step-code.php:114
+msgid "اگر شماره را اشتباه وارد کرده‌اید، «ویرایش شماره» را بزنید."
+msgstr ""
+
+#: templates/partials/step-fields.php:66
+msgid "انتخاب کنید…"
+msgstr ""
