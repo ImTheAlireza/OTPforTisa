@@ -76,16 +76,24 @@ LOG="$SITE/server.log"
 SERVER=$!
 trap 'kill $SERVER 2>/dev/null || true' EXIT
 
+annotate() {
+	# On GitHub Actions, surface the end of the server log as an annotation.
+	if [ -n "${GITHUB_ACTIONS:-}" ]; then
+		printf '::error title=%s::%s\n' "$1" "$(tail -c 3000 "$LOG" | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
+	fi
+}
+
 for _ in $(seq 1 180); do
 	if grep -q "Ready!" "$LOG"; then
 		break
 	fi
 	if ! kill -0 "$SERVER" 2>/dev/null; then
 		cat "$LOG"
+		annotate "WordPress exited"
 		exit 1
 	fi
 	sleep 1
 done
-grep -q "Ready!" "$LOG" || { cat "$LOG"; echo "WordPress did not start"; exit 1; }
+grep -q "Ready!" "$LOG" || { cat "$LOG"; echo "WordPress did not start"; annotate "WordPress did not start"; exit 1; }
 
 python3 "$HERE/smoke.py" "http://127.0.0.1:$PORT" "$WP_DIR"

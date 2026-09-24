@@ -33,6 +33,10 @@ def check(label, ok, detail=''):
     if not ok:
         failed += 1
     print(('  ok    ' if ok else '  FAIL  ') + label + (('  — ' + str(detail)) if detail and not ok else ''))
+    if not ok and os.environ.get('GITHUB_ACTIONS'):
+        # An annotation survives where the raw job log may not be reachable.
+        message = (label + ((' — ' + str(detail)) if detail else ''))[:1500]
+        print('::error title=smoke::' + message.replace('%', '%25').replace('\r', '').replace('\n', '%0A'))
 
 
 def req(path, data=None, headers=None, jar=ADMIN):
