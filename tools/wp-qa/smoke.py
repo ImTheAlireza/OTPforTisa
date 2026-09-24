@@ -262,7 +262,7 @@ check('the right code creates the account and signs in', done.get('success') and
 if ' WC ' in version:
     print('== WooCommerce ==')
     woo = json.loads(req('/?signa_qa_woo=1', jar=VISITOR)[2] or '{}')
-    check('Signa declares HPOS compatibility', 'signa/signa.php' in (woo.get('hpos') or []), woo.get('hpos'))
+    check('WooCommerce lists Signa as HPOS-compatible', 'signa/signa.php' in ((woo.get('hpos') or {}).get('compatible') or []), woo.get('hpos'))
     fresh(VISITOR)
     status, _, account = req(local(woo.get('account') or '/'), jar=VISITOR)
     check('My Account shows the Signa form to a visitor', status == 200 and 'data-signa-form' in account, status)

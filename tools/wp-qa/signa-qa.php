@@ -69,6 +69,13 @@ if ( isset( $_GET['signa_qa_php'] ) ) {
 		exit;
 	}, 99 );
 }
+// WooCommerce sends the first admin page after activation to its setup wizard.
+add_filter( 'woocommerce_prevent_automatic_wizard_redirect', '__return_true' );
+add_filter( 'woocommerce_enable_setup_wizard', '__return_false' );
+add_action( 'admin_init', function () {
+	delete_transient( '_wc_activation_redirect' );
+}, 0 );
+
 if ( isset( $_GET['signa_qa_woo'] ) ) {
 	add_action( 'wp_loaded', function () {
 		$hpos = array();

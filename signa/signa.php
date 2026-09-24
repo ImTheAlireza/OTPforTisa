@@ -6,6 +6,8 @@
  * Version:           2.0.0
  * Requires at least: 6.1
  * Requires PHP:      7.4
+ * WC requires at least: 7.1
+ * WC tested up to:  11.1
  * Author:            Signa
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html

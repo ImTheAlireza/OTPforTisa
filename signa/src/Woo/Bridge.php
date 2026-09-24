@@ -65,7 +65,7 @@ final class Bridge implements Bootable {
 		}
 
 		// Orders are only ever read through wc_get_orders(), which is HPOS-aware.
-		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_orders_table', SIGNA_FILE, true );
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', SIGNA_FILE, true );
 
 		// The block-based cart/checkout is not wired up yet (roadmap item 3.3),
 		// so say so instead of letting WooCommerce guess.

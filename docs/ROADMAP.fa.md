@@ -90,7 +90,7 @@
 
 ### ۰.۲ اعلام پشتیبانی HPOS — **حیاتی، S** ✅ انجام شد
 - **چرا:** ووکامرس ۸+ به افزونه‌هایی که `wc_get_orders` استفاده می‌کنند و HPOS را اعلام نکرده‌اند هشدار ناسازگاری می‌دهد؛ فروشگاه‌ها این هشدار را در پیشخوان می‌بینند.
-- **تغییر:** در `src/Woo/Bridge.php` هوک `before_woocommerce_init` با `FeaturesUtil::declare_compatibility('custom_orders_table', SIGNA_FILE, true)`؛ همچنین `declare_compatibility('cart_checkout_blocks', ...)` **فقط پس از انجام آیتم ۳.۳**.
+- **تغییر:** در `src/Woo/Bridge.php` هوک `before_woocommerce_init` با `FeaturesUtil::declare_compatibility('custom_order_tables', SIGNA_FILE, true)`؛ همچنین `declare_compatibility('cart_checkout_blocks', ...)` **فقط پس از انجام آیتم ۳.۳**.
 - **پذیرش:** در ووکامرس ← وضعیت ← HPOS هیچ هشداری برای سیگنا نباشد؛ جست‌وجوی سفارش با `meta_query` روی HPOS هم کار کند.
 
 ### ۰.۳ مهلت و لغو درخواست در JS — **M → S** ✅ انجام شد

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Signa 2.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/signa\n"
-"POT-Creation-Date: 2026-09-24 22:20+0000\n"
+"POT-Creation-Date: 2026-09-24 22:30+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 
 
 #. translators: %s: minimum PHP version
-#: signa.php:39
+#: signa.php:41
 msgid "سیگنا به PHP نسخه %s یا جدیدتر نیاز دارد و فعلاً غیرفعال است."
 msgstr ""
 
