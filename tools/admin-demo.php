@@ -217,6 +217,10 @@ function signa_demo_localise( string $html ): string {
 	$html = (string) preg_replace( '/(<span class="signa-chart__day" dir="ltr">)[^<]*</', '$1—<', $html );
 	$html = (string) preg_replace( '/(class="signa-chart__col" title=")[^"]*"/u', '$1"', $html );
 
+	// The tools screen reports the interpreter; the pages are generated on
+	// php-wasm locally and on native PHP in CI and must come out identical.
+	$html = str_replace( '>' . PHP_VERSION . '<', '>8.3.0<', $html );
+
 	return str_replace( '&', '&amp;', str_replace( '&amp;', '&', $html ) );
 }
 
