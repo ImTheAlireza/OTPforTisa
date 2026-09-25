@@ -35,12 +35,11 @@
 <main id="top">
 
 	<section class="hero">
-		<div class="wrap hero__in">
+		<div class="wrap">
 			<div class="hero__copy">
 				<p class="eyebrow">افزونهٔ وردپرس · نسخهٔ {{version_fa}}</p>
 				<h1>ورود و عضویت با کد پیامکی، <span>بدون رمز عبور</span></h1>
-				<p class="lead">سیگنا فرم ورود سایت شما را به «شماره موبایل + کد یک‌بارمصرف» تبدیل می‌کند. کاربر شماره‌اش را می‌زند، کد را وارد می‌کند و وارد می‌شود؛ اگر حساب نداشته باشد، حسابش همان‌جا ساخته می‌شود.</p>
-				<p class="tagline">سیگنال بده، وارد شو.</p>
+				<p class="lead">سیگنا فرم ورود سایت شما را به «شماره موبایل + کد یک‌بارمصرف» تبدیل می‌کند. کاربر شماره‌اش را می‌زند، کد را از پیامک وارد می‌کند و وارد می‌شود؛ اگر حساب نداشته باشد، همان‌جا ساخته می‌شود.</p>
 				<div class="hero__actions">
 					{{buy_large}}
 					<a class="btn btn--ghost" href="{{demo_url}}admin.html">پیشخوان مدیریت را ببینید</a>
@@ -52,15 +51,30 @@
 				</ul>
 			</div>
 
-			<div class="hero__demo">
-				<div class="frame">
-					<div class="frame__bar" aria-hidden="true"><i></i><i></i><i></i><span>example.ir/login</span></div>
-					<div class="frame__body">
+			<div class="stage" data-sg-stage="idle">
+				<div class="stage__site">
+					<div class="frame">
+						<div class="frame__bar" aria-hidden="true"><i></i><i></i><i></i><span>example.ir/login</span></div>
+						<div class="frame__body">
 <!-- @signa-form -->
+						</div>
 					</div>
 				</div>
-				<p class="try"><b>همین حالا امتحان کنید:</b> هر شمارهٔ موبایلی بزنید؛ کد آزمایشی <code>12345</code> است. شمارهٔ <code dir="ltr">09121234567</code> کاربر موجود است و بقیه به فرم عضویت می‌روند. پیامکی ارسال نمی‌شود.</p>
+
+				<div class="stage__link" aria-hidden="true">
+					<div class="sg-signal" data-sg-signal><i></i><i></i><i></i></div>
+					<span class="stage__label">سیگنال بده، وارد شو.</span>
+				</div>
+
+				<div class="stage__phone" data-sg-phone></div>
 			</div>
+
+			<ol class="flow" data-sg-stage="idle" aria-label="همین حالا امتحان کنید">
+				<li class="flow__step" data-step="phone"><span>۱</span>شمارهٔ موبایل بزنید و «دریافت کد» را بزنید</li>
+				<li class="flow__step" data-step="sms"><span>۲</span>پیامک روی گوشی کنار فرم می‌رسد</li>
+				<li class="flow__step" data-step="done"><span>۳</span>کد را وارد کنید، یا روی پیامک بزنید</li>
+			</ol>
+			<p class="try">نسخهٔ نمایشی است: پیامک واقعی ارسال نمی‌شود و هر بار کد تازه‌ای می‌آید. شمارهٔ <code dir="ltr">09121234567</code> کاربر موجود است و بقیهٔ شماره‌ها به فرم عضویت می‌روند.</p>
 		</div>
 	</section>
 
