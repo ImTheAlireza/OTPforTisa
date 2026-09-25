@@ -862,7 +862,7 @@ function testEveryScreenIsReachable() {
 	const admin = ADMIN_DEMO;
 	const adminCss = read('signa', 'assets', 'css', 'admin.css');
 
-	check('the switcher knows all five screens', ['Menu::ROOT', 'ReportScreen::SLUG', 'LogsScreen::SLUG', 'ToolsScreen::SLUG', 'AccessScreen::SLUG'].every((slug) => nav.indexOf(slug) >= 0));
+	check('the switcher knows all five screens', ['Page::ROOT', 'ReportScreen::SLUG', 'LogsScreen::SLUG', 'ToolsScreen::SLUG', 'AccessScreen::SLUG'].every((slug) => nav.indexOf(slug) >= 0));
 
 	// Since 2.0 every screen opens with the same frame, and the frame draws the nav.
 	const layout = read('signa', 'src', 'Admin', 'Layout.php');
@@ -1037,7 +1037,7 @@ function testThePanelKeepsItsOwnPromises() {
 	// click from leaving it, and never hide feedback while hiding furniture.
 	check('app mode is a user preference, not a site setting', /const META\s+= 'signa_app_mode'/.test(appMode) && /get_user_meta\( \$user_id, self::META/.test(appMode));
 	check('the body is marked before it is painted', /add_filter\( 'admin_body_class'/.test(appMode) && /' signa-app'/.test(appMode));
-	check('the switch is a form post with a nonce and a capability check', /admin_post_/.test(appMode) && /check_admin_referer\( self::ACTION \)/.test(appMode) && /current_user_can\( Menu::CAPABILITY \)/.test(appMode));
+	check('the switch is a form post with a nonce and a capability check', /admin_post_/.test(appMode) && /check_admin_referer\( self::ACTION \)/.test(appMode) && /current_user_can\( Page::CAPABILITY \)/.test(appMode));
 	check('and it lands back on the page it was pressed from', /wp_safe_redirect\( \$back/.test(appMode));
 	check('the switch rides in the shared header, so all five screens have it', /public static function appToggle\(\)/.test(nav) && /ScreenNav::appToggle\(\);/.test(read('signa', 'src', 'Admin', 'Layout.php')));
 	check('the button names where it goes, not what it is', /'نمای پیشخوان'/.test(nav) && /'حالت اپ'/.test(nav));

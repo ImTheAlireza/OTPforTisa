@@ -39,6 +39,11 @@ MANIFEST = os.path.join(PLUGIN, 'build.json')
 
 # A fixed stamp keeps the archive reproducible; the release version, not the
 # clock, is what identifies a build here.
+# Files RTL-Theme encodes (ionCube) for its license check. Their hash changes
+# after upload, so the runtime check only requires them to be present. Keep in
+# step with Signa\Admin\Gate::LICENSED — tests/php/package-test.php checks it.
+ENCODED = ['src/Admin/Menu.php']
+
 STAMP = time.localtime(time.mktime(time.strptime('2026-09-22 05:36:00', '%Y-%m-%d %H:%M:%S')))[:6]
 
 
@@ -84,6 +89,7 @@ def manifest(write=False):
         'name': 'signa',
         'version': plugin_version(),
         'files': {},
+        'encoded': list(ENCODED),
     }
 
     for name in relative_files():
@@ -164,6 +170,9 @@ def check():
         for name in committed.get('files', {}):
             if name not in wanted['files']:
                 problems.append('build.json lists a file that is gone: ' + name)
+
+        if committed.get('encoded', []) != wanted['encoded']:
+            problems.append('build.json lists other encoded files than tools/build_package.py')
 
         if committed.get('version') != wanted['version']:
             problems.append('build.json says version %s, the plugin says %s' % (committed.get('version'), wanted['version']))

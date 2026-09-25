@@ -122,7 +122,7 @@ final class Plugin {
 			Admin\AccessScreen::class,
 			Admin\FormPreview::class,
 			Admin\AppMode::class,
-			Admin\Menu::class,
+			Admin\Gate::class,
 		);
 	}
 
@@ -473,6 +473,18 @@ final class Plugin {
 				$c->make( Blocklist\Blocklist::class ),
 				$c->make( Access\EmergencyToken::class ),
 				$c->make( Log\Logger::class )
+			);
+		} );
+
+		/*
+		 * The admin menu is reached through the gate: Menu.php is the file the
+		 * marketplace encodes, and the gate only loads it where it can run.
+		 */
+		$c->bind( Admin\Gate::class, static function ( Container $c ) {
+			return new Admin\Gate(
+				static function () use ( $c ) {
+					return $c->make( Admin\Menu::class );
+				}
 			);
 		} );
 

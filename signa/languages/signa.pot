@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Signa 2.0.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/signa\n"
-"POT-Creation-Date: 2026-09-25 10:11+0000\n"
+"POT-Creation-Date: 2026-09-25 11:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,14 +18,14 @@ msgstr ""
 
 
 #. translators: %s: minimum PHP version
-#: signa.php:42
+#: signa.php:40
 msgid "سیگنا به PHP نسخه %s یا جدیدتر نیاز دارد و فعلاً غیرفعال است."
 msgstr ""
 
 #: src/Admin/AccessScreen.php:60
 #: src/Admin/AccessScreen.php:62
-#: src/Admin/Menu.php:70
-#: src/Admin/Menu.php:70
+#: src/Admin/Menu.php:71
+#: src/Admin/Menu.php:71
 #: src/Admin/ScreenNav.php:47
 msgid "دسترسی و مسدودی"
 msgstr ""
@@ -564,11 +564,48 @@ msgstr ""
 msgid "پیش‌نمایش فرم"
 msgstr ""
 
+#: src/Admin/Gate.php:124
+#: src/Admin/Gate.php:125
+#: src/Admin/Gate.php:155
 #: src/Admin/Layout.php:35
-#: src/Admin/Menu.php:57
 #: src/Admin/Menu.php:58
+#: src/Admin/Menu.php:59
 #: src/Elementor/Module.php:50
 msgid "سیگنا"
+msgstr ""
+
+#: src/Admin/Gate.php:140
+msgid "سیگنا: پنل تنظیمات باز نمی‌شود."
+msgstr ""
+
+#. translators: %s: PHP extension name
+#: src/Admin/Gate.php:145
+msgid "افزونهٔ PHP «%s» روی این هاست فعال نیست. فرم ورود سایت با تنظیمات ذخیره‌شده کار می‌کند؛ برای تغییر تنظیمات این افزونه را فعال کنید."
+msgstr ""
+
+#: src/Admin/Gate.php:149
+msgid "راهنما"
+msgstr ""
+
+#. translators: %s: PHP extension name
+#: src/Admin/Gate.php:160
+msgid "پنل سیگنا به افزونهٔ PHP «%s» نیاز دارد و این افزونه روی هاست شما فعال نیست. فرم ورود و عضویت سایت همچنان با آخرین تنظیمات ذخیره‌شده کار می‌کند."
+msgstr ""
+
+#: src/Admin/Gate.php:165
+msgid "راه رفع"
+msgstr ""
+
+#: src/Admin/Gate.php:166
+msgid "از پشتیبانی هاست بخواهید ionCube Loader نسخهٔ ۱۴ یا بالاتر را برای نسخهٔ PHP سایت فعال کند (در سی‌پنل و دایرکت‌ادمین معمولاً در بخش «انتخاب نسخهٔ PHP» یک تیک است)."
+msgstr ""
+
+#: src/Admin/Gate.php:167
+msgid "نسخهٔ PHP سایت را روی یکی از نسخه‌های پشتیبانی‌شدهٔ راست‌چین بگذارید: ۷.۴، ۸.۱ یا ۸.۲."
+msgstr ""
+
+#: src/Admin/Gate.php:168
+msgid "مطمئن شوید افزونهٔ «مدیریت هوشمند راست‌چین» نصب و فعال است و دامنهٔ سایت در پیشخوان راست‌چین ثبت شده است."
 msgstr ""
 
 #: src/Admin/Layout.php:36
@@ -724,36 +761,36 @@ msgstr ""
 msgid "صفحه بعد"
 msgstr ""
 
-#: src/Admin/Menu.php:66
-#: src/Admin/Menu.php:66
-#: src/Admin/Menu.php:95
+#: src/Admin/Menu.php:67
+#: src/Admin/Menu.php:67
+#: src/Admin/Menu.php:96
 msgid "تنظیمات"
 msgstr ""
 
-#: src/Admin/Menu.php:67
-#: src/Admin/Menu.php:67
+#: src/Admin/Menu.php:68
+#: src/Admin/Menu.php:68
 #: src/Admin/SettingsScreen.php:1353
 msgid "گزارش‌ها"
 msgstr ""
 
-#: src/Admin/Menu.php:68
-#: src/Admin/Menu.php:68
+#: src/Admin/Menu.php:69
+#: src/Admin/Menu.php:69
 msgid "رویدادها"
 msgstr ""
 
-#: src/Admin/Menu.php:69
+#: src/Admin/Menu.php:70
 #: src/Admin/ScreenNav.php:46
 #: src/Admin/ToolsScreen.php:58
 #: src/Admin/ToolsScreen.php:60
 msgid "ابزارها و وضعیت"
 msgstr ""
 
-#: src/Admin/Menu.php:69
+#: src/Admin/Menu.php:70
 #: src/Admin/ScreenNav.php:101
 msgid "ابزارها"
 msgstr ""
 
-#: src/Admin/Menu.php:79
+#: src/Admin/Menu.php:80
 msgid "تنظیمات افزونه سیگنا"
 msgstr ""
 
@@ -1315,7 +1352,7 @@ msgid "بدون پشتیبان"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:539
-msgid "فقط برای خطاهای موقت: تایم‌اوت، خطای ۵xx، اتمام اعتبار."
+msgid "هر خطای سامانهٔ اصلی، جز شمارهٔ نامعتبر، کد را به پشتیبان می‌فرستد. خطای اصلی در رویدادها ثبت می‌شود."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:551

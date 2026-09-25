@@ -42,6 +42,7 @@ jobs:
           php tests/php/woodmart-test.php
           php tests/php/hardening-test.php
           php tests/php/package-test.php
+          php tests/php/gate-test.php
       - name: The WoodMart preview page is the plugin's current output
         # The page at preview/public/woodmart.html is generated, not drawn: if
         # the renderer or the integration changes, this fails until it is

@@ -14,8 +14,9 @@ defined( 'ABSPATH' ) || exit;
 
 final class Menu implements Bootable {
 
-	const CAPABILITY = 'manage_options';
-	const ROOT       = 'signa';
+	/* Kept for anything that still asks Menu; new code asks Page (see Gate). */
+	const CAPABILITY = Page::CAPABILITY;
+	const ROOT       = Page::ROOT;
 
 	/** @var Settings */
 	private $settings;

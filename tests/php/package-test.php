@@ -90,6 +90,33 @@ $state = Package::verify( signa_fake_package( '// stale', true ), true );
 
 signa_same( 'missing and changed files in one list', array( 'src/Two.php', 'src/One.php' ), Package::offenders( $state ) );
 
+signa_start( 'a file the marketplace encoded is expected to differ, not to vanish' );
+
+$root     = signa_fake_package();
+$manifest = json_decode( (string) file_get_contents( $root . 'build.json' ), true );
+
+$manifest['encoded'] = array( 'src/One.php' );
+file_put_contents( $root . 'build.json', json_encode( $manifest ) );
+file_put_contents( $root . 'src/One.php', "<?php //0046a\nif(!extension_loaded('ionCube Loader')){die('x');}\n" );
+
+$state = Package::verify( $root, true );
+
+signa_check( 'the encoded file does not make the package look tampered with', $state['ok'] );
+signa_same( 'it is still counted', 2, $state['checked'] );
+
+unlink( $root . 'src/One.php' );
+$state = Package::verify( $root, true );
+
+signa_same( 'but a missing encoded file is still missing', array( 'src/One.php' ), $state['missing'] );
+
+$shipped = Package::manifest( SIGNA_PATH );
+
+signa_same(
+	'the shipped manifest names exactly the file the gate protects',
+	array( \Signa\Admin\Gate::LICENSED ),
+	isset( $shipped['encoded'] ) ? $shipped['encoded'] : null
+);
+
 signa_start( 'the shipped package is the package in this repository' );
 
 $real = Package::verify( SIGNA_PATH, true );

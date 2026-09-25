@@ -70,7 +70,7 @@ final class ScreenNav {
 			return admin_url( 'admin.php?page=' . $id );
 		}
 
-		if ( Menu::ROOT === $id ) {
+		if ( Page::ROOT === $id ) {
 			return SettingsScreen::tabUrl( 'dash' );
 		}
 
@@ -83,7 +83,7 @@ final class ScreenNav {
 	 * @param string $current A section id or a tool screen slug.
 	 */
 	public static function render( string $current ): void {
-		if ( Menu::ROOT === $current ) {
+		if ( Page::ROOT === $current ) {
 			$current = 'dash';
 		} elseif ( ReportScreen::SLUG === $current ) {
 			$current = 'reports';

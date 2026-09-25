@@ -65,7 +65,7 @@ final class AppMode implements Bootable {
 	 * is already drawn in the new state.
 	 */
 	public function handle(): void {
-		if ( ! current_user_can( Menu::CAPABILITY ) ) {
+		if ( ! current_user_can( Page::CAPABILITY ) ) {
 			wp_die( esc_html__( 'دسترسی غیرمجاز.', 'signa' ), '', array( 'response' => 403 ) );
 		}
 
@@ -78,7 +78,7 @@ final class AppMode implements Bootable {
 
 		$back = wp_get_referer();
 
-		wp_safe_redirect( $back ? $back : admin_url( 'admin.php?page=' . Menu::ROOT ) );
+		wp_safe_redirect( $back ? $back : admin_url( 'admin.php?page=' . Page::ROOT ) );
 		exit;
 	}
 }

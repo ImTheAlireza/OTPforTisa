@@ -91,6 +91,12 @@ final class Package {
 
 		$state['version'] = isset( $manifest['version'] ) ? (string) $manifest['version'] : $state['version'];
 
+		/*
+		 * Files the marketplace encodes for licensing are rewritten after the
+		 * build, so their hash can never match. They still have to be there.
+		 */
+		$encoded = isset( $manifest['encoded'] ) && is_array( $manifest['encoded'] ) ? array_map( 'strval', $manifest['encoded'] ) : array();
+
 		foreach ( $manifest['files'] as $name => $sha ) {
 			$path = $root . $name;
 
@@ -100,6 +106,10 @@ final class Package {
 			}
 
 			$state['checked']++;
+
+			if ( in_array( (string) $name, $encoded, true ) ) {
+				continue;
+			}
 
 			$actual = hash_file( 'sha256', $path );
 

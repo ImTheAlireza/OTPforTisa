@@ -81,7 +81,7 @@ final class SettingsScreen {
 	 * in one place cannot disagree with the navigation.
 	 */
 	public static function tabUrl( string $tab ): string {
-		return admin_url( 'admin.php?page=' . Menu::ROOT . '&tab=' . $tab );
+		return admin_url( 'admin.php?page=' . Page::ROOT . '&tab=' . $tab );
 	}
 
 	/**
@@ -536,7 +536,7 @@ final class SettingsScreen {
 
 						$c->field( __( 'سامانهٔ پشتیبان', 'signa' ), function () use ( $c, $options ) {
 							$c->select( 'sms_backup_gateway', array( '' => __( 'بدون پشتیبان', 'signa' ) ) + $options );
-						}, __( 'فقط برای خطاهای موقت: تایم‌اوت، خطای ۵xx، اتمام اعتبار.', 'signa' ), $c->id( 'sms_backup_gateway' ) );
+						}, __( 'هر خطای سامانهٔ اصلی، جز شمارهٔ نامعتبر، کد را به پشتیبان می‌فرستد. خطای اصلی در رویدادها ثبت می‌شود.', 'signa' ), $c->id( 'sms_backup_gateway' ) );
 					}
 				);
 

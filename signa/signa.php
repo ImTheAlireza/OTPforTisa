@@ -1,7 +1,6 @@
 <?php
 /**
  * Plugin Name:       سیگنا — ورود و عضویت با کد یکبارمصرف
- * Plugin URI:        https://parsena.ir/signa/
  * Description:       ورود، عضویت و تأیید شماره موبایل با کد یکبارمصرف از طریق پیامک یا ایمیل؛ معماری ماژولار، کانال‌های قابل‌تعویض و محافظت چندلایه در برابر ربات.
  * Version:           2.0.1
  * Requires at least: 6.1
@@ -9,7 +8,6 @@
  * WC requires at least: 7.1
  * WC tested up to:  11.1
  * Author:            پارسنا
- * Author URI:        https://parsena.ir/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       signa
