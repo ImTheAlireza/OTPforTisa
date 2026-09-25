@@ -121,7 +121,8 @@ function buyButton(size) {
 	return '<a class="' + cls + '" aria-disabled="true">به‌زودی در راست‌چین</a>';
 }
 
-const MARK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 5.5h3"/><path d="M9 12.5l2 2 4-4.5"/></svg>';
+// The mark: a phone with a tick, sending out a signal.
+const MARK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3" width="11" height="18" rx="2.8"/><path d="M7.8 6h2.4"/><path d="m6.6 12.3 1.8 1.8 3.3-3.7"/><path class="w1" d="M17.2 9.3a3.8 3.8 0 0 1 0 5.4"/><path class="w2" d="M19.6 7.1a7 7 0 0 1 0 9.8"/></svg>';
 
 const NAV = [
 	['index.html', 'فرم ورود'],
@@ -135,10 +136,13 @@ function strip(current) {
 
 	return [
 		'<div class="sg-strip" role="navigation" aria-label="دموی سیگنا">',
-		'<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark">' + MARK + '</span><span>سیگنا<small>دموی زنده · نسخهٔ ' + versionFa + '</small></span></a>',
+		'<div class="sg-strip__in">',
+		'<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark">' + MARK + '</span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دموی زنده · نسخهٔ ' + versionFa + '</small></span></a>',
 		'<nav class="sg-strip__nav">' + links + '</nav>',
-		'<span class="sg-strip__note">داده‌ها نمونه‌اند · پیامک نمایشی روی صفحه می‌آید و پیامک واقعی ارسال نمی‌شود</span>',
+		'<span class="sg-strip__note">داده‌ها نمونه‌اند؛ پیامک واقعی ارسال نمی‌شود</span>',
 		'<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="' + config.landingUrl + '">معرفی سیگنا</a>' + buyButton('strip') + '</span>',
+		'</div>',
+		'<div class="sg-strip__signal" aria-hidden="true"><i></i></div>',
 		'</div>',
 	].join('\n');
 }
@@ -160,45 +164,57 @@ function chrome(html, current) {
 
 /* ------------------------------------------------------------------ pages */
 
+/*
+ * The live form as it appears on the plugin's own preview page: its markup
+ * (FormRenderer output) and the signaOtp block wp_localize_script prints.
+ */
+function liveForm() {
+	const index = read(PREVIEW, 'index.html');
+	const form = between(index, '<!-- ↓↓↓ markup produced by FormRenderer::render() ↓↓↓ -->', '<!-- ↑↑↑ end of FormRenderer output ↑↑↑ -->', 'form markup').inner;
+	const cfgStart = index.indexOf('<script>\n\t/* Stands in for wp_localize_script');
+	const cfgEnd = index.indexOf('</script>', cfgStart);
+
+	if (cfgStart < 0 || cfgEnd < 0) {
+		fail('index.html: the signaOtp config block was not found');
+	}
+
+	return { form: form.trim(), cfg: index.slice(cfgStart, cfgEnd + '</script>'.length) };
+}
+
+/* The stage both pages share: the form in a browser frame, the appearance
+   studio under it, and the phone the demo SMS arrives on. */
+function stage(html, phoneAttrs) {
+	const live = liveForm();
+	let part = read(SITE, 'shared', 'stage.html');
+
+	part = replaceOnce(part, '<!-- @signa-form -->', live.form, 'form slot');
+	part = replaceOnce(part, '<!-- @phone-attrs -->', phoneAttrs, 'phone attributes');
+	html = replaceOnce(html, '<!-- @stage -->', part.replace(/\s+$/, ''), 'stage slot');
+	html = replaceOnce(html, '<!-- @signa-config -->', live.cfg, 'config slot');
+
+	return html;
+}
+
+function fillIn(html, where, fill) {
+	for (const [key, value] of Object.entries(fill)) {
+		if (html.indexOf(key) < 0) {
+			fail(where + ': placeholder ' + key + ' is not used');
+		}
+		html = html.split(key).join(value);
+	}
+
+	return html;
+}
+
+const SITE_SCRIPTS = '<script src="assets/js/demo-studio.js"></script>\n<script src="assets/js/site.js"></script>';
+
 function demoIndex() {
-	let html = read(PREVIEW, 'index.html');
+	let html = read(SITE, 'demo', 'index.html');
 
-	// The developer bar (with its download link) gives way to the demo strip.
-	const bar = html.indexOf('<div class="demo-bar">');
-	const stage = html.indexOf('<div class="demo-stage">');
-
-	if (bar < 0 || stage < bar) {
-		fail('index.html: demo bar not found');
-	}
-
-	html = html.slice(0, bar) + html.slice(stage);
-	html = replaceOnce(html, /<title>[^<]*<\/title>/, '<title>دموی زندهٔ سیگنا — فرم ورود و عضویت</title>', 'index title');
-
-	// The sticky controls sat under the old bar; the strip is a little shorter.
-	html = html.replace('top: 78px;', 'top: 74px;');
-
-	// Keep the behaviour a buyer can judge; the cache and timeout drills are
-	// for development and need the preview server.
-	for (const name of ['stale-nonce', 'stale-form', 'captcha', 'short-timeout', 'webotp']) {
-		html = replaceOnce(html, new RegExp('\\s*<button[^>]*data-behavior="' + name + '"[^>]*>[^<]*</button>'), '', 'behaviour ' + name);
-	}
-
-	html = replaceOnce(html, /\s*<p class="demo-hints">\s*«nonce کهنه»[\s\S]*?<\/p>/, '', 'behaviour hint');
-	html = replaceOnce(html, /\s*<span><code>09111111111<\/code>[^<]*<\/span>/, '', 'captcha number');
-
-	// Only the captcha drill (removed above) used this address.
-	html = html.replace("'/mock/captcha-unreachable.js'", "'captcha-unreachable.js'");
-
-	// Any number gets the SMS straight away (demo-shim.js skips the signup step).
-	html = replaceOnce(html, /<span><code>09351112233<\/code>[^<]*<\/span>/, '<span>هر شمارهٔ دیگر ← پیامک کد، بدون فرم عضویت</span>', 'new number hint');
-
-	// The code arrives on a phone beside the form instead of being printed.
-	html = replaceOnce(html, /<span>کد تأیید: <code>12345<\/code><\/span>/, '<span>کد هر بار تازه است و روی گوشی کنار فرم (یا بالای صفحه) می‌رسد</span>', 'code hint');
-	html = replaceOnce(html, '<div class="demo-stage">', '<div class="demo-stage has-phone">', 'phone stage');
-	html = replaceOnce(html, '\t</main>\n', '\t</main>\n\n\t<aside class="demo-phone" data-sg-phone aria-label="گوشی کاربر"></aside>\n', 'phone column');
-
-	// After a successful sign-in, show what the member sees.
-	html = replaceOnce(html, 'data-redirect=""', 'data-redirect="account.html"', 'redirect');
+	html = fillIn(html, 'demo index', { '{{version_fa}}': versionFa });
+	// After signing in, the phone offers the member page.
+	html = stage(html, ' data-sg-next="account.html"');
+	html = replaceOnce(html, '</head>', SITE_SCRIPTS + '\n</head>', 'demo index scripts');
 
 	return chrome(rewrite(html), 'index.html');
 }
@@ -231,35 +247,24 @@ function demoAdmin(file) {
 
 function landing() {
 	let html = read(SITE, 'landing', 'index.html');
-	const index = read(PREVIEW, 'index.html');
 
-	const form = between(index, '<!-- ↓↓↓ markup produced by FormRenderer::render() ↓↓↓ -->', '<!-- ↑↑↑ end of FormRenderer output ↑↑↑ -->', 'form markup').inner;
-	const cfgStart = index.indexOf('<script>\n\t/* Stands in for wp_localize_script');
-	const cfgEnd = index.indexOf('</script>', cfgStart);
-
-	if (cfgStart < 0 || cfgEnd < 0) {
-		fail('index.html: the signaOtp config block was not found');
-	}
-
-	const cfg = index.slice(cfgStart, cfgEnd + '</script>'.length);
-
-	const fill = {
+	html = fillIn(html, 'landing', {
 		'{{version_fa}}': versionFa,
 		'{{demo_url}}': config.demoUrl,
 		'{{buy_small}}': buyButton('small'),
 		'{{buy_large}}': buyButton('large'),
-	};
+	});
 
-	for (const [key, value] of Object.entries(fill)) {
-		if (html.indexOf(key) < 0) {
-			fail('landing: placeholder ' + key + ' is not used');
-		}
-		html = html.split(key).join(value);
-	}
-
-	html = replaceOnce(html, '<!-- @signa-form -->', form.trim(), 'form slot');
-	html = replaceOnce(html, '<!-- @signa-config -->', cfg, 'config slot');
-	html = replaceOnce(html, '<!-- @demo-head -->', '<link rel="stylesheet" href="assets/demo-phone.css">\n<script src="assets/js/demo-mock.js"></script>\n<script src="assets/js/demo-shim.js"></script>\n<script src="assets/js/demo-phone.js"></script>', 'head slot');
+	html = replaceOnce(html, '<!-- @brand-mark -->', '<span class="brand__mark">' + MARK + '</span>', 'brand mark');
+	html = replaceOnce(html, '<!-- @brand-mark-plain -->', MARK, 'plugin row mark');
+	html = stage(html, '');
+	html = replaceOnce(html, '<!-- @demo-head -->', [
+		'<link rel="stylesheet" href="assets/demo-phone.css">',
+		'<script src="assets/js/demo-mock.js"></script>',
+		'<script src="assets/js/demo-shim.js"></script>',
+		'<script src="assets/js/demo-phone.js"></script>',
+		SITE_SCRIPTS,
+	].join('\n'), 'head slot');
 
 	return rewrite(html);
 }
@@ -306,11 +311,13 @@ function files() {
 		copy(root + '/assets/js/demo-shim.js', SITE, 'shared', 'demo-shim.js');
 		copy(root + '/assets/js/demo-phone.js', SITE, 'shared', 'demo-phone.js');
 		copy(root + '/assets/demo-phone.css', SITE, 'shared', 'demo-phone.css');
+		copy(root + '/assets/js/demo-studio.js', SITE, 'shared', 'demo-studio.js');
+		copy(root + '/assets/js/site.js', SITE, 'shared', 'site.js');
+		copy(root + '/assets/landing.css', SITE, 'landing', 'landing.css');
 		put(root + '/.htaccess', HTACCESS);
 	};
 
 	shared('signa', false);
-	copy('signa/assets/landing.css', SITE, 'landing', 'landing.css');
 	put('signa/index.html', landing());
 
 	shared('demo', true);

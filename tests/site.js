@@ -224,7 +224,7 @@ async function demoForm(base) {
 	const again = await open(base, '/demo/');
 	let rejected = null;
 	const done = await signIn(again, '09121234567', 'tap', async () => {});
-	check('the demo page has a phone column for wide screens', !!again.doc.querySelector('.demo-stage.has-phone [data-sg-phone] .sg-phone'));
+	check('the demo page has the same stage as the landing page: form, studio and phone', !!again.doc.querySelector('.stage [data-sg-frame] [data-signa-form]') && !!again.doc.querySelector('.stage [data-sg-studio]') && !!again.doc.querySelector('.stage [data-sg-phone] .sg-phone'));
 	check('tapping the SMS fills the code in and signs in', done.form.root.classList.contains('is-signed-in') && !!done.note && done.note.classList.contains('is-used'));
 	check('the code hint no longer gives the code away', !/<code>12345<\/code>/.test(again.doc.documentElement.outerHTML));
 	check('no script error on the page', again.errors.length === 0, again.errors.slice(0, 3).join(' | '));
@@ -252,9 +252,65 @@ async function demoForm(base) {
 	const fourth = await open(base, '/demo/');
 	const done4 = await signIn(fourth, '09121234567', 'type');
 	check('signing in works on the demo page too', done4.form.root.classList.contains('is-signed-in'));
-	check('and it is set to continue to the member page', done4.form.redirect === 'account.html' || done4.host.getAttribute('data-redirect') === 'account.html');
+	const go = await until(() => fourth.doc.querySelector('.sg-done__go')) ? fourth.doc.querySelector('.sg-done__go') : null;
+	check('after signing in, the phone offers the member page', !!go && go.getAttribute('href') === 'account.html');
 	check('no script error on the page', fourth.errors.length === 0, fourth.errors.slice(0, 3).join(' | '));
 	fourth.win.close();
+}
+
+async function studio(base) {
+	scenario('The studio under the form changes it live');
+
+	const ctx = await open(base, '/signa/');
+	const doc = ctx.doc;
+	const host = doc.querySelector('[data-signa-form]');
+	await until(() => host && host.signaForm && host.shadowRoot);
+	const inner = () => host.shadowRoot.querySelector('.signa') || host.shadowRoot.firstElementChild;
+	const studioBox = doc.querySelector('[data-sg-studio]');
+	const frame = doc.querySelector('[data-sg-frame]');
+
+	check('the studio sits under the form', !!studioBox && studioBox.previousElementSibling === frame);
+
+	studioBox.querySelector('[data-skin="slate"]').click();
+	await wait(30);
+	check('a skin applies to the form (host and shadow copy)', host.classList.contains('signa-skin-slate') && !host.classList.contains('signa-skin-line') && await until(() => inner() && inner().classList.contains('signa-skin-slate'), 1000));
+	check('a dark skin darkens the page behind it', frame.classList.contains('is-dark'));
+	check('the chosen skin is marked', studioBox.querySelector('[data-skin="slate"]').getAttribute('aria-checked') === 'true');
+
+	studioBox.querySelector('[data-accent="#e11d48"]').click();
+	await wait(30);
+	check('a colour becomes the form accent, with its darker shade', host.style.getPropertyValue('--signa-accent') === '#e11d48' && host.style.getPropertyValue('--signa-accent-strong') === '#b01738');
+	check('and reaches inside the shadow root', await until(() => inner() && inner().style.getPropertyValue('--signa-accent') === '#e11d48', 1000));
+
+	const picker = studioBox.querySelector('[data-sg-color]');
+	picker.value = '#123abc';
+	picker.dispatchEvent(new ctx.win.Event('input', { bubbles: true }));
+	check('any colour works through the picker', host.style.getPropertyValue('--signa-accent') === '#123abc' && studioBox.querySelector('[data-sg-hex]').textContent === '#123abc' && studioBox.querySelector('.swatch--any').classList.contains('is-on'));
+
+	const radius = studioBox.querySelector('[data-sg-radius]');
+	radius.value = '4';
+	radius.dispatchEvent(new ctx.win.Event('input', { bubbles: true }));
+	check('the corner slider sets the radius', host.style.getPropertyValue('--signa-radius') === '4px' && text(studioBox.querySelector('[data-sg-radius-out]')) === '۴');
+
+	studioBox.querySelector('[data-code="single"]').click();
+	check('the code field can be one box', host.classList.contains('signa-code-single') && ctx.win.signaOtp.codeInput === 'single');
+
+	const done = await signIn(ctx, '09351112233', 'tap');
+	check('signing in still works with every change applied (one box, tap the SMS)', done.form.root.classList.contains('is-signed-in'));
+
+	check('the look is kept for the session', /"skin":"slate"/.test(ctx.win.sessionStorage.getItem('signa-demo-look') || ''));
+	studioBox.querySelector('[data-sg-reset]').click();
+	check('«حالت اول» puts everything back', host.classList.contains('signa-skin-line') && host.style.getPropertyValue('--signa-accent') === '#0f766e' && !frame.classList.contains('is-dark'));
+	check('no script error on the page', ctx.errors.length === 0, ctx.errors.slice(0, 3).join(' | '));
+	ctx.win.close();
+
+	const next = await open(base, '/demo/');
+	const host2 = next.doc.querySelector('[data-signa-form]');
+	await until(() => host2 && host2.signaForm);
+	next.doc.querySelector('[data-sg-scenarios] [data-phone="new"]').click();
+	check('a scenario button fills a number in and sends it', await until(() => host2.signaForm.stepCode && host2.signaForm.stepCode.classList.contains('is-current')));
+	check('and its SMS arrives on the phone', await until(() => !!next.doc.querySelector('.sg-note[data-sg-code]')));
+	next.win.close();
 }
 
 async function demoAdmin(base) {
@@ -319,6 +375,7 @@ async function main() {
 	try {
 		await landing(base);
 		await demoForm(base);
+		await studio(base);
 		await demoAdmin(base);
 	} finally {
 		server.close();

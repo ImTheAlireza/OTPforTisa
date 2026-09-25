@@ -3,55 +3,63 @@
 	position: sticky;
 	top: 0;
 	z-index: 100000;
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 10px 18px;
-	padding: 10px 22px;
-	background: rgba(15, 23, 42, 0.97);
-	color: #cbd5e1;
+	background: rgba(255, 255, 255, 0.88);
+	-webkit-backdrop-filter: saturate(1.5) blur(14px);
+	backdrop-filter: saturate(1.5) blur(14px);
+	color: #334155;
 	font: 500 13px/1.7 'Vazirmatn', Tahoma, sans-serif;
 	direction: rtl;
-	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06);
+	text-align: right;
+	box-shadow: 0 10px 30px -26px rgba(11, 19, 36, 0.6);
 }
 .sg-strip * { box-sizing: border-box; }
 .sg-strip a { color: inherit; text-decoration: none; }
-.sg-strip__brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; }
-.sg-strip__mark {
-	display: grid;
-	place-items: center;
-	width: 32px;
-	height: 32px;
-	border-radius: 10px;
-	background: linear-gradient(160deg, #14b8a6, #0f766e);
-	color: #fff;
-}
-.sg-strip__mark svg { width: 18px; height: 18px; }
-.sg-strip__brand small { display: block; color: #94a3b8; font-weight: 500; font-size: 11.5px; line-height: 1.3; }
-.sg-strip__nav { display: flex; flex-wrap: wrap; gap: 4px; }
-.sg-strip__nav a { padding: 6px 12px; border-radius: 999px; font-weight: 600; }
-.sg-strip__nav a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-.sg-strip__nav a[aria-current="page"] { background: rgba(255, 255, 255, 0.14); color: #fff; }
-.sg-strip__note { color: #94a3b8; font-size: 12px; }
-.sg-strip__note b { color: #5eead4; font-weight: 700; letter-spacing: 0.08em; }
+.sg-strip__in { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; max-width: 1480px; margin: 0 auto; padding: 10px 22px; }
+.sg-strip__brand { display: inline-flex; align-items: center; gap: 10px; color: #0b1324 !important; }
+.sg-strip__mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: #0b1324; color: #fff; }
+.sg-strip__mark svg { width: 23px; height: 23px; }
+.sg-strip__mark .w1, .sg-strip__mark .w2 { color: #5eead4; animation: sg-strip-wave 2.4s ease-in-out infinite; }
+.sg-strip__mark .w2 { animation-delay: 0.3s; }
+.sg-strip__name { display: flex; flex-direction: column; font-size: 17px; font-weight: 800; line-height: 1.25; }
+.sg-strip__name small { display: inline-flex; align-items: center; gap: 6px; color: #0b5f58; font-size: 11.5px; font-weight: 700; }
+.sg-strip__live { width: 7px; height: 7px; border-radius: 50%; background: #14b8a6; animation: sg-strip-live 2s ease-out infinite; }
+.sg-strip__nav { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px; border-radius: 14px; background: rgba(11, 19, 36, 0.045); }
+.sg-strip__nav a { padding: 4px 13px; border-radius: 10px; color: #334155; font-weight: 600; transition: background 0.15s ease, color 0.15s ease; }
+.sg-strip__nav a:hover { background: rgba(255, 255, 255, 0.85); color: #0b1324; }
+.sg-strip__nav a[aria-current="page"] { background: #fff; color: #0b5f58; box-shadow: 0 1px 3px rgba(11, 19, 36, 0.1); }
+.sg-strip__note { color: #64748b; font-size: 12px; }
 .sg-strip__end { display: flex; gap: 8px; align-items: center; margin-inline-start: auto; }
 .sg-strip__btn {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
 	padding: 7px 14px;
-	border-radius: 10px;
-	background: linear-gradient(160deg, #14b8a6, #0f766e);
+	border-radius: 11px;
+	background: #0b1324;
 	color: #fff !important;
 	font-weight: 700;
 	white-space: nowrap;
 }
-.sg-strip__btn--ghost { background: rgba(255, 255, 255, 0.08); }
-.sg-strip__btn[aria-disabled="true"] { opacity: 0.75; cursor: default; }
-@media (max-width: 900px) {
+.sg-strip__btn--ghost { background: #fff; color: #0b1324 !important; box-shadow: inset 0 0 0 1px #e3e8ef; }
+.sg-strip__btn[aria-disabled="true"] { opacity: 0.85; cursor: default; }
+/* The signal line: a pulse runs along it now and then. */
+.sg-strip__signal { position: relative; height: 2px; overflow: hidden; background: linear-gradient(90deg, transparent, #e3e8ef 15%, #e3e8ef 85%, transparent); }
+.sg-strip__signal i { position: absolute; top: 0; right: -30%; width: 30%; height: 2px; background: linear-gradient(270deg, transparent, #14b8a6, #0f766e, transparent); animation: sg-strip-run 6s ease-in-out infinite; }
+@keyframes sg-strip-wave { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes sg-strip-live { 0% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.6); } 100% { box-shadow: 0 0 0 8px rgba(20, 184, 166, 0); } }
+@keyframes sg-strip-run { 0% { right: -30%; } 45%, 100% { right: 110%; } }
+@media (max-width: 1100px) {
 	.sg-strip__note { display: none; }
-	.sg-strip { padding: 10px 14px; }
+}
+@media (max-width: 760px) {
+	.sg-strip__in { padding: 8px 14px; gap: 8px 12px; }
 	.sg-strip__end { margin-inline-start: 0; }
+	.sg-strip__btn--ghost { display: none; }
+	.sg-strip__nav { order: 3; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+	.sg-strip__nav a { white-space: nowrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.sg-strip__mark .w1, .sg-strip__mark .w2, .sg-strip__live, .sg-strip__signal i { animation: none; }
 }
 /* App mode is the plugin's full-screen panel; the strip stays on top of it. */
 body.signa-app .sg-strip { position: sticky; }
@@ -77,12 +85,3 @@ body.signa-app .sg-strip { position: sticky; }
 	pointer-events: none;
 }
 .sg-toast.is-on { opacity: 1; transform: none; }
-
-/* The phone that receives the demo SMS (demo-phone.js). Only where there is
-   room for a third column; elsewhere the notification drops from the top. */
-.demo-phone { display: none; }
-@media (min-width: 1280px) {
-	.demo-stage.has-phone { grid-template-columns: 290px minmax(0, 1fr) 296px; max-width: 1480px; }
-	.demo-phone { position: sticky; top: 74px; display: flex; justify-content: center; padding-top: 6px; }
-	.demo-phone .sg-phone { --sg-w: 272px; }
-}

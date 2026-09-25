@@ -154,6 +154,7 @@
 		}
 
 		wrap.innerHTML = '';
+		wrap.classList.remove('is-done');
 		var card = note(sms);
 		wrap.appendChild(card);
 		tip(wrap);
@@ -238,19 +239,7 @@
 		});
 	}
 
-	function signedIn(info) {
-		stage('done');
-
-		var wrap = document.querySelector('.sg-banner');
-		if (wrap) {
-			wrap.classList.remove('is-on');
-		}
-
-		if (!usePhone()) {
-			return;
-		}
-
-		phone.stack.innerHTML = '';
+	function doneCard(info, next) {
 		var card = el('div', 'sg-done', ''
 			+ '<span class="sg-done__ic">' + ICON_CHECK + '</span>'
 			+ '<b>' + (info && info.created ? 'حساب ساخته شد' : 'وارد شدید') + '</b>'
@@ -262,8 +251,48 @@
 			window.location.reload();
 		});
 
+		if (next) {
+			var go = el('a', 'sg-done__again sg-done__go', 'صفحهٔ حساب کاربری');
+			go.href = next;
+			card.appendChild(go);
+			again.classList.add('sg-done__again--ghost');
+		}
+
 		card.appendChild(again);
-		phone.stack.appendChild(card);
+
+		return card;
+	}
+
+	function signedIn(info) {
+		stage('done');
+
+		var mount = document.querySelector('[data-sg-phone]');
+		var next = mount ? mount.getAttribute('data-sg-next') : '';
+		var wrap = document.querySelector('.sg-banner');
+
+		if (!usePhone()) {
+			// Small screens: the same card drops in from the top.
+			if (!wrap) {
+				wrap = el('div', 'sg-banner');
+				document.body.appendChild(wrap);
+			}
+
+			wrap.innerHTML = '';
+			wrap.appendChild(doneCard(info, next));
+			wrap.classList.add('is-on', 'is-done');
+			window.clearTimeout(bannerTimer);
+			bannerTimer = window.setTimeout(function () {
+				wrap.classList.remove('is-on');
+			}, 9000);
+			return;
+		}
+
+		if (wrap) {
+			wrap.classList.remove('is-on');
+		}
+
+		phone.stack.innerHTML = '';
+		phone.stack.appendChild(doneCard(info, next));
 	}
 
 	/* --------------------------------------------- fill the waiting form in */
