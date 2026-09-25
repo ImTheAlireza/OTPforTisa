@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سیگنا — ورود و عضویت با کد پیامکی برای وردپرس و ووکامرس</title>
+<meta name="description" content="سیگنا فرم ورود و عضویت وردپرس را به «شماره موبایل + کد یک‌بارمصرف» تبدیل می‌کند؛ پنج سامانهٔ پیامکی با پشتیبان خودکار، کپچا، ووکامرس، المنتور و وودمارت.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='7' fill='%230f766e'/%3E%3Cpath d='M9 12.5l2 2 4-4.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/front.css">
+<link rel="stylesheet" href="assets/landing.css">
+<!-- @demo-head -->
+</head>
+<body>
+
+<header class="top">
+	<div class="wrap top__in">
+		<a class="brand" href="#top" aria-label="سیگنا">
+			<span class="brand__mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 5.5h3"/><path d="M9 12.5l2 2 4-4.5"/></svg></span>
+			<span>سیگنا</span>
+		</a>
+		<nav class="top__nav" aria-label="بخش‌ها">
+			<a href="#features">امکانات</a>
+			<a href="#gateways">سامانه‌ها</a>
+			<a href="#setup">راه‌اندازی</a>
+			<a href="#faq">پرسش‌ها</a>
+		</nav>
+		<div class="top__cta">
+			<a class="btn btn--ghost btn--sm" href="{{demo_url}}">دموی کامل</a>
+			{{buy_small}}
+		</div>
+	</div>
+</header>
+
+<main id="top">
+
+	<section class="hero">
+		<div class="wrap hero__in">
+			<div class="hero__copy">
+				<p class="eyebrow">افزونهٔ وردپرس · نسخهٔ {{version_fa}}</p>
+				<h1>ورود و عضویت با کد پیامکی، <span>بدون رمز عبور</span></h1>
+				<p class="lead">سیگنا فرم ورود سایت شما را به «شماره موبایل + کد یک‌بارمصرف» تبدیل می‌کند. کاربر شماره‌اش را می‌زند، کد را وارد می‌کند و وارد می‌شود؛ اگر حساب نداشته باشد، حسابش همان‌جا ساخته می‌شود.</p>
+				<p class="tagline">سیگنال بده، وارد شو.</p>
+				<div class="hero__actions">
+					{{buy_large}}
+					<a class="btn btn--ghost" href="{{demo_url}}admin.html">پیشخوان مدیریت را ببینید</a>
+				</div>
+				<ul class="hero__facts">
+					<li>۵ سامانهٔ پیامکی ایرانی</li>
+					<li>پشتیبان خودکار</li>
+					<li>ووکامرس، المنتور، وودمارت</li>
+				</ul>
+			</div>
+
+			<div class="hero__demo">
+				<div class="frame">
+					<div class="frame__bar" aria-hidden="true"><i></i><i></i><i></i><span>example.ir/login</span></div>
+					<div class="frame__body">
+<!-- @signa-form -->
+					</div>
+				</div>
+				<p class="try"><b>همین حالا امتحان کنید:</b> هر شمارهٔ موبایلی بزنید؛ کد آزمایشی <code>12345</code> است. شمارهٔ <code dir="ltr">09121234567</code> کاربر موجود است و بقیه به فرم عضویت می‌روند. پیامکی ارسال نمی‌شود.</p>
+			</div>
+		</div>
+	</section>
+
+	<section class="band" aria-label="سامانه‌های پشتیبانی‌شده" id="gateways">
+		<div class="wrap band__in">
+			<span class="band__label">سامانه‌های پیامکی</span>
+			<ul class="band__list">
+				<li>SMS.ir</li>
+				<li>کاوه‌نگار</li>
+				<li>ملی پیامک</li>
+				<li>آی‌پی‌پنل</li>
+				<li>فراز اس‌ام‌اس</li>
+			</ul>
+			<span class="band__note">ارسال با الگو (پترن) از خط خدماتی؛ یکی اصلی، یکی پشتیبان.</span>
+		</div>
+	</section>
+
+	<section class="section" id="features">
+		<div class="wrap">
+			<header class="section__head">
+				<h2>همه‌چیز برای یک ورود بی‌دردسر</h2>
+				<p>برای سایت‌های ایرانی ساخته شده: پنل‌های پیامکی داخلی، هاست‌های سخت‌گیر، کش و Cloudflare.</p>
+			</header>
+
+			<div class="grid">
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h11l-3-3M20 17H9l3 3"/></svg></span>
+					<h3>سامانهٔ پشتیبان خودکار</h3>
+					<p>اگر پنل اصلی قطع شد یا اعتبارش تمام شد، کد از پنل دوم می‌رود و کاربر منتظر نمی‌ماند. خطا در داشبورد ثبت می‌شود تا درستش کنید.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.2 3 7.8 7 9 4-1.2 7-4.8 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+					<h3>ضد ربات و ضد هزینهٔ الکی</h3>
+					<p>سقف ارسال برای هر شماره، هر IP و کل سایت؛ کپچای reCAPTCHA v3، hCaptcha یا آرکپچا؛ فهرست مسدود. اعتبار پنل پیامکی‌تان را ربات‌ها خرج نمی‌کنند.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></span>
+					<h3>سازگار با کش و Cloudflare</h3>
+					<p>روی صفحه‌های کش‌شده، LiteSpeed و Cloudflare هم کار می‌کند؛ اعتبارسنجی فرم تازه از سرور گرفته می‌شود و IP واقعی کاربر پشت پروکسی شناخته می‌شود.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5h2l2 10h9l2-7H8"/><circle cx="10" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg></span>
+					<h3>ووکامرس</h3>
+					<p>فرم «حساب کاربری» و ورود پیش از تسویه حساب؛ شمارهٔ تأییدشده در شمارهٔ صورتحساب هم ذخیره می‌شود. سازگار با HPOS.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span>
+					<h3>المنتور و وودمارت</h3>
+					<p>ویجت اختصاصی المنتور با همهٔ تنظیمات، و فرم سیگنا داخل کشوی ورود وودمارت؛ بدون دست زدن به فایل‌های پوسته.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 0 0 17"/><path d="M7 9h.01M8.5 14.5h.01M12 7h.01"/></svg></span>
+					<h3>پنج پوسته، هر رنگی</h3>
+					<p>خطی، کارت، شیشه‌ای، تیره و گرد؛ با رنگ، عرض و گوشه‌های دلخواه و پیش‌نمایش زنده. فرم در Shadow DOM است و استایل پوستهٔ سایت به‌همش نمی‌ریزد.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v10m0 0 4-4m-4 4-4-4"/><path d="M5 18h14"/></svg></span>
+					<h3>انتقال از Digits</h3>
+					<p>شماره‌های ذخیره‌شده توسط Digits، ووکامرس یا هر کلید متای دیگری منتقل می‌شوند؛ اول اجرای آزمایشی، بعد اجرای واقعی با امکان بازگشت.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/><path d="M12 14v2.5"/></svg></span>
+					<h3>کد اضطراری</h3>
+					<p>روزی که سامانهٔ پیامکی قطع است، مدیر یک کد کوتاه‌مدت و محدود می‌سازد تا کاربران موجود بیرون نمانند. هر استفاده ثبت می‌شود.</p>
+				</article>
+				<article class="card">
+					<span class="card__ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/></svg></span>
+					<h3>گزارش‌ها و عیب‌یابی</h3>
+					<p>نمودار ارسال‌ها، دلیل هر شکست به زبان ساده و آزمون یک‌کلیکی هر بخش. پیام خطا می‌گوید دقیقاً کدام فیلد یا کدام تنظیم هاست مشکل دارد.</p>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<section class="section section--alt" id="setup">
+		<div class="wrap">
+			<header class="section__head">
+				<h2>راه‌اندازی در پنج دقیقه</h2>
+				<p>بدون کدنویسی. راهنمای فارسی کامل همراه بسته است.</p>
+			</header>
+			<ol class="steps">
+				<li>
+					<span class="steps__n">۱</span>
+					<h3>نصب و فعال‌سازی</h3>
+					<p>افزونه را بارگذاری کنید و دامنه را در حساب راست‌چین ثبت کنید. کد لایسنس جداگانه‌ای لازم نیست.</p>
+				</li>
+				<li>
+					<span class="steps__n">۲</span>
+					<h3>اتصال سامانهٔ پیامکی</h3>
+					<p>کلید API و شمارهٔ الگو را وارد کنید و «ارسال پیامک آزمایشی» را بزنید.</p>
+				</li>
+				<li>
+					<span class="steps__n">۳</span>
+					<h3>قرار دادن فرم</h3>
+					<p>شورت‌کد <code>[signa_form]</code>، ویجت المنتور، یا جایگزینی خودکار صفحهٔ ورود وردپرس و ووکامرس.</p>
+				</li>
+			</ol>
+
+			<div class="panel">
+				<div class="panel__copy">
+					<h3>پیشخوانی که خودش توضیح می‌دهد</h3>
+					<p>هر بخش تنظیمات یک دکمهٔ «آزمایش» دارد که همان‌جا می‌گوید چه چیزی آماده است و چه چیزی نه. داشبورد وضعیت سامانه‌ها را نشان می‌دهد و اگر هاست درخواست‌های خروجی را ببندد، راه‌حلش را هم می‌نویسد.</p>
+					<a class="btn" href="{{demo_url}}admin.html">پیشخوان را در دمو باز کنید</a>
+				</div>
+				<ul class="panel__list">
+					<li>داشبورد و وضعیت سامانه‌ها</li>
+					<li>ورود و عضویت</li>
+					<li>پیامک و کانال‌ها</li>
+					<li>ظاهر فرم با پیش‌نمایش زنده</li>
+					<li>امنیت و محدودیت</li>
+					<li>یکپارچه‌سازی‌ها</li>
+					<li>گزارش‌ها و رویدادها</li>
+					<li>ابزارها، دسترسی و مسدودی</li>
+				</ul>
+			</div>
+		</div>
+	</section>
+
+	<section class="section" id="requirements">
+		<div class="wrap req">
+			<div>
+				<h2>نیازمندی‌ها</h2>
+				<p class="muted">پیش از خرید، این موارد را روی هاست خود بررسی کنید.</p>
+			</div>
+			<ul class="req__list">
+				<li><b>وردپرس</b> ۶.۱ یا بالاتر</li>
+				<li><b>PHP</b> نسخهٔ ۷.۴، ۸.۱ یا ۸.۲</li>
+				<li><b>ionCube Loader</b> نسخهٔ ۱۴ یا بالاتر</li>
+				<li><b>افزونهٔ مدیریت هوشمند راست‌چین</b> (رایگان)</li>
+				<li><b>پنل پیامکی</b> فعال در یکی از پنج سامانه</li>
+				<li><b>اختیاری:</b> ووکامرس ۷.۱+، المنتور، وودمارت</li>
+			</ul>
+		</div>
+	</section>
+
+	<section class="section section--alt" id="faq">
+		<div class="wrap faq">
+			<header class="section__head">
+				<h2>پرسش‌های پرتکرار</h2>
+			</header>
+			<details>
+				<summary>هزینهٔ پیامک‌ها با کیست؟</summary>
+				<p>پیامک‌ها از پنل پیامکی خودتان ارسال می‌شوند و هزینه‌شان را همان پنل حساب می‌کند. سیگنا با سقف ارسال و کپچا جلوی خرج شدن اعتبار توسط ربات‌ها را می‌گیرد.</p>
+			</details>
+			<details>
+				<summary>روی چند سایت می‌توانم استفاده کنم؟</summary>
+				<p>هر لایسنس برای یک دامنه است و هر دامنه یا زیردامنه لایسنس جدا می‌خواهد. روی لوکال‌هاست فعال‌سازی لازم نیست.</p>
+			</details>
+			<details>
+				<summary>کاربرانی که قبلاً با Digits ثبت‌نام کرده‌اند چه می‌شوند؟</summary>
+				<p>با ابزار واردسازی، شماره‌هایشان به سیگنا منتقل می‌شود و با همان حساب قبلی وارد می‌شوند. اول می‌توانید اجرای آزمایشی بگیرید و اگر لازم شد، کار را برگردانید.</p>
+			</details>
+			<details>
+				<summary>سایتم کش دارد و پشت Cloudflare است؛ مشکلی پیش نمی‌آید؟</summary>
+				<p>نه. فرم اعتبارسنجی تازه را از سرور می‌گیرد، پس روی صفحهٔ کش‌شده هم کار می‌کند؛ کافی است پروکسی را در تنظیمات امنیت معرفی کنید تا IP واقعی کاربران شناخته شود.</p>
+			</details>
+			<details>
+				<summary>مدیر سایت هم با کد وارد می‌شود؟</summary>
+				<p>به‌طور پیش‌فرض نه. نقش‌های حساس مثل مدیر فقط با گذرواژه وارد می‌شوند تا دسترسی به یک سیم‌کارت برای گرفتن کنترل سایت کافی نباشد. این را در تنظیمات تغییر می‌دهید.</p>
+			</details>
+			<details>
+				<summary>پشتیبانی و به‌روزرسانی چطور است؟</summary>
+				<p>پشتیبانی از طریق بخش پشتیبانی همین محصول در حساب راست‌چین انجام می‌شود و نسخه‌های تازه را از همان‌جا دریافت می‌کنید.</p>
+			</details>
+		</div>
+	</section>
+
+	<section class="final">
+		<div class="wrap final__in">
+			<h2>ورود سایتتان را به سیگنا بسپارید</h2>
+			<p>پنج سامانهٔ پیامکی، پشتیبان خودکار و راهنمای فارسی کامل.</p>
+			<div class="hero__actions">
+				{{buy_large}}
+				<a class="btn btn--ghost btn--light" href="{{demo_url}}">دموی کامل</a>
+			</div>
+		</div>
+	</section>
+
+</main>
+
+<footer class="foot">
+	<div class="wrap foot__in">
+		<span>سیگنا — ساختهٔ استودیو پارسنا</span>
+		<span>نسخهٔ {{version_fa}}</span>
+	</div>
+</footer>
+
+<!-- @signa-config -->
+<script src="assets/js/front.js"></script>
+</body>
+</html>

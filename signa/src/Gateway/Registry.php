@@ -152,7 +152,7 @@ final class Registry {
 			if ( '' !== $host && Transport::egressBlocked( $host ) ) {
 				$plan['issues'][] = sprintf(
 					/* translators: %s: gateway host */
-					__( 'وردپرس درخواست‌های خروجی به %s را بسته است؛ در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید.', 'signa' ),
+					__( 'وردپرس درخواست‌های خروجی به %s را بسته است؛ در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید.', 'signa' ),
 					$host
 				);
 			}

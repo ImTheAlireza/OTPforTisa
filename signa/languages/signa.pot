@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Signa 2.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/signa\n"
-"POT-Creation-Date: 2026-09-25 11:12+0000\n"
+"POT-Creation-Date: 2026-09-25 19:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2874,7 +2874,7 @@ msgid "بسته است"
 msgstr ""
 
 #: src/Diagnostics/SelfTest.php:523
-msgid "یا در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید."
+msgid "یا در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید."
 msgstr ""
 
 #. translators: 1: host, 2: error code
@@ -4278,7 +4278,7 @@ msgstr ""
 
 #. translators: %s: gateway host
 #: src/Gateway/Registry.php:155
-msgid "وردپرس درخواست‌های خروجی به %s را بسته است؛ در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید."
+msgid "وردپرس درخواست‌های خروجی به %s را بسته است؛ در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید."
 msgstr ""
 
 #: src/Guard/BlocklistGuard.php:56
@@ -4337,7 +4337,7 @@ msgid "کد آزمایشی از راه %s رفت؛ علت شکست پیامک د
 msgstr ""
 
 #: src/Http/AdminController.php:230
-msgid "در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید."
+msgid "در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید."
 msgstr ""
 
 #: src/Http/AdminController.php:305

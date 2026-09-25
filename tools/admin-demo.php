@@ -208,7 +208,7 @@ function signa_demo_localise( string $html ): string {
 	);
 
 	$html = (string) preg_replace( '#https://example\.test/wp-admin/admin-post\.php\?action=signa_form_preview[^"]*#', '/admin/form-preview', $html );
-	$html = str_replace( '/admin/logs&', '/admin/logs?', $html );
+	$html = str_replace( array( '/admin/logs&', '/admin/reports&' ), array( '/admin/logs?', '/admin/reports?' ), $html );
 
 	// Relative times and the minted-at stamp change every run; the files must not.
 	$html = (string) preg_replace( '/(class="signa-(?:frow__when|muted-cell)">)[^<]*</u', '$1۵ دقیقه پیش<', $html );
@@ -221,7 +221,17 @@ function signa_demo_localise( string $html ): string {
 	// php-wasm locally and on native PHP in CI and must come out identical.
 	$html = str_replace( '>' . PHP_VERSION . '<', '>8.3.0<', $html );
 
-	return str_replace( '&', '&amp;', str_replace( '&amp;', '&', $html ) );
+	$html = str_replace( '&', '&amp;', str_replace( '&amp;', '&', $html ) );
+
+	// A script body is not HTML: escaping it turned the form preview's `&&`
+	// into `&amp;&amp;`, a syntax error, and the preview never switched steps.
+	return (string) preg_replace_callback(
+		'#(<script\b[^>]*>)(.*?)(</script>)#s',
+		static function ( array $m ): string {
+			return $m[1] . str_replace( '&amp;', '&', $m[2] ) . $m[3];
+		},
+		$html
+	);
 }
 
 function signa_demo_page( string $title, string $body, bool $settings = false ): string {

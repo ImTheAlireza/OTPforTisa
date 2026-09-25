@@ -52,8 +52,8 @@ BOTTOM = 60
 
 INK = HexColor('#1f2433')
 MUTED = HexColor('#6b7185')
-ACCENT = HexColor('#4f46e5')
-SOFT = HexColor('#eef0fb')
+ACCENT = HexColor('#0f766e')
+SOFT = HexColor('#e2f5f1')
 CODE_BG = HexColor('#f4f5f8')
 RULE = HexColor('#dfe2ea')
 

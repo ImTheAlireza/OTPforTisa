@@ -279,7 +279,7 @@ function checkPayload(kind) {
 				{ label: 'کانال ارسال کد', value: 'پیامک', status: 'ok' },
 				{ label: 'کلید API و اعتبار', value: 'وصل نشد', status: 'fail', note: 'خودِ وردپرس این درخواست را رد کرد، نه فایروال هاست: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و api.sms.ir در WP_ACCESSIBLE_HOSTS نیست.' },
 				{ label: 'شماره خط', value: '3000505', status: 'info', note: 'تا وقتی خروجی باز نشود یا «ارسال مستقیم» روشن نشود، فهرست خط‌های حساب خوانده نمی‌شود.' },
-				{ label: 'دسترسی این سرور به سامانه', value: 'بسته است', status: 'fail', note: 'api.sms.ir — خودِ وردپرس این درخواست را رد کرد … یا در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید.' },
+				{ label: 'دسترسی این سرور به سامانه', value: 'بسته است', status: 'fail', note: 'api.sms.ir — خودِ وردپرس این درخواست را رد کرد … یا در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید.' },
 				{ label: 'ارسال واقعی', value: 'آزمایش جدا', status: 'info', note: 'این آزمایش چیزی ارسال نمی‌کند.' },
 			],
 		},
@@ -496,7 +496,7 @@ function handleRest(route, body, headers) {
 				carrier: 'email',
 				carrier_label: 'ایمیل',
 				direct: false,
-				fix: 'در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید.',
+				fix: 'در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید.',
 				masked: mask(phone),
 				trace: [
 					{ gateway: 'smsir', sent: false, error_code: 'transport', status: 0, message: 'خود وردپرس اجازهٔ این درخواست را نمی‌دهد: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و دامنهٔ سامانهٔ پیامکی در WP_ACCESSIBLE_HOSTS نیست. یا آن گزینه را بردارید یا دامنه را به فهرست اضافه کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'api.sms.ir\' );', reason: 'BLOCKED: http_request_not_executed — WordPress blocks outbound HTTP: api.sms.ir is not in WP_ACCESSIBLE_HOSTS.' },
@@ -506,7 +506,7 @@ function handleRest(route, body, headers) {
 					mode: 'pattern',
 					sender: '3000505',
 					template: '123456',
-					issues: ['وردپرس درخواست‌های خروجی به api.sms.ir را بسته است؛ در تنظیمات › سامانه‌های پیامکی «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید.'],
+					issues: ['وردپرس درخواست‌های خروجی به api.sms.ir را بسته است؛ در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید.'],
 				},
 				message: 'پیامک ارسال نشد؛ کد آزمایشی از راه ایمیل رفت. علت شکست پیامک در همین پنجره آمده است.',
 			});

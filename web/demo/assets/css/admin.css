@@ -1,0 +1,2666 @@
+/*!
+ * Signa — admin styles.
+ *
+ * Scoped to `.signa-wrap` (and the modal, which lives on <body>) so nothing
+ * leaks into other admin screens. The design language: a quiet grey page,
+ * white cards with a soft shadow, one teal accent, rounded controls, and a
+ * floating save bar. Every colour below is a token; tests/contrast.js reads
+ * the tokens straight out of this block and checks the pairs WCAG constrains.
+ */
+
+/* Vazirmatn ships with the plugin (assets/fonts, OFL): no request to a font CDN. */
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-400-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-400-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-600-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-600-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-arabic-700-normal.woff2) format('woff2');
+	unicode-range: U+0020,U+0041,U+00A0,U+060C-060D,U+0610-0612,U+0615,U+061B,U+061F,U+0621-063A,U+063D,U+0640-0658,U+065A-065B,U+0660-0671,U+0674,U+0679,U+067C,U+067E,U+0681,U+0685-0686,U+0688-0689,U+0691,U+0693,U+0695-0696,U+0698,U+069A,U+06A0-06A1,U+06A4,U+06A9-06AD,U+06AF,U+06B5,U+06BA,U+06BC-06BE,U+06C0-06C3,U+06C6-06D0,U+06D2-06D5,U+06DC-06DE,U+06E9,U+06F0-06F9,U+0762-0763,U+200C-200E,U+2010-2011,U+FB50-FB51,U+FB56-FB59,U+FB66-FB6D,U+FB7A-FB7D,U+FB88-FB95,U+FB9E-FB9F,U+FBA5,U+FBA7-FBB1,U+FBBF-FBC0,U+FBD3-FBDC,U+FBDE-FBDF,U+FBE2-FBE3,U+FBE8-FBE9,U+FBFC-FBFF,U+FD3E-FD3F,U+FDF2,U+FDFC,U+FE70-FE74,U+FE76-FEFC;
+}
+
+@font-face {
+	font-family: 'Vazirmatn';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(../fonts/vazirmatn-latin-700-normal.woff2) format('woff2');
+	unicode-range: U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02BC,U+02C6,U+02DA,U+02DC,U+0300-0301,U+0303,U+0309,U+0323,U+2002,U+2009,U+200B,U+2013-2014,U+2018-201A,U+201C-201E,U+2022,U+2026,U+2032-2033,U+2039-203A,U+2044,U+20AC,U+2122,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+.signa-wrap,
+.signa-modal {
+	--signa-accent: #0f766e;
+	--signa-accent-strong: #0b5f58;
+	--signa-accent-soft: #e2f5f1;
+	--signa-accent-line: #b6e3db;
+	--signa-ink: #101828;
+	--signa-muted: #5b6673;
+	--signa-hint: #667085;
+	--signa-line: #e6eaf0;
+	--signa-line-soft: #f1f4f7;
+	--signa-field: #838f9e;
+	--signa-bg: #eef1f4;
+	--signa-surface: #ffffff;
+	--signa-danger: #b42318;
+	--signa-danger-soft: #fef1f0;
+	--signa-danger-line: #f5c8c8;
+	--signa-success: #157f3d;
+	--signa-success-soft: #e8f6ec;
+	--signa-success-line: #bfe6cb;
+	--signa-warning: #9a6206;
+	--signa-warning-soft: #fff7e6;
+	--signa-warning-line: #f2dfb2;
+	--signa-info: #1d5fd1;
+	--signa-info-soft: #eaf2fe;
+	--signa-info-line: #c8dcfa;
+	--signa-radius: 16px;
+	--signa-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 28px -20px rgba(16, 24, 40, 0.18);
+	--signa-font: Vazirmatn, "Vazir", Tahoma, "Segoe UI", sans-serif;
+	--signa-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+
+.signa-wrap {
+	max-width: 1180px;
+	margin: 20px 0 110px 20px;
+	color: var(--signa-ink);
+	font-family: var(--signa-font);
+	font-size: 14px;
+	line-height: 1.75;
+	-webkit-font-smoothing: antialiased;
+}
+
+.signa-wrap *,
+.signa-wrap *::before,
+.signa-wrap *::after,
+.signa-modal *,
+.signa-modal *::before,
+.signa-modal *::after {
+	box-sizing: border-box;
+}
+
+.signa-wrap a {
+	color: #0b6b63;
+	text-decoration: none;
+}
+
+.signa-wrap a:hover {
+	text-decoration: underline;
+}
+
+.signa-wrap p {
+	margin: 0;
+}
+
+.signa-wrap h1,
+.signa-wrap h2,
+.signa-wrap h3 {
+	color: var(--signa-ink);
+	font-family: inherit;
+}
+
+.signa-ic {
+	flex: none;
+	vertical-align: -3px;
+}
+
+.signa-screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* One visible focus ring for everything the panel can reach. WordPress styles
+   `:focus` on some controls and not others, so it is drawn here once. */
+.signa-wrap a:focus-visible,
+.signa-wrap button:focus-visible,
+.signa-wrap .button:focus-visible,
+.signa-wrap input:focus-visible,
+.signa-wrap select:focus-visible,
+.signa-wrap textarea:focus-visible,
+.signa-wrap summary:focus-visible,
+.signa-wrap [tabindex]:focus-visible,
+.signa-modal button:focus-visible,
+.signa-modal input:focus-visible {
+	outline: 2px solid var(--signa-accent);
+	outline-offset: 2px;
+	box-shadow: none;
+}
+
+/* Hero ---------------------------------------------------------------------- */
+
+.signa-hero {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 14px 16px;
+	padding: 20px 24px;
+	border: 1px solid var(--signa-line);
+	border-radius: 18px;
+	background: linear-gradient(120deg, #ffffff 62%, var(--signa-accent-soft) 100%);
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+	overflow: hidden;
+}
+
+.signa-hero::after {
+	content: "";
+	position: absolute;
+	inset-inline-end: -70px;
+	top: -90px;
+	width: 240px;
+	height: 240px;
+	border-radius: 50%;
+	background: radial-gradient(circle, rgba(182, 227, 219, 0.33), transparent 70%);
+	pointer-events: none;
+}
+
+.signa-hero__logo {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 46px;
+	height: 46px;
+	border-radius: 13px;
+	background: linear-gradient(135deg, #0d9488, #0b6e60);
+	color: #fff;
+	box-shadow: 0 6px 14px -4px rgba(13, 148, 136, 0.4);
+}
+
+.signa-hero__text {
+	min-width: 0;
+}
+
+.signa-wrap .signa-hero__title {
+	margin: 0;
+	padding: 0;
+	font-size: 19px;
+	font-weight: 800;
+	line-height: 1.5;
+	letter-spacing: -0.2px;
+}
+
+.signa-hero__sub {
+	color: var(--signa-muted);
+	font-size: 12px;
+}
+
+.signa-hero__actions {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-inline-start: auto;
+}
+
+.signa-header__meta {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	flex-basis: 100%;
+}
+
+.signa-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 12px;
+	border: 1px solid var(--signa-line);
+	border-radius: 99px;
+	background: #f2f4f7;
+	color: var(--signa-muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.signa-pill.is-on {
+	border-color: var(--signa-success-line);
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa-pill.is-on::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--signa-success);
+	box-shadow: 0 0 0 3px rgba(21, 127, 61, 0.14);
+}
+
+.signa-pill.is-off {
+	border-color: var(--signa-danger-line);
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa-pill--ver {
+	font-size: 11.5px;
+	font-variant-numeric: tabular-nums;
+}
+
+.signa-appmode {
+	display: inline-flex;
+	margin: 0;
+}
+
+.signa-wrap .wp-header-end {
+	display: none;
+}
+
+/* Body: side navigation + main column --------------------------------------- */
+
+.signa-body {
+	display: grid;
+	grid-template-columns: 236px minmax(0, 1fr);
+	gap: 20px;
+	align-items: start;
+	margin-top: 20px;
+}
+
+.signa-body__nav {
+	position: sticky;
+	top: 46px;
+}
+
+.signa-main {
+	min-width: 0;
+}
+
+.signa-screens {
+	padding: 10px;
+	border: 1px solid var(--signa-line);
+	border-radius: var(--signa-radius);
+	background: var(--signa-surface);
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.signa-screens__list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.signa-screens__list li {
+	margin: 0;
+}
+
+.signa-screens__cap {
+	padding: 12px 11px 6px;
+	color: var(--signa-hint);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.2px;
+}
+
+.signa-wrap .signa-screen {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	padding: 9px 11px;
+	border-radius: 10px;
+	color: var(--signa-muted);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.6;
+	text-decoration: none;
+}
+
+.signa-screen .signa-ic {
+	color: var(--signa-hint);
+}
+
+.signa-wrap .signa-screen:hover {
+	background: #f6f8fa;
+	color: var(--signa-ink);
+	text-decoration: none;
+}
+
+.signa-wrap .signa-screen.is-current {
+	background: var(--signa-accent-soft);
+	color: var(--signa-accent);
+}
+
+.signa-screen.is-current .signa-ic {
+	color: var(--signa-accent);
+}
+
+.signa-screen.is-current::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: -10px;
+	top: 9px;
+	bottom: 9px;
+	width: 3.5px;
+	border-radius: 4px;
+	background: var(--signa-accent);
+}
+
+/* Section head -------------------------------------------------------------- */
+
+.signa-section[hidden] {
+	display: none;
+}
+
+.signa-sechead {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 12px 20px;
+	margin: 2px 0 16px;
+}
+
+.signa-sechead__text {
+	min-width: 0;
+	flex: 1 1 320px;
+}
+
+.signa-wrap .signa-sechead__title {
+	margin: 0;
+	padding: 0;
+	font-size: 18px;
+	font-weight: 800;
+	line-height: 1.6;
+}
+
+.signa-sechead__desc {
+	margin-top: 2px;
+	color: var(--signa-muted);
+	font-size: 12.5px;
+}
+
+.signa-sechead__side {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+}
+
+.signa-sechead__cap {
+	color: var(--signa-hint);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+/* Cards --------------------------------------------------------------------- */
+
+.signa-card {
+	margin: 0 0 18px;
+	border: 1px solid var(--signa-line);
+	border-radius: var(--signa-radius);
+	background: var(--signa-surface);
+	box-shadow: var(--signa-shadow);
+}
+
+.signa-card--danger {
+	border-color: var(--signa-danger-line);
+}
+
+.signa-card__head {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 18px 22px 12px;
+}
+
+.signa-tile {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 11px;
+	background: var(--signa-accent-soft);
+	color: var(--signa-accent);
+}
+
+.signa-card--danger .signa-tile {
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa-card__heading {
+	min-width: 0;
+}
+
+.signa-wrap .signa-card__title {
+	margin: 0;
+	padding: 0;
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 1.6;
+}
+
+.signa-card__desc {
+	margin-top: 1px;
+	color: var(--signa-muted);
+	font-size: 12px;
+}
+
+.signa-card__side {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin-inline-start: auto;
+}
+
+.signa-card__body {
+	padding: 4px 22px 20px;
+}
+
+.signa-card__more {
+	margin-top: 12px;
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+/* The tool screens draw older cards: a bare <h2>, an intro, then content. */
+.signa-panel.signa-card,
+.signa-card.signa-panel {
+	padding: 18px 22px 20px;
+}
+
+.signa-wrap .signa-card > h2 {
+	margin: 0 0 4px;
+	padding: 0;
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 1.6;
+}
+
+.signa-card__intro,
+.signa-desc {
+	margin: 0 0 12px;
+	color: var(--signa-muted);
+	font-size: 12.5px;
+}
+
+.signa-panel {
+	margin-bottom: 18px;
+}
+
+/* Setting rows and fields --------------------------------------------------- */
+
+.signa-sr {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	padding: 14px 2px;
+}
+
+.signa-sr + .signa-sr {
+	border-top: 1px solid var(--signa-line-soft);
+}
+
+.signa-sr__text {
+	min-width: 0;
+}
+
+.signa-sr__t {
+	display: block;
+	font-size: 13.5px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.signa-sr__s {
+	max-width: 60ch;
+	margin-top: 2px;
+	color: var(--signa-muted);
+	font-size: 12px;
+}
+
+.signa-sr__ctl {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 10px;
+}
+
+.signa-grid {
+	display: grid;
+	gap: 14px 18px;
+	padding: 12px 2px 6px;
+}
+
+.signa-grid--2 {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.signa-grid--3 {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.signa-f {
+	min-width: 0;
+	padding: 6px 2px;
+}
+
+.signa-grid .signa-f {
+	padding: 0;
+}
+
+.signa-f--solo {
+	padding-top: 12px;
+}
+
+.signa-f__label {
+	display: block;
+	margin-bottom: 6px;
+	color: var(--signa-muted);
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.signa-f__hint {
+	margin-top: 6px;
+	color: var(--signa-hint);
+	font-size: 11.5px;
+	line-height: 1.8;
+}
+
+/* Inputs -------------------------------------------------------------------- */
+
+.signa-wrap .signa-inp {
+	width: 100%;
+	min-height: 39px;
+	margin: 0;
+	padding: 0 12px;
+	border: 1.4px solid var(--signa-field);
+	border-radius: 10px;
+	background: #fff;
+	box-shadow: none;
+	color: var(--signa-ink);
+	font-family: inherit;
+	font-size: 13px;
+	line-height: 1.6;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.signa-wrap .signa-inp:hover {
+	border-color: #6d7a8a;
+}
+
+.signa-wrap .signa-inp:focus {
+	border-color: var(--signa-accent);
+	box-shadow: 0 0 0 3.5px rgba(15, 118, 110, 0.16);
+	outline: none;
+}
+
+.signa-wrap .signa-inp--mono {
+	font-family: var(--signa-mono);
+	font-size: 12px;
+}
+
+.signa-wrap textarea.signa-inp,
+.signa-wrap .signa-inp--area {
+	min-height: 0;
+	padding: 10px 12px;
+	line-height: 1.9;
+	resize: vertical;
+}
+
+.signa-wrap .signa-inp--num {
+	width: 96px;
+	text-align: center;
+}
+
+.signa-unit {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.signa-unit__u {
+	padding: 5px 9px;
+	border: 1px solid var(--signa-line);
+	border-radius: 8px;
+	background: #f4f6f8;
+	color: var(--signa-muted);
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+.signa-sel {
+	position: relative;
+	display: block;
+}
+
+.signa-wrap .signa-sel select.signa-inp {
+	max-width: none;
+	padding-inline-end: 32px;
+	background-image: none;
+	-webkit-appearance: none;
+	appearance: none;
+	cursor: pointer;
+}
+
+.signa-sel > .signa-ic,
+.signa-sel__chev {
+	position: absolute;
+	inset-inline-end: 10px;
+	top: 50%;
+	color: var(--signa-hint);
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+
+.signa-inline-field {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.signa-inline-field .signa-inp {
+	flex: 1 1 auto;
+}
+
+.signa-wrap .wp-picker-container .wp-color-result.button {
+	min-height: 36px;
+	border-radius: 10px;
+}
+
+/* Toggle: a real checkbox with role="switch", drawn as a switch. */
+.signa-wrap input.signa-tgl[type="checkbox"] {
+	position: relative;
+	flex: none;
+	width: 42px;
+	height: 24px;
+	margin: 0;
+	padding: 0;
+	border: 1.5px solid #7b8796;
+	border-radius: 99px;
+	background: #d3dbe3;
+	box-shadow: none;
+	-webkit-appearance: none;
+	appearance: none;
+	cursor: pointer;
+	transition: background 0.18s, border-color 0.18s;
+}
+
+.signa-wrap input.signa-tgl[type="checkbox"]::before {
+	content: "";
+	position: absolute;
+	top: 2px;
+	inset-inline-start: 2px;
+	width: 17px;
+	height: 17px;
+	margin: 0;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(16, 24, 40, 0.25);
+	transition: transform 0.18s;
+}
+
+.signa-wrap input.signa-tgl[type="checkbox"]:checked {
+	border-color: var(--signa-accent);
+	background: var(--signa-accent);
+}
+
+.signa-wrap input.signa-tgl[type="checkbox"]:checked::before {
+	content: "";
+	transform: translateX(-18px);
+}
+
+[dir="ltr"] .signa-wrap input.signa-tgl[type="checkbox"]:checked::before,
+.signa-wrap[dir="ltr"] input.signa-tgl[type="checkbox"]:checked::before {
+	transform: translateX(18px);
+}
+
+.signa-wrap input.signa-tgl[type="checkbox"]:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Checkbox. */
+.signa-wrap input.signa-chk[type="checkbox"] {
+	position: relative;
+	flex: none;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	border: 1.6px solid var(--signa-field);
+	border-radius: 6px;
+	background: #fff;
+	box-shadow: none;
+	-webkit-appearance: none;
+	appearance: none;
+	cursor: pointer;
+}
+
+.signa-wrap input.signa-chk[type="checkbox"]:checked {
+	border-color: var(--signa-accent);
+	background: var(--signa-accent);
+}
+
+.signa-wrap input.signa-chk[type="checkbox"]:checked::before {
+	content: "";
+	position: absolute;
+	top: 1.5px;
+	left: 5.2px;
+	width: 4.6px;
+	height: 8.6px;
+	margin: 0;
+	border: solid #fff;
+	border-width: 0 2.2px 2.2px 0;
+	transform: rotate(45deg);
+}
+
+.signa-checks {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 4px 0;
+}
+
+.signa-wrap .signa-check {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	cursor: pointer;
+}
+
+.signa-check:has(input:checked) {
+	border-color: var(--signa-accent-line);
+	background: var(--signa-accent-soft);
+	color: var(--signa-accent);
+}
+
+/* Option cards (radio). */
+.signa-opts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	padding: 6px 0 4px;
+}
+
+.signa-opt {
+	position: relative;
+	display: flex;
+	flex: 1 1 172px;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 11px 14px;
+	border: 1.4px solid var(--signa-line);
+	border-radius: 12px;
+	background: #fff;
+	cursor: pointer;
+	transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
+}
+
+.signa-opt:hover {
+	border-color: var(--signa-accent-line);
+}
+
+.signa-opt.is-selected,
+.signa-opt:has(.signa-opt__input:checked) {
+	border-color: var(--signa-accent);
+	background: var(--signa-accent-soft);
+	box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.signa-opt:focus-within {
+	outline: 2px solid var(--signa-accent);
+	outline-offset: 2px;
+}
+
+.signa-wrap .signa-opt__input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	opacity: 0;
+}
+
+.signa-opt__dot {
+	position: relative;
+	flex: none;
+	width: 17px;
+	height: 17px;
+	margin-top: 3px;
+	border: 1.8px solid var(--signa-field);
+	border-radius: 50%;
+	background: #fff;
+}
+
+.signa-opt.is-selected .signa-opt__dot,
+.signa-opt:has(.signa-opt__input:checked) .signa-opt__dot {
+	border-color: var(--signa-accent);
+}
+
+.signa-opt.is-selected .signa-opt__dot::after,
+.signa-opt:has(.signa-opt__input:checked) .signa-opt__dot::after {
+	content: "";
+	position: absolute;
+	inset: 3.4px;
+	border-radius: 50%;
+	background: var(--signa-accent);
+}
+
+.signa-opt__text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.signa-opt__t {
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.signa-opt__s {
+	margin-top: 1px;
+	color: var(--signa-muted);
+	font-size: 11.5px;
+	line-height: 1.7;
+}
+
+/* Chips, code, tokens ------------------------------------------------------- */
+
+.signa-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 10px;
+	border: 1px solid var(--signa-line);
+	border-radius: 99px;
+	background: #f4f6f8;
+	color: var(--signa-muted);
+	font-size: 11.5px;
+	font-weight: 600;
+	line-height: 1.7;
+	white-space: nowrap;
+}
+
+.signa-chip--ok {
+	border-color: var(--signa-success-line);
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa-chip--warn {
+	border-color: var(--signa-warning-line);
+	background: var(--signa-warning-soft);
+	color: var(--signa-warning);
+}
+
+.signa-chip--bad {
+	border-color: var(--signa-danger-line);
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa-code,
+.signa-wrap code {
+	display: inline-block;
+	padding: 2px 8px;
+	border: 1px solid var(--signa-line-soft);
+	border-radius: 7px;
+	background: #f4f6f8;
+	color: #3d4a5c;
+	font-family: var(--signa-mono);
+	font-size: 11.5px;
+	direction: ltr;
+	unicode-bidi: isolate;
+}
+
+.signa-tokens {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.signa-wrap button.signa-token {
+	border-color: var(--signa-line);
+	cursor: pointer;
+	transition: border-color 0.14s, color 0.14s;
+}
+
+.signa-wrap button.signa-token:hover {
+	border-color: var(--signa-accent-line);
+	color: var(--signa-accent);
+}
+
+.signa-footnote {
+	margin-top: 10px;
+	color: var(--signa-hint);
+	font-size: 11.5px;
+}
+
+.signa-note {
+	color: var(--signa-muted);
+	font-size: 12.5px;
+}
+
+.signa-empty {
+	padding: 22px;
+	border: 1.6px dashed var(--signa-line);
+	border-radius: 12px;
+	background: #fafbfc;
+	color: var(--signa-hint);
+	font-size: 12.5px;
+	text-align: center;
+}
+
+/* Notices ------------------------------------------------------------------- */
+
+.signa-notice {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 12px 0 4px;
+	padding: 11px 14px;
+	border: 1px solid var(--signa-info-line);
+	border-radius: 12px;
+	background: var(--signa-info-soft);
+	color: var(--signa-info);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+.signa-notice .signa-ic {
+	margin-top: 3px;
+}
+
+.signa-notice p {
+	margin: 0;
+	color: inherit;
+	font-size: inherit;
+}
+
+.signa-notice a {
+	color: inherit;
+	font-weight: 700;
+	text-decoration: underline;
+}
+
+.signa-notice--info {
+	border-color: var(--signa-info-line);
+}
+
+.signa-notice--success {
+	border-color: var(--signa-success-line);
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa-notice--warning {
+	border-color: var(--signa-warning-line);
+	background: var(--signa-warning-soft);
+	color: var(--signa-warning);
+}
+
+.signa-notice--error {
+	border-color: var(--signa-danger-line);
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa-main > .signa-notice:first-child {
+	margin-top: 0;
+	margin-bottom: 16px;
+}
+
+/* Buttons ------------------------------------------------------------------- */
+
+.signa-btn,
+.signa-wrap .button,
+.signa-modal .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 37px;
+	margin: 0;
+	padding: 0 17px;
+	border: 1.4px solid transparent;
+	border-radius: 10px;
+	box-shadow: none;
+	font-family: inherit;
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.4;
+	text-decoration: none;
+	white-space: nowrap;
+	cursor: pointer;
+	transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+
+.signa-wrap a.signa-btn:hover,
+.signa-wrap a.button:hover {
+	text-decoration: none;
+}
+
+.signa-btn--pri,
+.signa-wrap .button.button-primary,
+.signa-modal .button.button-primary {
+	border-color: var(--signa-accent);
+	background: var(--signa-accent);
+	color: #fff;
+	box-shadow: 0 4px 12px -4px rgba(15, 118, 110, 0.55);
+}
+
+.signa-btn--pri:hover,
+.signa-wrap .button.button-primary:hover,
+.signa-wrap .button.button-primary:focus,
+.signa-modal .button.button-primary:hover {
+	border-color: var(--signa-accent-strong);
+	background: var(--signa-accent-strong);
+	color: #fff;
+}
+
+.signa-btn--gh,
+.signa-wrap .button:not(.button-primary):not(.button-link):not(.wp-color-result),
+.signa-modal .button:not(.button-primary) {
+	border-color: var(--signa-line);
+	background: #fff;
+	color: var(--signa-muted);
+}
+
+.signa-btn--gh:hover,
+.signa-wrap .button:not(.button-primary):not(.button-link):not(.wp-color-result):hover,
+.signa-modal .button:not(.button-primary):hover {
+	border-color: var(--signa-accent-line);
+	background: #fff;
+	color: var(--signa-accent);
+}
+
+.signa-btn--soft {
+	background: var(--signa-accent-soft);
+	color: var(--signa-accent);
+}
+
+.signa-btn--soft:hover {
+	border-color: var(--signa-accent-line);
+}
+
+.signa-btn--sm {
+	min-height: 32px;
+	padding: 0 12px;
+	font-size: 12.5px;
+}
+
+.signa-btn--xs {
+	min-height: 28px;
+	padding: 0 10px;
+	font-size: 12px;
+}
+
+.signa-btn[disabled],
+.signa-btn.is-busy {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.signa-wrap .button.signa-danger,
+.signa-wrap .button-link-delete,
+.signa-wrap .button.button-link-delete {
+	border-color: var(--signa-danger-line);
+	background: #fff;
+	color: var(--signa-danger);
+}
+
+.signa-wrap .button.signa-danger:hover,
+.signa-wrap .button.button-link-delete:hover {
+	border-color: var(--signa-danger);
+	background: var(--signa-danger);
+	color: #fff;
+}
+
+.signa-wrap .button-link {
+	border: 0;
+	background: none;
+	color: var(--signa-accent);
+	cursor: pointer;
+}
+
+.signa-wrap .button-link.signa-remove {
+	color: var(--signa-danger);
+}
+
+.signa-actions-row,
+.signa-shortcuts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+/* Accordions (gateways, captcha providers) ---------------------------------- */
+
+.signa-accs {
+	padding-top: 6px;
+}
+
+.signa-acc {
+	margin-bottom: 12px;
+	border: 1px solid var(--signa-line);
+	border-radius: 13px;
+	background: #fff;
+	overflow: hidden;
+}
+
+.signa-acc > summary {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	padding: 14px 18px;
+	font-size: 13.5px;
+	font-weight: 800;
+	list-style: none;
+	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.signa-acc__t {
+	flex: 1;
+	min-width: 0;
+}
+
+.signa-acc > summary::-webkit-details-marker {
+	display: none;
+}
+
+.signa-acc > summary > .signa-ic {
+	color: var(--signa-accent);
+}
+
+.signa-acc__side {
+	display: flex;
+	align-items: center;
+	gap: 9px;
+	margin-inline-start: auto;
+}
+
+.signa-acc__chev {
+	color: var(--signa-hint);
+	transition: transform 0.18s;
+}
+
+.signa-acc[open] > summary {
+	border-bottom: 1px solid var(--signa-line-soft);
+	background: #fafcfb;
+}
+
+.signa-acc[open] .signa-acc__chev {
+	transform: rotate(180deg);
+}
+
+.signa-acc__bd {
+	padding: 12px 20px 18px;
+}
+
+/* Form section with the live preview beside it ------------------------------ */
+
+.signa-split {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	gap: 20px;
+	align-items: start;
+}
+
+.signa-split__main {
+	min-width: 0;
+}
+
+.signa-pv {
+	position: sticky;
+	top: 46px;
+}
+
+.signa-pv__bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.signa-pv__title {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--signa-muted);
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.signa-pv__steps {
+	display: inline-flex;
+	gap: 2px;
+	padding: 3px;
+	border: 1px solid var(--signa-line);
+	border-radius: 10px;
+	background: #f4f6f8;
+}
+
+.signa-wrap .signa-pv__step {
+	padding: 3px 10px;
+	border: 0;
+	border-radius: 7px;
+	background: transparent;
+	color: var(--signa-muted);
+	font-family: inherit;
+	font-size: 11.5px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.signa-wrap .signa-pv__step[aria-pressed="true"] {
+	background: #fff;
+	color: var(--signa-accent);
+	box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 0 0 1px var(--signa-line);
+}
+
+.signa-pv__frame {
+	position: relative;
+	border: 1px dashed #c9d1db;
+	border-radius: var(--signa-radius);
+	background: linear-gradient(160deg, #f5f7f9, #eceff3);
+	overflow: hidden;
+}
+
+.signa-pv__frame.is-loading::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: rgba(255, 255, 255, 0.45);
+}
+
+.signa-pv__iframe {
+	display: block;
+	width: 100%;
+	height: 540px;
+	border: 0;
+	background: transparent;
+}
+
+/* Registration fields repeater ---------------------------------------------- */
+
+.signa-repeater {
+	padding-top: 6px;
+}
+
+.signa-repeater__head,
+.signa-repeater__row {
+	display: grid;
+	grid-template-columns: 1fr 1.3fr 1fr 1fr 1fr 70px 36px;
+	gap: 8px;
+	align-items: center;
+}
+
+.signa-repeater__head {
+	padding: 0 2px 6px;
+	color: var(--signa-hint);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.signa-repeater__rows {
+	display: grid;
+	gap: 8px;
+	margin-bottom: 10px;
+}
+
+.signa-repeater__row .signa-chk {
+	justify-self: center;
+}
+
+.signa-wrap .signa-repeater__remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	padding: 0;
+	border: 1.4px solid var(--signa-danger-line);
+	border-radius: 9px;
+	background: #fff;
+	color: var(--signa-danger);
+	cursor: pointer;
+}
+
+/* Save bar ------------------------------------------------------------------ */
+
+.signa-savebar {
+	position: fixed;
+	bottom: 20px;
+	left: 50%;
+	z-index: 9990;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 7px 20px 7px 7px;
+	border-radius: 99px;
+	background: rgba(21, 35, 32, 0.94);
+	box-shadow: 0 14px 34px -10px rgba(16, 24, 40, 0.45);
+	transform: translateX(-50%);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+}
+
+.signa-savebar__st {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	color: #c4d6d1;
+	font-size: 12px;
+}
+
+.signa-savebar__st::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #5fd39b;
+	box-shadow: 0 0 0 3px rgba(95, 211, 155, 0.2);
+}
+
+.signa-savebar[data-state="dirty"] .signa-savebar__st::before {
+	background: #f4b740;
+	box-shadow: 0 0 0 3px rgba(244, 183, 64, 0.2);
+}
+
+.signa-savebar[data-state="error"] .signa-savebar__st::before {
+	background: #f97066;
+	box-shadow: 0 0 0 3px rgba(249, 112, 102, 0.25);
+}
+
+.signa-savebar[data-state="saving"] .signa-savebar__st::before {
+	animation: signa-pulse 0.9s ease-in-out infinite alternate;
+}
+
+.signa-wrap .signa-savebar__rst {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #b5cbc5;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.signa-wrap .signa-savebar__rst:hover {
+	color: #fff;
+}
+
+.signa-savebar[data-state="clean"] .signa-savebar__rst,
+.signa-savebar[data-state="saving"] .signa-savebar__rst {
+	visibility: hidden;
+}
+
+.signa-savebar .signa-btn--pri {
+	border-radius: 99px;
+}
+
+@keyframes signa-pulse {
+	from { opacity: 1; }
+	to { opacity: 0.35; }
+}
+
+/* Dashboard ----------------------------------------------------------------- */
+
+.signa-health {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 14px;
+}
+
+.signa-htile {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 14px 16px;
+	border: 1px solid var(--signa-line);
+	border-radius: 13px;
+	background: #fff;
+}
+
+.signa-htile__dot {
+	flex: none;
+	width: 10px;
+	height: 10px;
+	margin-top: 7px;
+	border-radius: 50%;
+	background: var(--signa-hint);
+}
+
+.signa-htile.is-good .signa-htile__dot {
+	background: var(--signa-success);
+	box-shadow: 0 0 0 3px rgba(21, 127, 61, 0.14);
+}
+
+.signa-htile.is-warn .signa-htile__dot {
+	background: #d99a06;
+	box-shadow: 0 0 0 3px rgba(217, 154, 6, 0.18);
+}
+
+.signa-htile.is-bad .signa-htile__dot {
+	background: var(--signa-danger);
+	box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.14);
+}
+
+.signa-htile.is-info .signa-htile__dot {
+	background: var(--signa-info);
+	box-shadow: 0 0 0 3px rgba(29, 95, 209, 0.14);
+}
+
+.signa-htile__t {
+	font-size: 13px;
+	font-weight: 800;
+}
+
+.signa-htile__d {
+	margin-top: 2px;
+	color: var(--signa-muted);
+	font-size: 11.5px;
+	line-height: 1.8;
+}
+
+.signa-kpis {
+	display: grid;
+	gap: 14px;
+	margin: 0 0 18px;
+}
+
+.signa-kpis--4 {
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.signa-kpis--6 {
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.signa-kpis__cap {
+	margin: -10px 0 18px;
+	color: var(--signa-hint);
+	font-size: 11.5px;
+	text-align: end;
+}
+
+.signa-kpi {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+	padding: 14px 16px;
+	border: 1px solid var(--signa-line);
+	border-radius: 14px;
+	background: #fff;
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.signa-kpi__tile {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	border-radius: 11px;
+	background: #f2f4f7;
+	color: var(--signa-muted);
+}
+
+.signa-kpi__text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.signa-kpi__value {
+	font-size: 21px;
+	font-weight: 800;
+	line-height: 1.3;
+	letter-spacing: -0.3px;
+	font-variant-numeric: tabular-nums;
+}
+
+.signa-kpi__label {
+	color: var(--signa-muted);
+	font-size: 11.5px;
+	font-weight: 600;
+}
+
+.signa-kpi__hint {
+	color: var(--signa-hint);
+	font-size: 11px;
+	line-height: 1.6;
+}
+
+.signa-kpi.is-good .signa-kpi__tile {
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa-kpi.is-bad .signa-kpi__tile {
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa-kpi.is-bad .signa-kpi__value {
+	color: var(--signa-danger);
+}
+
+.signa-kpi.is-rate {
+	border-color: var(--signa-accent);
+	box-shadow: 0 0 0 3px var(--signa-accent-soft);
+}
+
+.signa-kpi.is-rate .signa-kpi__tile {
+	background: var(--signa-accent-soft);
+	color: var(--signa-accent);
+}
+
+.signa-kpis--6 .signa-kpi {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.signa-pbar {
+	height: 8px;
+	margin: 4px 0 8px;
+	border-radius: 99px;
+	background: #eff2f5;
+	overflow: hidden;
+}
+
+.signa-pbar i {
+	display: block;
+	height: 100%;
+	border-radius: 99px;
+	background: linear-gradient(90deg, #0f766e, #17a890);
+}
+
+.signa-checks-list,
+.signa-frows {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.signa-ck {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 0;
+	padding: 11px 2px;
+	border-top: 1px solid var(--signa-line-soft);
+}
+
+.signa-ck:first-child {
+	border-top: 0;
+}
+
+.signa-ck__st {
+	display: flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+}
+
+.signa-ck.is-done .signa-ck__st {
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa-ck.is-todo .signa-ck__st {
+	border: 1.8px dashed var(--signa-field);
+}
+
+.signa-ck__t {
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.signa-ck.is-done .signa-ck__t {
+	color: var(--signa-muted);
+	text-decoration: line-through;
+	text-decoration-color: #b8c4c0;
+}
+
+.signa-ck__note {
+	color: var(--signa-hint);
+	font-size: 11.5px;
+}
+
+.signa-ck__go {
+	margin-inline-start: auto;
+}
+
+.signa-duo {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 18px;
+}
+
+.signa-frow {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0;
+	padding: 10px 2px;
+	border-top: 1px solid var(--signa-line-soft);
+	font-size: 12.5px;
+}
+
+.signa-frow:first-child {
+	border-top: 0;
+}
+
+.signa-frow__when {
+	min-width: 60px;
+	color: var(--signa-hint);
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+.signa-frow__what {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font-weight: 600;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.signa-wrap .signa-frow__fix {
+	font-size: 12px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+/* Reports ------------------------------------------------------------------- */
+
+.signa-report-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	margin-bottom: 16px;
+}
+
+.signa-range {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.signa-wrap .signa-range__item {
+	padding: 5px 15px;
+	background: #fff;
+	font-size: 12.5px;
+	text-decoration: none;
+}
+
+.signa-wrap .signa-range__item:hover {
+	border-color: var(--signa-accent-line);
+	color: var(--signa-accent);
+	text-decoration: none;
+}
+
+.signa-wrap .signa-range__item.is-active {
+	border-color: var(--signa-accent);
+	background: var(--signa-accent-soft);
+	color: var(--signa-accent);
+}
+
+.signa-legend {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 16px;
+	color: var(--signa-muted);
+	font-size: 11.5px;
+}
+
+.signa-legend__item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.signa-dot {
+	display: inline-block;
+	width: 9px;
+	height: 9px;
+	border-radius: 3px;
+	background: var(--signa-accent);
+}
+
+.signa-dot.is-failed {
+	background: var(--signa-danger);
+}
+
+.signa-chart {
+	display: flex;
+	align-items: flex-end;
+	gap: 6px;
+	height: 200px;
+	padding: 8px 2px 0;
+	border-bottom: 1px solid var(--signa-line);
+}
+
+.signa-chart__col {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 6px;
+	height: 100%;
+	min-width: 0;
+}
+
+.signa-chart__count {
+	color: var(--signa-hint);
+	font-size: 10.5px;
+	font-variant-numeric: tabular-nums;
+}
+
+.signa-chart__stack {
+	display: flex;
+	flex-direction: column-reverse;
+	width: 100%;
+	max-width: 30px;
+	height: 100%;
+	border-radius: 6px 6px 0 0;
+	background: #f4f6f8;
+	overflow: hidden;
+}
+
+.signa-chart__bar {
+	display: block;
+	width: 100%;
+	background: var(--signa-accent);
+}
+
+.signa-chart__bar.is-failed {
+	background: var(--signa-danger);
+}
+
+.signa-chart__day {
+	color: var(--signa-hint);
+	font-size: 10.5px;
+}
+
+.signa-meter {
+	display: block;
+	min-width: 110px;
+	height: 7px;
+	border-radius: 99px;
+	background: #f1f3f7;
+	overflow: hidden;
+}
+
+.signa-meter__fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--signa-danger);
+}
+
+/* Tables -------------------------------------------------------------------- */
+
+.signa-table-wrap {
+	overflow-x: auto;
+}
+
+.signa-wrap .signa-table,
+.signa-wrap .signa-diag,
+.signa-wrap .signa-rules {
+	width: 100%;
+	border: 0;
+	border-collapse: collapse;
+	background: transparent;
+	box-shadow: none;
+	font-size: 12.5px;
+}
+
+.signa-wrap .signa-table th,
+.signa-wrap .signa-rules th,
+.signa-wrap .signa-rules thead td {
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--signa-line);
+	background: transparent;
+	color: var(--signa-hint);
+	font-size: 11.5px;
+	font-weight: 700;
+	text-align: start;
+}
+
+.signa-wrap .signa-table td,
+.signa-wrap .signa-diag th,
+.signa-wrap .signa-diag td,
+.signa-wrap .signa-rules td {
+	padding: 11px 12px;
+	border-bottom: 1px solid var(--signa-line-soft);
+	background: transparent;
+	vertical-align: middle;
+}
+
+.signa-wrap .signa-table tbody tr:last-child td,
+.signa-wrap .signa-diag tr:last-child th,
+.signa-wrap .signa-diag tr:last-child td {
+	border-bottom: 0;
+}
+
+.signa-wrap .signa-diag th {
+	width: 240px;
+	color: var(--signa-muted);
+	font-weight: 600;
+	text-align: start;
+}
+
+.signa-wrap .signa-diag td em {
+	color: var(--signa-hint);
+	font-style: normal;
+}
+
+.signa-wrap .striped > tbody > :nth-child(odd) {
+	background: transparent;
+}
+
+.signa-num {
+	font-variant-numeric: tabular-nums;
+}
+
+.signa-muted-cell {
+	color: var(--signa-hint);
+	white-space: nowrap;
+}
+
+.signa-mono-cell {
+	font-family: var(--signa-mono);
+	font-size: 11.5px;
+}
+
+.signa-log-table .signa-sev-error td {
+	background: #fffbfa;
+}
+
+.signa-log-table .signa-sev-warning td {
+	background: #fffdf5;
+}
+
+.signa-rules tr.is-muted {
+	opacity: 0.55;
+}
+
+/* Events screen ------------------------------------------------------------- */
+
+.signa-statbar {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 14px;
+	margin-bottom: 18px;
+}
+
+.signa-stat {
+	padding: 14px 16px;
+	border: 1px solid var(--signa-line);
+	border-radius: 14px;
+	background: #fff;
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.signa-stat__value {
+	display: block;
+	font-size: 21px;
+	font-weight: 800;
+	line-height: 1.3;
+	font-variant-numeric: tabular-nums;
+}
+
+.signa-stat__label {
+	display: block;
+	margin-top: 2px;
+	color: var(--signa-muted);
+	font-size: 11.5px;
+	font-weight: 600;
+}
+
+.signa-stat.is-good .signa-stat__value {
+	color: var(--signa-success);
+}
+
+.signa-stat.is-bad .signa-stat__value {
+	color: var(--signa-danger);
+}
+
+.signa-filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+	padding: 12px;
+	border: 1px solid var(--signa-line);
+	border-radius: 14px;
+	background: #fff;
+}
+
+.signa-wrap .signa-filters select,
+.signa-wrap .signa-filters input[type="search"],
+.signa-wrap .signa-inline input[type="tel"],
+.signa-wrap .signa-inline input[type="text"],
+.signa-wrap .signa-inline input[type="number"],
+.signa-wrap .signa-inline select,
+.signa-wrap .signa-field input,
+.signa-wrap .signa-field select,
+.signa-wrap .signa-field textarea {
+	min-height: 37px;
+	padding: 0 11px;
+	border: 1.4px solid var(--signa-field);
+	border-radius: 10px;
+	background-color: #fff;
+	box-shadow: none;
+	color: var(--signa-ink);
+	font-family: inherit;
+	font-size: 13px;
+}
+
+.signa-wrap .signa-field textarea {
+	padding: 8px 11px;
+}
+
+.signa-wrap .signa-filters input[type="search"] {
+	min-width: 220px;
+}
+
+.signa-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 14px;
+}
+
+.signa-panel > .signa-table-wrap {
+	border: 1px solid var(--signa-line);
+	border-radius: var(--signa-radius);
+	background: #fff;
+	box-shadow: var(--signa-shadow);
+}
+
+.signa-pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 14px;
+}
+
+.signa-pager__current {
+	color: var(--signa-muted);
+	font-size: 13px;
+}
+
+/* Tools screen -------------------------------------------------------------- */
+
+.signa-inline {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+}
+
+.signa-result {
+	margin: 14px 0 0;
+	padding: 10px 13px;
+	border-radius: 10px;
+	background: #f4f6f8;
+	color: var(--signa-muted);
+	font-size: 12.5px;
+}
+
+.signa-result[hidden],
+.signa-progress[hidden],
+.signa-report[hidden] {
+	display: none;
+}
+
+.signa-result.is-success {
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa-result.is-error {
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa-progress {
+	position: relative;
+	height: 24px;
+	margin-top: 14px;
+	border-radius: 999px;
+	background: #eef0f3;
+	overflow: hidden;
+}
+
+.signa-progress span {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	width: 0;
+	height: 100%;
+	padding-inline-end: 10px;
+	border-radius: 999px;
+	background: var(--signa-accent);
+	color: #fff;
+	font-size: 12px;
+	font-weight: 700;
+	transition: width 240ms ease;
+}
+
+.signa-report {
+	max-height: 220px;
+	margin: 14px 0 0;
+	padding: 12px 14px;
+	border-radius: 10px;
+	background: #101828;
+	color: #d0d5dd;
+	font-family: var(--signa-mono);
+	font-size: 12px;
+	line-height: 1.8;
+	direction: ltr;
+	text-align: left;
+	overflow: auto;
+}
+
+.signa-doctor {
+	display: grid;
+	gap: 10px;
+	margin: 12px 0;
+}
+
+.signa-doctor__row {
+	padding: 12px 14px;
+	border: 1px solid var(--signa-line);
+	border-inline-start: 4px solid var(--signa-hint);
+	border-radius: 10px;
+	background: #fafbfc;
+}
+
+.signa-doctor__row.is-good {
+	border-inline-start-color: var(--signa-success);
+}
+
+.signa-doctor__row.is-bad {
+	border-inline-start-color: var(--signa-danger);
+}
+
+.signa-doctor__title {
+	margin: 0;
+	font-size: 13.5px;
+	font-weight: 700;
+}
+
+.signa-doctor__line {
+	margin: 4px 0 0;
+	color: var(--signa-muted);
+	font-size: 12.5px;
+	line-height: 1.9;
+}
+
+.signa-doctor__row .button {
+	margin-top: 8px;
+}
+
+.signa-trace {
+	margin: 6px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.signa-trace li {
+	position: relative;
+	padding: 4px 18px 4px 0;
+	font-size: 12.5px;
+	line-height: 1.9;
+}
+
+.signa-trace li::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 4px;
+	top: 11px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--signa-hint);
+}
+
+.signa-trace li.is-good::before {
+	background: var(--signa-success);
+}
+
+.signa-trace li.is-bad::before {
+	background: var(--signa-danger);
+}
+
+/* Access screen ------------------------------------------------------------- */
+
+.signa-access-form {
+	margin: 0 0 14px;
+}
+
+.signa-access-form--danger {
+	margin-top: 14px;
+	padding-top: 12px;
+	border-top: 1px solid var(--signa-line);
+}
+
+.signa-secret {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 16px;
+	padding: 14px 18px;
+	border: 1px dashed var(--signa-accent);
+	border-radius: 12px;
+	background: var(--signa-accent-soft);
+}
+
+.signa-secret__label {
+	font-weight: 600;
+}
+
+.signa-secret__value {
+	padding: 6px 14px;
+	border: 1px solid var(--signa-line);
+	border-radius: 8px;
+	background: #fff;
+	font-size: 20px;
+	font-weight: 700;
+	letter-spacing: 0.24em;
+}
+
+.signa-field {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 6px;
+	margin: 0 0 10px;
+}
+
+.signa-field > span {
+	color: var(--signa-muted);
+	font-weight: 600;
+}
+
+.signa-field em {
+	color: var(--signa-hint);
+	font-size: 12px;
+	font-style: normal;
+}
+
+.signa-field--wide {
+	display: flex;
+	width: 100%;
+}
+
+.signa-field--wide input,
+.signa-field--wide textarea {
+	flex: 1 1 320px;
+}
+
+.signa-rules code {
+	letter-spacing: 0.06em;
+}
+
+/* Self-test modal ----------------------------------------------------------- */
+
+/*
+ * Every section can be tested without leaving it. The results arrive in a
+ * native <dialog>, so the focus trap, the ESC key and the top layer are the
+ * browser's job rather than ours.
+ */
+.signa-modal {
+	width: min(620px, calc(100vw - 32px));
+	max-height: min(80vh, 720px);
+	padding: 0;
+	border: 1px solid var(--signa-line);
+	border-radius: 18px;
+	background: #fff;
+	color: var(--signa-ink);
+	direction: rtl;
+	font-family: var(--signa-font);
+	font-size: 14px;
+	line-height: 1.75;
+	box-shadow: 0 24px 60px rgba(16, 24, 40, 0.24);
+	overflow: hidden;
+}
+
+.signa-modal--fallback {
+	position: fixed;
+	inset-inline: 0;
+	top: 8vh;
+	z-index: 100000;
+	margin-inline: auto;
+}
+
+.signa-modal--fallback::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background: rgba(16, 24, 40, 0.5);
+}
+
+.signa-modal::backdrop {
+	background: rgba(16, 24, 40, 0.5);
+}
+
+.signa-modal__head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--signa-line);
+	background: linear-gradient(120deg, #ffffff 62%, var(--signa-accent-soft) 100%);
+}
+
+.signa-modal__title {
+	flex: 1;
+	margin: 0;
+	font-size: 16px;
+	font-weight: 800;
+	line-height: 1.5;
+}
+
+.signa-modal__state {
+	padding: 3px 11px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.signa-modal__state.is-ok {
+	background: var(--signa-success-soft);
+	color: var(--signa-success);
+}
+
+.signa-modal__state.is-fail {
+	background: var(--signa-danger-soft);
+	color: var(--signa-danger);
+}
+
+.signa-modal__close {
+	width: 32px;
+	height: 32px;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--signa-muted);
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.signa-modal__close:hover {
+	background: var(--signa-accent-soft);
+	color: var(--signa-accent);
+}
+
+.signa-modal__body {
+	max-height: 58vh;
+	padding: 16px 20px;
+	overflow-y: auto;
+}
+
+.signa-modal__summary,
+.signa-modal__note {
+	margin: 0 0 12px;
+	color: var(--signa-muted);
+	font-size: 13px;
+	line-height: 1.9;
+}
+
+.signa-modal__form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 12px 0 0;
+}
+
+.signa-modal__form input {
+	min-height: 37px;
+	padding: 0 11px;
+	border: 1.4px solid var(--signa-field);
+	border-radius: 10px;
+	font-family: inherit;
+}
+
+.signa-modal__foot {
+	display: flex;
+	justify-content: flex-start;
+	gap: 8px;
+	padding: 14px 20px;
+	border-top: 1px solid var(--signa-line);
+	background: #fbfcfd;
+}
+
+.signa-test-rows {
+	display: grid;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.signa-test-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 10px 12px;
+	border: 1px solid var(--signa-line);
+	border-radius: 10px;
+	background: #fff;
+}
+
+.signa-test-row__dot {
+	flex: none;
+	width: 10px;
+	height: 10px;
+	margin-top: 7px;
+	border-radius: 50%;
+	background: var(--signa-hint);
+}
+
+.signa-test-row.is-ok .signa-test-row__dot {
+	background: var(--signa-success);
+}
+
+.signa-test-row.is-warn .signa-test-row__dot {
+	background: var(--signa-warning);
+}
+
+.signa-test-row.is-fail .signa-test-row__dot {
+	background: var(--signa-danger);
+}
+
+.signa-test-row.is-info .signa-test-row__dot {
+	background: var(--signa-accent);
+}
+
+.signa-test-row__text {
+	min-width: 0;
+}
+
+.signa-test-row__line {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
+	margin: 0;
+}
+
+.signa-test-row__label {
+	font-weight: 600;
+}
+
+.signa-test-row__value {
+	color: var(--signa-muted);
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+	word-break: break-word;
+}
+
+.signa-test-row__note {
+	margin: 3px 0 0;
+	color: var(--signa-muted);
+	font-size: 13px;
+	line-height: 1.9;
+}
+
+/* The server's own sentence: English, machine-shaped, and better read apart. */
+.signa-test-row__why {
+	margin: 2px 0 0;
+	color: var(--signa-muted);
+	font-family: var(--signa-mono);
+	font-size: 12px;
+	line-height: 1.7;
+	direction: ltr;
+	text-align: left;
+	unicode-bidi: isolate;
+	word-break: break-word;
+}
+
+/* Narrow screens ------------------------------------------------------------ */
+
+@media (max-width: 1100px) {
+	.signa-kpis--6 {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.signa-split {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.signa-pv {
+		position: static;
+	}
+}
+
+@media (max-width: 960px) {
+	.signa-wrap {
+		margin-inline-end: 10px;
+	}
+
+	.signa-body {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.signa-body__nav {
+		position: static;
+	}
+
+	.signa-screens {
+		padding: 6px;
+	}
+
+	.signa-screens__list {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.signa-screens__cap {
+		display: none;
+	}
+
+	.signa-screen.is-current::before {
+		display: none;
+	}
+
+	.signa-kpis--4,
+	.signa-health,
+	.signa-duo {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.signa-grid--3 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.signa-repeater__head {
+		display: none;
+	}
+
+	.signa-repeater__row {
+		grid-template-columns: 1fr 1fr;
+		padding-bottom: 10px;
+		border-bottom: 1px solid var(--signa-line);
+	}
+}
+
+@media (max-width: 600px) {
+	.signa-hero {
+		padding: 16px;
+	}
+
+	.signa-hero__actions {
+		margin-inline-start: 0;
+	}
+
+	.signa-kpis--4,
+	.signa-kpis--6,
+	.signa-health,
+	.signa-duo,
+	.signa-grid--2,
+	.signa-grid--3 {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.signa-sr {
+		align-items: flex-start;
+	}
+
+	.signa-card__head,
+	.signa-card__body {
+		padding-inline: 16px;
+	}
+
+	.signa-chart {
+		height: 150px;
+	}
+
+	.signa-chart__day {
+		font-size: 9px;
+	}
+
+	.signa-savebar {
+		right: 10px;
+		left: 10px;
+		justify-content: space-between;
+		transform: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.signa-wrap *,
+	.signa-modal * {
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+/* App mode ------------------------------------------------------------------ */
+
+/*
+ * Everything outside `.signa-wrap` belongs to WordPress. In app mode the
+ * administrator asked for the plugin and not for the frame around it, so the
+ * bar, the side menu, the footer and the screen-options row step aside and the
+ * panel gets the whole window. Notices stay: a saved-settings message is
+ * feedback, not furniture. The switch sits in the header of every screen, so
+ * leaving the mode is always one click away.
+ */
+html:has(body.signa-app),
+html.signa-app {
+	padding-top: 0 !important;
+}
+
+body.signa-app #wpadminbar,
+body.signa-app #adminmenumain,
+body.signa-app #wpfooter,
+body.signa-app #screen-meta-links {
+	display: none !important;
+}
+
+body.signa-app #wpcontent {
+	margin-inline-start: 0 !important;
+	padding-inline-start: 0 !important;
+}
+
+body.signa-admin #wpwrap,
+body.signa-admin #wpcontent,
+body.signa-admin #wpbody-content {
+	background: #eef1f4;
+}
+
+body.signa-app .signa-wrap {
+	max-width: 1320px;
+	margin-block: 18px 110px;
+	margin-inline: auto;
+	padding-inline: clamp(16px, 4vw, 40px);
+}
+
+body.signa-app .signa-body__nav,
+body.signa-app .signa-pv {
+	top: 18px;
+}
+
+/* A switch with its own label, used where a row has no title of its own. */
+.signa-wrap .signa-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	cursor: pointer;
+	font-size: 13px;
+	color: var(--signa-ink);
+}
