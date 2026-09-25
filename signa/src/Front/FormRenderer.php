@@ -305,7 +305,12 @@ final class FormRenderer {
 		 */
 		$surface = sanitize_hex_color( (string) $this->pick( $args, 'surface', $this->settings->str( 'surface', '#ffffff' ), array() ) );
 
-		if ( $surface ) {
+		/*
+		 * Only a surface somebody chose. The default white, printed inline,
+		 * outranked the dark skin's own surface: slate fields turned white
+		 * under its light text, and what the visitor typed disappeared.
+		 */
+		if ( $surface && '#ffffff' !== strtolower( $surface ) ) {
 			$parts[] = '--signa-surface:' . $surface;
 		}
 

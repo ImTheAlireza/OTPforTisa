@@ -175,6 +175,12 @@ signa_check( 'the form prints its own font on the element', false !== strpos( $s
 signa_check( 'the surface colour now actually reaches the form', false !== strpos( $signa_style, '--signa-surface:#fff7ed' ) );
 signa_check( 'and the accent still does', false !== strpos( $signa_style, '--signa-accent:#b91c1c' ) );
 
+// The default white is not printed: inline, it outranked the dark skin's own
+// surface and slate fields went white under light text.
+$signa_default = signa_appearance_style( signa_appearance_renderer( array( 'skin' => 'slate' ) ) );
+signa_check( 'the default white surface is left to the skin', false === strpos( $signa_default, '--signa-surface' ) );
+signa_check( 'a chosen surface still wins over the skin', false !== strpos( signa_appearance_style( signa_appearance_renderer( array( 'skin' => 'slate', 'surface' => '#222222' ) ) ), '--signa-surface:#222222' ) );
+
 signa_check(
 	'choosing the theme means inheriting, and says so',
 	false !== strpos( signa_appearance_style( signa_appearance_renderer( array( 'form_font' => 'theme' ) ) ), '--signa-font:inherit' )

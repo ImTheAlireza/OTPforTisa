@@ -375,7 +375,9 @@ final class Assets implements Bootable {
 			'signa-accent'        => $accent,
 			'signa-accent-strong' => $this->mix( $accent, '#000000', 0.22 ),
 			'signa-accent-soft'   => $this->rgba( $accent, 0.14 ),
-			'signa-surface'       => $surface,
+			// Empty (so not printed) at the default: the skins bring their own
+			// surface, and an inline white beat the dark skin's (see FormRenderer).
+			'signa-surface'       => '#ffffff' === strtolower( $surface ) ? '' : $surface,
 			'signa-radius'        => $radius . 'px',
 			'signa-width'         => $width . 'px',
 		);
@@ -401,7 +403,9 @@ final class Assets implements Bootable {
 		$parts = array();
 
 		foreach ( $this->variables() as $name => $value ) {
-			$parts[] = '--' . $name . ':' . $value;
+			if ( '' !== $value ) {
+				$parts[] = '--' . $name . ':' . $value;
+			}
 		}
 
 		return ':root{' . implode( ';', $parts ) . ';}';
