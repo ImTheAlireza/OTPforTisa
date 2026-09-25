@@ -20,9 +20,9 @@
 		"assets/js/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
 		"index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
 		"languages/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
-		"languages/signa.pot": "5cb0c789bba1d359a9f61e22f67c4271bd41de5eb370665d0cfe6fb965b47b34",
-		"readme.txt": "04563b909f75460cd78d6fb12c4256477778d4aad9d38363d605fda3bdad3ab9",
-		"signa.php": "9d701ef43d37e1c19d358bf44bd26774e5d3d260cae385a1945ba7674ce2a95d",
+		"languages/signa.pot": "795603849686ad1d3048e84353ede66c078b360c8178de0b53453e7b3d9182c9",
+		"readme.txt": "37dfc0990da9ac6873a4859f7ee04d8142c008faa06fecb66e5ab9dc9f8b1832",
+		"signa.php": "4d0ea94ba320ed714068fe7d1f25f6953f9869ff965be62558a914fec1101946",
 		"src/Access/EmergencyToken.php": "d650f05d569cf44dbd5e19e9d09079ccedecae3cacc0e1f5cf72aa09573ead31",
 		"src/Access/index.php": "f1eb9034768c837d57a5bc8cd12c802531cf677fce7466cbac3b8e0daeccfdb9",
 		"src/Admin/AccessScreen.php": "248e1926db65055982492e29940000e381abf238513e42a20b553b90e656f5a3",
@@ -171,5 +171,5 @@
 		"uninstall.php": "858e4d2081495d304c2843e113807b4526fb89ebd4b94a0825a13bd6c1cb6e8e"
 	},
 	"name": "signa",
-	"version": "2.0.1"
+	"version": "2.1.0"
 }
