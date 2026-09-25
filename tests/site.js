@@ -186,11 +186,11 @@ async function landing(base) {
 	check('and the three steps under it start on step one', ctx.doc.querySelector('.flow').getAttribute('data-sg-stage') === 'idle');
 	check('the fixed test code is gone from the copy', !/12345(?!67)/.test(ctx.doc.body.textContent));
 
-	const { form, scope, code, note } = await signIn(ctx, '09121234567', 'type');
+	const { form, scope, code, note } = await signIn(ctx, '09351112233', 'type');
 	check('asking for a code delivers a demo SMS with a fresh 5-digit code', /^[0-9]{5}$/.test(code) && code !== '12345', code);
 	check('the SMS reads like the real one', !!note && /کد ورود شما/.test(text(note)) && /در اختیار کسی قرار ندهید/.test(text(note)));
 	check('the steps move on when it arrives', ctx.doc.querySelector('.flow').getAttribute('data-sg-stage') !== 'idle');
-	check('typing the code from the SMS signs in', form.root.classList.contains('is-signed-in'), text(scope().querySelector('[data-signa-status-text]')));
+	check('a brand-new number signs in with the code from its SMS', form.root.classList.contains('is-signed-in'), text(scope().querySelector('[data-signa-status-text]')));
 	check('and the steps finish', await until(() => ctx.doc.querySelector('.flow').getAttribute('data-sg-stage') === 'done'));
 
 	check('no buy link points nowhere', Array.from(ctx.doc.querySelectorAll('a[aria-disabled="true"]')).every((a) => !a.hasAttribute('href')));
@@ -200,7 +200,7 @@ async function landing(base) {
 }
 
 async function demoForm(base) {
-	scenario('Demo: the login form, new-member path and the strip');
+	scenario('Demo: the login form, a new number and the strip');
 
 	const ctx = await open(base, '/demo/');
 	const strip = ctx.doc.querySelector('.sg-strip');
@@ -216,7 +216,8 @@ async function demoForm(base) {
 
 	scope().querySelector('[data-signa-phone]').value = '09351112233';
 	form.act('start');
-	check('a new number opens the signup fields', await until(() => form.stepFields && form.stepFields.classList.contains('is-current')));
+	check('a new number gets the SMS straight away, without the signup fields', await until(() => form.stepCode && form.stepCode.classList.contains('is-current')) && !(form.stepFields && form.stepFields.classList.contains('is-current')));
+	check('and its SMS arrives too', await until(() => !!ctx.doc.querySelector('.sg-note[data-sg-code]')));
 
 	ctx.win.close();
 

@@ -189,6 +189,9 @@ function demoIndex() {
 	// Only the captcha drill (removed above) used this address.
 	html = html.replace("'/mock/captcha-unreachable.js'", "'captcha-unreachable.js'");
 
+	// Any number gets the SMS straight away (demo-shim.js skips the signup step).
+	html = replaceOnce(html, /<span><code>09351112233<\/code>[^<]*<\/span>/, '<span>هر شمارهٔ دیگر ← پیامک کد، بدون فرم عضویت</span>', 'new number hint');
+
 	// The code arrives on a phone beside the form instead of being printed.
 	html = replaceOnce(html, /<span>کد تأیید: <code>12345<\/code><\/span>/, '<span>کد هر بار تازه است و روی گوشی کنار فرم (یا بالای صفحه) می‌رسد</span>', 'code hint');
 	html = replaceOnce(html, '<div class="demo-stage">', '<div class="demo-stage has-phone">', 'phone stage');

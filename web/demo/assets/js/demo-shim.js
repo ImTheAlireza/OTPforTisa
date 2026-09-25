@@ -146,6 +146,18 @@
 		}
 
 		var result = mock.handleRest(route, body, headers);
+
+		// In the public demo every number goes straight to the SMS: the signup
+		// fields are a setting the buyer can switch on, not the first thing a
+		// visitor should have to fill in.
+		if ('start' === route && result.body && result.body.success && 'register_form' === (result.body.data || {}).step) {
+			result = mock.handleRest('code', body, headers);
+
+			if (result.body && result.body.data) {
+				result.body.data.message = 'کد ۵ رقمی پیامک شد. تا ۲ دقیقه معتبر است.';
+			}
+		}
+
 		var data = result.body && result.body.success ? result.body.data || {} : {};
 
 		if (['start', 'code', 'register'].indexOf(route) >= 0 && 'verify' === data.step) {
