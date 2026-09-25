@@ -1,5 +1,5 @@
 === سیگنا — ورود و عضویت با کد یکبارمصرف ===
-Contributors: signa
+Contributors: parsena
 Tags: otp, login, sms, verification code, woocommerce, mobile
 Requires at least: 6.1
 Tested up to: 7.1
