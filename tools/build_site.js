@@ -137,7 +137,7 @@ function strip(current) {
 		'<div class="sg-strip" role="navigation" aria-label="دموی سیگنا">',
 		'<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark">' + MARK + '</span><span>سیگنا<small>دموی زنده · نسخهٔ ' + versionFa + '</small></span></a>',
 		'<nav class="sg-strip__nav">' + links + '</nav>',
-		'<span class="sg-strip__note">داده‌ها نمونه‌اند و پیامکی ارسال نمی‌شود · کد آزمایشی <b>12345</b></span>',
+		'<span class="sg-strip__note">داده‌ها نمونه‌اند · پیامک نمایشی روی صفحه می‌آید و پیامک واقعی ارسال نمی‌شود</span>',
 		'<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="' + config.landingUrl + '">معرفی سیگنا</a>' + buyButton('strip') + '</span>',
 		'</div>',
 	].join('\n');
@@ -145,8 +145,10 @@ function strip(current) {
 
 const DEMO_HEAD = [
 	'<link rel="stylesheet" href="assets/demo.css">',
+	'<link rel="stylesheet" href="assets/demo-phone.css">',
 	'<script src="assets/js/demo-mock.js"></script>',
 	'<script src="assets/js/demo-shim.js"></script>',
+	'<script src="assets/js/demo-phone.js"></script>',
 ].join('\n');
 
 function chrome(html, current) {
@@ -186,6 +188,11 @@ function demoIndex() {
 
 	// Only the captcha drill (removed above) used this address.
 	html = html.replace("'/mock/captcha-unreachable.js'", "'captcha-unreachable.js'");
+
+	// The code arrives on a phone beside the form instead of being printed.
+	html = replaceOnce(html, /<span>کد تأیید: <code>12345<\/code><\/span>/, '<span>کد هر بار تازه است و روی گوشی کنار فرم (یا بالای صفحه) می‌رسد</span>', 'code hint');
+	html = replaceOnce(html, '<div class="demo-stage">', '<div class="demo-stage has-phone">', 'phone stage');
+	html = replaceOnce(html, '\t</main>\n', '\t</main>\n\n\t<aside class="demo-phone" data-sg-phone aria-label="گوشی کاربر"></aside>\n', 'phone column');
 
 	// After a successful sign-in, show what the member sees.
 	html = replaceOnce(html, 'data-redirect=""', 'data-redirect="account.html"', 'redirect');
@@ -249,7 +256,7 @@ function landing() {
 
 	html = replaceOnce(html, '<!-- @signa-form -->', form.trim(), 'form slot');
 	html = replaceOnce(html, '<!-- @signa-config -->', cfg, 'config slot');
-	html = replaceOnce(html, '<!-- @demo-head -->', '<script src="assets/js/demo-mock.js"></script>\n<script src="assets/js/demo-shim.js"></script>', 'head slot');
+	html = replaceOnce(html, '<!-- @demo-head -->', '<link rel="stylesheet" href="assets/demo-phone.css">\n<script src="assets/js/demo-mock.js"></script>\n<script src="assets/js/demo-shim.js"></script>\n<script src="assets/js/demo-phone.js"></script>', 'head slot');
 
 	return rewrite(html);
 }
@@ -294,6 +301,8 @@ function files() {
 		}
 		put(root + '/assets/js/demo-mock.js', mock);
 		copy(root + '/assets/js/demo-shim.js', SITE, 'shared', 'demo-shim.js');
+		copy(root + '/assets/js/demo-phone.js', SITE, 'shared', 'demo-phone.js');
+		copy(root + '/assets/demo-phone.css', SITE, 'shared', 'demo-phone.css');
 		put(root + '/.htaccess', HTACCESS);
 	};
 

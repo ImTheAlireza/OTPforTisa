@@ -107,16 +107,78 @@
 		});
 	}
 
+	/*
+	 * Every request gets its own code, delivered as a demo SMS (see
+	 * demo-phone.js), so the visitor goes through what their customers will:
+	 * ask, read the message, type the code. The mock itself only knows one
+	 * code, so a correct answer is translated to it on the way in.
+	 */
+	var MOCK_CODE = '12345';
+	var codes = {};
+
+	function key(phone) {
+		return String(phone || '').replace(/[^0-9]/g, '').replace(/^(0098|98)/, '0');
+	}
+
+	function freshCode() {
+		var code = MOCK_CODE;
+
+		while (code === MOCK_CODE) {
+			code = String(10000 + Math.floor(Math.random() * 90000));
+		}
+
+		return code;
+	}
+
+	function announce(name, detail) {
+		try {
+			window.dispatchEvent(new window.CustomEvent('signa-demo:' + name, { detail: detail }));
+		} catch (error) {
+			// Very old browsers: the form still works, only the phone stays quiet.
+		}
+	}
+
+	function handle(route, body, headers) {
+		var phone = key(body.phone);
+
+		if ('verify' === route && codes[phone]) {
+			body.code = String(body.code || '') === codes[phone] ? MOCK_CODE : '00000';
+		}
+
+		var result = mock.handleRest(route, body, headers);
+		var data = result.body && result.body.success ? result.body.data || {} : {};
+
+		if (['start', 'code', 'register'].indexOf(route) >= 0 && 'verify' === data.step) {
+			codes[phone] = freshCode();
+			result.sms = { phone: phone, masked: data.masked || '', code: codes[phone], length: data.code_length || 5, ttl: data.expires_in || 120 };
+		}
+
+		if ('verify' === route && 'signed_in' === data.step) {
+			delete codes[phone];
+			result.signedIn = { phone: phone, created: !!body.draft_token };
+		}
+
+		return result;
+	}
+
 	window.fetch = function (input, init) {
 		var url = typeof input === 'string' ? input : (input && input.url) || '';
 		var options = init || {};
 		var api = /demo-api\/signa\/v1\/([^?#]*)/.exec(url);
 
 		if (api) {
-			var result = mock.handleRest(api[1].replace(/\/$/, ''), parse(options.body), lower(options.headers));
+			var result = handle(api[1].replace(/\/$/, ''), parse(options.body), lower(options.headers));
 			var wait = (result.delay || 0) + 350 + Math.round(Math.random() * 250);
 
 			return later(wait, options.signal, function () {
+				if (result.sms) {
+					announce('sms', result.sms);
+				}
+
+				if (result.signedIn) {
+					announce('signed-in', result.signedIn);
+				}
+
 				return json(result);
 			});
 		}

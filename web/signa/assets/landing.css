@@ -101,7 +101,9 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 		radial-gradient(52rem 30rem at 90% -10%, rgba(20, 184, 166, 0.18), transparent 62%),
 		radial-gradient(40rem 26rem at 0% 20%, rgba(37, 99, 235, 0.10), transparent 60%);
 }
-.hero__in { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.hero__copy { max-width: 760px; margin: 0 auto; text-align: center; }
+.hero__copy .hero__actions, .hero__copy .hero__facts { justify-content: center; }
+.hero__copy .lead { margin-bottom: 26px; }
 .eyebrow {
 	display: inline-block;
 	margin: 0 0 18px;
@@ -149,8 +151,85 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 	font-size: 12px;
 	text-align: left;
 }
-.frame__body { padding: 30px 22px 34px; background: linear-gradient(180deg, #fff, #f8fafc); min-height: 430px; }
-.try { margin: 16px 6px 0; color: var(--muted); font-size: 13.5px; line-height: 2; }
+.frame__body { padding: 30px 22px 34px; background: linear-gradient(180deg, #fff, #f8fafc); min-height: 470px; }
+
+/* The stage: the site on one side, the customer's phone on the other. */
+.stage {
+	display: grid;
+	grid-template-columns: minmax(0, 470px) minmax(90px, 1fr) auto;
+	justify-content: center;
+	align-items: center;
+	gap: 0;
+	max-width: 1000px;
+	margin: 52px auto 0;
+}
+.stage__link { position: relative; padding: 0 14px; }
+.stage__label {
+	position: absolute;
+	top: 18px;
+	right: 0;
+	left: 0;
+	color: var(--accent-strong);
+	font-size: 12.5px;
+	font-weight: 700;
+	text-align: center;
+	white-space: nowrap;
+	opacity: 0.8;
+}
+.stage__phone { display: flex; justify-content: center; }
+
+.flow {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 34px auto 0;
+	padding: 0;
+	list-style: none;
+	counter-reset: none;
+}
+.flow__step {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 16px 8px 18px;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--muted);
+	font-size: 14px;
+	font-weight: 600;
+	transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+.flow__step span {
+	display: grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	background: var(--accent-soft);
+	color: var(--accent-strong);
+	font-size: 13px;
+	font-weight: 800;
+}
+/* The step the visitor is on glows; the ones behind them get a tick. */
+.flow[data-sg-stage="idle"] .flow__step[data-step="phone"],
+.flow[data-sg-stage="phone"] .flow__step[data-step="phone"],
+.flow[data-sg-stage="sms"] .flow__step[data-step="sms"],
+.flow[data-sg-stage="done"] .flow__step[data-step="done"] {
+	border-color: #b6e3db;
+	background: var(--accent-soft);
+	color: var(--accent-strong);
+	box-shadow: 0 8px 22px -14px rgba(15, 118, 110, 0.7);
+}
+.flow[data-sg-stage="sms"] .flow__step[data-step="phone"] span,
+.flow[data-sg-stage="done"] .flow__step[data-step="phone"] span,
+.flow[data-sg-stage="done"] .flow__step[data-step="sms"] span { background: var(--accent); color: transparent; position: relative; }
+.flow[data-sg-stage="sms"] .flow__step[data-step="phone"] span::after,
+.flow[data-sg-stage="done"] .flow__step[data-step="phone"] span::after,
+.flow[data-sg-stage="done"] .flow__step[data-step="sms"] span::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; }
+
+.try { max-width: 720px; margin: 16px auto 0; color: var(--muted); font-size: 13.5px; line-height: 2; text-align: center; }
 .try b { color: var(--ink-2); }
 
 /* Gateways band ---------------------------------------------------------- */
@@ -281,7 +360,9 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 
 /* Responsive ------------------------------------------------------------- */
 @media (max-width: 980px) {
-	.hero__in, .panel, .req { grid-template-columns: 1fr; }
+	.panel, .req { grid-template-columns: 1fr; }
+	.stage { grid-template-columns: minmax(0, 470px); }
+	.stage__link, .stage__phone { display: none; }
 	.hero { padding-top: 40px; }
 	.grid, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	.top__nav { display: none; }

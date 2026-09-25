@@ -77,3 +77,12 @@ body.signa-app .sg-strip { position: sticky; }
 	pointer-events: none;
 }
 .sg-toast.is-on { opacity: 1; transform: none; }
+
+/* The phone that receives the demo SMS (demo-phone.js). Only where there is
+   room for a third column; elsewhere the notification drops from the top. */
+.demo-phone { display: none; }
+@media (min-width: 1280px) {
+	.demo-stage.has-phone { grid-template-columns: 290px minmax(0, 1fr) 296px; max-width: 1480px; }
+	.demo-phone { position: sticky; top: 74px; display: flex; justify-content: center; padding-top: 6px; }
+	.demo-phone .sg-phone { --sg-w: 272px; }
+}

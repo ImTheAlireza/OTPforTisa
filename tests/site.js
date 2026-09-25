@@ -122,25 +122,43 @@ function linkCheck() {
 	check('both sites together stay small for the host (under 2 MB)', size < 2 * 1024 * 1024, Math.round(size / 1024) + ' KB');
 }
 
-async function signIn(ctx, phone) {
+function typeCode(ctx, form, code) {
+	// The boxes are rebuilt for the code length the server announces, so type
+	// into the ones the form holds now.
+	(form.boxes || []).forEach((box, i) => {
+		box.value = code.charAt(i);
+		box.dispatchEvent(new ctx.win.Event('input', { bubbles: true }));
+	});
+
+	if (form.bulk && !(form.boxes || []).length) {
+		form.bulk.value = code;
+		form.bulk.dispatchEvent(new ctx.win.Event('input', { bubbles: true }));
+	}
+}
+
+// The code is not printed anywhere: it arrives as a demo SMS, like it would
+// on the visitor's phone. `how` is 'type' (read it, type it) or 'tap' (tap the
+// notification and let it fill itself in).
+async function signIn(ctx, phone, how = 'type', report = () => {}) {
 	const host = ctx.doc.querySelector('[data-signa-form]');
 	await until(() => host && host.signaForm);
 	const form = host.signaForm;
 	const scope = () => host.shadowRoot || host;
+	const fresh = () => ctx.doc.querySelector('.sg-note[data-sg-code]:not(.is-old)');
 
 	scope().querySelector('[data-signa-phone]').value = phone;
 	form.act('start');
 
 	await until(() => form.stepCode && form.stepCode.classList.contains('is-current'));
-	// The boxes are rebuilt for the code length the server announces, so type
-	// into the ones the form holds now.
-	(form.boxes || []).forEach((box, i) => {
-		box.value = '12345'.charAt(i);
-		box.dispatchEvent(new ctx.win.Event('input', { bubbles: true }));
-	});
+	const note = await until(() => fresh()) ? fresh() : null;
+	const code = note ? note.getAttribute('data-sg-code') : '';
 
-	if (form.bulk && !(form.boxes || []).length) {
-		form.bulk.value = '12345';
+	report({ note, code, form, scope });
+
+	if (note && how === 'tap') {
+		note.click();
+	} else {
+		typeCode(ctx, form, code);
 	}
 
 	await until(() => form.root.classList.contains('is-signed-in'), 4000);
@@ -150,7 +168,7 @@ async function signIn(ctx, phone) {
 		await until(() => form.root.classList.contains('is-signed-in'), 4000);
 	}
 
-	return { host, form, scope };
+	return { host, form, scope, code, note };
 }
 
 async function landing(base) {
@@ -164,8 +182,16 @@ async function landing(base) {
 	check('front.js mounted it', await until(() => host && host.signaForm));
 	check('inside its own shadow root, like on a real site', await until(() => !!host.shadowRoot));
 
-	const { form, scope } = await signIn(ctx, '09121234567');
-	check('an existing number reaches the code step and signs in with 12345', form.root.classList.contains('is-signed-in'), text(scope().querySelector('[data-signa-status-text]')));
+	check('the stage has a phone waiting for the SMS', !!ctx.doc.querySelector('[data-sg-phone] .sg-phone') && /منتظر پیامک/.test(text(ctx.doc.querySelector('[data-sg-phone]'))));
+	check('and the three steps under it start on step one', ctx.doc.querySelector('.flow').getAttribute('data-sg-stage') === 'idle');
+	check('the fixed test code is gone from the copy', !/12345(?!67)/.test(ctx.doc.body.textContent));
+
+	const { form, scope, code, note } = await signIn(ctx, '09121234567', 'type');
+	check('asking for a code delivers a demo SMS with a fresh 5-digit code', /^[0-9]{5}$/.test(code) && code !== '12345', code);
+	check('the SMS reads like the real one', !!note && /کد ورود شما/.test(text(note)) && /در اختیار کسی قرار ندهید/.test(text(note)));
+	check('the steps move on when it arrives', ctx.doc.querySelector('.flow').getAttribute('data-sg-stage') !== 'idle');
+	check('typing the code from the SMS signs in', form.root.classList.contains('is-signed-in'), text(scope().querySelector('[data-signa-status-text]')));
+	check('and the steps finish', await until(() => ctx.doc.querySelector('.flow').getAttribute('data-sg-stage') === 'done'));
 
 	check('no buy link points nowhere', Array.from(ctx.doc.querySelectorAll('a[aria-disabled="true"]')).every((a) => !a.hasAttribute('href')));
 	check('the demo is linked', !!ctx.doc.querySelector('a[href*="demo"]'));
@@ -195,11 +221,39 @@ async function demoForm(base) {
 	ctx.win.close();
 
 	const again = await open(base, '/demo/');
-	const done = await signIn(again, '09121234567');
-	check('signing in works on the demo page too', done.form.root.classList.contains('is-signed-in'));
-	check('and it is set to continue to the member page', done.form.redirect === 'account.html' || done.host.getAttribute('data-redirect') === 'account.html');
+	let rejected = null;
+	const done = await signIn(again, '09121234567', 'tap', async () => {});
+	check('the demo page has a phone column for wide screens', !!again.doc.querySelector('.demo-stage.has-phone [data-sg-phone] .sg-phone'));
+	check('tapping the SMS fills the code in and signs in', done.form.root.classList.contains('is-signed-in') && !!done.note && done.note.classList.contains('is-used'));
+	check('the code hint no longer gives the code away', !/<code>12345<\/code>/.test(again.doc.documentElement.outerHTML));
 	check('no script error on the page', again.errors.length === 0, again.errors.slice(0, 3).join(' | '));
 	again.win.close();
+
+	// The old universal code must not open the door any more.
+	const third = await open(base, '/demo/');
+	const host3 = third.doc.querySelector('[data-signa-form]');
+	await until(() => host3 && host3.signaForm);
+	const form3 = host3.signaForm;
+	(host3.shadowRoot || host3).querySelector('[data-signa-phone]').value = '09121234567';
+	form3.act('start');
+	await until(() => third.doc.querySelector('.sg-note[data-sg-code]'));
+	typeCode(third, form3, '12345');
+	await wait(900);
+	if (!form3.busy && !form3.root.classList.contains('is-signed-in')) {
+		form3.act('verify');
+	}
+	await until(() => !form3.busy, 4000);
+	await wait(200);
+	rejected = !form3.root.classList.contains('is-signed-in');
+	check('12345 is rejected: only the code from the SMS works', rejected, text((host3.shadowRoot || host3).querySelector('[data-signa-status-text]')));
+	third.win.close();
+
+	const fourth = await open(base, '/demo/');
+	const done4 = await signIn(fourth, '09121234567', 'type');
+	check('signing in works on the demo page too', done4.form.root.classList.contains('is-signed-in'));
+	check('and it is set to continue to the member page', done4.form.redirect === 'account.html' || done4.host.getAttribute('data-redirect') === 'account.html');
+	check('no script error on the page', fourth.errors.length === 0, fourth.errors.slice(0, 3).join(' | '));
+	fourth.win.close();
 }
 
 async function demoAdmin(base) {

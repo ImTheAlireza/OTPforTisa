@@ -1,0 +1,249 @@
+/* Signa demo phone: the device, the SMS notification, the signal and the banner. */
+
+.sg-phone {
+	--sg-w: 272px;
+	position: relative;
+	width: var(--sg-w);
+	aspect-ratio: 9 / 18.6;
+	padding: 11px;
+	border-radius: 48px;
+	background: linear-gradient(145deg, #2b3242, #0b0f19 45%, #1c2230);
+	box-shadow:
+		0 0 0 1.5px #3a4254 inset,
+		0 50px 80px -40px rgba(15, 23, 42, 0.65),
+		0 20px 40px -24px rgba(15, 118, 110, 0.45);
+	direction: rtl;
+	font-family: 'Vazirmatn', Tahoma, sans-serif;
+	-webkit-user-select: none;
+	user-select: none;
+}
+/* Side buttons, for the silhouette. */
+.sg-phone::before,
+.sg-phone::after {
+	content: '';
+	position: absolute;
+	width: 3px;
+	border-radius: 2px;
+	background: #2b3242;
+}
+.sg-phone::before { left: -3px; top: 112px; height: 54px; box-shadow: 0 70px 0 #2b3242; }
+.sg-phone::after { right: -3px; top: 150px; height: 78px; }
+
+.sg-phone__screen {
+	position: relative;
+	height: 100%;
+	overflow: hidden;
+	border-radius: 38px;
+	background:
+		radial-gradient(120% 70% at 85% 0%, rgba(45, 212, 191, 0.55), transparent 55%),
+		radial-gradient(90% 60% at 0% 100%, rgba(79, 70, 229, 0.55), transparent 60%),
+		linear-gradient(170deg, #0f766e 0%, #134e4a 42%, #1e1b4b 100%);
+	color: #fff;
+}
+.sg-phone__island {
+	position: absolute;
+	top: 10px;
+	left: 50%;
+	width: 88px;
+	height: 26px;
+	margin-left: -44px;
+	border-radius: 20px;
+	background: #05070c;
+	z-index: 3;
+}
+.sg-phone__status {
+	position: absolute;
+	inset: 14px 26px auto;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	direction: ltr;
+	font-size: 12.5px;
+	font-weight: 700;
+	z-index: 2;
+}
+.sg-phone__icons { display: inline-flex; gap: 5px; align-items: center; }
+.sg-phone__icons svg { height: 10px; width: auto; fill: currentColor; }
+.sg-phone__lock { position: absolute; inset: 58px 0 auto; text-align: center; }
+.sg-phone__date { font-size: 13.5px; font-weight: 600; opacity: 0.85; }
+.sg-phone__clock { margin-top: -4px; font-size: 66px; font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15); }
+
+.sg-phone__stack {
+	position: absolute;
+	inset: 196px 10px 44px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow: hidden;
+}
+.sg-phone__idle {
+	position: absolute;
+	inset: auto 0 36px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
+	font-size: 12.5px;
+	opacity: 0.85;
+}
+.sg-phone__idle[hidden] { display: none; }
+.sg-phone__pulse { width: 8px; height: 8px; border-radius: 50%; background: #5eead4; animation: sg-pulse 1.6s ease-in-out infinite; }
+.sg-phone__home { position: absolute; bottom: 8px; left: 50%; width: 110px; height: 4.5px; margin-left: -55px; border-radius: 3px; background: rgba(255, 255, 255, 0.85); }
+
+.sg-phone.is-buzz { animation: sg-buzz 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+
+/* The notification ---------------------------------------------------- */
+.sg-note {
+	display: flex;
+	align-items: flex-start;
+	gap: 9px;
+	width: 100%;
+	margin: 0;
+	padding: 10px 11px;
+	border: 0;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.78);
+	-webkit-backdrop-filter: blur(18px) saturate(1.6);
+	backdrop-filter: blur(18px) saturate(1.6);
+	color: #0f172a;
+	font: inherit;
+	text-align: right;
+	cursor: pointer;
+	box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
+	transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15), opacity 0.3s ease, box-shadow 0.2s ease;
+}
+.sg-phone .sg-note { transform: translateY(-140%) scale(0.96); opacity: 0; }
+.sg-phone .sg-note.is-in { transform: none; opacity: 1; }
+.sg-note:hover { box-shadow: 0 0 0 2px rgba(94, 234, 212, 0.9), 0 10px 24px -14px rgba(0, 0, 0, 0.45); }
+.sg-note:focus-visible { outline: 2px solid #5eead4; outline-offset: 2px; }
+.sg-note.is-old { opacity: 0.55; cursor: default; box-shadow: none; }
+.sg-note.is-old .sg-note__code { text-decoration: line-through; }
+.sg-note.is-used { box-shadow: 0 0 0 2px #22c55e; }
+.sg-note__app {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 9px;
+	background: linear-gradient(180deg, #5bf675, #1fc93f);
+	color: #fff;
+}
+.sg-note__app svg { width: 21px; height: 21px; }
+.sg-note__body { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.55; }
+.sg-note__head { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: #475569; }
+.sg-note__head b { font-weight: 700; }
+.sg-note__from { font-size: 12.5px; font-weight: 800; text-align: right; }
+.sg-note__text { font-size: 12.5px; color: #1e293b; }
+.sg-note__code {
+	display: inline-block;
+	padding: 0 6px;
+	border-radius: 6px;
+	background: rgba(15, 118, 110, 0.12);
+	color: #0b5f58;
+	font-size: 14px;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+}
+.sg-tip {
+	margin: 2px 6px 0;
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 11.5px;
+	line-height: 1.7;
+	text-align: center;
+	animation: sg-fade 0.4s ease 0.5s both;
+}
+
+/* Signed in ----------------------------------------------------------- */
+.sg-done {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	margin-top: 26px;
+	padding: 18px 14px;
+	border-radius: 22px;
+	background: rgba(255, 255, 255, 0.14);
+	-webkit-backdrop-filter: blur(14px);
+	backdrop-filter: blur(14px);
+	text-align: center;
+	animation: sg-rise 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
+}
+.sg-done b { font-size: 17px; }
+.sg-done span:not(.sg-done__ic) { font-size: 12.5px; opacity: 0.85; }
+.sg-done__ic { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 6px; border-radius: 50%; background: #22c55e; box-shadow: 0 10px 24px -10px rgba(34, 197, 94, 0.9); }
+.sg-done__ic svg { width: 26px; height: 26px; }
+.sg-done__again {
+	margin-top: 10px;
+	padding: 6px 14px;
+	border: 0;
+	border-radius: 999px;
+	background: #fff;
+	color: #0b5f58;
+	font: inherit;
+	font-size: 12.5px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+/* The signal between the form and the phone --------------------------- */
+.sg-signal {
+	position: relative;
+	height: 4px;
+	border-radius: 2px;
+	background-image: radial-gradient(circle, rgba(15, 118, 110, 0.35) 1.6px, transparent 2px);
+	background-size: 12px 4px;
+	background-repeat: repeat-x;
+}
+.sg-signal i {
+	position: absolute;
+	top: 50%;
+	right: 0;
+	width: 10px;
+	height: 10px;
+	margin-top: -5px;
+	border-radius: 50%;
+	background: #14b8a6;
+	box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.2), 0 0 16px rgba(20, 184, 166, 0.9);
+	opacity: 0;
+}
+.sg-signal.is-live i { animation: sg-travel 0.9s ease-in forwards; }
+.sg-signal.is-live i:nth-child(2) { animation-delay: 0.12s; }
+.sg-signal.is-live i:nth-child(3) { animation-delay: 0.24s; }
+
+/* The same notification, dropped from the top of a small screen ------- */
+.sg-banner {
+	position: fixed;
+	top: 12px;
+	left: 50%;
+	z-index: 100002;
+	width: min(380px, calc(100% - 24px));
+	transform: translate(-50%, -160%);
+	transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+	direction: rtl;
+	font-family: 'Vazirmatn', Tahoma, sans-serif;
+}
+.sg-banner.is-on { transform: translate(-50%, 0); }
+.sg-banner .sg-note { background: rgba(255, 255, 255, 0.92); box-shadow: 0 20px 40px -18px rgba(15, 23, 42, 0.55), 0 0 0 1px rgba(15, 23, 42, 0.06); }
+.sg-banner .sg-tip { color: #475569; background: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 2px 8px; margin: 6px auto 0; width: max-content; max-width: 100%; }
+
+@keyframes sg-buzz {
+	10%, 90% { transform: translateX(-1px) rotate(-0.4deg); }
+	20%, 80% { transform: translateX(2px) rotate(0.6deg); }
+	30%, 50%, 70% { transform: translateX(-3px) rotate(-0.8deg); }
+	40%, 60% { transform: translateX(3px) rotate(0.8deg); }
+}
+@keyframes sg-travel {
+	0% { right: 0; opacity: 0; }
+	15% { opacity: 1; }
+	85% { opacity: 1; }
+	100% { right: calc(100% - 10px); opacity: 0; }
+}
+@keyframes sg-pulse { 0%, 100% { opacity: 0.35; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes sg-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sg-rise { from { opacity: 0; transform: translateY(14px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+	.sg-phone.is-buzz, .sg-signal.is-live i, .sg-phone__pulse, .sg-done, .sg-tip { animation: none; }
+	.sg-note, .sg-banner { transition: none; }
+}
