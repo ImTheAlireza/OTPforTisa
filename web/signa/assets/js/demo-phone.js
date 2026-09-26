@@ -368,10 +368,21 @@
 			title.focus();
 		}
 
-		var rect = box.getBoundingClientRect();
+		// The whole card in view, buttons included: measured on the card
+		// itself, because the box around it is as tall as the form was.
+		// From the layout, not getBoundingClientRect(): the card is still
+		// mid-way through its entrance transform here.
+		var card = box.querySelector('.sg-win__card');
+		var cardTop = stageEl.getBoundingClientRect().top + top + card.offsetTop;
+		var rect = { top: cardTop, height: card.offsetHeight, bottom: cardTop + card.offsetHeight };
+		var bar = document.querySelector('[data-sg-top], .sg-strip');
+		var head = (bar ? Math.max(0, bar.getBoundingClientRect().bottom) : 70) + 14;
 
-		if (box.scrollIntoView && (rect.top < 0 || rect.top > window.innerHeight - 120)) {
-			box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		if (rect.height && (rect.top < head || rect.bottom > window.innerHeight - 16) && window.scrollBy) {
+			var room = window.innerHeight - head;
+			var shift = rect.height < room ? rect.top - head - (room - rect.height) / 2 : rect.top - head - 12;
+
+			window.scrollBy({ top: shift, behavior: 'smooth' });
 		}
 	}
 
