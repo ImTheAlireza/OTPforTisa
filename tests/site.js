@@ -291,7 +291,7 @@ async function studio(base) {
 	const studioBox = doc.querySelector('[data-sg-studio]');
 	const frame = doc.querySelector('[data-sg-frame]');
 
-	check('the studio sits under the form', !!studioBox && studioBox.previousElementSibling === frame);
+	check('the studio runs under the form and the phone, across the stage', !!studioBox && !!frame && studioBox.parentElement.classList.contains('stage') && !!studioBox.previousElementSibling && studioBox.previousElementSibling.hasAttribute('data-sg-phone') && !studioBox.parentElement.querySelector('.stage__site [data-sg-studio]'));
 
 	studioBox.querySelector('[data-skin="slate"]').click();
 	await wait(30);
