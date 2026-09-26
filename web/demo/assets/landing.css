@@ -462,15 +462,20 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 		width: var(--stage-w);
 		max-width: none;
 		margin-inline: calc((100% - var(--stage-w)) / 2);
-		grid-template-columns: auto minmax(80px, 110px) auto;
+		grid-template-columns: auto 80px auto;
 	}
 	.stage__site {
-		grid-template-columns: 280px 1px minmax(0, 460px);
+		/* As wide as the screen allows: 330px at 1200, 380px from 1250; the form
+		 * gives up 40px below about 1340 so the studio does not have to. */
+		grid-template-columns: min(380px, calc(100vw - 870px)) 1px auto;
 		column-gap: 22px;
 		align-items: start;
 	}
 	.stage__site > .studio { grid-column: 1; grid-row: 1; }
-	.stage__site > [data-sg-frame] { grid-column: 3; grid-row: 1; width: 460px; max-width: 100%; }
+	.stage__site > [data-sg-frame] { grid-column: 3; grid-row: 1; width: clamp(420px, calc(100vw - 880px), 460px); }
+	/* Two short lines under the signal instead of one clipped one. */
+	.stage__label { white-space: normal; line-height: 1.6; }
+	.stage__label span { display: inline-block; white-space: nowrap; }
 	/* The divider: a hairline that fades out at both ends, with a small
 	 * knot in the middle where the controls meet the form. */
 	.stage__site::before {
@@ -496,25 +501,23 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 		box-shadow: 0 0 0 1px var(--line);
 	}
 
-	/* The studio as a slim column: labels above their controls. */
-	.stage .studio { padding: 16px 16px 18px; }
-	.stage .studio__head { flex-wrap: wrap; row-gap: 8px; }
-	.stage .studio__head > div { flex: 1 1 0; min-width: 0; }
-	.stage .studio__ic { display: none; }
-	.stage .studio__title { font-size: 14.5px; line-height: 1.55; }
-	.stage .studio__reset span { display: none; }
+	/* The studio as a wide, short panel: labels beside their controls,
+	 * radius and code side by side, the scenarios in one row. */
+	.stage .studio { padding: 16px 18px 18px; }
+	.stage .studio__title { font-size: 15px; line-height: 1.55; }
 	.stage .studio__reset { padding: 7px; }
-	.stage .studio__row,
-	.stage .studio__row--split { grid-template-columns: 1fr; gap: 8px; }
-	.stage .studio__row--split { gap: 14px; }
-	.stage .studio__row--split .studio__label { margin-bottom: 8px; }
-	.stage .skins { gap: 5px; }
-	.stage .skin { font-size: 10.5px; padding: 5px 1px 3px; }
-	.stage .skin__art { height: 32px; padding: 0 5px; }
+	.stage .studio__reset span { display: none; }
+	.stage .studio__row { grid-template-columns: 46px minmax(0, 1fr); gap: 10px; }
+	.stage .studio__row--split { grid-template-columns: 1fr 1fr; gap: 16px; }
+	.stage .studio__row--try { grid-template-columns: 1fr; gap: 8px; }
 	.stage .swatches { gap: 7px; }
 	.stage .swatch { width: 24px; height: 24px; }
-	.stage .scen { grid-template-columns: 1fr; gap: 5px; }
-	.stage .scen__btn { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 7px 10px; }
+	.stage .swatches__hex { font-size: 11.5px; padding: 2px 6px; }
+	.stage .scen { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+}
+@media (min-width: 1200px) and (max-width: 1339px) {
+	.stage .studio__ic { display: none; }
+	.stage .scen__btn small { display: none; }
 }
 
 /* Sections --------------------------------------------------------------- */
