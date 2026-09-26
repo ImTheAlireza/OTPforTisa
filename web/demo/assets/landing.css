@@ -453,6 +453,69 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .scen__btn b { font-size: 12px; }
 .scen__btn small { color: var(--muted); font-size: 10.5px; }
 
+/* Wide screens: the studio beside the form, a line between them --------
+ * From the right (RTL): studio │ form · signal · phone. The stage may run a
+ * little wider than the text column so the four fit without squeezing. */
+@media (min-width: 1200px) {
+	.stage {
+		--stage-w: min(1280px, calc(100vw - 48px));
+		width: var(--stage-w);
+		max-width: none;
+		margin-inline: calc((100% - var(--stage-w)) / 2);
+		grid-template-columns: auto minmax(80px, 110px) auto;
+	}
+	.stage__site {
+		grid-template-columns: 280px 1px minmax(0, 460px);
+		column-gap: 22px;
+		align-items: start;
+	}
+	.stage__site > .studio { grid-column: 1; grid-row: 1; }
+	.stage__site > [data-sg-frame] { grid-column: 3; grid-row: 1; width: 460px; max-width: 100%; }
+	/* The divider: a hairline that fades out at both ends, with a small
+	 * knot in the middle where the controls meet the form. */
+	.stage__site::before {
+		content: '';
+		grid-column: 2;
+		grid-row: 1;
+		align-self: stretch;
+		width: 1px;
+		min-height: 420px;
+		background: linear-gradient(to bottom, transparent, var(--line) 12%, #cfd8e3 50%, var(--line) 88%, transparent);
+	}
+	.stage__site::after {
+		content: '';
+		grid-column: 2;
+		grid-row: 1;
+		align-self: center;
+		justify-self: center;
+		width: 9px;
+		height: 9px;
+		border: 2px solid var(--paper);
+		border-radius: 50%;
+		background: var(--sg-accent, var(--accent));
+		box-shadow: 0 0 0 1px var(--line);
+	}
+
+	/* The studio as a slim column: labels above their controls. */
+	.stage .studio { padding: 16px 16px 18px; }
+	.stage .studio__head { flex-wrap: wrap; row-gap: 8px; }
+	.stage .studio__head > div { flex: 1 1 0; min-width: 0; }
+	.stage .studio__title { font-size: 14.5px; line-height: 1.55; }
+	.stage .studio__reset span { display: none; }
+	.stage .studio__reset { padding: 7px; }
+	.stage .studio__row,
+	.stage .studio__row--split { grid-template-columns: 1fr; gap: 8px; }
+	.stage .studio__row--split { gap: 14px; }
+	.stage .studio__row--split .studio__label { margin-bottom: 8px; }
+	.stage .skins { gap: 5px; }
+	.stage .skin { font-size: 10.5px; padding: 5px 1px 3px; }
+	.stage .skin__art { height: 32px; padding: 0 5px; }
+	.stage .swatches { gap: 7px; }
+	.stage .swatch { width: 24px; height: 24px; }
+	.stage .scen { grid-template-columns: 1fr; gap: 5px; }
+	.stage .scen__btn { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 7px 10px; }
+}
+
 /* Sections --------------------------------------------------------------- */
 .section { padding: 92px 0; }
 .section--alt { background: var(--paper); border-block: 1px solid var(--line); }

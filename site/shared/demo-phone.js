@@ -333,6 +333,7 @@
 		// as the taller of the two.
 		var top = 0;
 		var height = 0;
+		var right = 0;
 
 		if (frame) {
 			var stageRect = stageEl.getBoundingClientRect();
@@ -341,9 +342,13 @@
 
 			top = frameRect.top - stageRect.top;
 			height = Math.max(frameRect.height, phoneRect.height);
+			// From the form's edge across to the phone: where the studio sits
+			// beside the form, the card stays off it.
+			right = Math.max(0, stageRect.right - frameRect.right);
 		}
 
 		box.style.top = top + 'px';
+		box.style.right = right + 'px';
 
 		if (height > 0) {
 			box.style.minHeight = height + 'px';
