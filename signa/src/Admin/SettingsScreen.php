@@ -66,7 +66,7 @@ final class SettingsScreen {
 	private function sectionMeta(): array {
 		return array(
 			'login'    => array(
-				'desc'  => __( 'چه کسی، چطور و به کجا وارد می‌شود؛ و حساب‌های تازه چطور ساخته می‌شوند.', 'signa' ),
+				'desc'  => __( 'روش ورود، عضویت کاربران تازه و صفحه‌ای که بعد از ورود باز می‌شود.', 'signa' ),
 				'tests' => array(
 					'general'      => __( 'آزمایش تنظیمات ورود', 'signa' ),
 					'registration' => __( 'آزمایش فرم عضویت', 'signa' ),
@@ -283,11 +283,11 @@ final class SettingsScreen {
 				);
 
 				$c->toggleRow( 'replace_wp_login', __( 'جایگزینی صفحهٔ ورود وردپرس', 'signa' ), __( 'فرم OTP روی wp-login.php نمایش داده شود؛ فرم کلاسیک پنهان می‌شود.', 'signa' ) );
-				$c->toggleRow( 'password_login_off', __( 'ورود فقط با کد', 'signa' ), __( 'ورود با گذرواژه واقعاً بسته می‌شود، نه فقط پنهان. راه بازگشت: کد اضطراری.', 'signa' ) );
-				$c->toggleRow( 'remember_login', __( 'ماندن در حساب', 'signa' ), __( 'کاربر ۱۴ روز وارد بماند؛ خاموش = نشست با بستن مرورگر تمام می‌شود.', 'signa' ) );
+				$c->toggleRow( 'password_login_off', __( 'ورود فقط با کد', 'signa' ), __( 'ورود با رمز عبور کاملاً بسته می‌شود. اگر به مشکل خوردید، با کد اضطراری وارد شوید.', 'signa' ) );
+				$c->toggleRow( 'remember_login', __( 'ماندن در حساب', 'signa' ), __( 'کاربر تا ۱۴ روز وارد بماند. اگر خاموش باشد، با بستن مرورگر از حساب خارج می‌شود.', 'signa' ) );
 				$c->toggleRow( 'prevent_enumeration', __( 'پنهان‌سازی وجود حساب', 'signa' ), __( 'پیام‌ها یکسان باشند تا معلوم نشود شماره‌ای قبلاً ثبت شده یا نه.', 'signa' ) );
 			},
-			__( 'خط‌مشی کلی احراز و نشست کاربر', 'signa' ),
+			__( 'تنظیمات کلی ورود', 'signa' ),
 			'login',
 			null,
 			'behaviour'
@@ -329,7 +329,7 @@ final class SettingsScreen {
 
 						$c->field( __( 'پس از عضویت', 'signa' ), function () use ( $c ) {
 							$c->text( 'register_redirect', '', 'url' );
-						}, __( 'خالی = همان مقصد پس از ورود.', 'signa' ), $c->id( 'register_redirect' ) );
+						}, __( 'اگر خالی بماند، همان صفحهٔ بعد از ورود باز می‌شود.', 'signa' ), $c->id( 'register_redirect' ) );
 					}
 				);
 			},
@@ -465,7 +465,7 @@ final class SettingsScreen {
 
 				$c->richNotice( __( 'اعتبارنامه‌ها را می‌توانید در wp-config.php هم بگذارید، مثلاً <code>SIGNA_SMSIR_API_KEY</code>؛ امن‌تر از پایگاه داده.', 'signa' ) );
 			},
-			__( 'فقط سامانهٔ اصلی باز است؛ بقیه تا لزوم جمع‌اند.', 'signa' ),
+			__( 'فقط سامانهٔ اصلی باز است. بقیه را هر وقت لازم شد باز کنید.', 'signa' ),
 			'send',
 			function () {
 				printf(
@@ -580,7 +580,7 @@ final class SettingsScreen {
 
 						$c->field( __( 'فرستنده', 'signa' ), function () use ( $c ) {
 							$c->text( 'email_from', (string) get_option( 'admin_email' ), 'email' );
-						}, __( 'خالی = نشانی پیش‌فرض وردپرس.', 'signa' ), $c->id( 'email_from' ) );
+						}, __( 'اگر خالی بماند، نشانی پیش‌فرض وردپرس استفاده می‌شود.', 'signa' ), $c->id( 'email_from' ) );
 					}
 				);
 
@@ -1009,7 +1009,7 @@ final class SettingsScreen {
 
 						$c->field( __( 'کل سایت در روز', 'signa' ), function () use ( $c ) {
 							$c->number( 'limit_per_site_daily', 0, 100000, __( 'ارسال', 'signa' ) );
-						}, __( 'صفر = بی‌سقف.', 'signa' ), $c->id( 'limit_per_site_daily' ) );
+						}, __( 'صفر یعنی بدون سقف.', 'signa' ), $c->id( 'limit_per_site_daily' ) );
 					}
 				);
 
@@ -1052,14 +1052,14 @@ final class SettingsScreen {
 							'captcha_trigger',
 							array(
 								'always'      => array( 'label' => __( 'همیشه', 'signa' ), 'desc' => __( 'هر درخواست ارسال کد', 'signa' ) ),
-								'after_limit' => array( 'label' => __( 'پس از چند تلاش', 'signa' ), 'desc' => __( 'تجربهٔ روان‌تر برای انسان‌ها', 'signa' ) ),
+								'after_limit' => array( 'label' => __( 'پس از چند تلاش', 'signa' ), 'desc' => __( 'کاربر عادی کمتر کپچا می‌بیند', 'signa' ) ),
 							),
 							__( 'زمان نمایش', 'signa' )
 						);
 					}
 				);
 
-				$c->toggleRow( 'captcha_fail_open', __( 'اگر سرویس کپچا قطع بود', 'signa' ), __( 'روشن = کاربر رد نمی‌شود (هانی‌پات و سقف‌ها فعال می‌مانند)؛ خاموش = بدون کپچا ورودی نیست.', 'signa' ) );
+				$c->toggleRow( 'captcha_fail_open', __( 'اگر سرویس کپچا قطع بود', 'signa' ), __( 'اگر روشن باشد، کاربر رد نمی‌شود و بقیهٔ محافظ‌ها کار می‌کنند. اگر خاموش باشد، تا کپچا برنگردد کسی وارد نمی‌شود.', 'signa' ) );
 				$c->toggleRow( 'captcha_arcaptcha_v3', __( 'آرکپچا نسخهٔ ۳', 'signa' ), __( 'اگر حساب آرکپچای شما v3 (امتیازی و نامرئی) است روشن کنید.', 'signa' ) );
 
 				$c->grid(
@@ -1240,7 +1240,7 @@ final class SettingsScreen {
 
 						$c->field( __( 'سقف تعداد ردیف‌ها', 'signa' ), function () use ( $c ) {
 							$c->number( 'logs_max_rows', 0, 5000000, __( 'ردیف', 'signa' ) );
-						}, __( 'زیر حمله می‌تواند میلیون‌ها ردیف شود؛ صفر = بی‌سقف.', 'signa' ), $c->id( 'logs_max_rows' ) );
+						}, __( 'اگر سایت زیر حملهٔ ربات باشد، جدول خیلی بزرگ می‌شود. صفر یعنی بدون سقف.', 'signa' ), $c->id( 'logs_max_rows' ) );
 					}
 				);
 

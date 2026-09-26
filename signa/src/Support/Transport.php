@@ -83,7 +83,7 @@ final class Transport {
 
 			case self::BLOCKED:
 				return sprintf(
-					__( 'خودِ وردپرس این درخواست را رد کرد، نه فایروال هاست: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و %s در WP_ACCESSIBLE_HOSTS نیست. یکی از این دو کار را بکنید — ۱) همان خط را false کنید: define( \'WP_HTTP_BLOCK_EXTERNAL\', false ); ۲) یا دامنه را مجاز کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'%1$s\' );', 'signa' ),
+					__( 'خودِ وردپرس این درخواست را رد کرد، نه فایروال هاست: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و %s در WP_ACCESSIBLE_HOSTS نیست. یکی از این دو کار را بکنید: ۱) همان خط را false کنید: define( \'WP_HTTP_BLOCK_EXTERNAL\', false ); ۲) یا دامنه را مجاز کنید: define( \'WP_ACCESSIBLE_HOSTS\', \'%1$s\' );', 'signa' ),
 					self::host( $message )
 				);
 

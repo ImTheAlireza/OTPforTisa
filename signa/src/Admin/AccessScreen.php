@@ -248,7 +248,7 @@ final class AccessScreen implements Bootable {
 		printf(
 			'<label class="signa-field"><span>%s</span><input type="number" class="small-text signa-input" dir="ltr" name="block_days" value="0" min="0" max="365"><em>%s</em></label>',
 			esc_html__( 'مدت', 'signa' ),
-			esc_html__( 'روز (۰ = همیشگی)', 'signa' )
+			esc_html__( 'روز (صفر یعنی همیشه)', 'signa' )
 		);
 
 		echo '<button type="submit" class="button button-primary">' . esc_html__( 'افزودن', 'signa' ) . '</button>';

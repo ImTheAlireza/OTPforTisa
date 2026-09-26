@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Signa 2.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/signa\n"
-"POT-Creation-Date: 2026-09-26 21:10+0000\n"
+"POT-Creation-Date: 2026-09-26 21:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -169,7 +169,7 @@ msgid "مدت"
 msgstr ""
 
 #: src/Admin/AccessScreen.php:251
-msgid "روز (۰ = همیشگی)"
+msgid "روز (صفر یعنی همیشه)"
 msgstr ""
 
 #: src/Admin/AccessScreen.php:254
@@ -592,7 +592,7 @@ msgid "مطمئن شوید افزونهٔ «مدیریت هوشمند راست�
 msgstr ""
 
 #: src/Admin/Layout.php:18
-msgid "ورود و عضویت با کد یک‌بارمصرف — سریع، امن، بدون گذرواژه"
+msgid "ورود و عضویت با کد پیامکی، بدون رمز عبور"
 msgstr ""
 
 #: src/Admin/Layout.php:24
@@ -978,7 +978,7 @@ msgid "حالت اپ"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:69
-msgid "چه کسی، چطور و به کجا وارد می‌شود؛ و حساب‌های تازه چطور ساخته می‌شوند."
+msgid "روش ورود، عضویت کاربران تازه و صفحه‌ای که بعد از ورود باز می‌شود."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:71
@@ -1108,7 +1108,7 @@ msgid "ورود فقط با کد"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:286
-msgid "ورود با گذرواژه واقعاً بسته می‌شود، نه فقط پنهان. راه بازگشت: کد اضطراری."
+msgid "ورود با رمز عبور کاملاً بسته می‌شود. اگر به مشکل خوردید، با کد اضطراری وارد شوید."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:287
@@ -1116,7 +1116,7 @@ msgid "ماندن در حساب"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:287
-msgid "کاربر ۱۴ روز وارد بماند؛ خاموش = نشست با بستن مرورگر تمام می‌شود."
+msgid "کاربر تا ۱۴ روز وارد بماند. اگر خاموش باشد، با بستن مرورگر از حساب خارج می‌شود."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:288
@@ -1128,7 +1128,7 @@ msgid "پیام‌ها یکسان باشند تا معلوم نشود شماره
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:290
-msgid "خط‌مشی کلی احراز و نشست کاربر"
+msgid "تنظیمات کلی ورود"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:297
@@ -1174,7 +1174,7 @@ msgid "پس از عضویت"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:332
-msgid "خالی = همان مقصد پس از ورود."
+msgid "اگر خالی بماند، همان صفحهٔ بعد از ورود باز می‌شود."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:341
@@ -1334,7 +1334,7 @@ msgid "اعتبارنامه‌ها را می‌توانید در wp-config.php �
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:468
-msgid "فقط سامانهٔ اصلی باز است؛ بقیه تا لزوم جمع‌اند."
+msgid "فقط سامانهٔ اصلی باز است. بقیه را هر وقت لازم شد باز کنید."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:481
@@ -1461,7 +1461,7 @@ msgid "فرستنده"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:583
-msgid "خالی = نشانی پیش‌فرض وردپرس."
+msgid "اگر خالی بماند، نشانی پیش‌فرض وردپرس استفاده می‌شود."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:587
@@ -1867,7 +1867,7 @@ msgid "کل سایت در روز"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1012
-msgid "صفر = بی‌سقف."
+msgid "صفر یعنی بدون سقف."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1016
@@ -1916,7 +1916,7 @@ msgid "پس از چند تلاش"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1055
-msgid "تجربهٔ روان‌تر برای انسان‌ها"
+msgid "کاربر عادی کمتر کپچا می‌بیند"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1062
@@ -1924,7 +1924,7 @@ msgid "اگر سرویس کپچا قطع بود"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1062
-msgid "روشن = کاربر رد نمی‌شود (هانی‌پات و سقف‌ها فعال می‌مانند)؛ خاموش = بدون کپچا ورودی نیست."
+msgid "اگر روشن باشد، کاربر رد نمی‌شود و بقیهٔ محافظ‌ها کار می‌کنند. اگر خاموش باشد، تا کپچا برنگردد کسی وارد نمی‌شود."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1063
@@ -2178,7 +2178,7 @@ msgid "ردیف"
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1243
-msgid "زیر حمله می‌تواند میلیون‌ها ردیف شود؛ صفر = بی‌سقف."
+msgid "اگر سایت زیر حملهٔ ربات باشد، جدول خیلی بزرگ می‌شود. صفر یعنی بدون سقف."
 msgstr ""
 
 #: src/Admin/SettingsScreen.php:1247
@@ -3258,7 +3258,7 @@ msgid "رنگ‌های %1$s و %2$s شناسایی نشدند."
 msgstr ""
 
 #: src/Diagnostics/SelfTest.php:1010
-msgid "کمتر از %s:1 — متن سخت خوانده می‌شود. یک رنگ تأکید تیره‌تر انتخاب کنید."
+msgid "کمتر از %s:1 است و متن سخت خوانده می‌شود. یک رنگ تأکید تیره‌تر انتخاب کنید."
 msgstr ""
 
 #: src/Diagnostics/SelfTest.php:1014
@@ -4171,7 +4171,7 @@ msgid "هنوز ارسالی ثبت نشده است."
 msgstr ""
 
 #: src/Gateway/Health.php:133
-msgid "خودِ سایت درخواست خروجی را می‌بندد (%1$s) — %2$s پیش. این سامانه خطا نداد؛ در wp-config.php دامنه را در WP_ACCESSIBLE_HOSTS بگذارید یا «ارسال مستقیم» را روشن کنید."
+msgid "خودِ سایت درخواست خروجی را می‌بندد (%1$s)، %2$s پیش. این سامانه خطا نداد. در wp-config.php دامنه را در WP_ACCESSIBLE_HOSTS بگذارید یا «ارسال مستقیم» را روشن کنید."
 msgstr ""
 
 #: src/Gateway/Health.php:138
@@ -4277,7 +4277,7 @@ msgid "سرویسی با این شناسه برای بررسی وجود ندار
 msgstr ""
 
 #: src/Http/AdminController.php:287
-msgid "پاسخ %1$d در %2$d میلی‌ثانیه — مسیر خروجی باز است."
+msgid "پاسخ %1$d در %2$d میلی‌ثانیه. مسیر خروجی باز است."
 msgstr ""
 
 #: src/Http/AdminController.php:323
@@ -4419,7 +4419,7 @@ msgid " و %d فایل دیگر"
 msgstr ""
 
 #: src/Install/Guard.php:121
-msgid "راه‌حل: بستهٔ کامل نسخهٔ همین افزونه را از نو نصب کنید — افزونه‌ها ← افزودن ← بارگذاری افزونه ← «جایگزینی با نسخهٔ بارگذاری‌شده». با جایگزینی فایل‌ها هیچ تنظیمات یا داده‌ای پاک نمی‌شود؛ هرگز افزونه را «حذف» نکنید."
+msgid "راه‌حل: بستهٔ کامل نسخهٔ همین افزونه را از نو نصب کنید: افزونه‌ها ← افزودن ← بارگذاری افزونه ← «جایگزینی با نسخهٔ بارگذاری‌شده». با جایگزینی فایل‌ها هیچ تنظیمات یا داده‌ای پاک نمی‌شود؛ هرگز افزونه را «حذف» نکنید."
 msgstr ""
 
 #: src/Log/Report.php:51
@@ -4619,7 +4619,7 @@ msgid "پاسخ سامانه پیامکی در مهلت مقرر نرسید. ی�
 msgstr ""
 
 #: src/Support/Transport.php:86
-msgid "خودِ وردپرس این درخواست را رد کرد، نه فایروال هاست: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و %s در WP_ACCESSIBLE_HOSTS نیست. یکی از این دو کار را بکنید — ۱) همان خط را false کنید: define( 'WP_HTTP_BLOCK_EXTERNAL', false ); ۲) یا دامنه را مجاز کنید: define( 'WP_ACCESSIBLE_HOSTS', '%1$s' );"
+msgid "خودِ وردپرس این درخواست را رد کرد، نه فایروال هاست: در wp-config.php گزینهٔ WP_HTTP_BLOCK_EXTERNAL روشن است و %s در WP_ACCESSIBLE_HOSTS نیست. یکی از این دو کار را بکنید: ۱) همان خط را false کنید: define( 'WP_HTTP_BLOCK_EXTERNAL', false ); ۲) یا دامنه را مجاز کنید: define( 'WP_ACCESSIBLE_HOSTS', '%1$s' );"
 msgstr ""
 
 #: src/Support/Transport.php:92

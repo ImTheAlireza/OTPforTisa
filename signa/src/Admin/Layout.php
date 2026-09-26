@@ -15,7 +15,7 @@ final class Layout {
 		echo '<header class="signa-hero">';
 		echo '<span class="signa-hero__logo" aria-hidden="true">' . Icons::svg( 'phone', 24 ) . '</span>';
 		echo '<div class="signa-hero__text"><h1 class="signa-hero__title">' . esc_html__( 'سیگنا', 'signa' ) . '</h1>';
-		echo '<p class="signa-hero__sub">' . esc_html( '' !== $title ? $title : __( 'ورود و عضویت با کد یک‌بارمصرف — سریع، امن، بدون گذرواژه', 'signa' ) ) . '</p></div>';
+		echo '<p class="signa-hero__sub">' . esc_html( '' !== $title ? $title : __( 'ورود و عضویت با کد پیامکی، بدون رمز عبور', 'signa' ) ) . '</p></div>';
 
 		echo '<div class="signa-hero__actions">';
 		printf(

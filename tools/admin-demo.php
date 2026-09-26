@@ -149,9 +149,9 @@ final class Signa_Demo_Wpdb extends Signa_Wpdb_Stub {
 $GLOBALS['wpdb']       = new Signa_Demo_Wpdb();
 $GLOBALS['wpdb']->rows = array(
 	signa_demo_row( 120, 'code.sent' ),
-	signa_demo_row( 540, 'guard.rejected', 'notice', 'captcha_missing', 'Captcha token missing' ),
+	signa_demo_row( 540, 'guard.rejected', 'notice', 'captcha_missing', 'کپچا حل نشده بود' ),
 	signa_demo_row( 1300, 'code.sent' ),
-	signa_demo_row( 3900, 'code.not_sent', 'error', 'gateway_http_500', 'HTTP 500 from sms.ir' ),
+	signa_demo_row( 3900, 'code.not_sent', 'error', 'gateway_http_500', 'سرور SMS.ir خطای ۵۰۰ داد' ),
 	signa_demo_row( 7300, 'user.created' ),
 	signa_demo_row( 9800, 'code.sent' ),
 );

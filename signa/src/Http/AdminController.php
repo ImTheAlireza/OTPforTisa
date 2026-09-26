@@ -284,7 +284,7 @@ final class AdminController {
 			'status'  => $status,
 			'error'   => '',
 			'message' => sprintf(
-				__( 'پاسخ %1$d در %2$d میلی‌ثانیه — مسیر خروجی باز است.', 'signa' ),
+				__( 'پاسخ %1$d در %2$d میلی‌ثانیه. مسیر خروجی باز است.', 'signa' ),
 				$status,
 				$elapsed
 			),

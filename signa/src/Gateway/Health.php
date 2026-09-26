@@ -130,7 +130,7 @@ final class Health {
 		if ( ! empty( $record['blocked'] ) ) {
 			return '' !== (string) $record['detail']
 				? sprintf(
-					__( 'خودِ سایت درخواست خروجی را می‌بندد (%1$s) — %2$s پیش. این سامانه خطا نداد؛ در wp-config.php دامنه را در WP_ACCESSIBLE_HOSTS بگذارید یا «ارسال مستقیم» را روشن کنید.', 'signa' ),
+					__( 'خودِ سایت درخواست خروجی را می‌بندد (%1$s)، %2$s پیش. این سامانه خطا نداد. در wp-config.php دامنه را در WP_ACCESSIBLE_HOSTS بگذارید یا «ارسال مستقیم» را روشن کنید.', 'signa' ),
 					(string) $record['detail'],
 					$ago
 				)
