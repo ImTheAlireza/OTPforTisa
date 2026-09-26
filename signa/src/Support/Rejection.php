@@ -1,23 +1,12 @@
 <?php
-/**
- * Exception carrying a user-facing rejection (thrown by guards and services).
- *
- * @package Signa
- */
 
 namespace Signa\Support;
 
 defined( 'ABSPATH' ) || exit;
 
 class Rejection extends \RuntimeException {
-
-	/** @var string */
 	private $errorCode;
-
-	/** @var array<string,mixed> */
 	private $payload;
-
-	/** @var int */
 	private $status;
 
 	public function __construct( string $errorCode, string $message, array $payload = array(), int $status = 200 ) {

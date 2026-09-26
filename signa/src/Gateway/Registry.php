@@ -1,9 +1,4 @@
 <?php
-/**
- * Gateway catalogue and delivery order.
- *
- * @package Signa
- */
 
 namespace Signa\Gateway;
 
@@ -13,20 +8,13 @@ use Signa\Support\Transport;
 defined( 'ABSPATH' ) || exit;
 
 final class Registry {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var array<string,SmsGateway>|null */
 	private $instances;
 
 	public function __construct( Settings $settings ) {
 		$this->settings = $settings;
 	}
 
-	/**
-	 * @return array<string,string> id => class name
-	 */
 	public function catalogue(): array {
 		$drivers = array(
 			'smsir'     => Drivers\SmsIr::class,
@@ -36,17 +24,9 @@ final class Registry {
 			'faraz'     => Drivers\FarazSms::class,
 		);
 
-		/**
-		 * Register extra SMS gateway drivers.
-		 *
-		 * @param array<string,string> $drivers id => fully qualified class name.
-		 */
 		return (array) apply_filters( 'signa_sms_gateways', $drivers );
 	}
 
-	/**
-	 * @return array<string,SmsGateway>
-	 */
 	public function all(): array {
 		if ( null !== $this->instances ) {
 			return $this->instances;
@@ -75,9 +55,6 @@ final class Registry {
 		return isset( $all[ $id ] ) ? $all[ $id ] : null;
 	}
 
-	/**
-	 * @return array<string,string>
-	 */
 	public function labels(): array {
 		$labels = array();
 
@@ -88,11 +65,6 @@ final class Registry {
 		return $labels;
 	}
 
-	/**
-	 * Ordered list of gateways to try for one delivery.
-	 *
-	 * @return string[]
-	 */
 	public function deliveryOrder(): array {
 		$order = array( $this->settings->str( 'sms_gateway', 'smsir' ) );
 
@@ -103,19 +75,9 @@ final class Registry {
 			}
 		}
 
-		/**
-		 * Filter the gateway order for the current request.
-		 *
-		 * @param string[] $order Gateway ids.
-		 */
 		return array_values( array_filter( (array) apply_filters( 'signa_delivery_order', $order ) ) );
 	}
 
-	/**
-	 * How one gateway would send right now, without sending anything.
-	 *
-	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
-	 */
 	public function planFor( string $id ): array {
 		$driver = $this->find( $id );
 		$empty  = array(
@@ -129,7 +91,6 @@ final class Registry {
 
 		if ( null === $driver ) {
 			$empty['issues'][] = sprintf(
-				/* translators: %s: gateway id read from the settings */
 				__( 'سامانهٔ «%s» در فهرست سامانه‌ها نیست؛ از تنظیمات › سامانه‌های پیامکی یکی از سامانه‌های موجود را انتخاب کنید.', 'signa' ),
 				$id
 			);
@@ -139,19 +100,11 @@ final class Registry {
 
 		$plan = $driver->plan();
 
-		/*
-		 * The site's own outbound block is a problem of this installation, not
-		 * of the gateway's credentials — and it belongs in this card, which in
-		 * the screenshot that started round 10 said «سامانه پیامکی انتخاب‌شده
-		 * شناخته نشده است» under a failed SMS test. The card answers «راه حلش
-		 * چیه»: turn the plugin's own switch on, or open wp-config.php.
-		 */
 		if ( ! empty( $plan['endpoint'] ) && ! $this->settings->bool( 'direct_send', false ) ) {
 			$host = (string) wp_parse_url( (string) $plan['endpoint'], PHP_URL_HOST );
 
 			if ( '' !== $host && Transport::egressBlocked( $host ) ) {
 				$plan['issues'][] = sprintf(
-					/* translators: %s: gateway host */
 					__( 'وردپرس درخواست‌های خروجی به %s را بسته است؛ در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید یا دامنه را در WP_ACCESSIBLE_HOSTS بگذارید.', 'signa' ),
 					$host
 				);
@@ -161,9 +114,6 @@ final class Registry {
 		return $plan;
 	}
 
-	/**
-	 * Readiness report used by the admin screens.
-	 */
 	public function report(): array {
 		$report  = array();
 		$health  = new Health();

@@ -1,14 +1,4 @@
 <?php
-/**
- * Access screen: the emergency code and the number blocklist.
- *
- * Both features are emergency levers rather than everyday settings, so they
- * live on their own page instead of inside the settings form: they are written
- * by their own POST handlers, need their own nonces, and one of them can be
- * pulled at any moment from a phone.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -22,19 +12,10 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class AccessScreen implements Bootable {
-
 	const SLUG = 'signa-access';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Blocklist */
 	private $blocklist;
-
-	/** @var EmergencyToken */
 	private $emergency;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Settings $settings, Blocklist $blocklist, EmergencyToken $emergency, Logger $logger ) {
@@ -69,10 +50,6 @@ final class AccessScreen implements Bootable {
 		Layout::close();
 	}
 
-	/* ---------------------------------------------------------------------
-	 * Emergency code
-	 * ------------------------------------------------------------------ */
-
 	private function emergencyCard(): void {
 		$summary = $this->emergency->summary();
 		$reveal  = $this->emergency->pull( get_current_user_id() );
@@ -96,9 +73,6 @@ final class AccessScreen implements Bootable {
 		echo '</section>';
 	}
 
-	/**
-	 * @param array<string,mixed> $summary
-	 */
 	private function emergencyStatus( array $summary ): void {
 		echo '<div class="signa-statbar">';
 
@@ -247,10 +221,6 @@ final class AccessScreen implements Bootable {
 		$this->back( 'revoked' );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * Blocklist
-	 * ------------------------------------------------------------------ */
-
 	private function blocklistCard(): void {
 		$rules = $this->blocklist->all();
 
@@ -375,10 +345,6 @@ final class AccessScreen implements Bootable {
 		$this->back( 'cleared', array( 'added' => $count ) );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * Plumbing
-	 * ------------------------------------------------------------------ */
-
 	private function guard( string $action ): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'دسترسی غیرمجاز.', 'signa' ) );
@@ -387,9 +353,6 @@ final class AccessScreen implements Bootable {
 		check_admin_referer( $action );
 	}
 
-	/**
-	 * @param array<string,int> $extra
-	 */
 	private function back( string $message, array $extra = array() ): void {
 		$args = array_merge( array( 'page' => self::SLUG, 'signa_msg' => $message ), $extra );
 
@@ -398,25 +361,22 @@ final class AccessScreen implements Bootable {
 	}
 
 	private function notice(): void {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only banner.
 		$key = isset( $_GET['signa_msg'] ) ? sanitize_key( wp_unslash( $_GET['signa_msg'] ) ) : '';
 
 		if ( '' === $key ) {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$added = isset( $_GET['added'] ) ? (int) $_GET['added'] : 0;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$skipped = isset( $_GET['skipped'] ) ? (int) $_GET['skipped'] : 0;
 
 		$map = array(
 			'issued'      => array( 'success', __( 'کد اضطراری ساخته شد. همین حالا آن را جایی امن یادداشت کنید؛ کد ذخیره نمی‌شود و دوباره نمایش داده نخواهد شد.', 'signa' ) ),
 			'revoked'     => array( 'success', __( 'کد اضطراری باطل شد.', 'signa' ) ),
-			'code_short'  => array( 'error', sprintf( /* translators: %d: minimum digits */ __( 'کد باید دست‌کم %d رقم باشد.', 'signa' ), EmergencyToken::MIN_LENGTH ) ),
-			'blocked'     => array( 'success', sprintf( /* translators: 1: added, 2: skipped */ __( '%1$d مورد اضافه شد و %2$d مورد تکراری یا نامعتبر بود.', 'signa' ), $added, $skipped ) ),
+			'code_short'  => array( 'error', sprintf(  __( 'کد باید دست‌کم %d رقم باشد.', 'signa' ), EmergencyToken::MIN_LENGTH ) ),
+			'blocked'     => array( 'success', sprintf(  __( '%1$d مورد اضافه شد و %2$d مورد تکراری یا نامعتبر بود.', 'signa' ), $added, $skipped ) ),
 			'unblocked'   => array( 'success', __( 'مورد از فهرست حذف شد.', 'signa' ) ),
-			'cleared'     => array( 'success', sprintf( /* translators: %d: count */ __( '%d مورد از فهرست پاک شد.', 'signa' ), $added ) ),
+			'cleared'     => array( 'success', sprintf(  __( '%d مورد از فهرست پاک شد.', 'signa' ), $added ) ),
 			'missing'     => array( 'error', __( 'چنین موردی در فهرست نبود.', 'signa' ) ),
 		);
 
@@ -431,9 +391,6 @@ final class AccessScreen implements Bootable {
 		);
 	}
 
-	/**
-	 * Local time, formatted for the admin.
-	 */
 	private function stamp( int $timestamp ): string {
 		$format = (string) get_option( 'date_format' ) . ' ' . (string) get_option( 'time_format' );
 
@@ -446,22 +403,16 @@ final class AccessScreen implements Bootable {
 		}
 
 		if ( $seconds < 60 ) {
-			/* translators: %d: seconds */
 			return sprintf( __( '%d ثانیه', 'signa' ), $seconds );
 		}
 
 		if ( $seconds < 3600 ) {
-			/* translators: %d: minutes */
 			return sprintf( __( '%d دقیقه', 'signa' ), (int) floor( $seconds / 60 ) );
 		}
 
-		/* translators: %d: hours */
 		return sprintf( __( '%d ساعت', 'signa' ), (int) floor( $seconds / 3600 ) );
 	}
 
-	/**
-	 * Client address, honouring the trusted-proxy setting.
-	 */
 	private function clientIp(): string {
 		return \Signa\Support\ClientIp::current(
 			$this->settings->str( 'proxy_mode', 'none' ),

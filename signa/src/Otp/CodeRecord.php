@@ -1,38 +1,17 @@
 <?php
-/**
- * Immutable record of one issued one-time code.
- *
- * @package Signa
- */
 
 namespace Signa\Otp;
 
 defined( 'ABSPATH' ) || exit;
 
 final class CodeRecord {
-
-	/** @var int */
 	private $id;
-
-	/** @var string */
 	private $fingerprint;
-
-	/** @var string */
 	private $channel;
-
-	/** @var string */
 	private $codeHash;
-
-	/** @var int */
 	private $attempts;
-
-	/** @var int */
 	private $issuedAt;
-
-	/** @var int */
 	private $expiresAt;
-
-	/** @var bool */
 	private $consumed;
 
 	public function __construct(
@@ -55,9 +34,6 @@ final class CodeRecord {
 		$this->consumed    = $consumed;
 	}
 
-	/**
-	 * @param object|array $row Database row.
-	 */
 	public static function fromRow( $row ): self {
 		$row = is_array( $row ) ? (object) $row : $row;
 

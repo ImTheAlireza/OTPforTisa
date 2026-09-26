@@ -1,9 +1,4 @@
 <?php
-/**
- * Resolves the active registration form schema.
- *
- * @package Signa
- */
 
 namespace Signa\Registration;
 
@@ -12,11 +7,7 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class FieldSchema {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var array<int,array<string,mixed>>|null */
 	private $cached;
 
 	public function __construct( Settings $settings ) {
@@ -27,9 +18,6 @@ final class FieldSchema {
 		return $this->settings->bool( 'registration_enabled', true );
 	}
 
-	/**
-	 * Fields before the code (`fields_then_code`) or after it (`code_then_fields`).
-	 */
 	public function flow(): string {
 		$flow = $this->settings->str( 'registration_flow', 'fields_then_code' );
 
@@ -40,9 +28,6 @@ final class FieldSchema {
 		return 'code_then_fields' === $this->flow();
 	}
 
-	/**
-	 * @return array<int,array<string,mixed>>
-	 */
 	public function active(): array {
 		if ( null !== $this->cached ) {
 			return $this->cached;
@@ -75,19 +60,11 @@ final class FieldSchema {
 
 		$fields = $this->applyEmailPolicy( $fields );
 
-		/**
-		 * Filter the resolved registration schema.
-		 *
-		 * @param array $fields Normalised, sorted field definitions.
-		 */
 		$this->cached = array_values( (array) apply_filters( 'signa_registration_fields', $fields ) );
 
 		return $this->cached;
 	}
 
-	/**
-	 * Slimmed-down payload for the browser.
-	 */
 	public function forClient(): array {
 		return array_map(
 			static function ( array $field ): array {
@@ -106,9 +83,6 @@ final class FieldSchema {
 		);
 	}
 
-	/**
-	 * @return array<string,mixed>|null
-	 */
 	public function find( string $id ): ?array {
 		foreach ( $this->active() as $field ) {
 			if ( $field['id'] === $id ) {
@@ -119,10 +93,6 @@ final class FieldSchema {
 		return null;
 	}
 
-	/**
-	 * @param array<string,mixed> $field
-	 * @return array<string,mixed>
-	 */
 	public static function normalize( array $field ): array {
 		$type = isset( $field['type'] ) ? sanitize_key( (string) $field['type'] ) : 'text';
 
@@ -157,12 +127,6 @@ final class FieldSchema {
 		);
 	}
 
-	/**
-	 * The `email_mode` option overrides whatever the preset declares.
-	 *
-	 * @param array<int,array<string,mixed>> $fields
-	 * @return array<int,array<string,mixed>>
-	 */
 	private function applyEmailPolicy( array $fields ): array {
 		$mode = $this->settings->str( 'email_mode', 'optional' );
 

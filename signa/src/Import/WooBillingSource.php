@@ -1,16 +1,10 @@
 <?php
-/**
- * Imports numbers already collected by WooCommerce checkout.
- *
- * @package Signa
- */
 
 namespace Signa\Import;
 
 defined( 'ABSPATH' ) || exit;
 
 final class WooBillingSource extends MetaQuerySource {
-
 	public function id(): string {
 		return 'woo_billing';
 	}

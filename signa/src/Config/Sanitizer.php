@@ -1,24 +1,10 @@
 <?php
-/**
- * Schema-driven sanisignation of submitted settings.
- *
- * Each key declares how it must be cleaned, so adding an option never means
- * touching a wall of if/else statements.
- *
- * @package Signa
- */
 
 namespace Signa\Config;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Sanitizer {
-
-	/**
-	 * Keys whose stored value is kept when the browser sends back the masked placeholder.
-	 *
-	 * @return string[]
-	 */
 	public static function secretKeys(): array {
 		return array(
 			'smsir_api_key',
@@ -35,9 +21,6 @@ final class Sanitizer {
 		return '••••••••';
 	}
 
-	/**
-	 * @return array<string,array<string,mixed>>
-	 */
 	public static function spec(): array {
 		return array(
 			'enabled'              => array( 'type' => 'bool' ),
@@ -182,7 +165,6 @@ final class Sanitizer {
 
 		foreach ( $spec as $key => $rule ) {
 			if ( ! array_key_exists( $key, $input ) ) {
-				// Checkboxes arrive only when ticked.
 				if ( 'bool' === $rule['type'] && self::isSubmittable( $input, $key ) ) {
 					$output[ $key ] = '0';
 				}
@@ -193,7 +175,6 @@ final class Sanitizer {
 			$output[ $key ] = self::clean( $key, $input[ $key ], $rule, $fallback );
 		}
 
-		// Never allow a channel list without the primary channel.
 		$channels = is_array( $output['channels_enabled'] ) ? $output['channels_enabled'] : array();
 		if ( ! in_array( $output['channel'], $channels, true ) ) {
 			array_unshift( $channels, $output['channel'] );
@@ -207,11 +188,6 @@ final class Sanitizer {
 		return $output;
 	}
 
-	/**
-	 * @param mixed $value
-	 * @param mixed $fallback
-	 * @return mixed
-	 */
 	private static function clean( string $key, $value, array $rule, $fallback ) {
 		$type = isset( $rule['type'] ) ? $rule['type'] : 'text';
 
@@ -287,16 +263,6 @@ final class Sanitizer {
 		}
 	}
 
-	/**
-	 * A CSS `font-family` list, and nothing else.
-	 *
-	 * The value is printed inside a `style` attribute, so the whole grammar is
-	 * kept to what a font list can contain: family names, quotes, commas and
-	 * spaces. Braces, semicolons and angle brackets — the characters that would
-	 * let one setting escape its declaration and rewrite the rest of the page —
-	 * are dropped rather than escaped, and an empty result falls back to the
-	 * default font.
-	 */
 	public static function fontFamily( $value ): string {
 		$value = wp_strip_all_tags( (string) $value );
 		$value = preg_replace( '/[^A-Za-z0-9 ,\'"\-_\.]/', '', $value );
@@ -305,9 +271,6 @@ final class Sanitizer {
 		return substr( $value, 0, 180 );
 	}
 
-	/**
-	 * Registration field definitions are the only nested structure in settings.
-	 */
 	private static function sanitizeFields( array $raw ): array {
 		$fields = array();
 
@@ -359,10 +322,6 @@ final class Sanitizer {
 		return current_user_can( 'unfiltered_html' ) || ( is_multisite() && current_user_can( 'manage_network_options' ) );
 	}
 
-	/**
-	 * Detect whether a checkbox row was rendered in the submitted form even
-	 * though the box itself was left unchecked.
-	 */
 	private static function isSubmittable( array $input, string $key ): bool {
 		return array_key_exists( '_fields', $input ) && is_array( $input['_fields'] ) && in_array( $key, $input['_fields'], true );
 	}

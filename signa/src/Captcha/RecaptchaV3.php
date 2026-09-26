@@ -1,19 +1,4 @@
 <?php
-/**
- * Google reCAPTCHA v3 (score based, invisible).
- *
- * `www.google.com` is unreachable from a good part of the world (Iran, China,
- * some corporate networks). When the browser cannot load the script the visitor
- * used to hit a dead end: the form refused the send with "prove you are not a
- * robot" while showing no challenge at all. Two things changed:
- *
- *   1. `recaptcha.net` — Google's own mirror — is offered as a fallback URL and
- *      the browser walks the list until one loads (see ScriptFallbacks).
- *   2. A failure to reach the service no longer blocks sign-in: the guard falls
- *      back to the honeypot and the throttle and logs `captcha.fail_open`.
- *
- * @package Signa
- */
 
 namespace Signa\Captcha;
 
@@ -23,14 +8,9 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class RecaptchaV3 implements CaptchaProvider, ScriptFallbacks {
-
 	const ENDPOINT = 'https://www.google.com/recaptcha/api/siteverify';
 	const MIRROR   = 'https://recaptcha.net/recaptcha/api/siteverify';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Settings $settings, Logger $logger ) {
@@ -52,9 +32,6 @@ final class RecaptchaV3 implements CaptchaProvider, ScriptFallbacks {
 		return '' === $key ? '' : 'https://www.google.com/recaptcha/api.js?render=' . rawurlencode( $key );
 	}
 
-	/**
-	 * @return string[]
-	 */
 	public function fallbackScriptUrls(): array {
 		$key = trim( $this->settings->str( 'captcha_site_key' ) );
 
@@ -73,7 +50,6 @@ final class RecaptchaV3 implements CaptchaProvider, ScriptFallbacks {
 		$response = $this->request( self::ENDPOINT, $token, $ip );
 
 		if ( is_wp_error( $response ) ) {
-			// Google proper is filtered here more often than it is down.
 			$response = $this->request( self::MIRROR, $token, $ip );
 		}
 
@@ -105,22 +81,12 @@ final class RecaptchaV3 implements CaptchaProvider, ScriptFallbacks {
 			return CaptchaResult::failed( 'captcha_rejected', __( 'کپچا تأیید نشد. لطفاً دوباره تلاش کنید.', 'signa' ) );
 		}
 
-		/*
-		 * Google's advice for v3: check that the token was made for this
-		 * action. A token minted by another form on the same site key
-		 * (a comment form, a newsletter box) must not unlock an SMS.
-		 */
 		if ( isset( $body['action'] ) && is_string( $body['action'] ) && '' !== $body['action'] && 'signa_send' !== $body['action'] ) {
 			$this->logger->notice( 'captcha.wrong_action', array( 'gateway' => $this->id(), 'action' => substr( sanitize_key( $body['action'] ), 0, 40 ) ) );
 
 			return CaptchaResult::failed( 'captcha_rejected', __( 'کپچا تأیید نشد. لطفاً دوباره تلاش کنید.', 'signa' ) );
 		}
 
-		/*
-		 * A v3 answer always carries a score. None means the keys belong to a
-		 * reCAPTCHA v2 site, which cannot be judged here: say so instead of
-		 * silently scoring every request 1.0.
-		 */
 		if ( ! isset( $body['score'] ) ) {
 			$this->logger->warning( 'captcha.no_score', array( 'gateway' => $this->id() ) );
 
@@ -139,9 +105,6 @@ final class RecaptchaV3 implements CaptchaProvider, ScriptFallbacks {
 		return CaptchaResult::passed( $score );
 	}
 
-	/**
-	 * @return array|\WP_Error
-	 */
 	private function request( string $url, string $token, string $ip ) {
 		return wp_remote_post(
 			$url,

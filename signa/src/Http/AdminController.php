@@ -1,9 +1,4 @@
 <?php
-/**
- * Administrator endpoints: test delivery, housekeeping, stats and imports.
- *
- * @package Signa
- */
 
 namespace Signa\Http;
 
@@ -25,35 +20,15 @@ use Signa\Throttle\Throttle;
 defined( 'ABSPATH' ) || exit;
 
 final class AdminController {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Dispatcher */
 	private $dispatcher;
-
-	/** @var OtpService */
 	private $otp;
-
-	/** @var Throttle */
 	private $throttle;
-
-	/** @var Logger */
 	private $logger;
-
-	/** @var LogStore */
 	private $logs;
-
-	/** @var Runner */
 	private $importer;
-
-	/** @var Registry */
 	private $gateways;
-
-	/** @var CaptchaManager */
 	private $captcha;
-
-	/** @var SelfTest */
 	private $selfTest;
 
 	public function __construct(
@@ -80,19 +55,10 @@ final class AdminController {
 		$this->selfTest   = $selfTest;
 	}
 
-	/**
-	 * Run one of the per-section self-tests and hand the rows back untouched.
-	 *
-	 * The screen draws whatever this returns, so a check that could not run says
-	 * so in its own row instead of disappearing.
-	 */
 	public function check( Request $request ): array {
 		return $this->selfTest->run( $request->key( 'kind' ) );
 	}
 
-	/**
-	 * Send a real code to a number the administrator controls.
-	 */
 	public function sendTest( Request $request ): array {
 		$phone = $request->phone();
 
@@ -118,13 +84,6 @@ final class AdminController {
 
 		$meta = $result->meta();
 
-		/*
-		 * «ارسال شد» was true and misleading at once: the owner pressed "send a
-		 * test SMS", the panel was unreachable, the email channel carried the
-		 * code, and the modal showed a green tick. The channel that actually
-		 * carried it is named in the meta the dispatcher returns, so the panel
-		 * can say "the SMS did not go" instead.
-		 */
 		$carrier = isset( $meta['channel'] ) ? (string) $meta['channel'] : $channel;
 		$direct   = $carrier === $channel;
 
@@ -137,7 +96,7 @@ final class AdminController {
 				'error_code' => $result->isSent() ? '' : $result->errorCode(),
 				'reason'     => $result->isSent() ? '' : ( isset( $meta['reason'] ) ? (string) $meta['reason'] : '' ),
 				'message'    => $result->isSent()
-					? sprintf( /* translators: 1: channel, 2: gateway */ __( 'کد آزمایشی از %1$s (%2$s) ارسال شد.', 'signa' ), $channel, $result->gateway() )
+					? sprintf(  __( 'کد آزمایشی از %1$s (%2$s) ارسال شد.', 'signa' ), $channel, $result->gateway() )
 					: $result->message(),
 				'user_id'    => $request->userId(),
 			)
@@ -175,22 +134,12 @@ final class AdminController {
 			'message' => $direct
 				? __( 'کد آزمایشی ارسال شد. اگر نرسید، رویدادها را ببینید.', 'signa' )
 				: sprintf(
-					/* translators: %s: the channel that carried the code instead */
 					__( 'کد آزمایشی از راه %s رفت؛ علت شکست پیامک در همین پنجره آمده است.', 'signa' ),
 					$this->channelLabel( $carrier )
 				),
 		);
 	}
 
-	/**
-	 * The configuration card belongs to the SMS gateway, not to whichever
-	 * channel ended up carrying the code.
-	 *
-	 * The screenshot that started round 10 showed a failed SMS test whose code
-	 * had left by email; the modal asked the plan of `email`, got no driver,
-	 * and answered «سامانه پیامکی انتخاب‌شده شناخته نشده است» — a true sentence
-	 * about the wrong subject, sitting under a failed SMS.
-	 */
 	private function smsPlan(): array {
 		$order = $this->gateways->deliveryOrder();
 		$id    = isset( $order[0] ) ? (string) $order[0] : (string) $this->settings->str( 'sms_gateway', 'smsir' );
@@ -198,9 +147,6 @@ final class AdminController {
 		return $this->gateways->planFor( $id );
 	}
 
-	/**
-	 * The reason of the first attempt that failed, when the trace has one.
-	 */
 	private function blockedReason(): string {
 		foreach ( $this->dispatcher->trace() as $step ) {
 			$reason = isset( $step['reason'] ) ? (string) $step['reason'] : '';
@@ -213,11 +159,6 @@ final class AdminController {
 		return '';
 	}
 
-	/**
-	 * One sentence that fixes what just failed — shown as «راه‌حل», because that
-	 * is the next question an owner asks, and it is the plugin's own switch
-	 * rather than an edit they may not be able to make.
-	 */
 	private function fixFor( string $reason ): string {
 		if ( '' === $reason || Transport::BLOCKED !== Transport::classify( '', $reason ) ) {
 			return '';
@@ -230,20 +171,13 @@ final class AdminController {
 		return __( 'در پیشرفته › کلیدهای داده و ارسال «ارسال مستقیم» را روشن کنید؛ افزونه خودش درخواست را می‌فرستد و لازم نیست wp-config.php را عوض کنید.', 'signa' );
 	}
 
-	/**
-	 * The name of a channel as a person reads it: «ایمیل», not `email`.
-	 */
 	private function channelLabel( string $id ): string {
 		$channel = $this->dispatcher->channel( $id );
 
 		return null !== $channel ? $channel->label() : $id;
 	}
 
-	/**
-	 * Everything the "system doctor" card shows: what would send, and what stops it.
-	 */
 	public function doctor( Request $request ): array {
-
 		$channels = array();
 
 		foreach ( $this->dispatcher->channels() as $id => $channel ) {
@@ -290,13 +224,6 @@ final class AdminController {
 		);
 	}
 
-	/**
-	 * Outbound reachability probe for one service, run on demand.
-	 *
-	 * The most common cause of "the SMS does not arrive" on Iranian hosting is
-	 * WP_HTTP_BLOCK_EXTERNAL, a firewall, or a DNS resolver that cannot resolve
-	 * the panel. This answers exactly that question, with the HTTP status.
-	 */
 	public function probe( Request $request ): array {
 		$service = sanitize_key( $request->key( 'service', '' ) );
 		$url     = $this->probeUrl( $service );
@@ -357,7 +284,6 @@ final class AdminController {
 			'status'  => $status,
 			'error'   => '',
 			'message' => sprintf(
-				/* translators: 1: HTTP status code, 2: milliseconds */
 				__( 'پاسخ %1$d در %2$d میلی‌ثانیه — مسیر خروجی باز است.', 'signa' ),
 				$status,
 				$elapsed
@@ -365,9 +291,6 @@ final class AdminController {
 		);
 	}
 
-	/**
-	 * Resolve a probe target: a gateway endpoint, or the active captcha script.
-	 */
 	private function probeUrl( string $service ): string {
 		if ( 'captcha' === $service ) {
 			$bundle = $this->captcha->diagnostics();
@@ -389,8 +312,6 @@ final class AdminController {
 		$cleared = $this->throttle->resetAll();
 		$codes   = $this->otp->purge();
 
-		// A gateway the administrator has just fixed should not have to wait out
-		// its rest window before the next test proves it works.
 		$health = new Health();
 		$health->forget();
 
@@ -403,9 +324,6 @@ final class AdminController {
 		);
 	}
 
-	/**
-	 * Everything the dashboard cards and sparkline need.
-	 */
 	public function summary( Request $request ): array {
 		unset( $request );
 
@@ -497,9 +415,9 @@ final class AdminController {
 	private function accountCount(): int {
 		global $wpdb;
 
-		$count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				'SELECT COUNT(DISTINCT user_id) FROM ' . $wpdb->usermeta . ' WHERE meta_key = %s', // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				'SELECT COUNT(DISTINCT user_id) FROM ' . $wpdb->usermeta . ' WHERE meta_key = %s',
 				$this->settings->str( 'phone_meta_key', 'signa_phone' )
 			)
 		);

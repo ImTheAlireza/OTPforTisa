@@ -1,25 +1,10 @@
 <?php
-/**
- * The admin icon set.
- *
- * One stroke weight, one grid (24×24), drawn with `currentColor` so every icon
- * takes the colour of the text beside it. The markup is fixed and written in
- * this file, which is why it can be printed without escaping.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Icons {
-
-	/**
-	 * Inner SVG markup, keyed by name.
-	 *
-	 * @return array<string,string>
-	 */
 	private static function paths(): array {
 		return array(
 			'home'     => '<path d="M3.5 10.5 12 3.5l8.5 7V20a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 20z"/><path d="M9.5 21v-6h5v6"/>',
@@ -58,18 +43,10 @@ final class Icons {
 		);
 	}
 
-	/**
-	 * Every name the set knows, for tests and for callers that iterate.
-	 *
-	 * @return string[]
-	 */
 	public static function names(): array {
 		return array_keys( self::paths() );
 	}
 
-	/**
-	 * One icon as markup. Unknown names print nothing rather than a broken box.
-	 */
 	public static function svg( string $name, int $size = 16, string $class = '' ): string {
 		$paths = self::paths();
 
@@ -85,10 +62,7 @@ final class Icons {
 		);
 	}
 
-	/**
-	 * Print one icon. The markup is fixed, so there is nothing to escape.
-	 */
 	public static function out( string $name, int $size = 16, string $class = '' ): void {
-		echo self::svg( $name, $size, $class ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup from this file.
+		echo self::svg( $name, $size, $class );
 	}
 }

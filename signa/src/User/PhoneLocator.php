@@ -1,12 +1,4 @@
 <?php
-/**
- * Finds the account that owns a phone number.
- *
- * Legacy plugins store numbers under different meta keys and in different
- * formats; this class searches all of them and promotes the canonical value.
- *
- * @package Signa
- */
 
 namespace Signa\User;
 
@@ -17,14 +9,8 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class PhoneLocator {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
-
-	/** @var array<string,bool> */
 	private $ambiguous = array();
 
 	public function __construct( Settings $settings, Logger $logger ) {
@@ -38,11 +24,6 @@ final class PhoneLocator {
 		return '' !== $key ? $key : 'signa_phone';
 	}
 
-	/**
-	 * Meta keys searched when locating an account.
-	 *
-	 * @return string[]
-	 */
 	public function lookupKeys(): array {
 		$keys   = array( $this->metaKey() );
 		$extras = $this->settings->items( 'lookup_meta_keys' );
@@ -53,17 +34,9 @@ final class PhoneLocator {
 
 		$keys = array_merge( $keys, $extras );
 
-		/**
-		 * Filter the meta keys used to look up an account by phone.
-		 *
-		 * @param string[] $keys Meta keys.
-		 */
 		return array_values( array_unique( (array) apply_filters( 'signa_lookup_meta_keys', $keys ) ) );
 	}
 
-	/**
-	 * @return \WP_User|null Null when nobody matches *or* when several do.
-	 */
 	public function find( string $phone ): ?\WP_User {
 		$phone = Phone::normalize( $phone );
 
@@ -91,12 +64,6 @@ final class PhoneLocator {
 				)
 			);
 
-			/**
-			 * Fires when one phone number maps to several accounts.
-			 *
-			 * @param string $phone   Canonical phone number.
-			 * @param array  $matches user_id => matched meta keys.
-			 */
 			do_action( 'signa_ambiguous_phone', $phone, $matches );
 
 			return null;
@@ -114,9 +81,6 @@ final class PhoneLocator {
 		return $user;
 	}
 
-	/**
-	 * @return array<int,string[]> user_id => meta keys that matched.
-	 */
 	public function matches( string $phone ): array {
 		global $wpdb;
 
@@ -136,7 +100,7 @@ final class PhoneLocator {
 			. ' AND meta_value IN (' . $valuePlaceholders . ')'
 			. ' ORDER BY user_id ASC LIMIT 50';
 
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results(
 			$wpdb->prepare( $sql, array_merge( $keys, $variants ) )
 		);
 
@@ -163,11 +127,6 @@ final class PhoneLocator {
 		return ! empty( $this->ambiguous[ Phone::normalize( $phone ) ] );
 	}
 
-	/**
-	 * Write the canonical value so the next lookup is cheap and unambiguous.
-	 *
-	 * @param string[] $sources Meta keys that produced the match.
-	 */
 	private function promote( int $userId, string $phone, array $sources ): void {
 		$current = Phone::normalize( (string) get_user_meta( $userId, $this->metaKey(), true ) );
 
@@ -178,13 +137,6 @@ final class PhoneLocator {
 		update_user_meta( $userId, $this->metaKey(), $phone );
 
 		if ( '' !== $current && $current !== $phone ) {
-			/**
-			 * Fires when the canonical phone of an account changes.
-			 *
-			 * @param int    $userId   User id.
-			 * @param string $previous Old canonical number.
-			 * @param string $phone    New canonical number.
-			 */
 			do_action( 'signa_phone_changed', $userId, $current, $phone );
 		}
 
@@ -193,9 +145,6 @@ final class PhoneLocator {
 		}
 	}
 
-	/**
-	 * Persist a verified number plus bookkeeping meta.
-	 */
 	public function persist( int $userId, string $phone ): void {
 		$previous = Phone::normalize( (string) get_user_meta( $userId, $this->metaKey(), true ) );
 
@@ -218,9 +167,6 @@ final class PhoneLocator {
 		}
 	}
 
-	/**
-	 * Number currently stored for a user — primary key first, then lookups.
-	 */
 	public function phoneFor( int $userId ): string {
 		foreach ( $this->lookupKeys() as $key ) {
 			$candidate = Phone::normalize( (string) get_user_meta( $userId, $key, true ) );
@@ -233,9 +179,6 @@ final class PhoneLocator {
 		return '';
 	}
 
-	/**
-	 * Which meta key holds the number right now (used for profile hints).
-	 */
 	public function sourceKeyFor( int $userId ): string {
 		foreach ( $this->lookupKeys() as $key ) {
 			$candidate = Phone::normalize( (string) get_user_meta( $userId, $key, true ) );
@@ -248,17 +191,9 @@ final class PhoneLocator {
 		return '';
 	}
 
-	/**
-	 * Drop the stored number. Lookup keys owned by other plugins are left alone.
-	 */
 	public function clear( int $userId ): void {
 		delete_user_meta( $userId, $this->metaKey() );
 
-		/**
-		 * Fires after a user's stored number has been removed.
-		 *
-		 * @param int $userId User id.
-		 */
 		do_action( 'signa_phone_removed', $userId );
 	}
 

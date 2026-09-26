@@ -1,18 +1,4 @@
 <?php
-/**
- * Rendering helpers shared by the settings screen.
- *
- * Every control writes into `signa_settings[...]`, so the native Settings API
- * (options.php) persists the whole page in one POST — with or without the
- * script that saves it in the background. Two shapes cover the page:
- *
- * - a setting row (`.signa-sr`): title and one line of explanation on one side,
- *   the control (a switch, a select, a number) on the other;
- * - a field (`.signa-f`): a label above an input and a hint below it, laid out
- *   two or three to a row with `grid()`.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -22,8 +8,6 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class Controls {
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( Settings $settings ) {
@@ -38,13 +22,6 @@ final class Controls {
 		return 'signa-' . str_replace( '_', '-', $key );
 	}
 
-	/* Layout ---------------------------------------------------------------- */
-
-	/**
-	 * A setting row: text on one side, any control on the other.
-	 *
-	 * @param string   $for The id of the control, so the title is its label.
-	 */
 	public function row( string $title, callable $control, string $hint = '', string $for = '' ): void {
 		echo '<div class="signa-sr"><div class="signa-sr__text">';
 
@@ -63,9 +40,6 @@ final class Controls {
 		echo '</div></div>';
 	}
 
-	/**
-	 * The most common row: a title, a hint and an on/off switch.
-	 */
 	public function toggleRow( string $key, string $title, string $hint = '' ): void {
 		$id = $this->id( $key );
 
@@ -81,9 +55,6 @@ final class Controls {
 		echo '</div></div>';
 	}
 
-	/**
-	 * A labelled field for the grid.
-	 */
 	public function field( string $label, callable $control, string $hint = '', string $for = '', string $class = '' ): void {
 		echo '<div class="signa-f' . ( '' !== $class ? ' ' . esc_attr( $class ) : '' ) . '">';
 
@@ -104,20 +75,12 @@ final class Controls {
 		echo '</div>';
 	}
 
-	/**
-	 * Fields two or three to a row; one per row on narrow screens.
-	 */
 	public function grid( int $columns, callable $body ): void {
 		echo '<div class="signa-grid signa-grid--' . (int) max( 1, min( 3, $columns ) ) . '">';
 		$body();
 		echo '</div>';
 	}
 
-	/* Inputs ---------------------------------------------------------------- */
-
-	/**
-	 * @param bool $ltr Keys, addresses and numbers read left-to-right; Persian copy does not.
-	 */
 	public function text( string $key, string $placeholder = '', string $type = 'text', bool $ltr = true ): void {
 		printf(
 			'<input class="signa-inp%1$s" type="%2$s" id="%3$s" name="%4$s" value="%5$s" placeholder="%6$s"%7$s>',
@@ -131,9 +94,6 @@ final class Controls {
 		);
 	}
 
-	/**
-	 * Secrets are never echoed back; the stored value survives a masked submit.
-	 */
 	public function secret( string $key, string $placeholder = '' ): void {
 		$stored = '' !== $this->settings->str( $key );
 
@@ -176,18 +136,10 @@ final class Controls {
 		);
 	}
 
-	/**
-	 * An on/off switch: a real checkbox with the switch role, so it submits
-	 * without script and a screen reader announces «روشن/خاموش».
-	 *
-	 * @param string $label       Visible text beside the switch; empty when a row title labels it.
-	 * @param string $describedBy Id of the sentence that explains it.
-	 */
 	public function toggle( string $key, string $label = '', string $describedBy = '' ): void {
 		$on = $this->settings->bool( $key );
 		$id = $this->id( $key );
 
-		// Tells the sanitizer this toggle was rendered, so "off" is stored.
 		printf( '<input type="hidden" name="%s" value="%s">', esc_attr( $this->name( '_fields' ) . '[]' ), esc_attr( $key ) );
 
 		$input = sprintf(
@@ -199,21 +151,18 @@ final class Controls {
 		);
 
 		if ( '' === $label ) {
-			echo $input; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above.
+			echo $input;
 			return;
 		}
 
 		printf(
 			'<label class="signa-toggle" for="%1$s">%2$s<span class="signa-toggle__text">%3$s</span></label>',
 			esc_attr( $id ),
-			$input, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above.
+			$input,
 			esc_html( $label )
 		);
 	}
 
-	/**
-	 * @param array<string,string> $options
-	 */
 	public function select( string $key, array $options ): void {
 		$current = $this->settings->str( $key );
 
@@ -228,15 +177,9 @@ final class Controls {
 			);
 		}
 
-		echo '</select>' . Icons::svg( 'chevron', 16, 'signa-sel__chev' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+		echo '</select>' . Icons::svg( 'chevron', 16, 'signa-sel__chev' ) . '</span>';
 	}
 
-	/**
-	 * Radio cards: one option per card, the chosen one filled.
-	 *
-	 * @param array<string,array<string,string>> $options value => label/desc
-	 * @param string                             $legend  Accessible name of the group.
-	 */
 	public function cards( string $key, array $options, string $legend = '' ): void {
 		$current = $this->settings->str( $key );
 
@@ -260,9 +203,6 @@ final class Controls {
 		echo '</div>';
 	}
 
-	/**
-	 * @param array<string,string> $options
-	 */
 	public function checkboxList( string $key, array $options ): void {
 		$current = (array) $this->settings->arr( $key );
 
@@ -290,13 +230,11 @@ final class Controls {
 		);
 	}
 
-	/* Messages -------------------------------------------------------------- */
-
 	public function notice( string $text, string $type = 'info' ): void {
 		printf(
 			'<div class="signa-notice signa-notice--%1$s">%2$s<p>%3$s</p></div>',
 			esc_attr( $type ),
-			Icons::svg( self::noticeIcon( $type ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			Icons::svg( self::noticeIcon( $type ) ),
 			esc_html( $text )
 		);
 	}
@@ -312,14 +250,11 @@ final class Controls {
 		return isset( $icons[ $type ] ) ? $icons[ $type ] : 'info';
 	}
 
-	/**
-	 * A notice whose text carries a little markup (code, bold, links).
-	 */
 	public function richNotice( string $html, string $type = 'info' ): void {
 		printf(
 			'<div class="signa-notice signa-notice--%1$s">%2$s<p>%3$s</p></div>',
 			esc_attr( $type ),
-			Icons::svg( self::noticeIcon( $type ) ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			Icons::svg( self::noticeIcon( $type ) ),
 			wp_kses_post( $html )
 		);
 	}

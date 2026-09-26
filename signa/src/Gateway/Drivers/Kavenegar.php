@@ -1,23 +1,4 @@
 <?php
-/**
- * Kavenegar driver — verify/lookup with a template, or plain sms/send.
- *
- * Checked against https://kavenegar.com/rest.html:
- *
- *   https://api.kavenegar.com/v1/{API-KEY}/verify/lookup.json
- *       receptor, token, template            (form POST)
- *   https://api.kavenegar.com/v1/{API-KEY}/sms/send.json
- *       receptor, message, sender (optional) (form POST)
- *
- * Every answer carries `return.status` / `return.message`; 200 is success and
- * the message id is in `entries[0].messageid`.
- *
- * Two bugs fixed in 2.0.1: the form body left with the JSON content type the
- * shared plumbing adds by default, and the error table read 413 ("message
- * empty or too long") as "no credit" — credit is 418.
- *
- * @package Signa
- */
 
 namespace Signa\Gateway\Drivers;
 
@@ -28,16 +9,7 @@ use Signa\Gateway\HttpGateway;
 defined( 'ABSPATH' ) || exit;
 
 final class Kavenegar extends HttpGateway {
-
 	const API_BASE = 'https://api.kavenegar.com/v1/';
-
-	/**
-	 * The documented return codes: our error code, and what the owner does.
-	 *
-	 * @see https://kavenegar.com/rest.html (جدول کدهای برگشتی)
-	 *
-	 * @var array<int,array<int,string>>
-	 */
 	private static $statuses = array(
 		400 => array( 'rejected', 'پارامترهای درخواست ناقص است.' ),
 		401 => array( 'unauthorized', 'حساب کاوه‌نگار غیرفعال شده است؛ با پشتیبانی کاوه‌نگار تماس بگیرید.' ),
@@ -99,9 +71,6 @@ final class Kavenegar extends HttpGateway {
 		return '' === trim( $this->option( 'kavenegar_api_key' ) ) ? array( 'kavenegar_api_key' ) : array();
 	}
 
-	/**
-	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
-	 */
 	public function plan(): array {
 		$template = trim( $this->option( 'kavenegar_template' ) );
 		$sender   = trim( $this->option( 'kavenegar_sender' ) );
@@ -136,7 +105,6 @@ final class Kavenegar extends HttpGateway {
 		$template = trim( $this->option( 'kavenegar_template' ) );
 
 		if ( '' !== $template ) {
-			// 431: no spaces, newlines or underscores inside a token.
 			$token = (string) preg_replace( '/[\s_]+/u', '', $request->code() );
 
 			return $this->evaluate(
@@ -177,9 +145,6 @@ final class Kavenegar extends HttpGateway {
 		);
 	}
 
-	/**
-	 * @param array|\WP_Error $response
-	 */
 	private function evaluate( $response, string $mode ): GatewayResult {
 		if ( is_wp_error( $response ) ) {
 			return $this->transportFailure( $response );

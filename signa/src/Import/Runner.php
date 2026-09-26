@@ -1,12 +1,4 @@
 <?php
-/**
- * Resumable, reversible importer for legacy phone numbers.
- *
- * Every write is recorded so a job can be rolled back, and a dry run reports
- * exactly what would happen without touching user meta.
- *
- * @package Signa
- */
 
 namespace Signa\Import;
 
@@ -19,20 +11,11 @@ use Signa\User\PhoneLocator;
 defined( 'ABSPATH' ) || exit;
 
 final class Runner {
-
 	const BATCH  = 100;
 	const PREFIX = 'import:';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var StateStore */
 	private $state;
-
-	/** @var PhoneLocator */
 	private $locator;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Settings $settings, StateStore $state, PhoneLocator $locator, Logger $logger ) {
@@ -42,9 +25,6 @@ final class Runner {
 		$this->logger   = $logger;
 	}
 
-	/**
-	 * @return array<string,Source>
-	 */
 	public function sources( string $customKey = '' ): array {
 		$sources = array(
 			'woo_billing' => new WooBillingSource(),
@@ -56,11 +36,6 @@ final class Runner {
 			$sources[ $custom->id() ] = $custom;
 		}
 
-		/**
-		 * Register additional import sources.
-		 *
-		 * @param array<string,Source> $sources id => source.
-		 */
 		foreach ( (array) apply_filters( 'signa_import_sources', array() ) as $id => $source ) {
 			if ( $source instanceof Source ) {
 				$sources[ (string) $id ] = $source;
@@ -70,9 +45,6 @@ final class Runner {
 		return $sources;
 	}
 
-	/**
-	 * What this site could import right now.
-	 */
 	public function detect(): array {
 		$found = array();
 
@@ -132,9 +104,6 @@ final class Runner {
 		return is_array( $job ) ? $job : null;
 	}
 
-	/**
-	 * Process one batch and return the refreshed job state.
-	 */
 	public function step( string $jobId ): array {
 		$job = $this->job( $jobId );
 
@@ -174,9 +143,6 @@ final class Runner {
 		return $job;
 	}
 
-	/**
-	 * Restore every value this job changed.
-	 */
 	public function undo( string $jobId ): array {
 		$job = $this->job( $jobId );
 
@@ -250,9 +216,6 @@ final class Runner {
 		return implode( "\n", $lines );
 	}
 
-	/**
-	 * Drop finished jobs older than a week.
-	 */
 	public function prune(): int {
 		global $wpdb;
 
@@ -308,7 +271,6 @@ final class Runner {
 			'mask'     => Phone::mask( $phone ),
 		);
 
-		// Keep the undo log from growing without bound on huge sites.
 		if ( count( $job['undo'] ) > 20000 ) {
 			array_shift( $job['undo'] );
 		}

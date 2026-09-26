@@ -1,19 +1,10 @@
 <?php
-/**
- * Ready-made registration field presets.
- *
- * @package Signa
- */
 
 namespace Signa\Registration;
 
 defined( 'ABSPATH' ) || exit;
 
 final class FieldCatalog {
-
-	/**
-	 * @return array<string,array<int,array<string,mixed>>>
-	 */
 	public static function presets(): array {
 		$presets = array(
 			'minimal'     => self::minimal(),
@@ -22,11 +13,6 @@ final class FieldCatalog {
 			'custom'      => array(),
 		);
 
-		/**
-		 * Register additional field presets.
-		 *
-		 * @param array $presets preset id => field list.
-		 */
 		return (array) apply_filters( 'signa_field_presets', $presets );
 	}
 
@@ -39,9 +25,6 @@ final class FieldCatalog {
 		);
 	}
 
-	/**
-	 * @return array<int,array<string,mixed>>
-	 */
 	private static function minimal(): array {
 		return array(
 			self::field( 'first_name', __( 'نام', 'signa' ), 'text', 'core', 'first_name', true, 10, 'half' ),
@@ -49,28 +32,17 @@ final class FieldCatalog {
 		);
 	}
 
-	/**
-	 * @return array<int,array<string,mixed>>
-	 */
 	private static function identity(): array {
 		return array(
 			self::field( 'first_name', __( 'نام', 'signa' ), 'text', 'core', 'first_name', true, 10, 'half' ),
 			self::field( 'last_name', __( 'نام خانوادگی', 'signa' ), 'text', 'core', 'last_name', true, 20, 'half' ),
 			self::field( 'user_email', __( 'ایمیل', 'signa' ), 'email', 'core', 'user_email', false, 30, 'full', '', __( 'example@mail.com', 'signa' ) ),
 			self::field( 'city', __( 'شهر', 'signa' ), 'text', 'meta', 'signa_city', false, 40, 'half' ),
-			/*
-			 * These two land in the user's own profile record. When WooCommerce
-			 * is installed the same values are mirrored into the billing fields,
-			 * but only where nothing is stored yet — see AccountFactory.
-			 */
 			self::field( 'postcode', __( 'کد پستی', 'signa' ), 'postcode', 'meta', 'signa_postcode', false, 50, 'half', '', '1234567890' ),
 			self::field( 'address', __( 'آدرس', 'signa' ), 'textarea', 'meta', 'signa_address', false, 60, 'full', __( 'خیابان، کوچه، پلاک و واحد را کامل بنویسید.', 'signa' ) ),
 		);
 	}
 
-	/**
-	 * @return array<int,array<string,mixed>>
-	 */
 	private static function woocommerce(): array {
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return self::identity();
@@ -86,9 +58,6 @@ final class FieldCatalog {
 		);
 	}
 
-	/**
-	 * @return array<string,mixed>
-	 */
 	public static function field(
 		string $id,
 		string $label,
@@ -118,11 +87,6 @@ final class FieldCatalog {
 		);
 	}
 
-	/**
-	 * Field types the renderer and validator understand.
-	 *
-	 * @return string[]
-	 */
 	public static function types(): array {
 		return array( 'text', 'textarea', 'email', 'tel', 'number', 'postcode', 'select', 'checkbox', 'date' );
 	}

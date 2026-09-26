@@ -1,12 +1,4 @@
 <?php
-/**
- * Step 2 — registration fields.
- *
- * The same markup serves both flows: fields can be collected before the code
- * (`fields_then_code`) or after it (`code_then_fields`).
- *
- * @package Signa
- */
 
 defined( 'ABSPATH' ) || exit;
 
@@ -31,7 +23,6 @@ $fieldsHintId  = $instance . '-fields-hint';
 			$fieldErrorId   = $fieldId . '-error';
 			$hasFieldHint   = '' !== trim( (string) $field['hint'] );
 
-			// Hint first, error second: readers announce context, then the problem.
 			$fieldDescribedBy = trim( ( $hasFieldHint ? $fieldHintId . ' ' : '' ) . $fieldErrorId );
 			?>
 			<div class="signa-field <?php echo esc_attr( $widthClass ); ?>" data-signa-field="<?php echo esc_attr( $field['id'] ); ?>">

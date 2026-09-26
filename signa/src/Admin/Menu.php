@@ -1,9 +1,4 @@
 <?php
-/**
- * Admin menu and page routing.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -13,27 +8,13 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class Menu implements Bootable {
-
-	/* Kept for anything that still asks Menu; new code asks Page (see Gate). */
 	const CAPABILITY = Page::CAPABILITY;
 	const ROOT       = Page::ROOT;
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var SettingsScreen */
 	private $settingsScreen;
-
-	/** @var ReportScreen */
 	private $reportScreen;
-
-	/** @var LogsScreen */
 	private $logsScreen;
-
-	/** @var ToolsScreen */
 	private $toolsScreen;
-
-	/** @var AccessScreen */
 	private $accessScreen;
 
 	public function __construct( Settings $settings, SettingsScreen $settingsScreen, ReportScreen $reportScreen, LogsScreen $logsScreen, ToolsScreen $toolsScreen, AccessScreen $accessScreen ) {
@@ -52,7 +33,7 @@ final class Menu implements Bootable {
 	}
 
 	public function register(): void {
-		$icon = 'data:image/svg+xml;base64,' . base64_encode( $this->icon() ); // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+		$icon = 'data:image/svg+xml;base64,' . base64_encode( $this->icon() );
 
 		add_menu_page(
 			__( 'سیگنا', 'signa' ),
@@ -84,10 +65,6 @@ final class Menu implements Bootable {
 		);
 	}
 
-	/**
-	 * @param string[] $links
-	 * @return string[]
-	 */
 	public function actionLinks( array $links ): array {
 		$url = admin_url( 'admin.php?page=' . self::ROOT );
 

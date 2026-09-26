@@ -1,9 +1,4 @@
 <?php
-/**
- * Email channel — handy as a free fallback or for users without an Iranian SIM.
- *
- * @package Signa
- */
 
 namespace Signa\Channel;
 
@@ -15,11 +10,7 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class EmailChannel implements Channel {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Settings $settings, Logger $logger ) {
@@ -61,12 +52,6 @@ final class EmailChannel implements Channel {
 			$headers[] = sprintf( 'From: %s <%s>', wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ), $from );
 		}
 
-		/**
-		 * Filter the outgoing OTP email.
-		 *
-		 * @param array           $email   Array with to/subject/body/headers.
-		 * @param DeliveryRequest $request Delivery request.
-		 */
 		$email = (array) apply_filters(
 			'signa_email',
 			array(

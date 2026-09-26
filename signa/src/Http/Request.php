@@ -1,9 +1,4 @@
 <?php
-/**
- * Immutable view of an incoming API request.
- *
- * @package Signa
- */
 
 namespace Signa\Http;
 
@@ -14,20 +9,10 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class Request {
-
-	/** @var string */
 	private $phone;
-
-	/** @var string */
 	private $ip;
-
-	/** @var array<string,mixed> */
 	private $data;
-
-	/** @var \WP_User|null */
 	private $user;
-
-	/** @var string */
 	private $userAgent;
 
 	private function __construct( string $phone, string $ip, array $data, ?\WP_User $user, string $userAgent ) {
@@ -54,11 +39,6 @@ final class Request {
 		return new self( $phone, $ip, $params, $user instanceof \WP_User && $user->exists() ? $user : null, $agent );
 	}
 
-	/**
-	 * @param string $userAgent Optional, because a request built in a test or a
-	 *                          CLI tool has no browser behind it — which is
-	 *                          itself a fact the captcha diagnosis reports.
-	 */
 	public static function make( string $phone, string $ip, array $data = array(), ?\WP_User $user = null, string $userAgent = '' ): self {
 		return new self( Phone::normalize( $phone ), $ip, $data, $user, substr( $userAgent, 0, 200 ) );
 	}
@@ -95,9 +75,6 @@ final class Request {
 		return array_key_exists( $key, $this->data );
 	}
 
-	/**
-	 * @return mixed
-	 */
 	public function raw( string $key, $default = null ) {
 		return array_key_exists( $key, $this->data ) ? $this->data[ $key ] : $default;
 	}
@@ -128,9 +105,6 @@ final class Request {
 		return in_array( (string) $this->raw( $key, '' ), array( '1', 'true', 'yes', 'on' ), true );
 	}
 
-	/**
-	 * Nested registration field values.
-	 */
 	public function fields(): array {
 		$fields = $this->raw( 'fields', array() );
 

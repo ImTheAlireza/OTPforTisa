@@ -1,9 +1,4 @@
 <?php
-/**
- * Chooses a channel, delivers the code and reports what happened.
- *
- * @package Signa
- */
 
 namespace Signa\Channel;
 
@@ -15,29 +10,15 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class Dispatcher {
-
-	/** @var array<string,Channel> */
 	private $channels;
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
 
-	/**
-	 * @param array<string,Channel> $channels
-	 */
 	public function __construct( array $channels, Settings $settings, Logger $logger ) {
 		$this->channels = $channels;
 		$this->settings = $settings;
 		$this->logger   = $logger;
 
-		/**
-		 * Register additional delivery channels.
-		 *
-		 * @param array<string,Channel> $channels id => channel instance.
-		 */
 		$extra = (array) apply_filters( 'signa_channels', array() );
 
 		foreach ( $extra as $id => $channel ) {
@@ -47,9 +28,6 @@ final class Dispatcher {
 		}
 	}
 
-	/**
-	 * @return array<string,Channel>
-	 */
 	public function channels(): array {
 		return $this->channels;
 	}
@@ -58,11 +36,6 @@ final class Dispatcher {
 		return isset( $this->channels[ $id ] ) ? $this->channels[ $id ] : null;
 	}
 
-	/**
-	 * Ordered channel ids for the current configuration.
-	 *
-	 * @return string[]
-	 */
 	public function order( string $preferred = '' ): array {
 		$preferred = '' !== $preferred ? $preferred : $this->settings->str( 'channel', 'sms' );
 		$enabled   = $this->settings->arr( 'channels_enabled' );
@@ -88,11 +61,6 @@ final class Dispatcher {
 		return isset( $this->channels[ $id ] );
 	}
 
-	/**
-	 * Trace of the last delivery attempt for the SMS channel.
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
 	public function trace(): array {
 		$sms = $this->channel( 'sms' );
 

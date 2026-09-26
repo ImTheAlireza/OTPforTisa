@@ -1,9 +1,4 @@
 <?php
-/**
- * Validates and sanitises submitted registration values against the schema.
- *
- * @package Signa
- */
 
 namespace Signa\Registration;
 
@@ -13,19 +8,12 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class FieldValidator {
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( Settings $settings ) {
 		$this->settings = $settings;
 	}
 
-	/**
-	 * @param array<string,mixed> $raw
-	 * @param array<int,array<string,mixed>> $fields
-	 * @return array{ok:bool,values:array<string,mixed>,errors:array<string,string>}
-	 */
 	public function validate( array $raw, array $fields ): array {
 		$values = array();
 		$errors = array();
@@ -42,7 +30,6 @@ final class FieldValidator {
 
 			if ( '1' === $field['required'] && '' === $clean ) {
 				$errors[ $id ] = sprintf(
-					/* translators: %s: field label */
 					__( 'وارد کردن «%s» الزامی است.', 'signa' ),
 					$field['label']
 				);
@@ -59,13 +46,6 @@ final class FieldValidator {
 			$values[ $id ] = $clean;
 		}
 
-		/**
-		 * Filter validation results before the controller acts on them.
-		 *
-		 * @param array $values Sanitised values.
-		 * @param array $errors field id => message.
-		 * @param array $raw    Raw input.
-		 */
 		$values = (array) apply_filters( 'signa_validated_values', $values, $errors, $raw );
 
 		return array(
@@ -75,11 +55,6 @@ final class FieldValidator {
 		);
 	}
 
-	/**
-	 * @param array<string,mixed> $field
-	 * @param mixed $value
-	 * @return mixed
-	 */
 	private function sanitizeValue( array $field, $value ) {
 		switch ( $field['type'] ) {
 			case 'email':
@@ -95,11 +70,6 @@ final class FieldValidator {
 				$raw    = is_scalar( $value ) ? (string) $value : '';
 				$digits = preg_replace( '/[^0-9]/', '', Phone::latinDigits( $raw ) );
 
-				/*
-				 * Punctuation is dropped ("12345-67890" is one postal code),
-				 * but nothing else is trimmed here: an eleven-digit number has
-				 * to come back as an error, not as its first ten digits.
-				 */
 				if ( '' === $digits ) {
 					return substr( sanitize_text_field( $raw ), 0, 20 );
 				}
@@ -126,10 +96,6 @@ final class FieldValidator {
 		}
 	}
 
-	/**
-	 * @param array<string,mixed> $field
-	 * @param mixed $value
-	 */
 	private function validateValue( array $field, $value ): string {
 		if ( '' === $value ) {
 			return '';
@@ -174,13 +140,6 @@ final class FieldValidator {
 				break;
 		}
 
-		/**
-		 * Add custom validation per field id.
-		 *
-		 * @param string $error Empty when the value is acceptable.
-		 * @param mixed  $value Sanitised value.
-		 * @param array  $field Field definition.
-		 */
 		return (string) apply_filters( 'signa_validate_field_' . $field['id'], '', $value, $field );
 	}
 }

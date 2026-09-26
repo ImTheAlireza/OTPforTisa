@@ -1,21 +1,4 @@
 <?php
-/**
- * The self-tests behind the "test this section" buttons.
- *
- * Every settings tab can prove itself: the general tab checks the ground it
- * stands on (versions, tables, cron), the code tab stores a code for a
- * fictitious number and reads it back, the gateway tab reports what each
- * provider is missing, the security tab says what the captcha would receive in
- * this browser, the registration tab walks the enabled fields, the design tab
- * measures the colours the visitor will actually get, the store tab asks
- * WooCommerce what it has, and the data tab writes an event and finds it again.
- *
- * Two rules hold everywhere in here: nothing is reported as "ok" without having
- * been done, and nothing is reported as "ok" on a guess. A check that cannot run
- * says so and says why — that is more useful than a green tick.
- *
- * @package Signa
- */
 
 namespace Signa\Diagnostics;
 
@@ -41,35 +24,14 @@ use Signa\Support\Rejection;
 defined( 'ABSPATH' ) || exit;
 
 final class SelfTest {
-
-	/**
-	 * The number the code test stores against. It is not a real subscriber, and
-	 * the code is revoked before this method returns.
-	 */
 	const SAMPLE_PHONE = '09000000000';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Schema */
 	private $schema;
-
-	/** @var OtpService */
 	private $otp;
-
-	/** @var CodeStore */
 	private $codes;
-
-	/** @var Registry */
 	private $gateways;
-
-	/** @var LogStore */
 	private $logs;
-
-	/** @var CaptchaManager */
 	private $captcha;
-
-	/** @var FieldSchema */
 	private $fields;
 
 	public function __construct(
@@ -92,20 +54,10 @@ final class SelfTest {
 		$this->fields   = $fields;
 	}
 
-	/**
-	 * Which tabs can be tested, in menu order.
-	 *
-	 * @return string[]
-	 */
 	public static function kinds(): array {
 		return array( 'general', 'code', 'gateways', 'security', 'registration', 'design', 'store', 'data' );
 	}
 
-	/**
-	 * Run one test and hand back everything the modal needs to draw it.
-	 *
-	 * @return array<string,mixed>
-	 */
 	public function run( string $kind ): array {
 		$kind = sanitize_key( $kind );
 
@@ -121,12 +73,6 @@ final class SelfTest {
 		return $result;
 	}
 
-	/**
-	 * A test failed if any row failed. Warnings do not fail a test: they are
-	 * things that deserve a look, not things that are broken.
-	 *
-	 * @param array<int,array<string,string>> $rows
-	 */
 	private function verdict( array $rows ): bool {
 		foreach ( $rows as $row ) {
 			if ( 'fail' === $row['status'] ) {
@@ -137,9 +83,6 @@ final class SelfTest {
 		return true;
 	}
 
-	/**
-	 * @return array<string,string>
-	 */
 	private function row( string $label, string $value, string $status, string $note = '' ): array {
 		return array(
 			'label'  => $label,
@@ -149,10 +92,6 @@ final class SelfTest {
 		);
 	}
 
-	/**
-	 * @param array<int,array<string,string>> $rows
-	 * @return array<string,mixed>
-	 */
 	private function result( string $title, string $summary, array $rows ): array {
 		return array(
 			'title'   => $title,
@@ -161,17 +100,9 @@ final class SelfTest {
 		);
 	}
 
-	/* ---------------------------------------------------------------------
-	 * عمومی
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
 	private function general(): array {
 		$rows = array();
 
-		// The bootstrap defines this; the fallback keeps the test readable on its own.
 		$min_php = defined( 'SIGNA_MIN_PHP' ) ? SIGNA_MIN_PHP : '7.4';
 		$php_ok  = version_compare( PHP_VERSION, $min_php, '>=' );
 
@@ -179,7 +110,7 @@ final class SelfTest {
 			__( 'نسخه PHP', 'signa' ),
 			PHP_VERSION,
 			$php_ok ? 'ok' : 'fail',
-			$php_ok ? '' : sprintf( /* translators: %s: minimum PHP version */ __( 'افزونه به PHP %s یا بالاتر نیاز دارد.', 'signa' ), $min_php )
+			$php_ok ? '' : sprintf(  __( 'افزونه به PHP %s یا بالاتر نیاز دارد.', 'signa' ), $min_php )
 		);
 
 		$wp_version = get_bloginfo( 'version' );
@@ -192,11 +123,6 @@ final class SelfTest {
 			$wp_ok ? '' : __( 'روی ۶.۱ یا بالاتر آزمایش شده است.', 'signa' )
 		);
 
-		/*
-		 * Whether the files on disk are one package. This is the row that would
-		 * have answered "why has nothing changed?" in one click, and the one
-		 * that tells a half-replaced install apart from a working one.
-		 */
 		$package = Package::verify();
 		$offence = Package::offenders( $package );
 		$broke   = Guard::failures();
@@ -204,7 +130,7 @@ final class SelfTest {
 		$rows[] = $this->row(
 			__( 'یکپارچگی بستهٔ نصب‌شده', 'signa' ),
 			$package['ok']
-				? sprintf( /* translators: %d: number of files checked */ __( 'درست — %s فایل بررسی شد', 'signa' ), number_format_i18n( $package['checked'] ) )
+				? sprintf(  __( 'درست — %s فایل بررسی شد', 'signa' ), number_format_i18n( $package['checked'] ) )
 				: __( 'ناقص', 'signa' ),
 			$package['ok'] ? 'ok' : 'fail',
 			! $package['ok']
@@ -260,7 +186,7 @@ final class SelfTest {
 			__( 'حالت احراز', 'signa' ),
 			$this->settings->str( 'auth_mode', 'smart' ),
 			'info',
-			sprintf( /* translators: 1: flow, 2: channel */ __( 'جریان: %1$s · کانال: %2$s', 'signa' ), $this->settings->str( 'registration_flow', 'fields_then_code' ), $this->settings->str( 'channel', 'sms' ) )
+			sprintf(  __( 'جریان: %1$s · کانال: %2$s', 'signa' ), $this->settings->str( 'registration_flow', 'fields_then_code' ), $this->settings->str( 'channel', 'sms' ) )
 		);
 
 		$rows[] = $this->row(
@@ -284,13 +210,6 @@ final class SelfTest {
 		);
 	}
 
-	/* ---------------------------------------------------------------------
-	 * کد و کانال‌ها
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
 	private function code(): array {
 		$rows = array();
 
@@ -301,7 +220,6 @@ final class SelfTest {
 		$rows[] = $this->row( __( 'اعتبار کد', 'signa' ), number_format_i18n( $ttl ) . ' ' . __( 'ثانیه', 'signa' ), 'ok' );
 		$rows[] = $this->row( __( 'انبار کد', 'signa' ), $this->storeLabel(), 'info', $this->settings->str( 'code_store', 'database' ) );
 
-		// The real test: generate, store, find, revoke. No SMS leaves this.
 		$code   = $this->otp->generate();
 		$record = $this->otp->store( self::SAMPLE_PHONE, $code, 'sms', '127.0.0.1' );
 
@@ -314,7 +232,7 @@ final class SelfTest {
 			__( 'ساخت کد', 'signa' ),
 			$code,
 			strlen( $code ) === $length ? 'ok' : 'fail',
-			sprintf( /* translators: %d: number of digits */ __( '%d رقم، ساخته‌شده با همان تنظیمات همین صفحه.', 'signa' ), $length )
+			sprintf(  __( '%d رقم، ساخته‌شده با همان تنظیمات همین صفحه.', 'signa' ), $length )
 		);
 
 		$stored_ok = $pending && $left > 0;
@@ -324,7 +242,7 @@ final class SelfTest {
 			$stored_ok ? __( 'درست', 'signa' ) : __( 'ناموفق', 'signa' ),
 			$stored_ok ? 'ok' : 'fail',
 			$stored_ok
-				? sprintf( /* translators: 1: sample phone, 2: seconds */ __( 'برای شمارهٔ آزمایشی %1$s ذخیره و بی‌درنگ باطل شد؛ %2$s ثانیه اعتبار داشت.', 'signa' ), self::SAMPLE_PHONE, number_format_i18n( $left ) )
+				? sprintf(  __( 'برای شمارهٔ آزمایشی %1$s ذخیره و بی‌درنگ باطل شد؛ %2$s ثانیه اعتبار داشت.', 'signa' ), self::SAMPLE_PHONE, number_format_i18n( $left ) )
 				: __( 'کد ذخیره شد ولی بلافاصله پیدا نشد؛ انبار کد کار نمی‌کند. ورود کاربران در این وضعیت ممکن نیست.', 'signa' )
 		);
 
@@ -332,7 +250,7 @@ final class SelfTest {
 			__( 'شناسهٔ رکورد', 'signa' ),
 			'#' . number_format_i18n( $record->id() ),
 			'info',
-			sprintf( /* translators: 1: fingerprint, 2: expiry */ __( 'اثر انگشت %1$s · انقضا %2$s', 'signa' ), substr( $record->fingerprint(), 0, 12 ) . '…', wp_date( 'H:i:s', $record->expiresAt() ) )
+			sprintf(  __( 'اثر انگشت %1$s · انقضا %2$s', 'signa' ), substr( $record->fingerprint(), 0, 12 ) . '…', wp_date( 'H:i:s', $record->expiresAt() ) )
 		);
 
 		$rows[] = $this->row( __( 'کانال ارسال', 'signa' ), $this->settings->str( 'channel', 'sms' ), 'info', __( 'کانال آزمایشی همین حالا برای همین مقدار تنظیم شده است.', 'signa' ) );
@@ -359,13 +277,6 @@ final class SelfTest {
 		return $class;
 	}
 
-	/* ---------------------------------------------------------------------
-	 * سامانه‌های پیامکی
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
 	private function gateways(): array {
 		$rows  = array();
 		$chain = $this->gateways->deliveryOrder();
@@ -398,11 +309,6 @@ final class SelfTest {
 			$status = $gateway['ready'] ? ( $gateway['active'] || $gateway['backup'] ? 'ok' : 'info' ) : 'warn';
 			$value  = $gateway['ready'] ? ( $gateway['sender'] ? $gateway['sender'] : __( 'آماده', 'signa' ) ) : __( 'آماده نیست', 'signa' );
 
-			/*
-			 * A gateway whose last send failed is not "ready". Saying "آماده"
-			 * next to a failure the owner reported is how this test loses their
-			 * trust; the row has to carry the failure and its reason.
-			 */
 			$health = isset( $gateway['health'] ) ? (array) $gateway['health'] : array();
 
 			if ( $health && empty( $health['ok'] ) ) {
@@ -475,17 +381,6 @@ final class SelfTest {
 		);
 	}
 
-	/**
-	 * Can this server open a connection to the gateway it is configured to use?
-	 *
-	 * This is the row that answers "the SMS does not arrive" without asking
-	 * anybody: it asks the host to resolve the panel's domain and open a socket
-	 * to it, and reports what came back. It never sends a message and never
-	 * carries credentials, so it is safe to press as often as you like.
-	 *
-	 * @param string[] $chain Delivery order.
-	 * @return array<string,mixed>
-	 */
 	private function reachability( array $chain ): array {
 		$target = '';
 
@@ -516,7 +411,6 @@ final class SelfTest {
 				__( 'بسته است', 'signa' ),
 				'fail',
 				sprintf(
-					/* translators: 1: gateway host, 2: what WordPress answered */
 					__( '%1$s — %2$s', 'signa' ),
 					$host,
 					$block['message']
@@ -543,8 +437,7 @@ final class SelfTest {
 			'diagnostic',
 			'admin.reachability',
 			is_wp_error( $response )
-				? sprintf( /* translators: 1: host, 2: error code */ __( 'دسترسی به %1$s برقرار نشد: %2$s', 'signa' ), $host, $response->get_error_code() )
-				/* translators: 1: host, 2: HTTP status. Any status (405 included) means the host answered. */
+				? sprintf(  __( 'دسترسی به %1$s برقرار نشد: %2$s', 'signa' ), $host, $response->get_error_code() )
 				: sprintf( __( '%1$s در دسترس است (سرور با HTTP %2$d پاسخ داد؛ هر پاسخی یعنی ارتباط برقرار است).', 'signa' ), $host, (int) wp_remote_retrieve_response_code( $response ) ),
 			array(
 				'service' => $host,
@@ -571,7 +464,6 @@ final class SelfTest {
 			$host,
 			$status > 0 ? 'ok' : 'warn',
 			sprintf(
-				/* translators: 1: milliseconds, 2: HTTP status */
 				__( '%1$d میلی‌ثانیه · سرور پاسخ داد (HTTP %2$d). این آزمون فقط دسترسی را می‌سنجد؛ کد 404 یا 405 هم یعنی ارتباط سالم است.', 'signa' ),
 				$ms,
 				$status
@@ -579,18 +471,6 @@ final class SelfTest {
 		);
 	}
 
-	/**
-	 * Ask the panel about the account rather than about a message.
-	 *
-	 * The reachability row above proves the network; this one proves the
-	 * credentials, the credit and the line — read-only, no message, no charge.
-	 * A driver answers it only if it implements AccountProbe, so a third-party
-	 * driver written before this existed keeps working and simply reports that
-	 * it cannot be asked.
-	 *
-	 * @param string[] $chain Delivery order.
-	 * @return array<int,array<string,string>>
-	 */
 	private function account( array $chain ): array {
 		$driver = null;
 
@@ -640,7 +520,7 @@ final class SelfTest {
 			__( 'کلید API و اعتبار', 'signa' ),
 			null === $probe['credit']
 				? __( 'پذیرفته شد', 'signa' )
-				: sprintf( /* translators: %s: account credit */ __( 'پذیرفته شد · اعتبار %s', 'signa' ), self::amount( (float) $probe['credit'] ) ),
+				: sprintf(  __( 'پذیرفته شد · اعتبار %s', 'signa' ), self::amount( (float) $probe['credit'] ) ),
 			'ok',
 			(string) $probe['reason']
 		);
@@ -661,7 +541,7 @@ final class SelfTest {
 		$known = $probe['sender_ok'];
 		$lines = is_array( $probe['lines'] ) ? implode( ' · ', array_map( 'strval', $probe['lines'] ) ) : '';
 		$note  = '' !== $lines
-			? sprintf( /* translators: %s: line numbers of the account */ __( 'خط‌های این حساب: %s', 'signa' ), $lines )
+			? sprintf(  __( 'خط‌های این حساب: %s', 'signa' ), $lines )
 			: (string) $probe['message'];
 
 		$rows[] = $this->row(
@@ -674,23 +554,12 @@ final class SelfTest {
 		return $rows;
 	}
 
-	/**
-	 * `165.3` rather than `165.30`, with a thousands separator an Iranian owner
-	 * reads without stopping.
-	 */
 	private static function amount( float $value ): string {
 		$text = number_format( $value, 2, '.', '٬' );
 
 		return rtrim( rtrim( $text, '0' ), '.' );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * امنیت و محدودیت
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
 	private function security(): array {
 		$rows     = array();
 		$captcha  = $this->captcha->diagnostics();
@@ -725,11 +594,6 @@ final class SelfTest {
 			$rows[] = $this->row( __( 'پیکربندی نیمه‌کاره', 'signa' ), __( 'بله', 'signa' ), 'fail', __( 'تنها یکی از دو کلید پر شده است؛ ویجت و تأیید سروری هر دو می‌شکنند.', 'signa' ) );
 		}
 
-		/*
-		 * The two doors into an account, and how the site decided each one
-		 * opens. Both are settings a security review asks about first, and both
-		 * were previously invisible from inside the panel.
-		 */
 		$passwordOff = $this->settings->bool( 'password_login_off', false );
 		$remember    = $this->settings->bool( 'remember_login', true );
 
@@ -773,12 +637,6 @@ final class SelfTest {
 				: __( 'چالش از همان اولین درخواست خواسته می‌شود.', 'signa' )
 		);
 
-		/*
-		 * "Why did it not ask me for a captcha?" has three answers that look
-		 * identical from the outside: the challenge is invisible by design, the
-		 * number is on the exempt list, or there is no captcha at all. The rows
-		 * below name which one is true instead of leaving it to be guessed at.
-		 */
 		$rows[] = $this->row(
 			__( 'چالش دیدنی است؟', 'signa' ),
 			'score' === $captcha['kind'] ? __( 'نه — بی‌صدا', 'signa' ) : __( 'بله', 'signa' ),
@@ -815,12 +673,6 @@ final class SelfTest {
 				: __( 'با قطعی سرویس کپچا، هیچ ورودی‌ای پذیرفته نمی‌شود.', 'signa' )
 		);
 
-		/*
-		 * What the guard has actually been doing. A captcha that never renders
-		 * is not a theory: it shows up as `guard.rejected / captcha_missing` in
-		 * the events, one row per visitor who tried to log in. Counting those
-		 * rows here turns "the captcha does not load" into a number and a fix.
-		 */
 		$rejected = $this->captchaRejects( 7 );
 
 		if ( $rejected['total'] > 0 ) {
@@ -852,15 +704,6 @@ final class SelfTest {
 		);
 	}
 
-	/**
-	 * Who the guards are told to leave alone.
-	 *
-	 * A trusted number skips the captcha *by design* (admin settings ›
-	 * امنیت › فهرست معاف), and the site owner's own number is the first one
-	 * anyone puts there — usually while testing, and then it is forgotten. From
-	 * the visitor's side that is indistinguishable from a captcha that is off,
-	 * so the row says it out loud, with the number of the person reading it.
-	 */
 	private function trustedRow(): array {
 		$trusted = new Trusted( $this->settings );
 
@@ -883,7 +726,6 @@ final class SelfTest {
 			$exempt ? 'warn' : 'info',
 			$exempt
 				? sprintf(
-					/* translators: %s: the administrator's own masked phone number */
 					__( 'شمارهٔ خودتان (%s) در این فهرست است؛ به همین دلیل کپچا از شما پرسیده نشد. برای آزمایش واقعی برداریدش.', 'signa' ),
 					$this->mask( $own )
 				)
@@ -891,10 +733,6 @@ final class SelfTest {
 		);
 	}
 
-	/**
-	 * The administrator's own number, read from the same profile key the form
-	 * writes to, so the row above can name it.
-	 */
 	private function ownPhone(): string {
 		$user = get_current_user_id();
 
@@ -905,20 +743,6 @@ final class SelfTest {
 		return trim( (string) get_user_meta( $user, $this->settings->str( 'phone_meta_key', 'signa_phone' ), true ) );
 	}
 
-	/**
-	 * How many requests the guard turned away — and, for the ones without a
-	 * captcha token, who was on the other end.
-	 *
-	 * The old row counted `captcha_missing` and then said the widget had not
-	 * loaded in users' browsers. That was a guess, it was often wrong (a script
-	 * posting to the endpoint has no browser at all), and it contradicted the
-	 * green «بارگذاری در مرورگر» row three lines above it in the same window.
-	 * The user agent is recorded with each rejection now, so the sentence can be
-	 * about what actually happened.
-	 *
-	 * @param int $days Window.
-	 * @return array{total:int,captcha:int,browser:int,script:int,refused:int,failOpen:int,failOpenReason:string}
-	 */
 	private function captchaRejects( int $days ): array {
 		$out = array(
 			'total'          => 0,
@@ -978,15 +802,6 @@ final class SelfTest {
 		return $out;
 	}
 
-	/**
-	 * Did this rejection come from a browser, or from something holding a script?
-	 *
-	 * It is a heuristic and it is labelled as one: every browser sends a user
-	 * agent, and a bot hitting the endpoint directly usually sends `curl`, a
-	 * library name, or nothing at all. The point is not to be certain — it is to
-	 * stop telling the administrator something about their visitors that the
-	 * evidence does not support.
-	 */
 	private function looksLikeBrowser( string $ua ): bool {
 		$ua = strtolower( trim( $ua ) );
 
@@ -1003,11 +818,6 @@ final class SelfTest {
 		return false !== strpos( $ua, 'mozilla' );
 	}
 
-	/**
-	 * The row, in the words its own evidence supports.
-	 *
-	 * @param array<string,mixed> $rejected Counts from captchaRejects().
-	 */
 	private function captchaRejectRow( array $rejected ): array {
 		$total   = (int) $rejected['total'];
 		$missing = (int) $rejected['captcha'];
@@ -1021,7 +831,6 @@ final class SelfTest {
 				number_format_i18n( $total ) . ' ' . __( 'درخواست', 'signa' ),
 				'info',
 				sprintf(
-					/* translators: %d: number of requests whose token the provider refused */
 					__( 'کپچا نبود؛ %d درخواست توکن داشت و سرویس ردش کرد (امتیاز پایین یا توکن تکراری).', 'signa' ),
 					$refused
 				)
@@ -1032,7 +841,6 @@ final class SelfTest {
 
 		$note = $script > 0
 			? sprintf(
-				/* translators: %d: number of requests that carried no user agent of a browser */
 				__( '%d درخواست از ربات یا اسکریپت بود (بدون مرورگر)؛ کپچا کار خودش را کرد.', 'signa' ),
 				$script
 			)
@@ -1040,7 +848,6 @@ final class SelfTest {
 
 		if ( $browser > 0 ) {
 			$note .= ( '' !== $note ? ' ' : '' ) . sprintf(
-				/* translators: %d: number of requests that came from a real browser without a token */
 				__( '%d درخواست از مرورگر واقعی بود و توکن نرسید؛ اگر تکرار شد «باز ماندن ورود» یا نشانی جایگزین اسکریپت را ببینید.', 'signa' ),
 				$browser
 			);
@@ -1065,9 +872,6 @@ final class SelfTest {
 		return isset( $labels[ $trigger ] ) ? $labels[ $trigger ] : $trigger;
 	}
 
-	/**
-	 * Show the shape of a key without handing it back.
-	 */
 	private function mask( string $key ): string {
 		$key = trim( $key );
 
@@ -1078,13 +882,6 @@ final class SelfTest {
 		return substr( $key, 0, 4 ) . str_repeat( '•', 6 ) . substr( $key, -4 );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * فرم عضویت
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
 	private function registration(): array {
 		$rows  = array();
 		$flow  = $this->settings->str( 'registration_flow', 'fields_then_code' );
@@ -1168,13 +965,6 @@ final class SelfTest {
 		);
 	}
 
-	/* ---------------------------------------------------------------------
-	 * ظاهر فرم
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
 	private function design(): array {
 		$rows   = array();
 		$accent = $this->settings->str( 'accent', '#0f766e' );
@@ -1205,7 +995,7 @@ final class SelfTest {
 			$ratio = Colour::ratio( $pair[1], $pair[2] );
 
 			if ( null === $ratio ) {
-				$rows[] = $this->row( $pair[0], __( 'قابل‌خواندن نبود', 'signa' ), 'warn', sprintf( /* translators: 1: colour, 2: colour */ __( 'رنگ‌های %1$s و %2$s شناسایی نشدند.', 'signa' ), $pair[1], $pair[2] ) );
+				$rows[] = $this->row( $pair[0], __( 'قابل‌خواندن نبود', 'signa' ), 'warn', sprintf(  __( 'رنگ‌های %1$s و %2$s شناسایی نشدند.', 'signa' ), $pair[1], $pair[2] ) );
 				continue;
 			}
 
@@ -1217,7 +1007,7 @@ final class SelfTest {
 				$pass ? 'ok' : 'fail',
 				$pass
 					? ( '' !== $pair[3] ? $pair[3] : '' )
-					: sprintf( /* translators: %s: minimum ratio */ __( 'کمتر از %s:1 — متن سخت خوانده می‌شود. یک رنگ تأکید تیره‌تر انتخاب کنید.', 'signa' ), '4.5' )
+					: sprintf(  __( 'کمتر از %s:1 — متن سخت خوانده می‌شود. یک رنگ تأکید تیره‌تر انتخاب کنید.', 'signa' ), '4.5' )
 			);
 		}
 
@@ -1226,11 +1016,6 @@ final class SelfTest {
 		$rows[] = $this->row( __( 'گردی گوشه‌ها', 'signa' ), number_format_i18n( $this->settings->int( 'radius', 14 ) ) . ' px', 'info' );
 		$rows[] = $this->row( __( 'عرض فرم', 'signa' ), number_format_i18n( $this->settings->int( 'width', 420 ) ) . ' px', 'info' );
 
-		/*
-		 * "Your form does not look like your preview" is a font question more
-		 * often than a colour one: a theme with no Persian glyphs decides how the
-		 * form reads, unless the form brings its own font — which it does now.
-		 */
 		$font = $this->settings->str( 'form_font', 'vazirmatn' );
 
 		$rows[] = $this->row(
@@ -1258,16 +1043,6 @@ final class SelfTest {
 		);
 	}
 
-	/* ---------------------------------------------------------------------
-	 * فروشگاه
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
-	/**
-	 * The active theme's version, as WordPress reports it.
-	 */
 	private function themeVersion(): string {
 		$theme = function_exists( 'wp_get_theme' ) ? wp_get_theme() : null;
 
@@ -1285,9 +1060,6 @@ final class SelfTest {
 		return '' === $version ? $name : $name . ' ' . $version;
 	}
 
-	/**
-	 * Which font the form prints with, in one word.
-	 */
 	private function fontLabel(): string {
 		$choice = $this->settings->str( 'form_font', 'vazirmatn' );
 
@@ -1296,7 +1068,7 @@ final class SelfTest {
 			$name  = $theme instanceof \WP_Theme ? $theme->get( 'Name' ) : '';
 
 			return '' !== (string) $name
-				? sprintf( /* translators: %s: theme name */ __( 'پوسته: %s', 'signa' ), (string) $name )
+				? sprintf(  __( 'پوسته: %s', 'signa' ), (string) $name )
 				: __( 'پوسته', 'signa' );
 		}
 
@@ -1356,12 +1128,6 @@ final class SelfTest {
 			);
 		}
 
-		/*
-		 * The WoodMart login panel: the theme prints it on its own hook, and the
-		 * plugin wraps that hook. Whether the theme is here at all, and whether the
-		 * form is meant to go into it, are the two facts an owner needs — the
-		 * rest is visible on the site by opening the header's account dropdown.
-		 */
 		if ( \Signa\Integrations\WoodMart::detected() ) {
 			$enabled = $this->settings->bool( 'woodmart_sidebar', true );
 
@@ -1416,9 +1182,9 @@ final class SelfTest {
 	private function hasBillingPhone(): bool {
 		global $wpdb;
 
-		$found = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$found = $wpdb->get_var(
 			$wpdb->prepare(
-				'SELECT user_id FROM ' . $wpdb->usermeta . ' WHERE meta_key = %s LIMIT 1', // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				'SELECT user_id FROM ' . $wpdb->usermeta . ' WHERE meta_key = %s LIMIT 1',
 				'billing_phone'
 			)
 		);
@@ -1426,13 +1192,6 @@ final class SelfTest {
 		return null !== $found;
 	}
 
-	/* ---------------------------------------------------------------------
-	 * داده و رویدادها
-	 * ------------------------------------------------------------------ */
-
-	/**
-	 * @return array<string,mixed>
-	 */
 	private function data(): array {
 		$rows    = array();
 		$enabled = $this->settings->bool( 'logs_enabled', true );
@@ -1459,7 +1218,7 @@ final class SelfTest {
 			__( 'رویدادهای ثبت‌شده', 'signa' ),
 			number_format_i18n( (int) $before['total'] ),
 			'info',
-			sprintf( /* translators: %s: number of errors */ __( '%s موردش خطا بوده است.', 'signa' ), number_format_i18n( (int) $before['errors'] ) )
+			sprintf(  __( '%s موردش خطا بوده است.', 'signa' ), number_format_i18n( (int) $before['errors'] ) )
 		);
 
 		$rows[] = $this->row(
@@ -1471,7 +1230,6 @@ final class SelfTest {
 
 		$rows[] = $this->row( __( 'حالت اشکال‌زدایی', 'signa' ), $this->settings->bool( 'debug', false ) ? __( 'روشن', 'signa' ) : __( 'خاموش', 'signa' ), 'info', __( 'در حالت روشن، هر رویداد در error_log هم نوشته می‌شود.', 'signa' ) );
 
-		// The real test: write one event and find it again.
 		$event  = 'admin.self_test';
 		$wrote  = $this->logs->write( 'debug', $event, __( 'آزمایش خودکار پیشخوان: اگر این خط را می‌بینید، ثبت رویداد کار می‌کند.', 'signa' ), array( 'channel' => 'admin' ) );
 		$found  = $wrote ? $this->logs->count( array( 'event' => $event, 'hours' => 1 ) ) : 0;
@@ -1483,7 +1241,7 @@ final class SelfTest {
 			$round_trip ? __( 'درست', 'signa' ) : ( $enabled ? __( 'ناموفق', 'signa' ) : __( 'اجرا نشد', 'signa' ) ),
 			$round_trip ? 'ok' : ( $enabled ? 'fail' : 'warn' ),
 			$round_trip
-				? sprintf( /* translators: %s: event name */ __( 'یک رویداد %s نوشته شد و بلافاصله پیدا شد؛ در فهرست رویدادها هم دیده می‌شود.', 'signa' ), $event )
+				? sprintf(  __( 'یک رویداد %s نوشته شد و بلافاصله پیدا شد؛ در فهرست رویدادها هم دیده می‌شود.', 'signa' ), $event )
 				: ( $enabled ? __( 'نوشتن رویداد در دیتابیس ناموفق بود؛ گزارش‌ها نمی‌توانند چیزی نشان دهند.', 'signa' ) : __( 'برای اجرای این آزمایش اول «ثبت رویدادها» را روشن کنید.', 'signa' ) )
 		);
 

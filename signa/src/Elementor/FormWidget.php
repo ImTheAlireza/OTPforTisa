@@ -1,11 +1,4 @@
 <?php
-/**
- * Elementor widget wrapping the sign-in form.
- *
- * Only loaded when Elementor itself is present.
- *
- * @package Signa
- */
 
 namespace Signa\Elementor;
 
@@ -19,11 +12,7 @@ if ( ! class_exists( '\Elementor\Widget_Base' ) ) {
 }
 
 class FormWidget extends \Elementor\Widget_Base {
-
-	/** @var FormRenderer */
 	private $renderer;
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( FormRenderer $renderer, Settings $settings, array $data = array(), $args = null ) {
@@ -157,10 +146,9 @@ class FormWidget extends \Elementor\Widget_Base {
 			$atts['redirect'] = $settings['redirect']['url'];
 		}
 
-		echo $this->renderer->render( $atts ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->renderer->render( $atts );
 	}
 
 	protected function content_template(): void {
-		// Rendered server-side only.
 	}
 }

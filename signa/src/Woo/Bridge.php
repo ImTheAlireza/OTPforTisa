@@ -1,9 +1,4 @@
 <?php
-/**
- * WooCommerce integration: account form, checkout gate and guest order linking.
- *
- * @package Signa
- */
 
 namespace Signa\Woo;
 
@@ -15,11 +10,7 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class Bridge implements Bootable {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var FormRenderer */
 	private $renderer;
 
 	public function __construct( Settings $settings, FormRenderer $renderer ) {
@@ -53,28 +44,16 @@ final class Bridge implements Bootable {
 		return class_exists( 'WooCommerce' );
 	}
 
-	/**
-	 * Tell WooCommerce which of its features this integration supports.
-	 *
-	 * Runs on `before_woocommerce_init` because that is when WooCommerce collects
-	 * the declarations for its compatibility report.
-	 */
 	public function declareCompat(): void {
 		if ( ! class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			return;
 		}
 
-		// Orders are only ever read through wc_get_orders(), which is HPOS-aware.
 		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', SIGNA_FILE, true );
 
-		// The block-based cart/checkout is not wired up yet (roadmap item 3.3),
-		// so say so instead of letting WooCommerce guess.
 		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'cart_checkout_blocks', SIGNA_FILE, false );
 	}
 
-	/**
-	 * Hand WooCommerce our template for the My Account login screen.
-	 */
 	public function locateTemplate( string $template, string $templateName, string $templatePath ): string {
 		if ( 'myaccount/form-login.php' !== $templateName ) {
 			return $template;
@@ -91,13 +70,10 @@ final class Bridge implements Bootable {
 		}
 
 		echo '<div class="signa-woo-login">';
-		echo $this->renderer->render( array( 'redirect' => $this->accountUrl() ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $this->renderer->render( array( 'redirect' => $this->accountUrl() ) );
 		echo '</div>';
 	}
 
-	/**
-	 * Send guests to a login page before they can reach checkout.
-	 */
 	public function checkoutGate(): void {
 		if ( ! function_exists( 'is_checkout' ) || ! is_checkout() || is_user_logged_in() || ( function_exists( 'is_cart' ) && is_cart() ) ) {
 			return;
@@ -127,11 +103,6 @@ final class Bridge implements Bootable {
 		}
 	}
 
-	/**
-	 * Attach guest orders placed with the same number to the new account.
-	 *
-	 * @param array<string,mixed> $values
-	 */
 	public function linkGuestOrders( int $userId, string $phone, array $values = array() ): void {
 		unset( $values );
 
@@ -149,7 +120,7 @@ final class Bridge implements Bootable {
 			array(
 				'limit'      => 50,
 				'return'     => 'ids',
-				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'meta_query' => array(
 					array(
 						'key'     => '_billing_phone',
 						'value'   => $variants,
@@ -162,7 +133,6 @@ final class Bridge implements Bootable {
 		foreach ( (array) $orderIds as $orderId ) {
 			$order = wc_get_order( $orderId );
 
-			// Only untouched guest orders move over; anything already owned stays put.
 			if ( ! $order || 0 !== (int) $order->get_customer_id() ) {
 				continue;
 			}
@@ -170,12 +140,6 @@ final class Bridge implements Bootable {
 			$order->set_customer_id( $userId );
 			$order->save();
 
-			/**
-			 * Fires after a guest order has been linked to a freshly created account.
-			 *
-			 * @param int $orderId Order id.
-			 * @param int $userId  New user id.
-			 */
 			do_action( 'signa_order_linked', (int) $orderId, $userId );
 		}
 	}

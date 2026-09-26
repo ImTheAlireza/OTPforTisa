@@ -1,12 +1,4 @@
 <?php
-/**
- * REST surface of the plugin.
- *
- * Everything the browser needs lives under `signa/v1`, which keeps the flow
- * cache-friendly and independent from admin-ajax.
- *
- * @package Signa
- */
 
 namespace Signa\Http;
 
@@ -18,19 +10,10 @@ use Signa\Support\Rejection;
 defined( 'ABSPATH' ) || exit;
 
 final class Api implements Bootable {
-
 	const ROUTE_NS = 'signa/v1';
-
-	/** @var AuthController */
 	private $auth;
-
-	/** @var AdminController */
 	private $admin;
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var FormRenderer */
 	private $renderer;
 
 	public function __construct( AuthController $auth, AdminController $admin, Settings $settings, FormRenderer $renderer ) {
@@ -114,9 +97,6 @@ final class Api implements Bootable {
 		return current_user_can( 'manage_options' );
 	}
 
-	/**
-	 * Wrap a controller method so thrown rejections become JSON errors.
-	 */
 	private function handler( object $controller, string $method ): callable {
 		return function ( \WP_REST_Request $rest ) use ( $controller, $method ) {
 			try {
@@ -154,9 +134,6 @@ final class Api implements Bootable {
 		};
 	}
 
-	/**
-	 * Public bootstrap payload used by lazily rendered forms.
-	 */
 	public function formConfig(): \WP_REST_Response {
 		$response = new \WP_REST_Response(
 			array(
@@ -166,7 +143,6 @@ final class Api implements Bootable {
 			200
 		);
 
-		// This payload carries a fresh nonce, so a cached copy would defeat it.
 		$response->header( 'Cache-Control', 'no-store, max-age=0' );
 
 		return $response;

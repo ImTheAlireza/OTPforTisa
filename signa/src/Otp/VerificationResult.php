@@ -1,27 +1,17 @@
 <?php
-/**
- * Outcome of a code verification attempt.
- *
- * @package Signa
- */
 
 namespace Signa\Otp;
 
 defined( 'ABSPATH' ) || exit;
 
 final class VerificationResult {
-
 	const ACCEPTED  = 'accepted';
 	const MISSING   = 'missing';
 	const EXPIRED   = 'expired';
 	const MISMATCH  = 'mismatch';
 	const EXHAUSTED = 'exhausted';
 	const MALFORMED = 'malformed';
-
-	/** @var string */
 	private $status;
-
-	/** @var int */
 	private $attemptsLeft;
 
 	public function __construct( string $status, int $attemptsLeft = 0 ) {
@@ -67,7 +57,6 @@ final class VerificationResult {
 			case self::MISMATCH:
 			default:
 				return sprintf(
-					/* translators: %d: remaining attempts */
 					__( 'کد واردشده درست نیست. %d تلاش باقی مانده است.', 'signa' ),
 					$this->attemptsLeft
 				);

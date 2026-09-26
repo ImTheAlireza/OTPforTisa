@@ -1,9 +1,4 @@
 <?php
-/**
- * Picks the configured captcha provider and exposes its client bundle.
- *
- * @package Signa
- */
 
 namespace Signa\Captcha;
 
@@ -13,14 +8,8 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class Manager {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
-
-	/** @var array<string,CaptchaProvider>|null */
 	private $providers;
 
 	public function __construct( Settings $settings, Logger $logger ) {
@@ -28,9 +17,6 @@ final class Manager {
 		$this->logger   = $logger;
 	}
 
-	/**
-	 * @return array<string,CaptchaProvider>
-	 */
 	public function providers(): array {
 		if ( null !== $this->providers ) {
 			return $this->providers;
@@ -42,11 +28,6 @@ final class Manager {
 			'arcaptcha'    => new Arcaptcha( $this->settings, $this->logger ),
 		);
 
-		/**
-		 * Register additional captcha providers.
-		 *
-		 * @param array<string,CaptchaProvider> $providers id => provider.
-		 */
 		foreach ( (array) apply_filters( 'signa_captcha_providers', array() ) as $id => $provider ) {
 			if ( $provider instanceof CaptchaProvider ) {
 				$this->providers[ (string) $id ] = $provider;
@@ -56,9 +37,6 @@ final class Manager {
 		return $this->providers;
 	}
 
-	/**
-	 * @return array<string,string>
-	 */
 	public function labels(): array {
 		$labels = array( 'none' => __( 'بدون کپچا', 'signa' ) );
 
@@ -93,10 +71,6 @@ final class Manager {
 			&& '' !== trim( $this->settings->str( 'captcha_secret_key' ) );
 	}
 
-	/**
-	 * A provider picked but half-configured is the worst state: nothing renders
-	 * and nobody knows why. The admin screen asks this to warn early.
-	 */
 	public function halfConfigured(): bool {
 		$id = $this->settings->str( 'captcha_provider', 'none' );
 
@@ -107,33 +81,16 @@ final class Manager {
 		return ! $this->configured();
 	}
 
-	/**
-	 * `always` challenges every send, `after_limit` only once quotas tighten.
-	 */
 	public function trigger(): string {
 		$trigger = $this->settings->str( 'captcha_trigger', 'always' );
 
 		return in_array( $trigger, array( 'always', 'after_limit' ), true ) ? $trigger : 'always';
 	}
 
-	/**
-	 * When the captcha service itself cannot be reached, should a visitor be let
-	 * through (keeping the honeypot and the quota), or locked out?
-	 *
-	 * Locking out is the wrong trade in Iran, where the largest provider is
-	 * routinely unreachable: it turns a spam filter into a total outage of
-	 * sign-in. Default is therefore "let them through, and shout in the log".
-	 */
 	public function failOpen(): bool {
 		return $this->settings->bool( 'captcha_fail_open', true );
 	}
 
-	/**
-	 * Everything the browser needs to render and solve the challenge.
-	 *
-	 * `scripts` is a list, not a URL: the client walks it until a bundle loads,
-	 * which is what makes a blocked or filtered host survivable.
-	 */
 	public function clientBundle(): array {
 		$provider = $this->active();
 
@@ -152,7 +109,6 @@ final class Manager {
 		$override = trim( $this->settings->str( 'captcha_script_override' ) );
 		$scripts  = array();
 
-		// A self-hosted mirror wins when the admin typed one in.
 		if ( '' !== $override && ( 0 === strpos( $override, 'https://' ) || 0 === strpos( $override, 'http://' ) ) ) {
 			$scripts[] = $override;
 		}
@@ -165,12 +121,6 @@ final class Manager {
 			$scripts = array_merge( $scripts, $provider->fallbackScriptUrls() );
 		}
 
-		/**
-		 * Filter every script URL offered to the browser, in order.
-		 *
-		 * @param string[]        $scripts  Script URLs.
-		 * @param CaptchaProvider $provider Active provider.
-		 */
 		$scripts = (array) apply_filters( 'signa_captcha_script_urls', $scripts, $provider );
 
 		return array(
@@ -201,11 +151,6 @@ final class Manager {
 		return $provider->verify( $token, $ip );
 	}
 
-	/**
-	 * Plain data for the tools screen: what is configured, and what is not.
-	 *
-	 * @return array<string,mixed>
-	 */
 	public function diagnostics(): array {
 		$id       = $this->settings->str( 'captcha_provider', 'none' );
 		$provider = isset( $this->providers()[ $id ] ) ? $this->providers()[ $id ] : null;

@@ -1,9 +1,4 @@
 <?php
-/**
- * Step 1 — collect the phone number.
- *
- * @package Signa
- */
 
 defined( 'ABSPATH' ) || exit;
 
@@ -13,17 +8,8 @@ $phoneHintId  = $instance . '-phone-hint';
 $phoneErrorId = $instance . '-phone-error';
 $hasPhoneHint = '' !== trim( (string) $hint );
 
-// Point the field at its own hint and error so screen readers read the reason.
 $phoneDescribedBy = trim( ( $hasPhoneHint ? $phoneHintId . ' ' : '' ) . $phoneErrorId );
 
-/*
- * One field, one number, no decoration.
- *
- * A fixed "09" chip used to sit inside this control while the error text asked
- * people to "start with 09" — the field contradicted its own rule. The field
- * now takes the number exactly as it is written on a phone, and the placeholder
- * shows the whole shape of it.
- */
 $phonePlaceholder = isset( $phonePlaceholder ) && '' !== $phonePlaceholder ? (string) $phonePlaceholder : '09121234567';
 ?>
 <section class="signa-step is-current" data-signa-step="phone" aria-labelledby="<?php echo esc_attr( $phoneTitleId ); ?>">
@@ -72,19 +58,11 @@ $phonePlaceholder = isset( $phonePlaceholder ) && '' !== $phonePlaceholder ? (st
 		<span class="signa-btn__spinner" aria-hidden="true"></span>
 	</button>
 
-	<?php
-	/*
-	 * Three claims, right under the button the visitor is about to press. They
-	 * answer the question that actually stops people ("why does this site want
-	 * my number?") where the hesitation happens, and they stay quiet: this is
-	 * reassurance, not a feature list.
-	 */
-	?>
 	<?php if ( ! empty( $trust ) ) : ?>
 		<ul class="signa__trust">
 			<?php foreach ( (array) $trust as $item ) : ?>
 				<li class="signa__trust-item">
-					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><?php echo $item['icon']; // phpcs:ignore WordPress.Security.EscapeOutput -- fixed markup from the renderer. ?></svg>
+					<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><?php echo $item['icon']; ?></svg>
 					<span><?php echo esc_html( (string) $item['label'] ); ?></span>
 				</li>
 			<?php endforeach; ?>

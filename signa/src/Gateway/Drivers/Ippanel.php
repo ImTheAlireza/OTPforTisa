@@ -1,27 +1,4 @@
 <?php
-/**
- * IPPanel driver (Edge API) — pattern delivery when a pattern code exists,
- * otherwise a plain webservice message.
- *
- * Checked against https://ippanelcom.github.io/Edge-Document/docs/send/ :
- *
- *   POST https://edge.ippanel.com/v1/api/send
- *   Authorization: <api key>            (the raw key, no "Bearer")
- *   pattern     {sending_type:"pattern", from_number, code,
- *                recipients:["+989…"], params:{name:value}}
- *   webservice  {sending_type:"webservice", from_number, message,
- *                params:{recipients:["+989…"]}}
- *
- * Numbers are E.164 on both sides. Every answer is
- * `{data, meta:{status, message, message_code}}`; success carries
- * `data.message_outbox_ids`.
- *
- * Fixed in 2.0.1: recipients left as `0912…` instead of `+98912…`, and the
- * webservice route put `recipients` at the top level where the API expects
- * it inside `params` — every free-text send was refused.
- *
- * @package Signa
- */
 
 namespace Signa\Gateway\Drivers;
 
@@ -32,7 +9,6 @@ use Signa\Gateway\HttpGateway;
 defined( 'ABSPATH' ) || exit;
 
 final class Ippanel extends HttpGateway {
-
 	const ENDPOINT = 'https://edge.ippanel.com/v1/api/send';
 
 	public function id(): string {
@@ -76,9 +52,6 @@ final class Ippanel extends HttpGateway {
 		return '' === trim( $this->option( 'ippanel_api_key' ) ) ? array( 'ippanel_api_key' ) : array();
 	}
 
-	/**
-	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
-	 */
 	public function plan(): array {
 		$pattern = trim( $this->option( 'ippanel_pattern' ) );
 		$sender  = self::e164Line( $this->option( 'ippanel_sender' ) );
@@ -101,7 +74,6 @@ final class Ippanel extends HttpGateway {
 			'notes'    => '' !== $pattern
 				? array(
 					sprintf(
-						/* translators: %s: variable name */
 						__( 'متغیر پترن «%s» فرستاده می‌شود؛ باید با متغیر داخل متن پترن یکی باشد.', 'signa' ),
 						$this->param()
 					),
@@ -111,11 +83,6 @@ final class Ippanel extends HttpGateway {
 	}
 
 	private function param(): string {
-		/**
-		 * Filter the pattern variable name expected by the IPPanel pattern.
-		 *
-		 * @param string $name Variable name inside the pattern.
-		 */
 		return (string) apply_filters( 'signa_ippanel_param', $this->paramName( 'ippanel_param', 'code' ) );
 	}
 
@@ -203,11 +170,7 @@ final class Ippanel extends HttpGateway {
 		);
 	}
 
-	/**
-	 * @param array<string,mixed> $body
-	 */
 	private function hasError( array $body ): bool {
-		// The documented envelope: meta.status is false on every refusal.
 		if ( isset( $body['meta'] ) && is_array( $body['meta'] ) && array_key_exists( 'status', $body['meta'] ) && false === (bool) $body['meta']['status'] ) {
 			return true;
 		}
@@ -216,7 +179,6 @@ final class Ippanel extends HttpGateway {
 			return true;
 		}
 
-		// The pattern endpoint answers `{"code": 422, "message": "…"}` on failure.
 		if ( isset( $body['code'] ) && is_numeric( $body['code'] ) && (int) $body['code'] >= 400 ) {
 			return true;
 		}
@@ -224,9 +186,6 @@ final class Ippanel extends HttpGateway {
 		return false;
 	}
 
-	/**
-	 * @param array<string,mixed> $body
-	 */
 	private function errorText( array $body ): string {
 		foreach ( array( 'meta.message', 'error.message', 'error', 'message', 'data.message' ) as $path ) {
 			$value = $body;

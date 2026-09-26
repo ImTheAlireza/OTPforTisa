@@ -1,14 +1,4 @@
 <?php
-/**
- * Refuses numbers an administrator has banned.
- *
- * This runs before the throttle guard so a banned number never reserves a
- * cooldown slot or burns quota, and it covers `verify` as well as `send`:
- * banning a number while a code is already in flight must stop the sign-in,
- * not just the next send.
- *
- * @package Signa
- */
 
 namespace Signa\Guard;
 
@@ -19,8 +9,6 @@ use Signa\Support\Rejection;
 defined( 'ABSPATH' ) || exit;
 
 final class BlocklistGuard implements Guard {
-
-	/** @var Blocklist */
 	private $blocklist;
 
 	public function __construct( Blocklist $blocklist ) {
@@ -42,15 +30,6 @@ final class BlocklistGuard implements Guard {
 			return;
 		}
 
-		/**
-		 * Filter the message shown to a banned number.
-		 *
-		 * Deliberately vague by default: telling a spammer which prefix is
-		 * banned tells them which prefix to switch to.
-		 *
-		 * @param string $message Refusal text.
-		 * @param string $kind    Rule kind that matched.
-		 */
 		$message = (string) apply_filters(
 			'signa_blocked_message',
 			__( 'امکان ورود با این شماره وجود ندارد. در صورت نیاز با پشتیبانی سایت تماس بگیرید.', 'signa' ),

@@ -1,16 +1,10 @@
 <?php
-/**
- * Custom tables: issued codes, keyed state (throttle/locks/drafts) and logs.
- *
- * @package Signa
- */
 
 namespace Signa\Install;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Schema {
-
 	const DB_VERSION = '1.0.0';
 
 	public function codes(): string {
@@ -25,9 +19,6 @@ final class Schema {
 		return $this->table( 'signa_logs' );
 	}
 
-	/**
-	 * @return string[]
-	 */
 	public function tables(): array {
 		return array( $this->codes(), $this->state(), $this->logs() );
 	}
@@ -99,7 +90,7 @@ final class Schema {
 		global $wpdb;
 
 		foreach ( $this->tables() as $table ) {
-			$wpdb->query( 'DROP TABLE IF EXISTS ' . $table ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery
+			$wpdb->query( 'DROP TABLE IF EXISTS ' . $table );
 		}
 
 		delete_option( 'signa_db_version' );
@@ -111,7 +102,7 @@ final class Schema {
 		$missing = array();
 
 		foreach ( $this->tables() as $table ) {
-			$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$found = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
 			if ( $found !== $table ) {
 				$missing[] = $table;
 			}

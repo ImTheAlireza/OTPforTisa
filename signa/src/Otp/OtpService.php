@@ -1,12 +1,4 @@
 <?php
-/**
- * Issue and verify one-time codes.
- *
- * Codes are generated with a CSPRNG, stored only as an HMAC that is bound to
- * the destination phone, and compared in constant time.
- *
- * @package Signa
- */
 
 namespace Signa\Otp;
 
@@ -17,11 +9,7 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class OtpService {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var CodeStore */
 	private $store;
 
 	public function __construct( Settings $settings, CodeStore $store ) {
@@ -30,22 +18,12 @@ final class OtpService {
 	}
 
 	public function length(): int {
-		/**
-		 * Filter the number of digits in a code.
-		 *
-		 * @param int $length Configured length.
-		 */
 		$length = (int) apply_filters( 'signa_code_length', $this->settings->int( 'code_length', 5 ) );
 
 		return max( 4, min( 8, $length ) );
 	}
 
 	public function ttl(): int {
-		/**
-		 * Filter the lifetime of a code in seconds.
-		 *
-		 * @param int $ttl Configured TTL.
-		 */
 		$ttl = (int) apply_filters( 'signa_code_ttl', $this->settings->int( 'code_ttl', 120 ) );
 
 		return max( 30, min( 3600, $ttl ) );
@@ -55,9 +33,6 @@ final class OtpService {
 		return Crypto::digits( $this->length() );
 	}
 
-	/**
-	 * Store the hash of a code that has just been handed to a channel.
-	 */
 	public function store( string $phone, string $code, string $channel, string $ip ): CodeRecord {
 		$fingerprint = Phone::fingerprint( $phone );
 
@@ -103,11 +78,6 @@ final class OtpService {
 			return VerificationResult::rejected( VerificationResult::MISMATCH, max( 0, $maxTries - $attempts ) );
 		}
 
-		/*
-		 * The code is right — now win the right to spend it. A correct code
-		 * that somebody else already spent in the same second is treated as
-		 * used up, not as a second sign-in.
-		 */
 		if ( ! $this->store->claim( $record ) ) {
 			return VerificationResult::rejected( VerificationResult::MISSING );
 		}

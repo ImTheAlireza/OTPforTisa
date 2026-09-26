@@ -1,12 +1,4 @@
 <?php
-/**
- * Builds the template data for the sign-in form.
- *
- * Shortcode attributes win over global settings, but an empty attribute means
- * "inherit", never "override with nothing".
- *
- * @package Signa
- */
 
 namespace Signa\Front;
 
@@ -19,33 +11,12 @@ use Signa\Support\View;
 defined( 'ABSPATH' ) || exit;
 
 final class FormRenderer {
-
-	/**
-	 * The font the form was designed in, shipped with the plugin.
-	 *
-	 * Vazirmatn (SIL OFL, see assets/fonts/OFL.txt) is a Persian-first family,
-	 * so a form inside a theme with no Persian glyphs stops falling back to
-	 * whatever the operating system has lying around. The names after it are
-	 * only there for the case where a site already loads its own copy.
-	 */
 	const FONT_STACK = "'Vazirmatn','Vazir','IRANSans','Iranian Sans',Tahoma,sans-serif";
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var FieldSchema */
 	private $schema;
-
-	/** @var Manager */
 	private $captcha;
-
-	/** @var View */
 	private $view;
-
-	/** @var Assets */
 	private $assets;
-
-	/** @var int */
 	private static $sequence = 0;
 
 	public function __construct( Settings $settings, FieldSchema $schema, Manager $captcha, View $view, Assets $assets ) {
@@ -56,9 +27,6 @@ final class FormRenderer {
 		$this->assets   = $assets;
 	}
 
-	/**
-	 * @param array<string,mixed> $args Shortcode / widget attributes.
-	 */
 	public function render( array $args = array() ): string {
 		if ( ! $this->settings->bool( 'enabled', true ) ) {
 			return '';
@@ -77,23 +45,12 @@ final class FormRenderer {
 		return $this->view->render( 'form.php', $data );
 	}
 
-	/**
-	 * The form as a visitor would see it, for the admin preview.
-	 *
-	 * The administrator who opens the preview is signed in and the plugin may
-	 * be switched off while it is being set up, so neither of the checks in
-	 * render() applies — and nothing is queued, because the preview page prints
-	 * its own stylesheet.
-	 */
 	public function preview(): string {
 		self::$sequence++;
 
 		return $this->view->render( 'form.php', $this->templateData( array() ) );
 	}
 
-	/**
-	 * Payload used by `GET /form-config` for lazily mounted forms.
-	 */
 	public function clientConfig(): array {
 		return array_merge(
 			$this->assets->clientConfig(),
@@ -106,9 +63,6 @@ final class FormRenderer {
 		);
 	}
 
-	/**
-	 * @param array<string,mixed> $args
-	 */
 	private function templateData( array $args ): array {
 		$args = $this->normalizeArgs( $args );
 
@@ -136,7 +90,6 @@ final class FormRenderer {
 			'regHint'      => $this->settings->str( 'register_subheading' ),
 			'redirect'     => $this->resolveRedirect( $args ),
 			'phoneLabel'   => __( 'شماره موبایل', 'signa' ),
-			// The chip already shows 09; the placeholder shows what is left to type.
 			'phonePlaceholder' => __( '09121234567', 'signa' ),
 			'trust'        => $this->trust(),
 			'codeLabel'    => __( 'کد تأیید', 'signa' ),
@@ -168,22 +121,6 @@ final class FormRenderer {
 		);
 	}
 
-	/**
-	 * Steps shown in the progress bar, in the order the visitor meets them.
-	 *
-	 * Registration off means two steps, which is not worth a progress bar, so
-	 * the template hides it; the order follows the configured flow.
-	 *
-	 * @return array<int,array{id:string,label:string}>
-	 */
-	/**
-	 * The three quiet claims under the send button.
-	 *
-	 * Icons are inline SVG on purpose: this row has to work on a page with no
-	 * icon font, no external request and no theme stylesheet.
-	 *
-	 * @return array<int,array{icon:string,label:string}>
-	 */
 	private function trust(): array {
 		$items = array(
 			array(
@@ -200,12 +137,6 @@ final class FormRenderer {
 			),
 		);
 
-		/**
-		 * Filter the reassurance row under the send button. Return an empty array
-		 * to hide it.
-		 *
-		 * @param array<int,array{icon:string,label:string}> $items Icon path plus label.
-		 */
 		return (array) apply_filters( 'signa_form_trust', $items );
 	}
 
@@ -232,17 +163,9 @@ final class FormRenderer {
 			? array( $phone, $code, $fields )
 			: array( $phone, $fields, $code );
 
-		/**
-		 * Filter the steps shown in the progress bar.
-		 *
-		 * @param array $steps Ordered list of `id`/`label` pairs.
-		 */
 		return (array) apply_filters( 'signa_form_steps', $steps );
 	}
 
-	/**
-	 * @param array<string,mixed> $args
-	 */
 	private function normalizeArgs( array $args ): array {
 		$clean = array();
 
@@ -257,11 +180,6 @@ final class FormRenderer {
 		return $clean;
 	}
 
-	/**
-	 * @param array<string,mixed> $args
-	 * @param string[] $allowed Empty array disables the whitelist.
-	 * @return mixed
-	 */
 	private function pick( array $args, string $key, $fallback, array $allowed ) {
 		$value = array_key_exists( $key, $args ) ? $args[ $key ] : $fallback;
 
@@ -272,9 +190,6 @@ final class FormRenderer {
 		return $value;
 	}
 
-	/**
-	 * @param array<string,mixed> $args
-	 */
 	private function flag( array $args, string $key, bool $fallback ): bool {
 		if ( ! array_key_exists( $key, $args ) ) {
 			return $fallback;
@@ -283,9 +198,6 @@ final class FormRenderer {
 		return in_array( (string) $args[ $key ], array( '1', 'true', 'yes' ), true );
 	}
 
-	/**
-	 * @param array<string,mixed> $args
-	 */
 	private function inlineStyle( array $args ): string {
 		$accent = sanitize_hex_color( (string) $this->pick( $args, 'accent', $this->settings->str( 'accent', '#0f766e' ), array() ) );
 		$width  = (int) $this->pick( $args, 'width', (string) $this->settings->int( 'width', 420 ), array() );
@@ -297,19 +209,8 @@ final class FormRenderer {
 			$parts[] = '--signa-accent:' . $accent;
 		}
 
-		/*
-		 * The surface and the font are set here rather than on `:root`, because a
-		 * variable declared on `.signa` in the stylesheet beats one inherited
-		 * from `:root` — the settings used to be emitted per request and silently
-		 * lose to the stylesheet's own defaults.
-		 */
 		$surface = sanitize_hex_color( (string) $this->pick( $args, 'surface', $this->settings->str( 'surface', '#ffffff' ), array() ) );
 
-		/*
-		 * Only a surface somebody chose. The default white, printed inline,
-		 * outranked the dark skin's own surface: slate fields turned white
-		 * under its light text, and what the visitor typed disappeared.
-		 */
 		if ( $surface && '#ffffff' !== strtolower( $surface ) ) {
 			$parts[] = '--signa-surface:' . $surface;
 		}
@@ -329,14 +230,6 @@ final class FormRenderer {
 		return implode( ';', $parts );
 	}
 
-	/**
-	 * The font stack the form prints with.
-	 *
-	 * `theme` keeps the old behaviour (`inherit`), which is also the honest name
-	 * for it: the form then looks like whatever the site's theme uses, Persian
-	 * glyphs or not. The default is the font shipped in `assets/fonts`, which is
-	 * the same one the packaged preview renders with.
-	 */
 	private function fontFamily(): string {
 		$choice = $this->settings->str( 'form_font', 'vazirmatn' );
 
@@ -355,14 +248,11 @@ final class FormRenderer {
 		return self::FONT_STACK;
 	}
 
-	/**
-	 * @param array<string,mixed> $args
-	 */
 	private function resolveRedirect( array $args ): string {
 		$candidate = isset( $args['redirect'] ) ? (string) $args['redirect'] : $this->settings->str( 'login_redirect' );
 
-		if ( isset( $_GET['redirect_to'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$requested = sanitize_text_field( wp_unslash( $_GET['redirect_to'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['redirect_to'] ) ) {
+			$requested = sanitize_text_field( wp_unslash( $_GET['redirect_to'] ) );
 
 			if ( '' !== $requested ) {
 				$candidate = $requested;
@@ -401,7 +291,6 @@ final class FormRenderer {
 		return sprintf(
 			'<div class="signa signa--signed-in"><p>%s</p></div>',
 			sprintf(
-				/* translators: %s: display name */
 				esc_html__( 'وارد شده‌اید: %s', 'signa' ),
 				esc_html( $user->display_name )
 			)

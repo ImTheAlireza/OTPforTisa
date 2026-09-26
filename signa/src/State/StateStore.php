@@ -1,33 +1,21 @@
 <?php
-/**
- * Keyed state with expiry: throttle counters, mutex locks and registration drafts.
- *
- * Writes are atomic thanks to the PRIMARY KEY on state_key, which makes the
- * counters safe across concurrent PHP workers without an object cache.
- *
- * @package Signa
- */
 
 namespace Signa\State;
 
 defined( 'ABSPATH' ) || exit;
 
 final class StateStore {
-
 	public function table(): string {
 		global $wpdb;
 
 		return $wpdb->prefix . 'signa_state';
 	}
 
-	/**
-	 * @return mixed|null
-	 */
 	public function get( string $key ) {
 		global $wpdb;
 
-		$row = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'SELECT payload, hits, expires_at FROM ' . $this->table() . ' WHERE state_key = %s LIMIT 1', $key ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$row = $wpdb->get_row(
+			$wpdb->prepare( 'SELECT payload, hits, expires_at FROM ' . $this->table() . ' WHERE state_key = %s LIMIT 1', $key )
 		);
 
 		if ( ! $row ) {
@@ -45,23 +33,20 @@ final class StateStore {
 	public function hits( string $key ): int {
 		global $wpdb;
 
-		$value = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'SELECT hits FROM ' . $this->table() . ' WHERE state_key = %s AND (expires_at = 0 OR expires_at > %d) LIMIT 1', $key, time() ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$value = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT hits FROM ' . $this->table() . ' WHERE state_key = %s AND (expires_at = 0 OR expires_at > %d) LIMIT 1', $key, time() )
 		);
 
 		return null === $value ? 0 : (int) $value;
 	}
 
-	/**
-	 * @param mixed $value
-	 */
 	public function put( string $key, $value, int $ttl = 0 ): void {
 		global $wpdb;
 
 		$expires = $ttl > 0 ? time() + $ttl : 0;
 		$payload = wp_json_encode( array( 'v' => $value ) );
 
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query(
 			$wpdb->prepare(
 				'INSERT INTO ' . $this->table() . ' (state_key, hits, payload, expires_at) VALUES (%s, 0, %s, %d)
 				 ON DUPLICATE KEY UPDATE payload = VALUES(payload), expires_at = VALUES(expires_at)',
@@ -72,17 +57,12 @@ final class StateStore {
 		);
 	}
 
-	/**
-	 * Increment a counter, resetting it when the window has rolled over.
-	 *
-	 * @return int New counter value.
-	 */
 	public function bump( string $key, int $windowSeconds ): int {
 		global $wpdb;
 
 		$windowEnd = ( intdiv( time(), max( 1, $windowSeconds ) ) + 1 ) * max( 1, $windowSeconds );
 
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query(
 			$wpdb->prepare(
 				'INSERT INTO ' . $this->table() . " (state_key, hits, payload, expires_at) VALUES (%s, 1, NULL, %d)
 				 ON DUPLICATE KEY UPDATE
@@ -96,8 +76,8 @@ final class StateStore {
 			)
 		);
 
-		$hits = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'SELECT hits FROM ' . $this->table() . ' WHERE state_key = %s LIMIT 1', $key ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$hits = $wpdb->get_var(
+			$wpdb->prepare( 'SELECT hits FROM ' . $this->table() . ' WHERE state_key = %s LIMIT 1', $key )
 		);
 
 		if ( random_int( 1, 120 ) === 1 ) {
@@ -110,21 +90,17 @@ final class StateStore {
 	public function forget( string $key ): void {
 		global $wpdb;
 
-		$wpdb->delete( $this->table(), array( 'state_key' => $key ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->delete( $this->table(), array( 'state_key' => $key ) );
 	}
 
-	/**
-	 * Atomic "insert if absent" used for mutex locks.
-	 */
 	public function claim( string $key, string $token, int $ttl ): bool {
 		global $wpdb;
 
-		// Clear a stale lock first, then race on the unique key.
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query(
 			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE state_key = %s AND expires_at > 0 AND expires_at < %d', $key, time() )
 		);
 
-		$inserted = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$inserted = $wpdb->query(
 			$wpdb->prepare(
 				'INSERT IGNORE INTO ' . $this->table() . ' (state_key, hits, payload, expires_at) VALUES (%s, 0, %s, %d)',
 				$key,
@@ -139,7 +115,7 @@ final class StateStore {
 	public function release( string $key, string $token ): bool {
 		global $wpdb;
 
-		$affected = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$affected = $wpdb->query(
 			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE state_key = %s AND payload = %s', $key, wp_json_encode( array( 'v' => $token ) ) )
 		);
 
@@ -149,7 +125,7 @@ final class StateStore {
 	public function prune(): int {
 		global $wpdb;
 
-		$deleted = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$deleted = $wpdb->query(
 			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE expires_at > 0 AND expires_at < %d LIMIT 5000', time() )
 		);
 
@@ -160,7 +136,7 @@ final class StateStore {
 		global $wpdb;
 
 		$like    = $wpdb->esc_like( $prefix ) . '%';
-		$deleted = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$deleted = $wpdb->query(
 			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE state_key LIKE %s', $like )
 		);
 
@@ -171,16 +147,13 @@ final class StateStore {
 		global $wpdb;
 
 		$like  = $wpdb->esc_like( $prefix ) . '%';
-		$count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$count = $wpdb->get_var(
 			$wpdb->prepare( 'SELECT COUNT(*) FROM ' . $this->table() . ' WHERE state_key LIKE %s', $like )
 		);
 
 		return (int) $count;
 	}
 
-	/**
-	 * @return mixed
-	 */
 	private function decode( string $payload ) {
 		$data = json_decode( $payload, true );
 

@@ -1,13 +1,4 @@
 <?php
-/**
- * Reports: requests, successes, failures and the reasons between them.
- *
- * The events screen answers "what happened at 14:03?". This one answers "is
- * this thing working?" — the numbers a site owner actually looks at after a
- * change, over a range they can pick.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -19,16 +10,9 @@ use Signa\Log\Report;
 defined( 'ABSPATH' ) || exit;
 
 final class ReportScreen implements Bootable {
-
 	const SLUG = 'signa-reports';
-
-	/** Ranges the screen offers, in days. Anything else falls back to 14. */
 	const RANGES = array( 7, 14, 30 );
-
-	/** @var LogStore */
 	private $logs;
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( LogStore $logs, Settings $settings ) {
@@ -41,16 +25,11 @@ final class ReportScreen implements Bootable {
 	}
 
 	public function range(): int {
-		$requested = isset( $_GET['range'] ) ? (int) $_GET['range'] : 14; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$requested = isset( $_GET['range'] ) ? (int) $_GET['range'] : 14;
 
 		return in_array( $requested, self::RANGES, true ) ? $requested : 14;
 	}
 
-	/**
-	 * Everything the screen and the REST summary need, in one array.
-	 *
-	 * @return array<string,mixed>
-	 */
 	public function data( int $days ): array {
 		$days = in_array( $days, self::RANGES, true ) ? $days : 14;
 
@@ -88,10 +67,6 @@ final class ReportScreen implements Bootable {
 		Layout::close();
 	}
 
-	/**
-	 * The report itself. The settings page and this screen both draw it, so
-	 * there is one report with one set of numbers, reachable from two menus.
-	 */
 	public function body( int $days ): void {
 		$data = $this->data( $days );
 		$days = (int) $data['days'];
@@ -101,13 +76,13 @@ final class ReportScreen implements Bootable {
 		printf(
 			'<a class="signa-btn signa-btn--gh signa-btn--sm" href="%1$s">%2$s<span>%3$s</span></a>',
 			esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=signa_export_report&range=' . $days ), 'signa_export_report' ) ),
-			Icons::svg( 'download', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			Icons::svg( 'download', 14 ),
 			esc_html__( 'دانلود CSV', 'signa' )
 		);
 		echo '</div>';
 
 		if ( ! $this->settings->bool( 'logs_enabled', true ) ) {
-			echo '<div class="signa-notice signa-notice--warning">' . Icons::svg( 'alert' ) . '<p>' . esc_html__( 'ثبت رویدادها خاموش است؛ عددهای زیر فقط تا لحظهٔ خاموش شدن را نشان می‌دهند.', 'signa' ) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			echo '<div class="signa-notice signa-notice--warning">' . Icons::svg( 'alert' ) . '<p>' . esc_html__( 'ثبت رویدادها خاموش است؛ عددهای زیر فقط تا لحظهٔ خاموش شدن را نشان می‌دهند.', 'signa' ) . '</p></div>';
 		}
 
 		$this->kpis( $data['kpis'] );
@@ -130,7 +105,6 @@ final class ReportScreen implements Bootable {
 			'<p class="signa-footnote">%s</p>',
 			esc_html(
 				sprintf(
-					/* translators: 1: number of events, 2: how many are errors, 3: days of retention */
 					__( '%1$s رویداد ثبت شده است؛ %2$s موردش خطا بوده. رویدادها %3$s روز نگه داشته می‌شوند.', 'signa' ),
 					number_format_i18n( (int) $data['totals']['total'] ),
 					number_format_i18n( (int) $data['totals']['errors'] ),
@@ -151,21 +125,18 @@ final class ReportScreen implements Bootable {
 				$range === $days ? ' is-active' : '',
 				esc_url( add_query_arg( 'range', $range, $base ) ),
 				$range === $days ? ' aria-current="true"' : '',
-				esc_html( sprintf( /* translators: %s: number of days */ __( '%s روز', 'signa' ), number_format_i18n( $range ) ) )
+				esc_html( sprintf(  __( '%s روز', 'signa' ), number_format_i18n( $range ) ) )
 			);
 		}
 
 		echo '</nav>';
 	}
 
-	/**
-	 * One number card with its tile. Shared with the dashboard strip.
-	 */
 	public static function kpi( string $label, string $value, string $icon, string $tone = '', string $hint = '' ): void {
 		printf(
 			'<div class="%1$s"><span class="signa-kpi__tile">%2$s</span><span class="signa-kpi__text"><span class="signa-kpi__value">%3$s</span><span class="signa-kpi__label">%4$s</span>%5$s</span></div>',
 			esc_attr( trim( 'signa-kpi ' . $tone ) ),
-			Icons::svg( $icon, 18 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			Icons::svg( $icon, 18 ),
 			esc_html( $value ),
 			esc_html( $label ),
 			'' !== $hint ? '<span class="signa-kpi__hint">' . esc_html( $hint ) . '</span>' : ''
@@ -196,7 +167,7 @@ final class ReportScreen implements Bootable {
 		Layout::cardHead(
 			__( 'ارسال‌ها و خطاها، روز به روز', 'signa' ),
 			'chart',
-			sprintf( /* translators: %s: number of days */ __( 'بازه: %s روز گذشته.', 'signa' ), number_format_i18n( $days ) ),
+			sprintf(  __( 'بازه: %s روز گذشته.', 'signa' ), number_format_i18n( $days ) ),
 			sprintf(
 				'<span class="signa-legend"><span class="signa-legend__item"><span class="signa-dot is-sent"></span>%1$s</span><span class="signa-legend__item"><span class="signa-dot is-failed"></span>%2$s</span></span>',
 				esc_html__( 'ارسال‌شده', 'signa' ),
@@ -205,7 +176,7 @@ final class ReportScreen implements Bootable {
 		);
 
 		echo '<div class="signa-card__body">';
-		echo '<div class="signa-chart" role="img" aria-label="' . esc_attr( sprintf( /* translators: %d: number of days */ __( 'نمودار ارسال و خطا در %d روز گذشته', 'signa' ), $days ) ) . '">';
+		echo '<div class="signa-chart" role="img" aria-label="' . esc_attr( sprintf(  __( 'نمودار ارسال و خطا در %d روز گذشته', 'signa' ), $days ) ) . '">';
 
 		foreach ( $series as $day => $counts ) {
 			$sent   = isset( $counts[ Report::SENT ] ) ? (int) $counts[ Report::SENT ] : 0;
@@ -218,7 +189,7 @@ final class ReportScreen implements Bootable {
 				esc_attr( (string) round( ( $failed / $peak ) * 100, 2 ) ),
 				esc_attr( (string) round( ( $sent / $peak ) * 100, 2 ) ),
 				esc_html( gmdate( 'm-d', (int) strtotime( $day ) ) ),
-				esc_attr( sprintf( /* translators: 1: day, 2: sent, 3: failed */ __( '%1$s: %2$s ارسال، %3$s ناموفق', 'signa' ), $day, number_format_i18n( $sent ), number_format_i18n( $failed ) ) )
+				esc_attr( sprintf(  __( '%1$s: %2$s ارسال، %3$s ناموفق', 'signa' ), $day, number_format_i18n( $sent ), number_format_i18n( $failed ) ) )
 			);
 		}
 
@@ -255,12 +226,6 @@ final class ReportScreen implements Bootable {
 		echo '</tbody></table></div></div></section>';
 	}
 
-	/**
-	 * The latest events as a compact table. Shared with the dashboard.
-	 *
-	 * @param object[] $rows    Log rows, newest first.
-	 * @param bool     $compact Leave out the column header (the dashboard card is small).
-	 */
 	public static function eventsTable( array $rows, bool $compact = false ): void {
 		if ( array() === $rows ) {
 			echo '<p class="signa-empty">' . esc_html__( 'هنوز رویدادی ثبت نشده است.', 'signa' ) . '</p>';
@@ -299,9 +264,6 @@ final class ReportScreen implements Bootable {
 		echo '</tbody></table></div>';
 	}
 
-	/**
-	 * «۵ دقیقه پیش» for a GMT timestamp from the event table.
-	 */
 	public static function ago( string $gmt ): string {
 		$time = strtotime( $gmt . ' UTC' );
 
@@ -315,13 +277,9 @@ final class ReportScreen implements Bootable {
 			return __( 'همین حالا', 'signa' );
 		}
 
-		/* translators: %s: a time span such as «۵ دقیقه» */
 		return sprintf( __( '%s پیش', 'signa' ), human_time_diff( $time, time() ) );
 	}
 
-	/**
-	 * The same numbers as CSV, for a spreadsheet.
-	 */
 	public function export(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'دسترسی لازم را ندارید.', 'signa' ) );
@@ -329,7 +287,7 @@ final class ReportScreen implements Bootable {
 
 		check_admin_referer( 'signa_export_report' );
 
-		$days = isset( $_GET['range'] ) ? (int) $_GET['range'] : 14; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$days = isset( $_GET['range'] ) ? (int) $_GET['range'] : 14;
 		$data = $this->data( $days );
 
 		nocache_headers();
@@ -338,7 +296,6 @@ final class ReportScreen implements Bootable {
 
 		$out = fopen( 'php://output', 'w' );
 
-		// Excel needs the BOM to read Persian headers as UTF-8.
 		fwrite( $out, "\xEF\xBB\xBF" );
 
 		fputcsv( $out, Report::row( array( __( 'روز', 'signa' ), __( 'ارسال‌شده', 'signa' ), __( 'ناموفق', 'signa' ) ) ) );

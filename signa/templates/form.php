@@ -1,17 +1,4 @@
 <?php
-/**
- * Signa — sign-in form wrapper.
- *
- * Override in a theme by copying this file to `{theme}/signa/form.php`.
- *
- * Available variables: instance, classes, style, heading, hint, regHeading,
- * regHint, redirect, labels, codeLength, cooldown, showBrand, logo, logoWidth,
- * fields, flow, registration, captcha, terms, dir, configUrl, cacheMode, nonce,
- * formToken, renderedAt, phonePlaceholder, trust,
- * restUrl, honeypot, timestampKey, renderedAt, steps, view.
- *
- * @package Signa
- */
 
 defined( 'ABSPATH' ) || exit;
 ?>
@@ -34,10 +21,8 @@ defined( 'ABSPATH' ) || exit;
 >
 	<form class="signa__form" method="post" novalidate autocomplete="on">
 
-		<?php // First tab stop: jump straight to the field that matters. ?>
 		<a class="signa__skip" href="#<?php echo esc_attr( $instance ); ?>-phone" data-signa-skip><?php esc_html_e( 'رفتن به فرم ورود', 'signa' ); ?></a>
 
-		<?php // Bots fill this; people never see it. ?>
 		<input type="text" name="<?php echo esc_attr( $honeypot ); ?>" class="signa__honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" value="">
 		<input type="hidden" name="<?php echo esc_attr( $timestampKey ); ?>" class="signa__rendered" value="<?php echo esc_attr( (string) $renderedAt ); ?>">
 
@@ -48,11 +33,6 @@ defined( 'ABSPATH' ) || exit;
 		<?php endif; ?>
 
 		<?php
-		/*
-		 * Progress. The list is decorative (`aria-hidden`); the sentence beside
-		 * it is what a screen reader hears, and JS keeps both in sync. It is
-		 * only rendered when the flow really has three steps.
-		 */
 		if ( count( $steps ) > 2 ) :
 			?>
 			<ol class="signa__steps" data-signa-steps aria-hidden="true">
@@ -66,7 +46,6 @@ defined( 'ABSPATH' ) || exit;
 			<p class="signa-screen-reader signa__steps-text" data-signa-steps-text>
 				<?php
 				printf(
-					/* translators: 1: current step number, 2: total steps, 3: step name */
 					esc_html__( 'گام %1$s از %2$s: %3$s', 'signa' ),
 					esc_html( number_format_i18n( 1 ) ),
 					esc_html( number_format_i18n( count( $steps ) ) ),
@@ -100,16 +79,13 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 
 		<?php
-		// Step 1 — phone number.
-		echo $view->partial( 'step-phone', get_defined_vars() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $view->partial( 'step-phone', get_defined_vars() );
 
-		// Step 2 — registration fields (used by both flows).
 		if ( $registration ) {
-			echo $view->partial( 'step-fields', get_defined_vars() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo $view->partial( 'step-fields', get_defined_vars() );
 		}
 
-		// Step 3 — one-time code.
-		echo $view->partial( 'step-code', get_defined_vars() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $view->partial( 'step-code', get_defined_vars() );
 		?>
 
 		<?php if ( ! empty( $terms['show'] ) ) : ?>

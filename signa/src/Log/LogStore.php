@@ -1,9 +1,4 @@
 <?php
-/**
- * Persistence and querying for structured log entries.
- *
- * @package Signa
- */
 
 namespace Signa\Log;
 
@@ -12,8 +7,6 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class LogStore {
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( Settings $settings ) {
@@ -48,24 +41,11 @@ final class LogStore {
 			'meta'              => wp_json_encode( $this->metaFrom( $context ) ),
 		);
 
-		$inserted = $wpdb->insert( $this->table(), $row ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$inserted = $wpdb->insert( $this->table(), $row );
 
 		return false !== $inserted;
 	}
 
-	/**
-	 * One value out of a row's `meta` column.
-	 *
-	 * Everything a record wants to keep that has no column of its own — the
-	 * user agent of a rejected request, the reason a fail-open happened — is
-	 * stored as JSON here. Reading it with `$row->ua` returns null forever and
-	 * looks like "there is no evidence", which is how a diagnosis turns into a
-	 * guess without anyone noticing.
-	 *
-	 * @param object|array<string,mixed> $row   Row from query().
-	 * @param string                     $key   Meta key.
-	 * @param string                     $default Value when absent.
-	 */
 	public static function metaOf( $row, string $key, string $default = '' ): string {
 		$meta = '';
 
@@ -90,9 +70,6 @@ final class LogStore {
 		return is_scalar( $value ) ? (string) $value : $default;
 	}
 
-	/**
-	 * @return object[]
-	 */
 	public function query( array $args = array() ): array {
 		global $wpdb;
 
@@ -146,7 +123,7 @@ final class LogStore {
 		$params[] = max( 1, min( 500, (int) $args['limit'] ) );
 		$params[] = max( 0, (int) $args['offset'] );
 
-		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $wpdb->prepare( $sql, $params ) );
 
 		return is_array( $rows ) ? $rows : array();
 	}
@@ -161,17 +138,14 @@ final class LogStore {
 		return count( $rows );
 	}
 
-	/**
-	 * Per-day event tallies for the dashboard sparkline.
-	 */
 	public function tally( string $event, int $days = 14 ): array {
 		global $wpdb;
 
 		$since = gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) );
 
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				'SELECT DATE(created_at) AS day, COUNT(*) AS total FROM ' . $this->table() . ' WHERE event = %s AND created_at >= %s GROUP BY day ORDER BY day ASC', // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				'SELECT DATE(created_at) AS day, COUNT(*) AS total FROM ' . $this->table() . ' WHERE event = %s AND created_at >= %s GROUP BY day ORDER BY day ASC',
 				$event,
 				$since
 			)
@@ -186,12 +160,6 @@ final class LogStore {
 		return $tally;
 	}
 
-	/**
-	 * One tally per event, for the report cards.
-	 *
-	 * @param string[] $events
-	 * @return array<string,int> event => total.
-	 */
 	public function countByEvent( array $events, int $days = 14 ): array {
 		global $wpdb;
 
@@ -204,9 +172,9 @@ final class LogStore {
 		$since        = gmdate( 'Y-m-d H:i:s', time() - ( max( 1, $days ) * DAY_IN_SECONDS ) );
 		$placeholders = implode( ', ', array_fill( 0, count( $events ), '%s' ) );
 
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				'SELECT event, COUNT(*) AS total FROM ' . $this->table() . ' WHERE event IN (' . $placeholders . ') AND created_at >= %s GROUP BY event', // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				'SELECT event, COUNT(*) AS total FROM ' . $this->table() . ' WHERE event IN (' . $placeholders . ') AND created_at >= %s GROUP BY event',
 				array_merge( $events, array( $since ) )
 			)
 		);
@@ -220,13 +188,6 @@ final class LogStore {
 		return $counts;
 	}
 
-	/**
-	 * Per-day tallies for several events, so the chart needs three queries
-	 * instead of thirty.
-	 *
-	 * @param string[] $events
-	 * @return array<string,array<string,int>> event => (day => total).
-	 */
 	public function series( array $events, int $days = 14 ): array {
 		$out = array();
 
@@ -237,12 +198,6 @@ final class LogStore {
 		return $out;
 	}
 
-	/**
-	 * Why things failed, grouped by event and error code.
-	 *
-	 * @param string[] $events
-	 * @return array<int,array<string,mixed>>
-	 */
 	public function reasons( array $events, int $days = 14, int $limit = 20 ): array {
 		global $wpdb;
 
@@ -259,8 +214,8 @@ final class LogStore {
 			. ' WHERE event IN (' . $placeholders . ') AND created_at >= %s'
 			. ' GROUP BY event, error_code ORDER BY total DESC LIMIT %d';
 
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( $sql, array_merge( $events, array( $since, max( 1, $limit ) ) ) ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( $sql, array_merge( $events, array( $since, max( 1, $limit ) ) ) )
 		);
 
 		$out = array();
@@ -279,7 +234,7 @@ final class LogStore {
 	public function totals(): array {
 		global $wpdb;
 
-		$row = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$row = $wpdb->get_row(
 			'SELECT COUNT(*) AS total,
 					SUM(CASE WHEN severity = "error" THEN 1 ELSE 0 END) AS errors,
 					SUM(CASE WHEN created_at >= "' . esc_sql( gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS ) ) . '" THEN 1 ELSE 0 END) AS last_day
@@ -296,33 +251,20 @@ final class LogStore {
 	public function truncate(): void {
 		global $wpdb;
 
-		$wpdb->query( 'TRUNCATE TABLE ' . $this->table() ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query( 'TRUNCATE TABLE ' . $this->table() );
 	}
 
 	public function purge( int $days ): int {
 		global $wpdb;
 
 		$days    = max( 1, $days );
-		$deleted = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE created_at < %s LIMIT 10000', gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) ) ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$deleted = $wpdb->query(
+			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE created_at < %s LIMIT 10000', gmdate( 'Y-m-d H:i:s', time() - ( $days * DAY_IN_SECONDS ) ) )
 		);
 
 		return (int) $deleted;
 	}
 
-	/**
-	 * Keep the event table under a hard row ceiling.
-	 *
-	 * Retention by age is the polite rule, and it is the one that fails exactly
-	 * when it matters: a site under a flood logs a hundred thousand rows a day
-	 * and seven days of "keep" is seven hundred thousand rows — the table that
-	 * was going to tell the owner what happened becomes the thing that fills
-	 * the disk. This is the ceiling underneath the retention rule. The oldest
-	 * rows go first, in batches, so the delete never holds a long lock.
-	 *
-	 * @param int $maxRows Ceiling; 0 disables the cap.
-	 * @return int Rows removed.
-	 */
 	public function cap( int $maxRows ): int {
 		global $wpdb;
 
@@ -332,35 +274,32 @@ final class LogStore {
 			return 0;
 		}
 
-		$total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $this->table() ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$total = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . $this->table() );
 
 		if ( $total <= $maxRows ) {
 			return 0;
 		}
 
 		$table = $this->table();
-		$cut   = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'SELECT id FROM ' . $table . ' ORDER BY id DESC LIMIT 1 OFFSET %d', $maxRows ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$cut   = (int) $wpdb->get_var(
+			$wpdb->prepare( 'SELECT id FROM ' . $table . ' ORDER BY id DESC LIMIT 1 OFFSET %d', $maxRows )
 		);
 
 		if ( $cut <= 0 ) {
 			return 0;
 		}
 
-		$removed = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'DELETE FROM ' . $table . ' WHERE id <= %d LIMIT 5000', $cut ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$removed = $wpdb->query(
+			$wpdb->prepare( 'DELETE FROM ' . $table . ' WHERE id <= %d LIMIT 5000', $cut )
 		);
 
 		return max( 0, (int) $removed );
 	}
 
-	/**
-	 * @return string[] Distinct event names seen so far.
-	 */
 	public function events(): array {
 		global $wpdb;
 
-		$rows = $wpdb->get_col( 'SELECT DISTINCT event FROM ' . $this->table() . ' ORDER BY event ASC LIMIT 200' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_col( 'SELECT DISTINCT event FROM ' . $this->table() . ' ORDER BY event ASC LIMIT 200' );
 
 		return is_array( $rows ) ? array_map( 'strval', $rows ) : array();
 	}

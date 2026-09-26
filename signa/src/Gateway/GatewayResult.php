@@ -1,35 +1,16 @@
 <?php
-/**
- * Normalised outcome of a gateway attempt.
- *
- * @package Signa
- */
 
 namespace Signa\Gateway;
 
 defined( 'ABSPATH' ) || exit;
 
 final class GatewayResult {
-
-	/** @var bool */
 	private $sent;
-
-	/** @var string */
 	private $gateway;
-
-	/** @var string */
 	private $errorCode;
-
-	/** @var string */
 	private $message;
-
-	/** @var string */
 	private $reference;
-
-	/** @var int */
 	private $httpStatus;
-
-	/** @var array<string,mixed> */
 	private $meta;
 
 	private function __construct( bool $sent, string $gateway, string $errorCode = '', string $message = '', string $reference = '', int $httpStatus = 0, array $meta = array() ) {
@@ -70,21 +51,6 @@ final class GatewayResult {
 		return '' !== $this->message ? $this->message : __( 'ارسال کد ناموفق بود.', 'signa' );
 	}
 
-	/**
-	 * What the visitor in front of the form may be told.
-	 *
-	 * `message()` is written for the administrator: it names the gateway's host,
-	 * the wp-config constant and the person to call. For three releases that
-	 * sentence was handed to whoever was trying to log in, because it was the
-	 * only message the send path had. A visitor cannot edit wp-config.php, so the
-	 * sentence is not just noise — it is the site's plumbing, published to
-	 * strangers.
-	 *
-	 * Two cases keep their own words, because a visitor can act on both: asking
-	 * again a moment later, and the panel refusing the number. Everything else is
-	 * one calm sentence; the technical reason stays in the log, the gateway trace
-	 * and the admin screens, where somebody can use it.
-	 */
 	public function visitorMessage(): string {
 		if ( $this->sent ) {
 			return __( 'کد تأیید ارسال شد.', 'signa' );
@@ -109,9 +75,6 @@ final class GatewayResult {
 		return $this->meta;
 	}
 
-	/**
-	 * Transport-level or provider-side hiccup worth retrying on another gateway.
-	 */
 	public function isTransient(): bool {
 		if ( $this->sent ) {
 			return false;
@@ -124,16 +87,6 @@ final class GatewayResult {
 		return $this->httpStatus >= 500 && $this->httpStatus <= 599;
 	}
 
-	/**
-	 * Configuration or credential problems: the owner has something to fix.
-	 * Used to label the failure (health card, self-test); since 2.0.1 it no
-	 * longer stops the failover chain — see worthFailover().
-	 *
-	 * A transient failure is never a configuration problem, even when the panel
-	 * chooses to report it with a 4xx status: an empty account (402/400 "no
-	 * credit") or a rate limit (429) is exactly the case the backup gateway
-	 * exists for, and the status range used to swallow both.
-	 */
 	public function isConfigurationProblem(): bool {
 		if ( in_array( $this->errorCode, array( 'not_configured', 'unauthorized', 'forbidden', 'bad_credentials' ), true ) ) {
 			return true;
@@ -146,21 +99,6 @@ final class GatewayResult {
 		return $this->httpStatus >= 400 && $this->httpStatus <= 499;
 	}
 
-	/**
-	 * Whether the next gateway in the chain should be asked.
-	 *
-	 * The backup gateway exists for exactly one sentence: «if one panel stops
-	 * working, logins must not». Until 2.0.1 it only stepped in for transient
-	 * trouble (timeouts, empty credit, rate limits). A suspended account, an
-	 * expired key, a pattern the panel withdrew — all of them "configuration"
-	 * — stopped the chain, and every visitor was locked out while a working,
-	 * paid-for backup sat idle. That was the wrong trade: one OTP costs one
-	 * SMS whichever panel sends it, and the failure is still recorded against
-	 * the primary so the health card and the self-test name it.
-	 *
-	 * The one refusal that is not worth a second panel is the recipient
-	 * itself: a number that is not a mobile will not become one next door.
-	 */
 	public function worthFailover(): bool {
 		if ( $this->sent ) {
 			return false;

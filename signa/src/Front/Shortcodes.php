@@ -1,9 +1,4 @@
 <?php
-/**
- * Shortcodes exposing the form anywhere in content.
- *
- * @package Signa
- */
 
 namespace Signa\Front;
 
@@ -13,11 +8,7 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class Shortcodes implements Bootable {
-
-	/** @var FormRenderer */
 	private $renderer;
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( FormRenderer $renderer, Settings $settings ) {
@@ -31,9 +22,6 @@ final class Shortcodes implements Bootable {
 		add_shortcode( 'signa_hint', array( $this, 'hint' ) );
 	}
 
-	/**
-	 * @param array<string,mixed> $atts
-	 */
 	public function form( $atts = array() ): string {
 		$atts = shortcode_atts(
 			array(
@@ -57,9 +45,6 @@ final class Shortcodes implements Bootable {
 		return $this->renderer->render( $atts );
 	}
 
-	/**
-	 * Small helper shortcode for pages that already show their own heading.
-	 */
 	public function hint(): string {
 		if ( ! $this->settings->bool( 'enabled', true ) ) {
 			return '';

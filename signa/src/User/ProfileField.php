@@ -1,12 +1,4 @@
 <?php
-/**
- * Phone number field on the profile screens.
- *
- * Works on both "Your Profile" and the admin user editor, plus the
- * "Add New User" form where no user id exists yet.
- *
- * @package Signa
- */
 
 namespace Signa\User;
 
@@ -17,17 +9,7 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class ProfileField implements Bootable {
-
 	const NONCE = 'signa_profile';
-
-	/**
-	 * Where the signup form's own questions are kept.
-	 *
-	 * They are edited here as well as collected at signup, because a customer
-	 * who moves house should not have to re-register to say so.
-	 *
-	 * @var array<string,array<string,mixed>>
-	 */
 	const PROFILE_KEYS = array(
 		'signa_city'     => array(
 			'label' => 'شهر',
@@ -43,10 +25,7 @@ final class ProfileField implements Bootable {
 		),
 	);
 
-	/** @var Settings */
 	private $settings;
-
-	/** @var PhoneLocator */
 	private $locator;
 
 	public function __construct( Settings $settings, PhoneLocator $locator ) {
@@ -92,7 +71,7 @@ final class ProfileField implements Bootable {
 		if ( '' !== $source && $source !== $this->settings->str( 'phone_meta_key', 'signa_phone' ) ) {
 			printf(
 				'<p class="description">%s</p>',
-				esc_html( sprintf( /* translators: %s: meta key */ __( 'شماره فعلی از کلید «%s» خوانده شده و پس از ذخیره به کلید اصلی منتقل می‌شود.', 'signa' ), $source ) )
+				esc_html( sprintf(  __( 'شماره فعلی از کلید «%s» خوانده شده و پس از ذخیره به کلید اصلی منتقل می‌شود.', 'signa' ), $source ) )
 			);
 		}
 
@@ -101,16 +80,12 @@ final class ProfileField implements Bootable {
 		$this->renderProfileFields( $user->ID );
 	}
 
-	/**
-	 * The answers the signup form collected, editable in the same place.
-	 */
 	private function renderProfileFields( int $userId ): void {
 		$rows = array();
 
 		foreach ( self::PROFILE_KEYS as $key => $spec ) {
 			$value = (string) get_user_meta( $userId, $key, true );
 
-			// Nothing collected and nothing stored: stay out of the way.
 			if ( '' === trim( $value ) ) {
 				continue;
 			}
@@ -180,7 +155,7 @@ final class ProfileField implements Bootable {
 			return;
 		}
 
-		$raw = isset( $_POST['signa_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['signa_phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$raw = isset( $_POST['signa_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['signa_phone'] ) ) : '';
 
 		$this->store( $userId, $raw );
 		$this->storeProfileFields( $userId );
@@ -191,21 +166,15 @@ final class ProfileField implements Bootable {
 			return;
 		}
 
-		$raw = isset( $_POST['signa_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['signa_phone'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$raw = isset( $_POST['signa_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['signa_phone'] ) ) : '';
 
 		$this->store( $userId, $raw );
 		$this->storeProfileFields( $userId );
 	}
 
-	/**
-	 * Save the signup-profile fields, but only the ones already on the record.
-	 *
-	 * A field the site never collected is not created here: the profile screen
-	 * would otherwise grow three empty rows on every installation.
-	 */
 	private function storeProfileFields( int $userId ): void {
 		foreach ( self::PROFILE_KEYS as $key => $spec ) {
-			if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			if ( ! isset( $_POST[ $key ] ) ) {
 				continue;
 			}
 
@@ -213,7 +182,7 @@ final class ProfileField implements Bootable {
 				continue;
 			}
 
-			$value = wp_unslash( $_POST[ $key ] ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$value = wp_unslash( $_POST[ $key ] );
 			$value = 'textarea' === $spec['type']
 				? sanitize_textarea_field( (string) $value )
 				: sanitize_text_field( (string) $value );
@@ -265,12 +234,6 @@ final class ProfileField implements Bootable {
 
 		$this->locator->persist( $userId, $phone );
 
-		/**
-		 * Fires after a phone number was changed from a profile screen.
-		 *
-		 * @param int    $userId User id.
-		 * @param string $phone  Canonical phone number.
-		 */
 		do_action( 'signa_phone_updated', $userId, $phone );
 	}
 }

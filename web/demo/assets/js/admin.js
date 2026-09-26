@@ -1,12 +1,3 @@
-/*!
- * Signa — admin screen behaviour.
- *
- * Handles the interactivity the settings and tools screens need: switching
- * sections without a reload, the save bar, the live form preview, option cards,
- * placeholders, the colour and media pickers, the field repeater, the
- * REST-driven tools (test send, throttle reset, importer) and the browser-side
- * generator for the emergency code.
- */
 (function (window, document) {
 	'use strict';
 
@@ -40,7 +31,6 @@
 				if (!response.ok || !body || body.success === false) {
 					var error = new Error((body && body.message) || 'Request failed');
 
-					// Keep the payload: the trace of a failed delivery lives here.
 					error.data = (body && body.data) || {};
 					error.code = (body && body.code) || '';
 
@@ -52,11 +42,6 @@
 		});
 	}
 
-	/*
-	 * One modal, used by every self-test: reports and event lists are pages, but
-	 * "test this section" must not cost a page load. `<dialog>` brings the focus
-	 * trap, the ESC key and the top layer with it.
-	 */
 	function modal(title) {
 		var opener = document.activeElement;
 		var dialog = document.createElement('dialog');
@@ -102,12 +87,6 @@
 			}
 		}
 
-		/*
-		 * `close()` fires the event that puts the focus back. Where the element
-		 * cannot be a real modal, the same markup is shown as a plain overlay and
-		 * torn down by hand, so a test can still be read on an old browser
-		 * instead of throwing.
-		 */
 		function dismiss() {
 			if ('function' === typeof dialog.close) {
 				dialog.close();
@@ -120,7 +99,6 @@
 
 		close.addEventListener('click', dismiss);
 
-		// A click on the backdrop lands on the dialog element itself.
 		dialog.addEventListener('click', function (event) {
 			if (event.target === dialog) {
 				dismiss();
@@ -174,10 +152,6 @@
 		return words[status] || words.info;
 	}
 
-	/*
-	 * One result row. The colour dot is decoration; the word is the actual
-	 * information, and it is in the DOM for screen readers.
-	 */
 	function checkRow(row) {
 		var status = row.status || 'info';
 		var item = document.createElement('li');
@@ -231,9 +205,6 @@
 		return item;
 	}
 
-	/**
-	 * Run one section's self-test and draw it in a modal.
-	 */
 	function runCheck(kind, button) {
 		var box = modal(i18n.testing || '');
 		var list = document.createElement('ul');
@@ -280,8 +251,6 @@
 
 			done();
 
-			// The captcha test is the one check that cannot run on the server:
-			// it has to load the real script in the administrator's browser.
 			if ('security' === kind) {
 				testCaptcha(function (row) {
 					list.appendChild(checkRow(row));
@@ -297,10 +266,6 @@
 		});
 	}
 
-	/**
-	 * The one test that is only useful if the administrator types a number they
-	 * actually hold: a real code, through the real gateway chain.
-	 */
 	function runSendTest(opener) {
 		var box = modal(i18n.smsTitle || '');
 		var list = document.createElement('ul');
@@ -352,11 +317,6 @@
 
 			api('admin/test', { phone: number, channel: channel.value }).then(function (data) {
 				busy(send, false);
-				/*
-				 * The code went out, but not through the channel this button
-				 * asks about. A green «ارسال شد» on a failed SMS test is the
-				 * kind of green that costs an owner an afternoon.
-				 */
 				list.appendChild(checkRow({
 					label: false === data.direct ? (i18n.smsNotSent || '') : (i18n.smsSent || ''),
 					value: data.masked || number,
@@ -387,23 +347,11 @@
 
 		phone.focus();
 
-		// The opener is only used for focus return; keep the parameter honest.
 		void opener;
 	}
 
-	/**
-	 * Every gateway that was tried, in order, with what it answered.
-	 */
 	function traceRows(list, trace, plan, fix) {
 		(trace || []).forEach(function (step) {
-			/*
-			 * The Persian sentence says what to do; the reason is the sentence
-			 * from the server that says what happened ("DNS: could not resolve
-			 * host api.sms.ir"). Both belong here — "transport" alone is what
-			 * this project was told off for — but the server's sentence is
-			 * English and machine-shaped, so it gets its own quiet line
-			 * underneath instead of being run into the Persian one.
-			 */
 			list.appendChild(checkRow({
 				label: (step.gateway || '') + (step.sent ? ' (' + (i18n.traceSent || '') + ')' : ''),
 				value: step.error_code || step.status || '',
@@ -461,10 +409,7 @@
 		}
 	}
 
-	/* Toggles, cards and colour picker -------------------------------------- */
-
 	function initControls() {
-		// Option cards: the ring follows the checked radio, not the last click.
 		$$('.signa-opts').forEach(function (group) {
 			var sync = function () {
 				$$('.signa-opt', group).forEach(function (card) {
@@ -477,7 +422,6 @@
 			group.addEventListener('change', sync);
 		});
 
-		// A switch announces its state: role="switch" reads aria-checked.
 		$$('input.signa-tgl[role="switch"]').forEach(function (input) {
 			var sync = function () {
 				input.setAttribute('aria-checked', input.checked ? 'true' : 'false');
@@ -490,7 +434,6 @@
 		if (window.jQuery && window.jQuery.fn.wpColorPicker) {
 			window.jQuery('.signa-color').wpColorPicker({
 				change: function (event) {
-					// The picker writes the value without an input event of its own.
 					window.setTimeout(function () {
 						event.target.dispatchEvent(new window.Event('input', { bubbles: true }));
 					}, 0);
@@ -506,7 +449,6 @@
 			});
 		}
 
-		// Placeholders such as {code}: insert at the caret of the field they belong to.
 		document.addEventListener('click', function (event) {
 			var token = event.target.closest('[data-signa-token]');
 
@@ -543,12 +485,6 @@
 		});
 	}
 
-	/*
-	 * The settings screen prints every section into one form and hides all but
-	 * one. The side links are real links (?tab=…), so without this script each
-	 * one is a page load; with it, a click only swaps the visible pane and the
-	 * address, and nothing typed in another pane is lost.
-	 */
 	function initSections() {
 		var form = document.querySelector('[data-signa-settings]');
 
@@ -564,7 +500,6 @@
 		var links = $$('[data-signa-section]');
 
 		function referer() {
-			// options.php sends the browser back to this address after a save.
 			var field = form.querySelector('input[name="_wp_http_referer"]');
 
 			if (field) {
@@ -655,7 +590,6 @@
 			}
 		});
 
-		// An address that names another pane than the server drew (the demo, a bookmark).
 		var wanted = new window.URL(window.location.href).searchParams.get('tab');
 
 		if (wanted && panes[wanted] && panes[wanted].hidden) {
@@ -666,12 +600,6 @@
 		referer();
 	}
 
-	/*
-	 * The dark bar at the bottom: it says whether anything is unsaved, puts the
-	 * form back, and saves without leaving the page. The save is still the one
-	 * options.php runs, with its nonce and sanitising; without this script the
-	 * same button is a plain submit.
-	 */
 	function initSaveBar() {
 		var form = document.querySelector('[data-signa-settings]');
 		var bar = document.querySelector('[data-signa-savebar]');
@@ -711,7 +639,6 @@
 			state('clean', text || resting || i18n.stateClean || '');
 		}
 
-		// Controls that sit in the form but only drive the screen, not the settings.
 		function counts(event) {
 			var target = event.target;
 
@@ -737,7 +664,6 @@
 			reset.addEventListener('click', function () {
 				form.reset();
 
-				// reset() fires no change events: let every mirror catch up.
 				$$('input, select, textarea', form).forEach(function (input) {
 					input.dispatchEvent(new window.Event('change', { bubbles: true }));
 				});
@@ -767,7 +693,6 @@
 			window.clearTimeout(timer);
 			clean(i18n.stateSaved || 'ذخیره شد');
 			$$('input, select, textarea', form).forEach(function (input) {
-				// What was just saved is the new starting point for "reset".
 				if ('checkbox' === input.type || 'radio' === input.type) {
 					input.defaultChecked = input.checked;
 				} else if ('SELECT' === input.tagName) {
@@ -789,13 +714,6 @@
 			state('error', messages && messages.length ? messages.join(' ') : (i18n.stateError || 'ذخیره نشد'));
 		}
 
-		/*
-		 * The address to post to. admin_url() is built from the "WordPress
-		 * address" setting while this page may be open on another origin (www
-		 * or not, http or https — the site address, a CDN in front of it). A
-		 * cross-origin fetch carries no login cookie and is refused, so the
-		 * same path is posted on the origin this page is actually open on.
-		 */
 		function target() {
 			try {
 				var url = new window.URL(form.getAttribute('action') || 'options.php', window.location.href);
@@ -806,12 +724,6 @@
 			}
 		}
 
-		/*
-		 * When the quick save cannot tell what went wrong (a firewall, a login
-		 * that expired, a fatal error, a browser that refused the request), the
-		 * form is sent the ordinary way: WordPress then either saves it or shows
-		 * its own error page, which names the real cause.
-		 */
 		function fallback(status) {
 			var note = i18n.stateFallback || 'ذخیرهٔ سریع انجام نشد؛ فرم به روش عادی ارسال می‌شود…';
 
@@ -841,8 +753,6 @@
 				credentials: 'same-origin'
 			}).then(function (response) {
 				return response.text().then(function (html) {
-					// options.php answers with a redirect back to this screen; the page
-					// it lands on carries whatever the sanitiser had to say.
 					var page = new window.DOMParser().parseFromString(html, 'text/html');
 					var errors = $$('.notice-error, .error.settings-error', page).map(function (notice) {
 						return notice.textContent.replace(/\s+/g, ' ').trim();
@@ -873,10 +783,6 @@
 		clean();
 	}
 
-	/*
-	 * The live preview: the plugin's own template, rendered by the server from
-	 * what is in the form right now, shown in a sandboxed frame.
-	 */
 	function initPreview() {
 		var form = document.querySelector('[data-signa-settings]');
 
@@ -901,7 +807,6 @@
 				var own = seq + 1;
 
 				new window.FormData(form).forEach(function (value, key) {
-					// The form's own nonce must not replace the preview's nonce.
 					if ('string' === typeof value && ['_wpnonce', '_wp_http_referer', 'option_page', 'action'].indexOf(key) < 0) {
 						body.append(key, value);
 					}
@@ -925,7 +830,6 @@
 						frame.srcdoc = html;
 					}
 				}).catch(function () {
-					// Keep the last good picture; the form itself is unaffected.
 				}).then(function () {
 					if (own === seq && box) {
 						box.classList.remove('is-loading');
@@ -959,8 +863,6 @@
 			form.addEventListener('signa:section', later);
 		});
 	}
-
-	/* Media picker ---------------------------------------------------------- */
 
 	function initMedia() {
 		if (!window.wp || !window.wp.media) {
@@ -996,8 +898,6 @@
 			});
 		});
 	}
-
-	/* Registration field repeater ------------------------------------------- */
 
 	function initRepeater() {
 		$$('[data-signa-repeater]').forEach(function (repeater) {
@@ -1049,17 +949,6 @@
 		});
 	}
 
-	/* Tools ----------------------------------------------------------------- */
-
-	/**
-	 * Try to load the captcha the way the login page does.
-	 *
-	 * The dashboard can reach the captcha API over HTTP and still have every
-	 * visitor blocked — the script is loaded by the *browser*, and that is the
-	 * step that fails most often (an ad blocker, a DNS filter, a mirror that
-	 * moved). So this walks the same URL list the front end walks and reports
-	 * the first one that actually answers.
-	 */
 	function testCaptcha(report) {
 		var captcha = cfg.captcha || {};
 		var urls = [captcha.script].concat(captcha.fallbacks || []).filter(Boolean);
@@ -1111,15 +1000,12 @@
 			script.onload = function () {
 				window.clearTimeout(timer);
 
-
 				if (settled) {
 					return;
 				}
 
 				settled = true;
 
-				// The file can load and still not register its API: that is the
-				// failure the plugin's own changelog was written about.
 				var name = captcha.global;
 
 				if (name && !window[name]) {
@@ -1148,8 +1034,6 @@
 
 	function initTools() {
 		initDoctor();
-
-		// The captcha button belongs to the security section's self-test (initSelfTests).
 
 		var testButton = document.querySelector('[data-signa-test-send]');
 
@@ -1197,11 +1081,6 @@
 		initImporter();
 	}
 
-	/**
-	 * Render every gateway that was tried, in order, with the upstream reason.
-	 * This is the difference between "the code was not sent" and "SMS.ir answered
-	 * 401: کلید API نامعتبر است".
-	 */
 	function describeTrace(payload) {
 		var box = document.querySelector('[data-signa-doctor-result]');
 		var trace = payload && payload.trace ? payload.trace : [];
@@ -1233,8 +1112,6 @@
 
 		box.appendChild(list);
 	}
-
-	/* Doctor ---------------------------------------------------------------- */
 
 	function initDoctor() {
 		var card = document.querySelector('[data-signa-doctor]');
@@ -1304,11 +1181,6 @@
 			}
 		}
 
-		/**
-		 * A gateway that failed three times in a row is skipped for a while, so the
-		 * screen has to say that — otherwise "why is the backup sending?" becomes
-		 * the next support question.
-		 */
 		function restingLine(until) {
 			var left = Math.max(0, Math.ceil((until - Math.floor(Date.now() / 1000)) / 60));
 
@@ -1517,10 +1389,6 @@
 		}
 	}
 
-	/**
-	 * The emergency code is generated in the browser, never on the server, so
-	 * the plaintext exists only in the administrator's own tab.
-	 */
 	function initEmergency() {
 		var button = document.querySelector('[data-signa-emergency-generate]');
 
@@ -1564,11 +1432,6 @@
 		}
 	}
 
-	/*
-	 * `admin_body_class` can only reach the body, but the WordPress toolbar
-	 * reserves its room on <html>. Modern browsers get this from `:has()` in the
-	 * stylesheet; this line is for the ones that do not.
-	 */
 	function initAppMode() {
 		if (document.body && document.body.classList.contains('signa-app')) {
 			document.documentElement.classList.add('signa-app');

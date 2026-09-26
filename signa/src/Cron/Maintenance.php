@@ -1,9 +1,4 @@
 <?php
-/**
- * Housekeeping: expired codes, stale state rows and old log entries.
- *
- * @package Signa
- */
 
 namespace Signa\Cron;
 
@@ -16,19 +11,10 @@ use Signa\State\StateStore;
 defined( 'ABSPATH' ) || exit;
 
 final class Maintenance implements Bootable {
-
 	const HOOK = 'signa_maintenance';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var StateStore */
 	private $state;
-
-	/** @var LogStore */
 	private $logs;
-
-	/** @var CodeStore */
 	private $codes;
 
 	public function __construct( Settings $settings, StateStore $state, LogStore $logs, CodeStore $codes ) {
@@ -46,9 +32,6 @@ final class Maintenance implements Bootable {
 		}
 	}
 
-	/**
-	 * @return array<string,int>
-	 */
 	public function run(): array {
 		$result = array(
 			'codes' => (int) $this->codes->purge(),
@@ -57,11 +40,6 @@ final class Maintenance implements Bootable {
 			'capped' => (int) $this->logs->cap( $this->settings->int( 'logs_max_rows', 200000 ) ),
 		);
 
-		/**
-		 * Fires after scheduled housekeeping has run.
-		 *
-		 * @param array $result Number of rows removed per area.
-		 */
 		do_action( 'signa_maintenance_done', $result );
 
 		return $result;

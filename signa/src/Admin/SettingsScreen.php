@@ -1,18 +1,4 @@
 <?php
-/**
- * The settings page: a dashboard, six sections of settings and the reports.
- *
- * The six setting sections share one form that posts to the native Settings
- * API (`options.php`), which keeps nonces, capability checks and sanitising in
- * one well-tested place. With script, admin.js switches between them without a
- * page load and saves the same POST in the background; without it, every link
- * is a real address and the save button is a real submit.
- *
- * The dashboard and the reports are pages, not forms: nothing on them is
- * saved, so they are drawn only when they are the page being opened.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -29,29 +15,13 @@ use Signa\User\AccessPolicy;
 defined( 'ABSPATH' ) || exit;
 
 final class SettingsScreen {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Controls */
 	private $controls;
-
-	/** @var Registry */
 	private $gateways;
-
-	/** @var FieldSchema */
 	private $schema;
-
-	/** @var Manager */
 	private $captcha;
-
-	/** @var LogStore */
 	private $logs;
-
-	/** @var ReportScreen */
 	private $reports;
-
-	/** @var Dashboard */
 	private $dashboard;
 
 	public function __construct( Settings $settings, Controls $controls, Registry $gateways, FieldSchema $schema, Manager $captcha, LogStore $logs, ReportScreen $reports, Dashboard $dashboard ) {
@@ -65,31 +35,16 @@ final class SettingsScreen {
 		$this->dashboard = $dashboard;
 	}
 
-	/**
-	 * Sanitize callback registered with register_setting().
-	 *
-	 * @param mixed $input
-	 */
 	public function sanitize( $input ): array {
 		return Sanitizer::sanitize( is_array( $input ) ? $input : array(), $this->settings->all() );
 	}
 
-	/**
-	 * Address of one section.
-	 *
-	 * Everything that points at a section builds its URL here, so a link written
-	 * in one place cannot disagree with the navigation.
-	 */
 	public static function tabUrl( string $tab ): string {
 		return admin_url( 'admin.php?page=' . Page::ROOT . '&tab=' . $tab );
 	}
 
-	/**
-	 * Section ids, with the addresses of the pre-2.0 tabs mapped onto them so an
-	 * old bookmark still lands somewhere sensible.
-	 */
 	public function currentTab(): string {
-		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'dash'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'dash';
 
 		$legacy = array(
 			'general'      => 'login',
@@ -108,11 +63,6 @@ final class SettingsScreen {
 		return array_key_exists( $tab, ScreenNav::sections() ) ? $tab : 'dash';
 	}
 
-	/**
-	 * What each section is for, and which self-tests prove it.
-	 *
-	 * @return array<string,array{desc:string,tests:array<string,string>}>
-	 */
 	private function sectionMeta(): array {
 		return array(
 			'login'    => array(
@@ -168,11 +118,6 @@ final class SettingsScreen {
 
 		$this->egressNotice();
 
-		/*
-		 * The dashboard and the reports are pages, not forms: there is nothing to
-		 * save, so they skip the form and its save bar. The reports page draws the
-		 * same body the reports screen draws.
-		 */
 		if ( 'dash' === $tab ) {
 			$this->dashboard->render();
 			Layout::close();
@@ -216,8 +161,6 @@ final class SettingsScreen {
 		Layout::close();
 	}
 
-	/* Frame pieces ---------------------------------------------------------- */
-
 	private function pageHead( string $title, string $desc ): void {
 		echo '<div class="signa-sechead"><div class="signa-sechead__text">';
 		echo '<h2 class="signa-sechead__title">' . esc_html( $title ) . '</h2>';
@@ -225,14 +168,6 @@ final class SettingsScreen {
 		echo '</div></div>';
 	}
 
-	/**
-	 * Title of a section and the self-tests that prove it.
-	 *
-	 * Every section can prove itself without leaving it: the buttons open a
-	 * modal that is filled from `/admin/check`.
-	 *
-	 * @param array<string,string> $tests kind => button label
-	 */
 	private function sectionHead( string $id, string $title, string $desc, array $tests ): void {
 		echo '<div class="signa-sechead"><div class="signa-sechead__text">';
 		echo '<h2 class="signa-sechead__title" id="signa-section-' . esc_attr( $id ) . '-title">' . esc_html( $title ) . '</h2>';
@@ -247,7 +182,7 @@ final class SettingsScreen {
 				'<button type="button" class="signa-btn signa-btn--soft signa-btn--sm" data-signa-check="%1$s"%2$s>%3$s<span>%4$s</span></button>',
 				esc_attr( $kind ),
 				'security' === $kind ? ' data-signa-captcha-test' : '',
-				Icons::svg( 'check', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+				Icons::svg( 'check', 14 ),
 				esc_html( $label )
 			);
 		}
@@ -255,12 +190,6 @@ final class SettingsScreen {
 		echo '</div></div>';
 	}
 
-	/**
-	 * One card: tile, heading, a line of description, and an optional control
-	 * on the far side of the header.
-	 *
-	 * @param callable|null $side Prints into the header's far side.
-	 */
 	private function card( string $title, callable $body, string $desc = '', string $icon = 'sliders', ?callable $side = null, string $id = '', string $class = '' ): void {
 		printf(
 			'<section class="signa-card%1$s"%2$s>',
@@ -269,7 +198,7 @@ final class SettingsScreen {
 		);
 
 		echo '<header class="signa-card__head">';
-		echo '<span class="signa-tile">' . Icons::svg( $icon, 18 ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+		echo '<span class="signa-tile">' . Icons::svg( $icon, 18 ) . '</span>';
 		echo '<div class="signa-card__heading"><h3 class="signa-card__title">' . esc_html( $title ) . '</h3>';
 
 		if ( '' !== $desc ) {
@@ -289,29 +218,21 @@ final class SettingsScreen {
 		echo '</div></section>';
 	}
 
-	/**
-	 * A folded group for settings most sites never touch.
-	 */
 	private function accordion( string $title, callable $body, string $chip = '', string $icon = 'sliders', bool $open = false, string $chipClass = '' ): void {
 		echo '<details class="signa-acc"' . ( $open ? ' open' : '' ) . '><summary>';
-		echo Icons::svg( $icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+		echo Icons::svg( $icon );
 		echo '<span class="signa-acc__t">' . esc_html( $title ) . '</span><span class="signa-acc__side">';
 
 		if ( '' !== $chip ) {
 			echo '<span class="signa-chip' . ( '' !== $chipClass ? ' ' . esc_attr( $chipClass ) : '' ) . '">' . esc_html( $chip ) . '</span>';
 		}
 
-		echo Icons::svg( 'chevron', 16, 'signa-acc__chev' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+		echo Icons::svg( 'chevron', 16, 'signa-acc__chev' );
 		echo '</span></summary><div class="signa-acc__bd">';
 		$body();
 		echo '</div></details>';
 	}
 
-	/**
-	 * Clickable placeholders: a click puts the token into the field at the caret.
-	 *
-	 * @param string[] $tokens
-	 */
 	private function tokens( string $target, array $tokens ): void {
 		echo '<div class="signa-tokens" role="group" aria-label="' . esc_attr__( 'نشانه‌های قابل درج', 'signa' ) . '">';
 
@@ -332,13 +253,11 @@ final class SettingsScreen {
 		echo '<button type="button" class="signa-savebar__rst" data-signa-reset>' . esc_html__( 'بازنشانی', 'signa' ) . '</button>';
 		printf(
 			'<button type="submit" name="submit" class="signa-btn signa-btn--pri" data-signa-save>%1$s<span>%2$s</span></button>',
-			Icons::svg( 'check', 15 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			Icons::svg( 'check', 15 ),
 			esc_html__( 'ذخیره تنظیمات', 'signa' )
 		);
 		echo '</div>';
 	}
-
-	/* Sections -------------------------------------------------------------- */
 
 	private function loginSection(): void {
 		$c = $this->controls;
@@ -497,7 +416,6 @@ final class SettingsScreen {
 
 				$c->richNotice(
 					sprintf(
-						/* translators: %s: link to the form appearance section */
 						__( 'فیلدهای مرحلهٔ دوم (نشانی، شهر، کد پستی…) در %s مدیریت می‌شوند تا همهٔ ظاهر فرم یک‌جا باشد.', 'signa' ),
 						'<a href="' . esc_url( self::tabUrl( 'formskin' ) . '#signa-card-fields' ) . '" data-signa-goto="formskin"><b>' . esc_html__( 'ظاهر فرم ← فیلدها', 'signa' ) . '</b></a>'
 					)
@@ -510,9 +428,6 @@ final class SettingsScreen {
 		);
 	}
 
-	/**
-	 * Host name shown in the WebOTP hint, e.g. `example.com`.
-	 */
 	private function webOtpDomain(): string {
 		$host = wp_parse_url( home_url(), PHP_URL_HOST );
 
@@ -555,7 +470,7 @@ final class SettingsScreen {
 			function () {
 				printf(
 					'<button type="button" class="signa-btn signa-btn--soft signa-btn--sm" data-signa-sms-test>%1$s<span>%2$s</span></button>',
-					Icons::svg( 'send', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+					Icons::svg( 'send', 14 ),
 					esc_html__( 'ارسال پیامک آزمایشی', 'signa' )
 				);
 			},
@@ -591,7 +506,6 @@ final class SettingsScreen {
 					'webotp_enabled',
 					__( 'خواندن خودکار کد (WebOTP)', 'signa' ),
 					sprintf(
-						/* translators: %s: the WebOTP binding line, for example @example.com #12345 */
 						__( 'خط %s به انتهای پیامک متنی اضافه می‌شود تا مرورگر کد را خودش بخواند.', 'signa' ),
 						'@' . $this->webOtpDomain() . ' #12345'
 					)
@@ -680,11 +594,6 @@ final class SettingsScreen {
 		);
 	}
 
-	/**
-	 * One gateway, folded unless it is the one in use.
-	 *
-	 * @param array<string,mixed> $state The registry's report for this gateway.
-	 */
 	private function gatewayAccordion( string $id, $driver, array $state ): void {
 		$c = $this->controls;
 
@@ -738,7 +647,6 @@ final class SettingsScreen {
 					}
 				);
 
-				// Only the gateways in use are worth a list of what is wrong with them.
 				if ( ( $active || $backup ) && ! empty( $state['issues'] ) && is_array( $state['issues'] ) ) {
 					foreach ( $state['issues'] as $issue ) {
 						if ( is_scalar( $issue ) && '' !== (string) $issue ) {
@@ -939,7 +847,6 @@ final class SettingsScreen {
 
 				$c->description(
 					sprintf(
-						/* translators: %d: number of active fields */
 						esc_html__( 'اکنون %d فیلد در فرم عضویت فعال است.', 'signa' ),
 						count( $this->schema->active() )
 					)
@@ -983,18 +890,11 @@ final class SettingsScreen {
 		echo '</div>';
 	}
 
-	/**
-	 * The real form, drawn by the real template, next to the settings.
-	 *
-	 * The frame loads the preview endpoint once; admin.js then posts the
-	 * unsaved values to the same endpoint and swaps the result in, so what the
-	 * owner sees is what the site will print — not a drawing of it.
-	 */
 	private function preview(): void {
 		$url = wp_nonce_url( admin_url( 'admin-post.php?action=' . FormPreview::ACTION ), FormPreview::ACTION );
 
 		echo '<aside class="signa-pv" data-signa-preview data-url="' . esc_url( $url ) . '" aria-label="' . esc_attr__( 'پیش‌نمایش زنده', 'signa' ) . '">';
-		echo '<div class="signa-pv__bar"><span class="signa-pv__title">' . Icons::svg( 'eye', 14 ) . esc_html__( 'پیش‌نمایش زنده', 'signa' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+		echo '<div class="signa-pv__bar"><span class="signa-pv__title">' . Icons::svg( 'eye', 14 ) . esc_html__( 'پیش‌نمایش زنده', 'signa' ) . '</span>';
 		echo '<span class="signa-pv__steps" role="group" aria-label="' . esc_attr__( 'مرحلهٔ فرم', 'signa' ) . '">';
 
 		foreach ( array( 'phone' => __( 'شماره', 'signa' ), 'code' => __( 'کد', 'signa' ), 'fields' => __( 'عضویت', 'signa' ) ) as $step => $label ) {
@@ -1073,7 +973,7 @@ final class SettingsScreen {
 			esc_attr__( 'الزامی', 'signa' )
 		);
 
-		printf( '<button type="button" class="signa-repeater__remove" data-signa-remove-row aria-label="%1$s">%2$s</button>', esc_attr__( 'حذف این فیلد', 'signa' ), Icons::svg( 'trash', 15 ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+		printf( '<button type="button" class="signa-repeater__remove" data-signa-remove-row aria-label="%1$s">%2$s</button>', esc_attr__( 'حذف این فیلد', 'signa' ), Icons::svg( 'trash', 15 ) );
 
 		echo '</div>';
 	}
@@ -1349,10 +1249,10 @@ final class SettingsScreen {
 				printf(
 					'<p class="signa-actions-row"><a class="signa-btn signa-btn--gh signa-btn--sm" href="%1$s">%2$s<span>%3$s</span></a><a class="signa-btn signa-btn--gh signa-btn--sm" href="%4$s">%5$s<span>%6$s</span></a></p>',
 					esc_url( self::tabUrl( 'reports' ) ),
-					Icons::svg( 'chart', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+					Icons::svg( 'chart', 14 ),
 					esc_html__( 'گزارش‌ها', 'signa' ),
 					esc_url( admin_url( 'admin.php?page=' . LogsScreen::SLUG ) ),
-					Icons::svg( 'list', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+					Icons::svg( 'list', 14 ),
 					esc_html__( 'تک‌تک رویدادها', 'signa' )
 				);
 			},
@@ -1378,13 +1278,6 @@ final class SettingsScreen {
 					}
 				);
 
-				/*
-				 * The switch that answers «راه حلش چیه» for a site whose own
-				 * wp-config.php blocks outbound HTTP. It is labelled with what it
-				 * bypasses, and the hint says which of the two answers is better —
-				 * a plugin that quietly walked around the site's setting would be
-				 * worse than the problem it solves.
-				 */
 				$c->toggleRow(
 					'direct_send',
 					__( 'ارسال مستقیم (نادیده گرفتن WP_HTTP_BLOCK_EXTERNAL)', 'signa' ),
@@ -1403,7 +1296,7 @@ final class SettingsScreen {
 				printf(
 					'<p class="signa-actions-row"><a class="signa-btn signa-btn--gh signa-btn--sm" href="%1$s">%2$s<span>%3$s</span></a></p>',
 					esc_url( admin_url( 'admin.php?page=' . AccessScreen::SLUG ) ),
-					Icons::svg( 'ban', 14 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+					Icons::svg( 'ban', 14 ),
 					esc_html__( 'صفحهٔ دسترسی و مسدودی', 'signa' )
 				);
 				echo '<p class="signa-footnote">' . esc_html__( 'اگر ورود با کد از کار افتاد، کد اضطراری یک‌بارمصرف همان‌جاست.', 'signa' ) . '</p>';
@@ -1425,17 +1318,6 @@ final class SettingsScreen {
 		);
 	}
 
-	/* Notices --------------------------------------------------------------- */
-
-	/**
-	 * The one sentence the owner needs before pressing any button.
-	 *
-	 * A site whose wp-config.php blocks outbound HTTP cannot send a single SMS
-	 * — and finding that out from a test result is a worse afternoon than
-	 * finding it out from a banner. It is shown only when it is true for the
-	 * gateway they configured, and it names both answers: the switch in this
-	 * panel, and the line in wp-config.php. Turning the switch on hides it.
-	 */
 	private function egressNotice(): void {
 		if ( $this->settings->bool( 'direct_send', false ) ) {
 			return;
@@ -1459,7 +1341,6 @@ final class SettingsScreen {
 		$this->controls->richNotice(
 			esc_html(
 				sprintf(
-					/* translators: %s: the host this site refuses to reach */
 					__( 'این سایت اجازهٔ درخواست خروجی به %s را نمی‌دهد؛ تا آن خط عوض نشود هیچ پیامکی فرستاده نمی‌شود.', 'signa' ),
 					$host
 				)

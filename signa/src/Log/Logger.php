@@ -1,9 +1,4 @@
 <?php
-/**
- * Structured logger. Events are namespaced strings such as `otp.sent`.
- *
- * @package Signa
- */
 
 namespace Signa\Log;
 
@@ -12,14 +7,8 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class Logger {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Redactor */
 	private $redactor;
-
-	/** @var LogStore */
 	private $store;
 
 	public function __construct( Settings $settings, Redactor $redactor, LogStore $store ) {
@@ -53,13 +42,6 @@ final class Logger {
 	}
 
 	private function record( string $severity, string $event, array $context ): void {
-		/**
-		 * Allow third parties to tap every log record.
-		 *
-		 * @param string $severity Severity level.
-		 * @param string $event    Event name.
-		 * @param array  $context  Raw context.
-		 */
 		do_action( 'signa_log', $severity, $event, $context );
 
 		if ( ! $this->settings->bool( 'logs_enabled', true ) ) {
@@ -74,7 +56,7 @@ final class Logger {
 		$this->store->write( $severity, $event, $message, $safe );
 
 		if ( $this->settings->bool( 'debug', false ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( '[signa][%s] %s %s', $severity, $event, wp_json_encode( $safe ) ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( sprintf( '[signa][%s] %s %s', $severity, $event, wp_json_encode( $safe ) ) );
 		}
 	}
 }

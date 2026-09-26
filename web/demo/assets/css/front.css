@@ -1,41 +1,3 @@
-/*!
- * Signa — front-end styles.
- *
- * Two rules shape everything below:
- *
- *   1. Every colour, radius, space and shadow is a token. A theme can restyle
- *      the whole form by overriding five variables set from PHP
- *      (`Assets::cssVariables`) or from the shortcode/Elementor attributes:
- *
- *        --signa-accent        main colour
- *        --signa-accent-soft   tinted wash for focus and hover
- *        --signa-surface       card background
- *        --signa-radius        corner radius
- *        --signa-width         form width
- *
- *   2. Nothing may depend on two elements staying in step with each other.
- *      The previous step bar drew its connector line as a pseudo-element that
- *      painted *over* the numbered circles, and the phone field printed "09"
- *      twice. Both looked broken for a reason that was structural, not
- *      cosmetic, so both are rebuilt rather than repainted: the progress bar is
- *      three filled segments, and the country prefix is a real chip that the
- *      placeholder no longer repeats.
- *
- * Contrast-critical values were measured, not guessed: see
- * `node tests/contrast.js` and docs/UI-PLAN.fa.md §3.
- */
-
-/* The font the form is designed in -----------------------------------------
- *
- * Vazirmatn (SIL OFL 1.1, assets/fonts/OFL.txt) ships with the plugin, so the
- * form does not depend on a theme that may have no Persian glyphs at all, on a
- * CDN that is blocked from Iran, or on the reader's operating system. Two
- * subsets per weight: the Arabic one carries the Persian letters and digits,
- * the Latin one carries ASCII (the phone and code fields are `dir=ltr`) and
- * the punctuation. `unicode-range` is what lets both live under the same
- * family name — without it the second block simply replaces the first.
- * The ranges below were read out of the font files themselves.
- */
 @font-face {
 	font-family: 'Vazirmatn';
 	font-style: normal;
@@ -91,7 +53,6 @@
 }
 
 .signa {
-	/* Colour ------------------------------------------------------------- */
 	--signa-accent: #0f766e;
 	--signa-accent-soft: rgba(15, 118, 110, 0.12);
 	--signa-accent-strong: #0b5c56;
@@ -115,7 +76,6 @@
 	--signa-info-line: rgba(23, 92, 211, 0.22);
 	--signa-overlay: rgba(255, 255, 255, 0.72);
 
-	/* Space — a 4px rhythm, so vertical distances stay related ----------- */
 	--signa-space-1: 4px;
 	--signa-space-2: 8px;
 	--signa-space-3: 12px;
@@ -125,7 +85,6 @@
 	--signa-space-6: 24px;
 	--signa-space-8: 32px;
 
-	/* Radius and depth ---------------------------------------------------- */
 	--signa-radius: 14px;
 	--signa-radius-card: 18px;
 	--signa-radius-sm: calc(var(--signa-radius) * 0.5);
@@ -136,14 +95,12 @@
 	--signa-elev-3: 0 24px 56px -28px rgba(16, 24, 40, 0.45);
 	--signa-elev-button: 0 12px 26px -16px var(--signa-accent-strong);
 
-	/* Motion -------------------------------------------------------------- */
 	--signa-dur-fast: 120ms;
 	--signa-dur-base: 180ms;
 	--signa-dur-slow: 320ms;
 	--signa-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 	--signa-ease-in: cubic-bezier(0.4, 0, 1, 1);
 
-	/* Type ---------------------------------------------------------------- */
 	--signa-width: 420px;
 	--signa-font: 'Vazirmatn', 'Vazir', 'IRANSans', 'Iranian Sans', Tahoma, sans-serif;
 
@@ -160,14 +117,6 @@
 	direction: rtl;
 	text-align: right;
 
-	/* Nothing inherited --------------------------------------------------
-	 *
-	 * These are the properties a theme's content column is most likely to set
-	 * — and the ones that make a form look like somebody else's prose: a
-	 * stretched or squeezed letter-spacing, a theme-wide bold, a text shadow,
-	 * a minimum or maximum weight. The form declares every one of them, so it
-	 * reads the same on any site and inside a shadow root.
-	 */
 	font-weight: 400;
 	font-style: normal;
 	font-variant: normal;
@@ -181,12 +130,6 @@
 	visibility: visible;
 }
 
-/*
- * Inside a shadow root the host element is the boundary: light DOM themes set
- * properties on it, and a bare `display: inline` host would collapse the form
- * to the width of one word. This rule is inert in the light DOM (nothing
- * matches `:host` outside a shadow tree), so the same file serves both paths.
- */
 :host {
 	display: block;
 	contain: layout style;
@@ -198,8 +141,6 @@
 	box-sizing: inherit;
 }
 
-/* Text for screen readers only. Used for the step announcement, the code
-   labels and the resend status. */
 .signa .signa-screen-reader {
 	position: absolute !important;
 	width: 1px;
@@ -211,14 +152,6 @@
 	white-space: nowrap;
 	border: 0;
 }
-
-/* Skip link -----------------------------------------------------------------
- *
- * The first tab stop jumps past the (invisible) honeypot and straight to the
- * phone field. It has to be *gone* until it is focused: the previous version
- * only nudged itself up with `translateY(-150%)`, which left it sitting on the
- * card in plain sight — the button users kept asking about.
- */
 
 .signa__skip {
 	position: absolute;
@@ -249,17 +182,6 @@
 	transform: translateX(50%) translateY(0);
 }
 
-/* WoodMart login sidebar ------------------------------------------------------
- *
- * The form is placed inside the theme's own sign-in panel, replacing its
- * WooCommerce username/password form (see src/Integrations/WoodMart.php). The
- * panel is a narrow drawer with its own padding, so the form only needs room.
- *
- * The selector targets the *host* element — the one the theme's markup
- * contains — because the form renders in a shadow root: padding on the host
- * still lays out the form inside it, and in the no-JavaScript case the same
- * rule lands on the form itself. One rule, both paths.
- */
 .login-form-side .signa {
 	padding: 0 20px 22px;
 }
@@ -267,8 +189,6 @@
 .login-form-side .signa__brand {
 	margin-bottom: var(--signa-space-3);
 }
-
-/* Alignment ----------------------------------------------------------------- */
 
 .signa-align-start {
 	margin-inline-start: 0;
@@ -280,8 +200,6 @@
 	margin-inline-end: 0;
 }
 
-/* Brand --------------------------------------------------------------------- */
-
 .signa__brand {
 	margin-bottom: var(--signa-space-5);
 	text-align: center;
@@ -291,8 +209,6 @@
 	height: auto;
 	max-width: 100%;
 }
-
-/* Form shell ---------------------------------------------------------------- */
 
 .signa__form {
 	display: block;
@@ -308,8 +224,6 @@
 	opacity: 0;
 	pointer-events: none;
 }
-
-/* Status card --------------------------------------------------------------- */
 
 .signa__status {
 	display: flex;
@@ -407,16 +321,6 @@
 	color: var(--signa-danger);
 }
 
-/* Progress ------------------------------------------------------------------
- *
- * Three segments instead of numbered circles joined by a line. A segment can
- * never land on top of another one, it survives any font size, and it reads the
- * same in RTL and LTR — which is exactly what the old connector failed at.
- *
- * Decorative for assistive tech: `aria-hidden` on the list, with the visually
- * hidden "step N of M" sentence beside it doing the announcing.
- */
-
 .signa__steps {
 	display: flex;
 	gap: var(--signa-space-2);
@@ -468,8 +372,6 @@
 	font-weight: 700;
 }
 
-/* Steps --------------------------------------------------------------------- */
-
 .signa-step {
 	display: none;
 }
@@ -510,7 +412,6 @@
 	font-size: 13.5px;
 }
 
-/* The step title is focused programmatically when a step opens. */
 .signa-step__title:focus {
 	outline: none;
 }
@@ -528,8 +429,6 @@
 	color: var(--signa-text);
 	letter-spacing: 0.02em;
 }
-
-/* Fields -------------------------------------------------------------------- */
 
 .signa-fields {
 	display: flex;
@@ -585,10 +484,6 @@
 	display: none;
 }
 
-/*
- * 16px, not 15px: iOS zooms the whole page when a focused input is smaller,
- * which leaves the form sitting half off-screen on every iPhone.
- */
 .signa-field__input,
 .signa-field__select,
 .signa-phone__input,
@@ -606,21 +501,6 @@
 	appearance: none;
 }
 
-/* Theme-proofing -------------------------------------------------------------
- *
- * Every rule above names one class, so a theme that styles its own content —
- * `.entry-content input`, `.wp-block-group button`, `#main .searchform input` —
- * outranks them and the form starts looking like the theme instead of like
- * this design. That is the whole of the honest answer to "your preview does
- * not match my site": WordPress never rewrites the markup, the theme's
- * stylesheet simply wins the cascade.
- *
- * These declarations re-assert the parts a theme is most likely to set and
- * that this design never wants from it. They are written *before* the skins on
- * purpose: a later rule at the same specificity still wins, so no skin loses
- * its look, and `letter-spacing`/`text-indent` stay available to the single
- * code field, which uses both to keep digits centred.
- */
 .signa .signa-field__input,
 .signa .signa-field__select,
 .signa .signa-phone__input,
@@ -685,28 +565,12 @@
 	accent-color: var(--signa-accent);
 }
 
-/* Phone ---------------------------------------------------------------------
- *
- * One field, one number. There used to be a fixed `09` chip inside this
- * control, which contradicted the error message right underneath it ("start
- * with 09") — the field asked for something it had already printed. Now the
- * placeholder shows the whole number the way it is written on a phone, and
- * anything the visitor types is folded to `09xxxxxxxxx` before it is sent
- * (see `canonicalPhone()` in `front.js`).
- */
-
 .signa-phone {
-	/* The number is written left to right, so the field is too. There is no
-	   prefix chip any more: the placeholder shows the whole number, and what
-	   the user types is what gets sent. */
 	direction: ltr;
 }
 
 .signa-phone__input,
 .signa-phone__input:focus {
-	/* Inherited from `.signa-field__input`: one border, one radius, one focus
-	   ring. All this adds is the direction and the tracking the eye needs to
-	   read eleven digits as one number. */
 	text-align: left;
 	direction: ltr;
 	letter-spacing: 0.06em;
@@ -714,11 +578,8 @@
 }
 
 .signa-phone__input::placeholder {
-	/* The placeholder is a tail, not a value: it should not shout. */
 	color: var(--signa-placeholder);
 }
-
-/* Code --------------------------------------------------------------------- */
 
 .signa-code {
 	margin-bottom: var(--signa-space-4);
@@ -752,8 +613,6 @@
 .signa-code__boxes {
 	display: flex;
 	gap: var(--signa-space-2);
-	/* Centred, always: five boxes hugging one edge left a hole on the other
-	   side of the card and made the step look half-finished. */
 	justify-content: center;
 	direction: ltr;
 }
@@ -771,7 +630,6 @@
 	font-family: inherit;
 	font-size: 24px;
 	font-weight: 700;
-	/* Tabular figures keep the boxes from twitching as digits land. */
 	font-feature-settings: "tnum" 1;
 	font-variant-numeric: tabular-nums;
 	text-align: center;
@@ -787,7 +645,6 @@
 	direction: ltr;
 	text-align: center;
 	letter-spacing: 0.5em;
-	/* The trailing letter-spacing would otherwise push the text off-centre. */
 	text-indent: 0.5em;
 	font-size: 22px;
 	font-weight: 700;
@@ -832,8 +689,6 @@
 	display: none;
 }
 
-/* Cooldown bar: one CSS animation instead of a second timer (UI plan 4.5). */
-
 .signa-code__cooldown {
 	height: 3px;
 	margin-top: var(--signa-space-2);
@@ -865,16 +720,12 @@
 	}
 }
 
-/* "No SMS?" helper — an offer, not a warning, so it reads like a card. */
-
 .signa-code__rescue {
 	margin-top: var(--signa-space-4);
 	padding: var(--signa-space-3) var(--signa-space-4);
 	border: 1px solid var(--signa-info-line);
 	border-radius: var(--signa-radius-control);
 	background: var(--signa-info-soft);
-	/* The panel explains a situation; it never centres itself and it never
-	   raises its voice above the code boxes it sits under. */
 	text-align: start;
 	animation: signa-step-in var(--signa-dur-base) var(--signa-ease-out);
 }
@@ -941,15 +792,12 @@
 	border-color: var(--signa-danger-line);
 }
 
-/* Buttons ------------------------------------------------------------------- */
-
 .signa-btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	gap: 10px;
 	width: 100%;
-	/* 44px is the WCAG 2.2 target-size floor; 52px is the comfortable one. */
 	min-height: 52px;
 	margin: 0;
 	padding: 13px 22px;
@@ -963,16 +811,11 @@
 	transition: background-color var(--signa-dur-fast) var(--signa-ease-out), color var(--signa-dur-fast) var(--signa-ease-out), border-color var(--signa-dur-fast) var(--signa-ease-out), box-shadow var(--signa-dur-base) var(--signa-ease-out), transform 90ms var(--signa-ease-out), opacity var(--signa-dur-fast) var(--signa-ease-out);
 }
 
-/* The label keeps its resting width so "..." does not resize the button. */
 .signa-btn__label {
 	min-width: var(--signa-label-width, auto);
 }
 
 .signa-btn--primary {
-	/* The depth is a translucent sheen *over* the accent, never a second
-	   colour. A fixed "darker teal" stop used to sit under the gradient, so a
-	   crimson button faded into green and every hover turned teal — the token
-	   could not follow a setting it knew nothing about. */
 	background-color: var(--signa-accent);
 	background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(0, 0, 0, 0.18) 100%);
 	color: var(--signa-accent-contrast);
@@ -1039,9 +882,6 @@
 	}
 }
 
-/* While a request is in flight the step dims, so the wait is visible even
-   when the pressed button has scrolled out of view. */
-
 .signa.is-busy .signa-step.is-current {
 	opacity: 0.72;
 	transition: opacity var(--signa-dur-fast) var(--signa-ease-out);
@@ -1078,8 +918,6 @@
 	cursor: default;
 }
 
-/* Captcha ------------------------------------------------------------------- */
-
 .signa-captcha {
 	display: flex;
 	flex-direction: column;
@@ -1093,15 +931,6 @@
 	display: none;
 }
 
-/*
- * A widget that arrives before its stylesheet (or without one) must not be able
- * to fill the form with its own brand mark: ARCaptcha's loader logo is an SVG
- * with a 621x363 viewBox, and that is exactly what it did.
- *
- * These are caps, not sizes — anything the vendor sets smaller stays smaller,
- * and the vendor's own rules are appended after this stylesheet inside the
- * shadow root, so on a tie they win. See mirrorVendorStyles() in front.js.
- */
 .signa-captcha :where(img, svg, canvas, video) {
 	max-width: 100%;
 	max-height: 96px;
@@ -1111,7 +940,6 @@
 	max-width: 100%;
 }
 
-/* An empty slot is a bug the visitor should be able to see coming. */
 .signa-captcha:not([hidden]):empty::after {
 	content: "";
 	width: 26px;
@@ -1145,13 +973,6 @@
 	line-height: 1.8;
 }
 
-/* Trust row -----------------------------------------------------------------
- *
- * Sits under the primary button, where the hesitation happens ("should I give
- * this site my number?"). Quiet by design: it is reassurance, not a feature
- * list, so it stays one muted line of three short claims.
- */
-
 .signa__trust {
 	display: flex;
 	flex-wrap: wrap;
@@ -1178,8 +999,6 @@
 	color: var(--signa-accent);
 }
 
-/* Terms --------------------------------------------------------------------- */
-
 .signa__terms {
 	margin: var(--signa-space-4) 0 0;
 	color: var(--signa-muted);
@@ -1190,12 +1009,6 @@
 .signa__terms a {
 	color: var(--signa-accent);
 }
-
-/* Skins --------------------------------------------------------------------
- *
- * `line` is the default: no card at all, so the form can be dropped into a
- * theme that already draws one. The others add a surface of their own.
- */
 
 .signa-skin-line .signa__form {
 	padding: 0;
@@ -1212,8 +1025,6 @@
 }
 
 .signa-skin-card .signa__form {
-	/* A hairline of the accent at the very top: the card gets an edge to sit
-	   against without a header band eating vertical space. */
 	border-top: 3px solid var(--signa-accent);
 }
 
@@ -1231,16 +1042,10 @@
 	background: rgba(255, 255, 255, 0.78);
 }
 
-/*
- * Slate is a pure token swap: no component-level colour overrides, so any new
- * component inherits the dark palette for free (UI plan 6.2).
- */
-
 .signa-skin-slate {
 	--signa-text: #f2f4f7;
 	--signa-muted: #98a2b3;
 	--signa-line: #344054;
-	/* 3.98:1 on --signa-surface and 4.8:1 on the form background (WCAG 1.4.11). */
 	--signa-input-line: #7a8697;
 	--signa-placeholder: #98a2b3;
 	--signa-surface: #1d2939;
@@ -1290,9 +1095,6 @@
 	border-radius: 999px;
 }
 
-/* Responsive ---------------------------------------------------------------- */
-
-/* md — tablets and narrow desktop columns. */
 @media (max-width: 768px) {
 	.signa__steps li {
 		font-size: 11.5px;
@@ -1305,7 +1107,6 @@
 	}
 }
 
-/* sm — phones. */
 @media (max-width: 480px) {
 	.signa {
 		font-size: 14.5px;
@@ -1315,7 +1116,6 @@
 		flex: 1 1 100%;
 	}
 
-	/* The action stays within thumb reach while the boxes are typed. */
 	.signa-step.is-current .signa-btn--primary {
 		position: sticky;
 		bottom: 10px;
@@ -1324,7 +1124,6 @@
 
 	.signa-code__box {
 		height: 54px;
-		/* Still 16px+ so iOS does not zoom when a box takes focus. */
 		font-size: 22px;
 	}
 
@@ -1352,7 +1151,6 @@
 	}
 }
 
-/* xs — 360px and below, where eight code boxes stop fitting. */
 @media (max-width: 380px) {
 	.signa-code__box {
 		height: 50px;
@@ -1363,7 +1161,6 @@
 		gap: var(--signa-space-1);
 	}
 
-	/* Only the "step 2 of 3" sentence survives; the labels would wrap. */
 	.signa__steps {
 		display: none;
 	}
@@ -1380,7 +1177,6 @@
 		font-size: 12.5px;
 		white-space: normal;
 	}
-
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1402,7 +1198,6 @@
 		transition: none;
 	}
 
-	/* The bar would be a 60-second moving object; the number stays instead. */
 	.signa-code__cooldown {
 		display: none;
 	}
@@ -1431,14 +1226,11 @@
 	}
 }
 
-/* Left-to-right installs: the attribute wins over the RTL default. */
 .signa[dir="ltr"] {
 	direction: ltr;
 	text-align: left;
 }
 
-/* The skip link centres itself with a transform, which is physical, so the
-   LTR form needs the mirrored value. */
 .signa[dir="ltr"] .signa__skip {
 	transform: translateX(-50%) translateY(-12px);
 }
@@ -1478,8 +1270,6 @@
 		color: CanvasText;
 	}
 }
-
-/* wp-login.php takeover ----------------------------------------------------- */
 
 .login.signa-login #login {
 	width: 100%;

@@ -1,30 +1,4 @@
 <?php
-/**
- * FarazSMS driver.
- *
- * FarazSMS moved its web service to a new platform. The current official
- * documentation (https://farazsms.com/webservice/ → docs.iranpayamak.com)
- * describes a JSON API with an `Api-Key` header:
- *
- *   pattern  POST https://api.iranpayamak.com/ws/v1/sms/pattern
- *            {code, attributes:{name:value}, recipient:"09…",
- *             line_number, number_format:"english"}
- *   text     POST https://api.iranpayamak.com/ws/v1/sms/simple
- *            {text, line_number, recipients:["09…"], number_format, schedule}
- *   answer   {"status":"success"|"error", "data":<id>, "messages":…}
- *
- * That is the route used whenever an API key is set. Accounts still on the
- * old IPPanel-based panel (username + password, no key) keep the legacy
- * transports below, which follow the vendor's old PHP samples:
- *
- *   pattern   POST https://ippanel.com/patterns/pattern
- *   free text GET  http://sms.farazsms.com/class/sms/webservice/send_url.php
- *
- * The legacy routes answer with a bare number; a short one is an error code,
- * not a tracking id (2.0.0 counted both as "sent").
- *
- * @package Signa
- */
 
 namespace Signa\Gateway\Drivers;
 
@@ -35,10 +9,8 @@ use Signa\Gateway\HttpGateway;
 defined( 'ABSPATH' ) || exit;
 
 final class FarazSms extends HttpGateway {
-
 	const API_PATTERN_ENDPOINT = 'https://api.iranpayamak.com/ws/v1/sms/pattern';
 	const API_SIMPLE_ENDPOINT  = 'https://api.iranpayamak.com/ws/v1/sms/simple';
-
 	const PATTERN_ENDPOINT = 'https://ippanel.com/patterns/pattern';
 	const SEND_URL_ENDPOINT = 'http://sms.farazsms.com/class/sms/webservice/send_url.php';
 	const SELECT_ENDPOINT   = 'http://ippanel.com/api/select';
@@ -88,9 +60,6 @@ final class FarazSms extends HttpGateway {
 		);
 	}
 
-	/**
-	 * Either an API key (new platform) or username + password (legacy panel).
-	 */
 	public function missing(): array {
 		if ( $this->usesApi() ) {
 			return array();
@@ -117,11 +86,6 @@ final class FarazSms extends HttpGateway {
 	}
 
 	private function param(): string {
-		/**
-		 * Filter the pattern variable name used by FarazSMS.
-		 *
-		 * @param string $key Input key.
-		 */
 		return (string) apply_filters( 'signa_faraz_pattern_key', $this->paramName( 'faraz_param', $this->usesApi() ? 'code' : 'verification-code' ) );
 	}
 
@@ -129,9 +93,6 @@ final class FarazSms extends HttpGateway {
 		return trim( \Signa\Support\Phone::latinDigits( $this->option( 'faraz_from' ) ) );
 	}
 
-	/**
-	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
-	 */
 	public function plan(): array {
 		$pattern = trim( $this->option( 'faraz_pattern' ) );
 		$sender  = $this->line();
@@ -141,7 +102,7 @@ final class FarazSms extends HttpGateway {
 
 		foreach ( $this->missing() as $key ) {
 			$label    = isset( $this->fields()[ $key ]['label'] ) ? (string) $this->fields()[ $key ]['label'] : $key;
-			$issues[] = sprintf( /* translators: %s: settings field label */ __( 'مقدار «%s» تنظیم نشده است.', 'signa' ), $label );
+			$issues[] = sprintf(  __( 'مقدار «%s» تنظیم نشده است.', 'signa' ), $label );
 		}
 
 		if ( '' === $pattern && '' === $sender ) {
@@ -150,7 +111,6 @@ final class FarazSms extends HttpGateway {
 
 		if ( '' !== $pattern ) {
 			$notes[] = sprintf(
-				/* translators: %s: variable name */
 				__( 'متغیر پترن «%s» فرستاده می‌شود؛ باید با متغیر داخل متن پترن یکی باشد.', 'signa' ),
 				$this->param()
 			);
@@ -206,9 +166,6 @@ final class FarazSms extends HttpGateway {
 		return $this->sendText( $request, $username, $password, $sender );
 	}
 
-	/**
-	 * The current FarazSMS web service (docs.iranpayamak.com).
-	 */
 	private function sendApi( DeliveryRequest $request, string $key, string $pattern, string $sender ): GatewayResult {
 		if ( '' !== $pattern ) {
 			$url     = self::API_PATTERN_ENDPOINT;
@@ -279,11 +236,6 @@ final class FarazSms extends HttpGateway {
 		);
 	}
 
-	/**
-	 * `messages` is a string, a list, or a field => list map.
-	 *
-	 * @param array<string,mixed> $body
-	 */
 	private function apiMessage( array $body ): string {
 		foreach ( array( 'messages', 'message', 'errors' ) as $key ) {
 			if ( ! isset( $body[ $key ] ) ) {
@@ -314,9 +266,6 @@ final class FarazSms extends HttpGateway {
 		return '';
 	}
 
-	/**
-	 * Pattern delivery, exactly as the vendor's own PHP sample does it.
-	 */
 	private function sendPattern( DeliveryRequest $request, string $username, string $password, string $pattern, string $sender ): GatewayResult {
 		$payload = array( $this->param() => $request->code() );
 
@@ -338,7 +287,6 @@ final class FarazSms extends HttpGateway {
 				'timeout'     => 12,
 				'redirection' => 0,
 				'body'        => $payload,
-				// The panel wants the payload as it is, with no JSON header.
 				'headers'     => array(),
 			)
 		);
@@ -346,9 +294,6 @@ final class FarazSms extends HttpGateway {
 		return $this->evaluateText( $response, 'pattern' );
 	}
 
-	/**
-	 * Free text over the documented webservice URL, with one fallback bridge.
-	 */
 	private function sendText( DeliveryRequest $request, string $username, string $password, string $sender ): GatewayResult {
 		$message = $request->render( $this->settings->str( 'sms_template' ), $this->settings->int( 'code_ttl', 120 ) );
 
@@ -375,7 +320,6 @@ final class FarazSms extends HttpGateway {
 			return $result;
 		}
 
-		// Some panels only expose the IPPanel bridge.
 		$bridge = $this->post(
 			self::SELECT_ENDPOINT,
 			array(
@@ -396,13 +340,6 @@ final class FarazSms extends HttpGateway {
 		return $this->evaluateText( $bridge, 'text' );
 	}
 
-	/**
-	 * These endpoints answer with a bare tracking id on success and a sentence
-	 * (Persian) or a JSON error object on failure — never with a documented
-	 * `status` field.
-	 *
-	 * @param array|\WP_Error $response
-	 */
 	private function evaluateText( $response, string $mode ): GatewayResult {
 		if ( is_wp_error( $response ) ) {
 			return $this->transportFailure( $response );
@@ -417,7 +354,6 @@ final class FarazSms extends HttpGateway {
 		}
 
 		if ( 200 === $status && '' !== $raw && ! $this->looksLikeFailure( $raw, $body ) ) {
-			// A tracking id is a long number; a failure sentence is not.
 			return GatewayResult::sent( $this->id(), substr( preg_replace( '/[^0-9a-zA-Z\-]/', '', $raw ), 0, 64 ), $status, array( 'mode' => $mode ) );
 		}
 
@@ -445,9 +381,6 @@ final class FarazSms extends HttpGateway {
 		return GatewayResult::failed( $this->id(), $this->codeForStatus( $status ), $detail, $status, array( 'mode' => $mode ) );
 	}
 
-	/**
-	 * @param array<string,mixed> $body
-	 */
 	private function looksLikeFailure( string $raw, array $body ): bool {
 		if ( ! empty( $body['error'] ) ) {
 			return true;
@@ -461,11 +394,6 @@ final class FarazSms extends HttpGateway {
 			return true;
 		}
 
-		/*
-		 * The legacy panels answer errors with a bare, short number (0, 2, -1,
-		 * 11…) and success with a long tracking id. 2.0.0 read both as sent,
-		 * so an empty account looked healthy while no code arrived.
-		 */
 		$bare = trim( $raw, " \t\n\r\0\x0B\"[]" );
 
 		if ( preg_match( '/^-?\d+$/', $bare ) && strlen( ltrim( $bare, '-' ) ) < 5 ) {

@@ -1,22 +1,4 @@
 <?php
-/**
- * Opens the admin area — through the licensed file, when it can.
- *
- * RTL-Theme licenses a product by encoding some of its files (ionCube); the
- * marketplace's own license manager plugin does the checking. Signa hands it
- * exactly one file: Menu.php, which registers every admin screen and the
- * settings group. That keeps the licence where the marketplace says it
- * belongs — the admin panel — and everything the visitor sees (the login
- * form, WooCommerce, the REST API) in plain PHP that never depends on it.
- *
- * An encoded file starts with a stub that ends the request when its loader is
- * missing. So this class looks before it loads: an encoded Menu.php on a host
- * without the loader is not included at all. The administrator gets one page
- * that says what is missing and how to fix it; the site keeps logging people
- * in with the saved settings.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -25,20 +7,10 @@ use Signa\Bootable;
 defined( 'ABSPATH' ) || exit;
 
 final class Gate implements Bootable {
-
-	/** Plugin-relative path of the file the marketplace encodes. */
 	const LICENSED = 'src/Admin/Menu.php';
-
-	/** @var callable():Bootable */
 	private $menu;
-
-	/** @var string */
 	private $file;
 
-	/**
-	 * @param callable():Bootable $menu Builds the real admin menu.
-	 * @param string              $file Absolute path of the licensed file; empty means the installed one.
-	 */
 	public function __construct( callable $menu, string $file = '' ) {
 		$this->menu = $menu;
 		$this->file = '' === $file ? SIGNA_PATH . self::LICENSED : $file;
@@ -62,28 +34,19 @@ final class Gate implements Bootable {
 		$menu->boot();
 	}
 
-	/**
-	 * Which encoder wrote this file, if any.
-	 *
-	 * Encoded files announce their loader in the stub at the top; only the
-	 * head of the file is read.
-	 *
-	 * @param string $file Absolute path.
-	 * @return string 'ioncube', 'sourceguardian' or '' for plain PHP.
-	 */
 	public static function encoder( string $file ): string {
 		if ( ! is_readable( $file ) ) {
 			return '';
 		}
 
-		$handle = fopen( $file, 'rb' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		$handle = fopen( $file, 'rb' );
 
 		if ( false === $handle ) {
 			return '';
 		}
 
-		$head = (string) fread( $handle, 4096 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread
-		fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		$head = (string) fread( $handle, 4096 );
+		fclose( $handle );
 
 		if ( false !== stripos( $head, 'ioncube' ) ) {
 			return 'ioncube';
@@ -96,12 +59,6 @@ final class Gate implements Bootable {
 		return '';
 	}
 
-	/**
-	 * The loader this file needs and this server lacks, or '' when it can load.
-	 *
-	 * @param string $file Absolute path.
-	 * @return string
-	 */
 	public static function missingLoader( string $file ): string {
 		$encoder = self::encoder( $file );
 
@@ -116,9 +73,6 @@ final class Gate implements Bootable {
 		return '';
 	}
 
-	/**
-	 * One menu entry in the usual place, so nobody has to hunt for the reason.
-	 */
 	public function registerFallback(): void {
 		add_menu_page(
 			__( 'سیگنا', 'signa' ),
@@ -141,7 +95,6 @@ final class Gate implements Bootable {
 			. '</strong> ';
 
 		printf(
-			/* translators: %s: PHP extension name */
 			esc_html__( 'افزونهٔ PHP «%s» روی این هاست فعال نیست. فرم ورود سایت با تنظیمات ذخیره‌شده کار می‌کند؛ برای تغییر تنظیمات این افزونه را فعال کنید.', 'signa' ),
 			esc_html( self::missingLoader( $this->file ) )
 		);
@@ -156,7 +109,6 @@ final class Gate implements Bootable {
 
 		echo '<p>';
 		printf(
-			/* translators: %s: PHP extension name */
 			esc_html__( 'پنل سیگنا به افزونهٔ PHP «%s» نیاز دارد و این افزونه روی هاست شما فعال نیست. فرم ورود و عضویت سایت همچنان با آخرین تنظیمات ذخیره‌شده کار می‌کند.', 'signa' ),
 			esc_html( $loader )
 		);

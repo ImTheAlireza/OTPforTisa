@@ -1,9 +1,4 @@
 <?php
-/**
- * Scrubs anything sensitive before a context array is persisted.
- *
- * @package Signa
- */
 
 namespace Signa\Log;
 
@@ -13,16 +8,11 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class Redactor {
-
-	/** @var string[] */
 	private $forbidden = array(
 		'otp', 'code', 'plain_code', 'password', 'secret', 'token', 'api_key', 'apikey',
 		'authorization', 'cookie', 'session', 'challenge', 'response_body', 'body',
 	);
 
-	/**
-	 * @return array<string,mixed>
-	 */
 	public function clean( array $context ): array {
 		$clean = array();
 

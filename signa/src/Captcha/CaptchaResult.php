@@ -1,26 +1,13 @@
 <?php
-/**
- * Captcha verification outcome.
- *
- * @package Signa
- */
 
 namespace Signa\Captcha;
 
 defined( 'ABSPATH' ) || exit;
 
 final class CaptchaResult {
-
-	/** @var bool */
 	private $passed;
-
-	/** @var string */
 	private $errorCode;
-
-	/** @var string */
 	private $message;
-
-	/** @var float */
 	private $score;
 
 	private function __construct( bool $passed, string $errorCode = '', string $message = '', float $score = 0.0 ) {
@@ -38,11 +25,6 @@ final class CaptchaResult {
 		return new self( false, $errorCode, $message, $score );
 	}
 
-	/**
-	 * Named `isPassed()` rather than `passed()` because the static factory
-	 * above already owns that name — same split as GatewayResult::sent() and
-	 * GatewayResult::isSent().
-	 */
 	public function isPassed(): bool {
 		return $this->passed;
 	}

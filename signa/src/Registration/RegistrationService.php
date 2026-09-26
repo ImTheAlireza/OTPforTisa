@@ -1,12 +1,4 @@
 <?php
-/**
- * Orchestrates both registration flows.
- *
- * fields_then_code : fill form → store draft → send code → verify → create account
- * code_then_fields : send code → verify → issue verified token → fill form → create account
- *
- * @package Signa
- */
 
 namespace Signa\Registration;
 
@@ -19,26 +11,12 @@ use Signa\User\PhoneLocator;
 defined( 'ABSPATH' ) || exit;
 
 final class RegistrationService {
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var FieldSchema */
 	private $schema;
-
-	/** @var FieldValidator */
 	private $validator;
-
-	/** @var DraftStore */
 	private $drafts;
-
-	/** @var AccountFactory */
 	private $accounts;
-
-	/** @var PhoneLocator */
 	private $locator;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct(
@@ -75,9 +53,6 @@ final class RegistrationService {
 		return $this->schema->active();
 	}
 
-	/**
-	 * @return array{ok:bool,values:array,errors:array}
-	 */
 	public function validate( array $raw ): array {
 		return $this->validator->validate( $raw, $this->fields() );
 	}
@@ -90,9 +65,6 @@ final class RegistrationService {
 		return $this->drafts->create( $phone, array(), true );
 	}
 
-	/**
-	 * @return \WP_User|\WP_Error
-	 */
 	public function register( string $phone, array $values ) {
 		$phone = Phone::normalize( $phone );
 
@@ -121,24 +93,12 @@ final class RegistrationService {
 				)
 			);
 
-			/**
-			 * Fires when a registration attempt fails.
-			 *
-			 * @param string    $phone  Canonical phone.
-			 * @param string    $reason WP_Error code.
-			 * @param array     $values Sanitised values.
-			 */
 			do_action( 'signa_registration_failed', $phone, $user->get_error_code(), $values );
 		}
 
 		return $user;
 	}
 
-	/**
-	 * Turn a fields-first draft into an account.
-	 *
-	 * @return \WP_User|\WP_Error
-	 */
 	public function completeDraft( string $token, string $phone ) {
 		$draft = $this->drafts->find( $token );
 
@@ -163,11 +123,6 @@ final class RegistrationService {
 		return $user;
 	}
 
-	/**
-	 * Create an account after the phone was verified first.
-	 *
-	 * @return \WP_User|\WP_Error
-	 */
 	public function completeVerified( string $token, string $phone, array $rawValues ) {
 		$draft = $this->drafts->find( $token );
 

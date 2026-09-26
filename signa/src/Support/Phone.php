@@ -1,19 +1,11 @@
 <?php
-/**
- * Iranian phone number normalisation, validation and masking.
- *
- * @package Signa
- */
 
 namespace Signa\Support;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Phone {
-
 	const CANONICAL = '/^09\d{9}$/';
-
-	/** @var array<string,string> */
 	private static $digitMap = array(
 		'۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
 		'۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
@@ -25,9 +17,6 @@ final class Phone {
 		return strtr( $value, self::$digitMap );
 	}
 
-	/**
-	 * Reduce any local spelling to 09xxxxxxxxx.
-	 */
 	public static function normalize( string $raw ): string {
 		$value = preg_replace( '/[^0-9+]/', '', self::latinDigits( $raw ) );
 
@@ -56,20 +45,9 @@ final class Phone {
 	public static function isValid( string $phone ): bool {
 		$normalized = self::normalize( $phone );
 
-		/**
-		 * Allow other numbering plans to opt in.
-		 *
-		 * @param bool   $valid Whether the number matches the Iranian mobile pattern.
-		 * @param string $normalized Normalised number.
-		 */
 		return (bool) apply_filters( 'signa_phone_valid', 1 === preg_match( self::CANONICAL, $normalized ), $normalized );
 	}
 
-	/**
-	 * Every spelling that may already exist in legacy user meta.
-	 *
-	 * @return string[]
-	 */
 	public static function variants( string $phone ): array {
 		$normalized = self::normalize( $phone );
 
@@ -102,9 +80,6 @@ final class Phone {
 		return substr( $digits, 0, 4 ) . '***' . substr( $digits, -3 );
 	}
 
-	/**
-	 * Fingerprint used as a storage key; never reversible without the pepper.
-	 */
 	public static function fingerprint( string $phone ): string {
 		return Crypto::sign( self::normalize( $phone ), 'phone' );
 	}

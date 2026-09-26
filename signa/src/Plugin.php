@@ -1,9 +1,4 @@
 <?php
-/**
- * Plugin orchestrator: wires the service container and boots hook-bearing services.
- *
- * @package Signa
- */
 
 namespace Signa;
 
@@ -12,14 +7,8 @@ use Signa\Support\Container;
 defined( 'ABSPATH' ) || exit;
 
 final class Plugin {
-
-	/** @var Plugin|null */
 	private static $instance;
-
-	/** @var Container */
 	private $container;
-
-	/** @var bool */
 	private $booted = false;
 
 	private function __construct() {
@@ -51,9 +40,6 @@ final class Plugin {
 		return $this->container;
 	}
 
-	/**
-	 * @return mixed
-	 */
 	public function get( string $id ) {
 		return $this->container->make( $id );
 	}
@@ -66,13 +52,6 @@ final class Plugin {
 
 		load_plugin_textdomain( 'signa', false, dirname( plugin_basename( SIGNA_FILE ) ) . '/languages' );
 
-		/*
-		 * Every service is built and started through the guard. A constructor
-		 * whose wiring drifted, a class that is not in the package, a file that
-		 * was half replaced — all of them used to be a fatal on every request,
-		 * front end included. Now they are one sentence in the admin and the
-		 * rest of the plugin keeps working.
-		 */
 		try {
 			$this->container->make( Install\Upgrades::class )->run();
 		} catch ( \Throwable $error ) {
@@ -91,19 +70,9 @@ final class Plugin {
 			}
 		}
 
-		/**
-		 * Fires after every Signa service has been attached to WordPress.
-		 *
-		 * @param Container $container Plugin service container.
-		 */
 		do_action( 'signa_booted', $this->container );
 	}
 
-	/**
-	 * Services that must be instantiated on every request to attach hooks.
-	 *
-	 * @return string[]
-	 */
 	private function bootables(): array {
 		return array(
 			Install\Guard::class,
@@ -476,10 +445,6 @@ final class Plugin {
 			);
 		} );
 
-		/*
-		 * The admin menu is reached through the gate: Menu.php is the file the
-		 * marketplace encodes, and the gate only loads it where it can run.
-		 */
 		$c->bind( Admin\Gate::class, static function ( Container $c ) {
 			return new Admin\Gate(
 				static function () use ( $c ) {

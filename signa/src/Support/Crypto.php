@@ -1,22 +1,11 @@
 <?php
-/**
- * Cryptographic helpers: code generation, keyed hashing and constant-time compare.
- *
- * A per-installation pepper is generated on activation so exported database
- * dumps cannot be brute-forced offline against stored code hashes.
- *
- * @package Signa
- */
 
 namespace Signa\Support;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Crypto {
-
 	const PEPPER_OPTION = 'signa_pepper';
-
-	/** @var string|null */
 	private static $pepper;
 
 	public static function digits( int $length ): string {
@@ -34,9 +23,6 @@ final class Crypto {
 		return substr( bin2hex( random_bytes( max( 8, $bytes ) ) ), 0, max( 8, $bytes ) * 2 );
 	}
 
-	/**
-	 * Keyed hash used for identifiers, codes and log fingerprints.
-	 */
 	public static function sign( string $value, string $context = 'general' ): string {
 		return hash_hmac( 'sha256', $context . '|' . $value, self::pepper() );
 	}

@@ -1,23 +1,11 @@
 <?php
-/**
- * Tiny lazy service container.
- *
- * Every service is registered as a factory and resolved at most once, which
- * keeps the plugin cheap on requests that never touch the OTP flow.
- *
- * @package Signa
- */
 
 namespace Signa\Support;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Container {
-
-	/** @var array<string,callable> */
 	private $factories = array();
-
-	/** @var array<string,mixed> */
 	private $resolved = array();
 
 	public function bind( string $id, callable $factory ): void {
@@ -33,9 +21,6 @@ final class Container {
 		return isset( $this->resolved[ $id ] ) || isset( $this->factories[ $id ] );
 	}
 
-	/**
-	 * @return mixed
-	 */
 	public function make( string $id ) {
 		if ( array_key_exists( $id, $this->resolved ) ) {
 			return $this->resolved[ $id ];
@@ -51,9 +36,6 @@ final class Container {
 		return $this->resolved[ $id ];
 	}
 
-	/**
-	 * @return string[]
-	 */
 	public function ids(): array {
 		return array_values( array_unique( array_merge( array_keys( $this->factories ), array_keys( $this->resolved ) ) ) );
 	}

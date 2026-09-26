@@ -1,9 +1,4 @@
 <?php
-/**
- * Activation / deactivation routines.
- *
- * @package Signa
- */
 
 namespace Signa\Install;
 
@@ -14,7 +9,6 @@ use Signa\Support\Crypto;
 defined( 'ABSPATH' ) || exit;
 
 final class Activator {
-
 	public static function activate(): void {
 		$schema = new Schema();
 		$schema->install();
@@ -33,9 +27,6 @@ final class Activator {
 
 		flush_rewrite_rules();
 
-		/**
-		 * Fires once, right after the plugin has been activated.
-		 */
 		do_action( 'signa_activated' );
 	}
 
@@ -43,24 +34,15 @@ final class Activator {
 		wp_clear_scheduled_hook( Maintenance::HOOK );
 		flush_rewrite_rules();
 
-		/**
-		 * Fires when the plugin is deactivated. Data is never removed here.
-		 */
 		do_action( 'signa_deactivated' );
 	}
 
-	/**
-	 * Repair missing pieces (tables or cron) on a normal request.
-	 */
 	public static function schedule(): void {
 		if ( ! wp_next_scheduled( Maintenance::HOOK ) ) {
 			wp_schedule_event( time(), 'twicedaily', Maintenance::HOOK );
 		}
 	}
 
-	/**
-	 * Cheap self-heal used by the diagnostics screen.
-	 */
 	public static function repair(): array {
 		$schema  = new Schema();
 		$missing = $schema->missingTables();

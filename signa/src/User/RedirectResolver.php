@@ -1,9 +1,4 @@
 <?php
-/**
- * Picks a safe destination after a successful sign-in.
- *
- * @package Signa
- */
 
 namespace Signa\User;
 
@@ -12,18 +7,12 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class RedirectResolver {
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( Settings $settings ) {
 		$this->settings = $settings;
 	}
 
-	/**
-	 * @param string $context   `login` or `register`.
-	 * @param string $requested Value supplied by the form.
-	 */
 	public function resolve( int $userId, string $context = 'login', string $requested = '' ): string {
 		$candidates = array(
 			$this->fromRequest(),
@@ -58,9 +47,6 @@ final class RedirectResolver {
 		return home_url( '/' );
 	}
 
-	/**
-	 * Accept only same-host relative URLs (or absolute ones on this host).
-	 */
 	public function internal( string $url ): string {
 		$url = trim( $url );
 
@@ -76,21 +62,14 @@ final class RedirectResolver {
 	private function fromRequest(): string {
 		$raw = '';
 
-		if ( isset( $_REQUEST['redirect_to'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$raw = sanitize_text_field( wp_unslash( $_REQUEST['redirect_to'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_REQUEST['redirect_to'] ) ) {
+			$raw = sanitize_text_field( wp_unslash( $_REQUEST['redirect_to'] ) );
 		}
 
 		return $this->internal( $raw );
 	}
 
 	private function filter( string $url, int $userId, string $context ): string {
-		/**
-		 * Filter the post sign-in destination.
-		 *
-		 * @param string $url     Resolved URL.
-		 * @param int    $userId  Signed-in user.
-		 * @param string $context `login` or `register`.
-		 */
 		$filtered = (string) apply_filters( 'signa_redirect', $url, $userId, $context );
 
 		return '' !== $this->internal( $filtered ) ? $filtered : $this->fallback();

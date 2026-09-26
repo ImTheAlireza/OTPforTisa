@@ -1,16 +1,10 @@
 <?php
-/**
- * Default code store backed by the {prefix}signa_codes table.
- *
- * @package Signa
- */
 
 namespace Signa\Otp;
 
 defined( 'ABSPATH' ) || exit;
 
 final class TableCodeStore implements CodeStore {
-
 	private function table(): string {
 		global $wpdb;
 
@@ -22,14 +16,13 @@ final class TableCodeStore implements CodeStore {
 
 		$now = time();
 
-		// Only the newest code per phone stays usable.
-		$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update(
 			$this->table(),
 			array( 'consumed' => 1 ),
 			array( 'fingerprint' => $fingerprint, 'consumed' => 0 )
 		);
 
-		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->insert(
 			$this->table(),
 			array(
 				'fingerprint' => $fingerprint,
@@ -59,9 +52,9 @@ final class TableCodeStore implements CodeStore {
 	public function active( string $fingerprint ): ?CodeRecord {
 		global $wpdb;
 
-		$row = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				'SELECT * FROM ' . $this->table() . ' WHERE fingerprint = %s AND consumed = 0 AND expires_at > %d ORDER BY id DESC LIMIT 1', // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				'SELECT * FROM ' . $this->table() . ' WHERE fingerprint = %s AND consumed = 0 AND expires_at > %d ORDER BY id DESC LIMIT 1',
 				$fingerprint,
 				time()
 			)
@@ -77,12 +70,12 @@ final class TableCodeStore implements CodeStore {
 			return PHP_INT_MAX;
 		}
 
-		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'UPDATE ' . $this->table() . ' SET attempts = attempts + 1 WHERE id = %d', $record->id() ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$wpdb->query(
+			$wpdb->prepare( 'UPDATE ' . $this->table() . ' SET attempts = attempts + 1 WHERE id = %d', $record->id() )
 		);
 
-		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'SELECT attempts FROM ' . $this->table() . ' WHERE id = %d', $record->id() ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		return (int) $wpdb->get_var(
+			$wpdb->prepare( 'SELECT attempts FROM ' . $this->table() . ' WHERE id = %d', $record->id() )
 		);
 	}
 
@@ -93,20 +86,13 @@ final class TableCodeStore implements CodeStore {
 			return;
 		}
 
-		$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update(
 			$this->table(),
 			array( 'consumed' => 1 ),
 			array( 'id' => $record->id() )
 		);
 	}
 
-	/**
-	 * Claim a record with a conditional update, and let the database arbitrate.
-	 *
-	 * The `consumed = 0` in the WHERE clause is the whole trick: MySQL reports
-	 * how many rows it actually changed, so a second request in the same second
-	 * sees `0` and loses the race instead of replaying the code.
-	 */
 	public function claim( CodeRecord $record ): bool {
 		global $wpdb;
 
@@ -114,11 +100,11 @@ final class TableCodeStore implements CodeStore {
 			return false;
 		}
 
-		$changed = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$changed = $wpdb->query(
 			$wpdb->prepare(
 				'UPDATE ' . $this->table() . ' SET consumed = 1 WHERE id = %d AND consumed = 0',
 				$record->id()
-			) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			)
 		);
 
 		return 1 === (int) $changed;
@@ -127,7 +113,7 @@ final class TableCodeStore implements CodeStore {
 	public function revoke( string $fingerprint ): void {
 		global $wpdb;
 
-		$wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update(
 			$this->table(),
 			array( 'consumed' => 1 ),
 			array( 'fingerprint' => $fingerprint, 'consumed' => 0 )
@@ -137,8 +123,8 @@ final class TableCodeStore implements CodeStore {
 	public function purge(): int {
 		global $wpdb;
 
-		$deleted = $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE expires_at < %d OR consumed = 1 LIMIT 5000', time() - DAY_IN_SECONDS ) // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		$deleted = $wpdb->query(
+			$wpdb->prepare( 'DELETE FROM ' . $this->table() . ' WHERE expires_at < %d OR consumed = 1 LIMIT 5000', time() - DAY_IN_SECONDS )
 		);
 
 		return (int) $deleted;

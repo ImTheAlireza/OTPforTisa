@@ -1,9 +1,4 @@
 <?php
-/**
- * Walks the configured gateway order until one of them accepts the delivery.
- *
- * @package Signa
- */
 
 namespace Signa\Gateway;
 
@@ -14,20 +9,10 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class FailoverChain {
-
-	/** @var Registry */
 	private $registry;
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
-
-	/** @var Health */
 	private $health;
-
-	/** @var array<int,array<string,mixed>> */
 	private $trace = array();
 
 	public function __construct( Registry $registry, Settings $settings, Logger $logger, ?Health $health = null ) {
@@ -37,33 +22,14 @@ final class FailoverChain {
 		$this->health   = null === $health ? new Health() : $health;
 	}
 
-	/**
-	 * Gateway ids in the order they will be tried.
-	 *
-	 * @return string[]
-	 */
 	public function order(): array {
 		return array_values( array_map( 'strval', $this->registry->deliveryOrder() ) );
 	}
 
-	/**
-	 * Delivery plan for one gateway, straight from its driver.
-	 *
-	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
-	 */
 	public function planFor( string $gateway ): array {
 		return $this->registry->planFor( $gateway );
 	}
 
-	/**
-	 * Gateway => outcome for the attempt that just ran.
-	 *
-	 * This is what the tools screen shows when an administrator asks "why did my
-	 * test message not arrive": every gateway tried, in order, with the exact
-	 * upstream error code and HTTP status.
-	 *
-	 * @return array<int,array<string,mixed>>
-	 */
 	public function trace(): array {
 		return $this->trace;
 	}
@@ -111,11 +77,6 @@ final class FailoverChain {
 			$last = $result;
 			$meta = $result->meta();
 
-			/*
-			 * The health card is where "why did it fail last time?" is answered
-			 * without reading logs, so the technical reason travels with the
-			 * sentence: "DNS: Could not resolve host: api.sms.ir — نام دامنه…".
-			 */
 			$detail = trim(
 				( isset( $meta['reason'] ) ? (string) $meta['reason'] : '' ) . ' '
 				. (string) $result->message()
@@ -123,12 +84,6 @@ final class FailoverChain {
 
 			$this->record( $result, $attempt, $id );
 
-			/*
-			 * A request the site itself refused is recorded, but not counted:
-			 * the gateway was never asked, so it is neither unhealthy nor
-			 * benched. The event keeps its own name too, so the events screen
-			 * reads «خروجی سایت بسته است» instead of a gateway failure.
-			 */
 			$outbound = Transport::isBlocked( isset( $meta['reason'] ) ? (string) $meta['reason'] : (string) $result->message() );
 
 			if ( $outbound ) {
@@ -145,7 +100,6 @@ final class FailoverChain {
 					'status'     => $result->httpStatus(),
 					'phone'      => $request->phone(),
 					'attempt'    => $attempt,
-					// What actually failed, in the row the administrator reads.
 					'reason'     => isset( $meta['reason'] ) ? (string) $meta['reason'] : '',
 					'message'    => $result->message(),
 				)
@@ -159,13 +113,6 @@ final class FailoverChain {
 		return $last;
 	}
 
-	/**
-	 * Keep the gateways that are not resting, and log the ones that were held
-	 * back. The order of the rest is untouched, because it is the admin's.
-	 *
-	 * @param string[] $order Configured order.
-	 * @return string[]
-	 */
 	private function choose( array $order ): array {
 		$blocked = array();
 
@@ -188,16 +135,6 @@ final class FailoverChain {
 		return $usable;
 	}
 
-	/**
-	 * A breaker must never be the reason nobody can log in: when every gateway
-	 * is resting, the chain runs in full — which is also the half-open probe.
-	 *
-	 * Pure function, so the rule is testable without WordPress or a network.
-	 *
-	 * @param string[]            $order   Configured order.
-	 * @param array<string,bool>  $blocked Gateway => resting.
-	 * @return string[]
-	 */
 	public static function usable( array $order, array $blocked ): array {
 		$usable = array();
 
@@ -210,9 +147,6 @@ final class FailoverChain {
 		return array() === $usable ? array_values( array_map( 'strval', $order ) ) : $usable;
 	}
 
-	/**
-	 * One line of the delivery trace shown on the tools screen.
-	 */
 	private function record( GatewayResult $result, int $attempt, string $id ): void {
 		$this->trace[] = array(
 			'gateway'    => $result->gateway(),
@@ -227,17 +161,10 @@ final class FailoverChain {
 		);
 	}
 
-	/**
-	 * Ask the next gateway while one is left, failover is on, and the refusal
-	 * was not about the recipient's number (see GatewayResult::worthFailover).
-	 */
 	private function shouldContinue( GatewayResult $result, int $index, int $total ): bool {
 		return self::continues( $result, $index, $total, $this->settings->bool( 'failover_enabled', true ) );
 	}
 
-	/**
-	 * Pure form of the rule above, so it is testable without WordPress.
-	 */
 	public static function continues( GatewayResult $result, int $index, int $total, bool $enabled ): bool {
 		if ( $index + 1 >= $total || ! $enabled ) {
 			return false;

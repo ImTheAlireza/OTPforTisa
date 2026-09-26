@@ -1,9 +1,4 @@
 <?php
-/**
- * Elementor registration: one category, one widget.
- *
- * @package Signa
- */
 
 namespace Signa\Elementor;
 
@@ -14,13 +9,8 @@ use Signa\Front\FormRenderer;
 defined( 'ABSPATH' ) || exit;
 
 final class Module implements Bootable {
-
 	const CATEGORY = 'signa';
-
-	/** @var FormRenderer */
 	private $renderer;
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( FormRenderer $renderer, Settings $settings ) {
@@ -32,13 +22,9 @@ final class Module implements Bootable {
 		add_action( 'elementor/elements/categories_registered', array( $this, 'category' ) );
 		add_action( 'elementor/widgets/register', array( $this, 'widgets' ) );
 
-		// Elementor 3.4 and older.
 		add_action( 'elementor/widgets/widgets_registered', array( $this, 'legacyWidgets' ) );
 	}
 
-	/**
-	 * @param \Elementor\Elements_Manager $manager
-	 */
 	public function category( $manager ): void {
 		if ( ! is_object( $manager ) || ! method_exists( $manager, 'add_category' ) ) {
 			return;
@@ -53,9 +39,6 @@ final class Module implements Bootable {
 		);
 	}
 
-	/**
-	 * @param \Elementor\Widgets_Manager $manager
-	 */
 	public function widgets( $manager ): void {
 		if ( ! $this->usable() || ! is_object( $manager ) || ! method_exists( $manager, 'register' ) ) {
 			return;
@@ -64,9 +47,6 @@ final class Module implements Bootable {
 		$manager->register( new FormWidget( $this->renderer, $this->settings ) );
 	}
 
-	/**
-	 * @param \Elementor\Widgets_Manager $manager
-	 */
 	public function legacyWidgets( $manager ): void {
 		if ( ! $this->usable() || ! is_object( $manager ) || ! method_exists( $manager, 'register_widget_type' ) ) {
 			return;

@@ -1,9 +1,4 @@
 <?php
-/**
- * Fixed-window quotas, resend cooldown and verification throttling.
- *
- * @package Signa
- */
 
 namespace Signa\Throttle;
 
@@ -16,7 +11,6 @@ use Signa\Support\Rejection;
 defined( 'ABSPATH' ) || exit;
 
 final class Throttle {
-
 	const PREFIX_SEND_PHONE = 'quota:send:phone:';
 	const PREFIX_SEND_IP    = 'quota:send:ip:';
 	const PREFIX_SEND_DAY   = 'quota:send:day:';
@@ -25,11 +19,7 @@ final class Throttle {
 	const PREFIX_CHALLENGE  = 'quota:challenge:ip:';
 	const PREFIX_COOLDOWN   = 'cooldown:';
 	const PREFIX_LOCK       = 'cooldownlock:';
-
-	/** @var StateStore */
 	private $state;
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( StateStore $state, Settings $settings ) {
@@ -45,9 +35,6 @@ final class Throttle {
 		return max( MINUTE_IN_SECONDS, $this->settings->int( 'window_minutes', 60 ) * MINUTE_IN_SECONDS );
 	}
 
-	/**
-	 * Charge one send attempt against every quota. Throws when a limit is hit.
-	 */
 	public function chargeSend( string $phone, string $ip ): void {
 		if ( ! $this->isEnabled() ) {
 			return;
@@ -65,15 +52,6 @@ final class Throttle {
 		$dayLimit   = max( $ipLimit, $this->settings->int( 'limit_per_ip_daily', 60 ) );
 		$siteLimit  = $this->settings->int( 'limit_per_site_daily', 300 );
 
-		/*
-		 * The per-address quotas above are defeated by a botnet: a thousand
-		 * addresses each sending twelve codes is a thousand addresses inside
-		 * every limit. This one counter is not about abuse on a single address,
-		 * it is the site's own ceiling — the day the number of codes the whole
-		 * site sent crosses it, sending stops and says so. It protects the
-		 * owner's credit line, which is the only thing a distributed flood
-		 * actually spends.
-		 */
 		if ( $siteLimit > 0 && $perSite > $siteLimit ) {
 			throw Rejection::make(
 				'site_daily_limit',
@@ -107,10 +85,6 @@ final class Throttle {
 		}
 	}
 
-	/**
-	 * Charge a verification attempt (IP scoped, so an attacker cannot lock out
-	 * a victim's phone number).
-	 */
 	public function chargeVerify( string $ip ): void {
 		if ( ! $this->isEnabled() ) {
 			return;
@@ -125,9 +99,6 @@ final class Throttle {
 		}
 	}
 
-	/**
-	 * Charge a captcha submission before it reaches the external service.
-	 */
 	public function chargeChallenge( string $ip ): void {
 		if ( ! $this->isEnabled() ) {
 			return;
@@ -146,9 +117,6 @@ final class Throttle {
 		return max( 10, $this->settings->int( 'resend_delay', 60 ) );
 	}
 
-	/**
-	 * Remaining cooldown in seconds (0 when the user may request again).
-	 */
 	public function cooldownRemaining( string $phone ): int {
 		$value = $this->state->get( self::PREFIX_COOLDOWN . Phone::fingerprint( $phone ) );
 
@@ -176,10 +144,6 @@ final class Throttle {
 		);
 	}
 
-	/**
-	 * Claim the right to send before contacting the gateway. Prevents two
-	 * parallel requests from both slipping through the cooldown check.
-	 */
 	public function reserveCooldown( string $phone ): bool {
 		if ( ! $this->isEnabled() ) {
 			return true;
@@ -196,9 +160,6 @@ final class Throttle {
 		$this->state->forget( self::PREFIX_LOCK . Phone::fingerprint( $phone ) );
 	}
 
-	/**
-	 * How much of the current window a phone/IP pair has already consumed.
-	 */
 	public function usage( string $phone, string $ip ): array {
 		return array(
 			'phone'       => $this->state->hits( self::PREFIX_SEND_PHONE . Phone::fingerprint( $phone ) ),
@@ -227,9 +188,6 @@ final class Throttle {
 		);
 	}
 
-	/**
-	 * Snapshot used by the admin tools screen.
-	 */
 	public function summary(): array {
 		return array(
 			'cooldown_rows' => $this->state->countPrefix( self::PREFIX_COOLDOWN ),

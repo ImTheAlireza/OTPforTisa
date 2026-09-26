@@ -1,15 +1,4 @@
 <?php
-/**
- * The first thing an owner sees: is it working, and what is left to do?
- *
- * Three health tiles, the last day in four numbers, a setup checklist, the
- * latest errors each with a link to the setting that fixes it, and the latest
- * events. Everything here is read from what the plugin already stores — the
- * gateway registry, the settings and the event table — so nothing on this page
- * is a guess.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -21,17 +10,9 @@ use Signa\Log\Report;
 defined( 'ABSPATH' ) || exit;
 
 final class Dashboard {
-
-	/** The strip covers the last day; the reports cover longer ranges. */
 	const DAYS = 1;
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Registry */
 	private $gateways;
-
-	/** @var LogStore */
 	private $logs;
 
 	public function __construct( Settings $settings, Registry $gateways, LogStore $logs ) {
@@ -57,11 +38,6 @@ final class Dashboard {
 		$this->shortcuts();
 	}
 
-	/* Health ---------------------------------------------------------------- */
-
-	/**
-	 * @param array<string,mixed> $state The registry's report for the primary gateway.
-	 */
 	private function health( array $state ): void {
 		$tiles = array( $this->gatewayTile( $state ), $this->channelTile(), $this->loginTile() );
 
@@ -102,10 +78,6 @@ final class Dashboard {
 		return isset( $words[ $tone ] ) ? $words[ $tone ] : '';
 	}
 
-	/**
-	 * @param array<string,mixed> $state
-	 * @return array{title:string,text:string,tone:string}
-	 */
 	private function gatewayTile( array $state ): array {
 		$title = __( 'سامانهٔ پیامکی', 'signa' );
 
@@ -118,7 +90,6 @@ final class Dashboard {
 		if ( empty( $state['ready'] ) ) {
 			return array(
 				'title' => $title,
-				/* translators: %s: gateway name */
 				'text'  => sprintf( __( '%s: اعتبارنامه یا پیکربندی کامل نیست.', 'signa' ), $label ),
 				'tone'  => 'bad',
 			);
@@ -127,7 +98,6 @@ final class Dashboard {
 		if ( ! empty( $state['resting'] ) ) {
 			return array(
 				'title' => $title,
-				/* translators: %s: gateway name */
 				'text'  => sprintf( __( '%s پس از چند خطای پیاپی موقتاً کنار گذاشته شده است.', 'signa' ), $label ),
 				'tone'  => 'warn',
 			);
@@ -139,7 +109,6 @@ final class Dashboard {
 		if ( array_key_exists( 'ok', $health ) && ! $health['ok'] ) {
 			return array(
 				'title' => $title,
-				/* translators: 1: gateway name, 2: what the last attempt said */
 				'text'  => '' !== $text ? sprintf( __( '%1$s — %2$s', 'signa' ), $label, $text ) : sprintf( __( '%s: آخرین ارسال ناموفق بود.', 'signa' ), $label ),
 				'tone'  => 'warn',
 			);
@@ -147,15 +116,11 @@ final class Dashboard {
 
 		return array(
 			'title' => $title,
-			/* translators: 1: gateway name, 2: what the last attempt said */
 			'text'  => '' !== $text ? sprintf( __( '%1$s آماده است — %2$s', 'signa' ), $label, $text ) : sprintf( __( '%s آماده است.', 'signa' ), $label ),
 			'tone'  => 'good',
 		);
 	}
 
-	/**
-	 * @return array{title:string,text:string,tone:string}
-	 */
 	private function channelTile(): array {
 		$names   = array(
 			'sms'   => __( 'پیامک', 'signa' ),
@@ -184,9 +149,6 @@ final class Dashboard {
 		);
 	}
 
-	/**
-	 * @return array{title:string,text:string,tone:string}
-	 */
 	private function loginTile(): array {
 		$modes = array(
 			'smart'         => __( 'هوشمند', 'signa' ),
@@ -202,17 +164,14 @@ final class Dashboard {
 
 		return array(
 			'title' => __( 'ورود با کد', 'signa' ),
-			/* translators: %s: authentication mode */
 			'text'  => sprintf( __( 'فعال — حالت «%s»', 'signa' ), isset( $modes[ $mode ] ) ? $modes[ $mode ] : $mode ),
 			'tone'  => 'good',
 		);
 	}
 
-	/* Numbers --------------------------------------------------------------- */
-
 	private function strip(): void {
 		if ( ! $this->settings->bool( 'logs_enabled', true ) ) {
-			echo '<div class="signa-notice signa-notice--warning">' . Icons::svg( 'alert' ) . '<p>' . esc_html__( 'ثبت رویدادها خاموش است؛ آماری برای نمایش نیست.', 'signa' ) . '</p></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			echo '<div class="signa-notice signa-notice--warning">' . Icons::svg( 'alert' ) . '<p>' . esc_html__( 'ثبت رویدادها خاموش است؛ آماری برای نمایش نیست.', 'signa' ) . '</p></div>';
 
 			return;
 		}
@@ -238,11 +197,6 @@ final class Dashboard {
 		echo '<p class="signa-kpis__cap">' . esc_html__( 'آمار ۲۴ ساعت گذشته', 'signa' ) . ' · <a href="' . esc_url( SettingsScreen::tabUrl( 'reports' ) ) . '">' . esc_html__( 'گزارش کامل', 'signa' ) . '</a></p>';
 	}
 
-	/* Checklist ------------------------------------------------------------- */
-
-	/**
-	 * @param array<string,mixed> $state
-	 */
 	private function checklist( array $state ): void {
 		$steps = array(
 			array(
@@ -282,7 +236,6 @@ final class Dashboard {
 		Layout::cardHead(
 			__( 'راه‌اندازی سریع', 'signa' ),
 			'bolt',
-			/* translators: 1: steps done, 2: all steps */
 			sprintf( __( '%1$s از %2$s مرحله انجام شده', 'signa' ), number_format_i18n( $done ), number_format_i18n( $total ) )
 		);
 
@@ -299,7 +252,7 @@ final class Dashboard {
 
 		foreach ( $steps as $step ) {
 			echo '<li class="signa-ck ' . ( $step['done'] ? 'is-done' : 'is-todo' ) . '">';
-			echo '<span class="signa-ck__st" aria-hidden="true">' . ( $step['done'] ? Icons::svg( 'check', 13 ) : '' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+			echo '<span class="signa-ck__st" aria-hidden="true">' . ( $step['done'] ? Icons::svg( 'check', 13 ) : '' ) . '</span>';
 			echo '<span class="signa-ck__t">' . esc_html( $step['label'] ) . '<span class="signa-screen-reader-text"> — ' . esc_html( $step['done'] ? __( 'انجام شده', 'signa' ) : __( 'مانده', 'signa' ) ) . '</span></span>';
 
 			if ( '' !== $step['note'] ) {
@@ -324,9 +277,6 @@ final class Dashboard {
 		echo '</ul></div></section>';
 	}
 
-	/**
-	 * Has a message ever gone out — from the test button or from a real visitor?
-	 */
 	private function tested(): bool {
 		if ( array() !== $this->logs->query( array( 'event' => 'admin.test_send', 'limit' => 1 ) ) ) {
 			return true;
@@ -334,8 +284,6 @@ final class Dashboard {
 
 		return array() !== $this->logs->query( array( 'event' => Report::SENT, 'limit' => 1 ) );
 	}
-
-	/* Errors and events ----------------------------------------------------- */
 
 	private function recentErrors(): void {
 		$rows = array();
@@ -380,12 +328,6 @@ final class Dashboard {
 		echo '</div></section>';
 	}
 
-	/**
-	 * Where an error is fixed: a label and an address.
-	 *
-	 * @param object $row A log row.
-	 * @return array{0:string,1:string}
-	 */
 	private function fix( $row ): array {
 		$event = (string) $row->event;
 		$code  = strtolower( (string) $row->error_code );
@@ -455,7 +397,7 @@ final class Dashboard {
 				'<a class="signa-btn signa-btn--gh" href="%1$s"%2$s>%3$s<span>%4$s</span></a>',
 				esc_url( $link[0] ),
 				$link[3] ? ' target="_blank" rel="noopener"' : '',
-				Icons::svg( $link[1], 15 ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup.
+				Icons::svg( $link[1], 15 ),
 				esc_html( $link[2] )
 			);
 		}
@@ -463,9 +405,6 @@ final class Dashboard {
 		echo '</div>';
 	}
 
-	/**
-	 * A page the form is actually on, if the plugin put it somewhere it knows.
-	 */
 	private function formUrl(): string {
 		if ( $this->settings->bool( 'replace_wp_login' ) ) {
 			return wp_login_url();

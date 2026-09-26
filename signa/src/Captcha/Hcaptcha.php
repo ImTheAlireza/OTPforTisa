@@ -1,9 +1,4 @@
 <?php
-/**
- * hCaptcha (checkbox or invisible, privacy friendly).
- *
- * @package Signa
- */
 
 namespace Signa\Captcha;
 
@@ -13,13 +8,8 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class Hcaptcha implements CaptchaProvider, ScriptFallbacks {
-
 	const ENDPOINT = 'https://api.hcaptcha.com/siteverify';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Settings $settings, Logger $logger ) {
@@ -39,12 +29,6 @@ final class Hcaptcha implements CaptchaProvider, ScriptFallbacks {
 		return 'https://js.hcaptcha.com/1/api.js?render=explicit&recaptchacompat=off';
 	}
 
-	/**
-	 * The compatibility bundle auto-renders every `.h-captcha` element; it is the
-	 * second chance when the explicit bundle is blocked or cached badly.
-	 *
-	 * @return string[]
-	 */
 	public function fallbackScriptUrls(): array {
 		return array( 'https://js.hcaptcha.com/1/api.js' );
 	}

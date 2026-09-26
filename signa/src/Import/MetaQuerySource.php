@@ -1,21 +1,10 @@
 <?php
-/**
- * Base class for sources that read a single user meta key.
- *
- * @package Signa
- */
 
 namespace Signa\Import;
 
 defined( 'ABSPATH' ) || exit;
 
 abstract class MetaQuerySource implements Source {
-
-	/**
-	 * Meta keys this source reads, in order of preference.
-	 *
-	 * @return string[]
-	 */
 	abstract protected function keys(): array;
 
 	public function available(): bool {
@@ -28,7 +17,7 @@ abstract class MetaQuerySource implements Source {
 		$keys         = $this->keys();
 		$placeholders = implode( ',', array_fill( 0, count( $keys ), '%s' ) );
 
-		$count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$count = $wpdb->get_var(
 			$wpdb->prepare(
 				'SELECT COUNT(DISTINCT user_id) FROM ' . $wpdb->usermeta . ' WHERE meta_key IN (' . $placeholders . ') AND meta_value <> ""',
 				$keys
@@ -46,7 +35,7 @@ abstract class MetaQuerySource implements Source {
 
 		$params = array_merge( $keys, array( max( 1, min( 500, $limit ) ), max( 0, $offset ) ) );
 
-		$rows = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery,WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_col(
 			$wpdb->prepare(
 				'SELECT DISTINCT user_id FROM ' . $wpdb->usermeta . ' WHERE meta_key IN (' . $placeholders . ') AND meta_value <> "" ORDER BY user_id ASC LIMIT %d OFFSET %d',
 				$params

@@ -1,24 +1,4 @@
 <?php
-/**
- * ARCaptcha (Iranian captcha service).
- *
- * Two client integrations exist and they are not interchangeable:
- *
- *   v2 (widget)  https://widget.arcaptcha.ir/1/api.js
- *                arcaptcha.render(el, {site_key}) → arcaptcha.getArcToken(id)
- *   v3 (score)   https://widget.arcaptcha.ir/3/api.js?render=<sitekey>
- *                arcaptcha.ready(fn) → arcaptcha.execute(sitekey, {action})
- *
- * The old client code called `arcaptcha.widget.render()`, an object this
- * library has never exposed, so the widget silently never appeared. Both shapes
- * are implemented in `assets/js/front.js` and picked by the `kind` handed to
- * the browser below.
- *
- * Verification is unchanged and matches the vendor docs: JSON POST with
- * `challenge_id`, `site_key` and `secret_key`.
- *
- * @package Signa
- */
 
 namespace Signa\Captcha;
 
@@ -28,27 +8,12 @@ use Signa\Log\Logger;
 defined( 'ABSPATH' ) || exit;
 
 final class Arcaptcha implements CaptchaProvider, ScriptFallbacks {
-
 	const ENDPOINT  = 'https://api.arcaptcha.co/arcaptcha/api/verify';
 	const WIDGET_JS = 'https://widget.arcaptcha.ir/1/api.js';
 	const SCORE_JS  = 'https://widget.arcaptcha.ir/3/api.js';
-
-	/**
-	 * The host the vendor's current installation docs load the widget from.
-	 *
-	 * `widget.arcaptcha.ir` is what their own React and Vue packages still ship
-	 * as the default and what this plugin used first; `nwidget.arcaptcha.ir` is
-	 * what docs.arcaptcha.co hands out today. Both answer, but which one a given
-	 * visitor can reach depends on their network, so both are offered — the
-	 * browser walks the list until the library appears.
-	 */
 	const WIDGET_JS_NEW = 'https://nwidget.arcaptcha.ir/1/api.js';
 	const SCORE_JS_NEW  = 'https://nwidget.arcaptcha.ir/3/api.js';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Settings $settings, Logger $logger ) {
@@ -74,16 +39,6 @@ final class Arcaptcha implements CaptchaProvider, ScriptFallbacks {
 		return $this->isScore() ? self::SCORE_JS . '?render=' . rawurlencode( $key ) : self::WIDGET_JS;
 	}
 
-	/**
-	 * Every other host that serves the same bundle.
-	 *
-	 * `.ir` is the vendor's own host, `.co` answers from outside Iran and has
-	 * saved more than one migration. Each kind gets its own version path: a v3
-	 * site key cannot render a v2 widget, so crossing them would be worse than
-	 * failing.
-	 *
-	 * @return string[]
-	 */
 	public function fallbackScriptUrls(): array {
 		$key = $this->siteKey();
 
@@ -156,7 +111,6 @@ final class Arcaptcha implements CaptchaProvider, ScriptFallbacks {
 
 			$this->logger->notice( 'captcha.rejected', array( 'gateway' => $this->id(), 'reason' => implode( ',', $codes ) ) );
 
-			// https://docs.arcaptcha.co/API/Verify/ — error code reference.
 			if ( array() !== array_intersect( array( 'invalid-input-secret', 'missing-input-secret', 'invalid-input-sitekey', 'missing-input-sitekey' ), $codes ) ) {
 				return CaptchaResult::failed( 'captcha_misconfigured', __( 'کلیدهای آرکپچا درست نیستند. با مدیر سایت تماس بگیرید.', 'signa' ) );
 			}

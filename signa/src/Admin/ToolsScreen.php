@@ -1,9 +1,4 @@
 <?php
-/**
- * Tools: environment status, test delivery, throttling reset and the importer.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -19,22 +14,11 @@ use Signa\Throttle\Throttle;
 defined( 'ABSPATH' ) || exit;
 
 final class ToolsScreen implements Bootable {
-
 	const SLUG = 'signa-tools';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Runner */
 	private $importer;
-
-	/** @var Throttle */
 	private $throttle;
-
-	/** @var LogStore */
 	private $logs;
-
-	/** @var Schema */
 	private $schema;
 
 	public function __construct( Settings $settings, Runner $importer, Throttle $throttle, LogStore $logs, Schema $schema ) {
@@ -130,7 +114,7 @@ final class ToolsScreen implements Bootable {
 				'label' => __( 'کد یکبارمصرف', 'signa' ),
 				'value' => 'database' === $this->settings->str( 'code_store', 'database' ) ? __( 'جدول', 'signa' ) : __( 'کش شیء', 'signa' ),
 				'ok'    => true,
-				'note'  => sprintf( /* translators: 1: length, 2: ttl */ __( '%1$d رقم / %2$d ثانیه', 'signa' ), $this->settings->int( 'code_length', 5 ), $this->settings->int( 'code_ttl', 120 ) ),
+				'note'  => sprintf(  __( '%1$d رقم / %2$d ثانیه', 'signa' ), $this->settings->int( 'code_length', 5 ), $this->settings->int( 'code_ttl', 120 ) ),
 			),
 			array(
 				'label' => __( 'کش شیء پایدار', 'signa' ),
@@ -148,13 +132,13 @@ final class ToolsScreen implements Bootable {
 				'label' => __( 'محدودیت‌های فعال', 'signa' ),
 				'value' => (string) ( (int) $throttle['cooldown_rows'] + (int) $throttle['quota_rows'] ),
 				'ok'    => true,
-				'note'  => sprintf( /* translators: %d: limit per phone */ __( 'سقف هر شماره در بازه: %d', 'signa' ), (int) $throttle['per_phone'] ),
+				'note'  => sprintf(  __( 'سقف هر شماره در بازه: %d', 'signa' ), (int) $throttle['per_phone'] ),
 			),
 			array(
 				'label' => __( 'رویدادهای ثبت‌شده', 'signa' ),
 				'value' => (string) $totals['total'],
 				'ok'    => $this->settings->bool( 'logs_enabled', true ),
-				'note'  => sprintf( /* translators: %d: errors */ __( '%d خطا', 'signa' ), (int) $totals['errors'] ),
+				'note'  => sprintf(  __( '%d خطا', 'signa' ), (int) $totals['errors'] ),
 			),
 			array(
 				'label' => __( 'حساب‌های دارای شماره', 'signa' ),
@@ -177,9 +161,6 @@ final class ToolsScreen implements Bootable {
 		);
 	}
 
-	/**
-	 * "Why did my SMS not arrive?" — answered before asking the question.
-	 */
 	private function doctorCard(): void {
 		echo '<section class="signa-panel signa-card" data-signa-doctor>';
 		echo '<h2>' . esc_html__( 'سلامت ارسال و کپچا', 'signa' ) . '</h2>';
@@ -223,7 +204,7 @@ final class ToolsScreen implements Bootable {
 				'<option value="%1$s">%2$s (%3$s)</option>',
 				esc_attr( (string) $source['id'] ),
 				esc_html( (string) $source['label'] ),
-				esc_html( sprintf( /* translators: %d: user count */ __( '%d کاربر', 'signa' ), (int) $source['total'] ) )
+				esc_html( sprintf(  __( '%d کاربر', 'signa' ), (int) $source['total'] ) )
 			);
 		}
 
@@ -301,9 +282,9 @@ final class ToolsScreen implements Bootable {
 	private function accountCount(): int {
 		global $wpdb;
 
-		$count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				'SELECT COUNT(DISTINCT user_id) FROM ' . $wpdb->usermeta . ' WHERE meta_key = %s', // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				'SELECT COUNT(DISTINCT user_id) FROM ' . $wpdb->usermeta . ' WHERE meta_key = %s',
 				$this->settings->str( 'phone_meta_key', 'signa_phone' )
 			)
 		);

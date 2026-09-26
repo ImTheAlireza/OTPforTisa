@@ -1,12 +1,4 @@
 <?php
-/**
- * Front-end and admin asset loading.
- *
- * Scripts are only queued where a form can actually appear, and every visual
- * option is emitted as a CSS custom property instead of inline style soup.
- *
- * @package Signa
- */
 
 namespace Signa\Front;
 
@@ -17,17 +9,10 @@ use Signa\Config\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class Assets implements Bootable {
-
 	const STYLE = 'signa-front';
 	const SCRIPT = 'signa-front';
-
-	/** @var Settings */
 	private $settings;
-
-	/** @var Manager */
 	private $captcha;
-
-	/** @var bool */
 	private $queued = false;
 
 	public function __construct( Settings $settings, Manager $captcha ) {
@@ -41,9 +26,6 @@ final class Assets implements Bootable {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueueAdmin' ) );
 	}
 
-	/**
-	 * Idempotent front-end enqueue — safe to call from a renderer.
-	 */
 	public function enqueue(): void {
 		if ( $this->queued ) {
 			return;
@@ -56,7 +38,7 @@ final class Assets implements Bootable {
 		$captcha = $this->captcha->clientBundle();
 
 		if ( ! empty( $captcha['enabled'] ) && ! empty( $captcha['script'] ) ) {
-			wp_enqueue_script( 'signa-captcha', $captcha['script'], array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+			wp_enqueue_script( 'signa-captcha', $captcha['script'], array(), null, true );
 		}
 
 		wp_enqueue_script( self::SCRIPT, SIGNA_URL . 'assets/js/front.js', array(), SIGNA_VERSION, true );
@@ -67,9 +49,6 @@ final class Assets implements Bootable {
 
 		$this->injectCustomCode();
 
-		/**
-		 * Fires after front-end assets have been queued.
-		 */
 		do_action( 'signa_assets_enqueued' );
 	}
 
@@ -89,7 +68,7 @@ final class Assets implements Bootable {
 	}
 
 	public function enqueueAdmin( string $hook ): void {
-		$screen = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$screen = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
 		if ( false === strpos( $screen, 'signa' ) ) {
 			return;
@@ -107,12 +86,6 @@ final class Assets implements Bootable {
 		unset( $hook );
 	}
 
-	/**
-	 * What admin.js is handed: the REST root, the nonce and every sentence it
-	 * prints. Public so the static admin demo shows the same words.
-	 *
-	 * @return array<string,mixed>
-	 */
 	public function adminConfig(): array {
 		return array(
 			'restUrl' => esc_url_raw( rest_url( 'signa/v1/' ) ),
@@ -164,12 +137,6 @@ final class Assets implements Bootable {
 		);
 	}
 
-	/**
-	 * The administrator's own number, used to pre-fill the test-send modal.
-	 *
-	 * It is read from the profile key the plugin itself writes, so the field is
-	 * empty rather than wrong when nothing is stored.
-	 */
 	private function ownPhone(): string {
 		$key  = $this->settings->str( 'phone_meta_key', 'signa_phone' );
 		$user = get_current_user_id();
@@ -181,15 +148,6 @@ final class Assets implements Bootable {
 		return trim( (string) get_user_meta( $user, $key, true ) );
 	}
 
-	/**
-	 * What the admin screen needs to test the captcha the way a visitor meets it.
-	 *
-	 * The point is to answer "why is there no captcha on my login page?" from
-	 * inside the dashboard: the same script URLs the front end tries, in the
-	 * same order, in a real browser.
-	 *
-	 * @return array<string,mixed>
-	 */
 	private function captchaTest(): array {
 		$provider = $this->captcha->active();
 
@@ -217,17 +175,12 @@ final class Assets implements Bootable {
 		);
 	}
 
-	/**
-	 * Everything the browser needs; also served over `GET /form-config`.
-	 */
 	public function clientConfig(): array {
 		return array(
 			'restUrl'    => esc_url_raw( rest_url( 'signa/v1/' ) ),
 			'nonce'      => wp_create_nonce( 'wp_rest' ),
 			'configUrl'  => esc_url_raw( rest_url( 'signa/v1/form-config' ) ),
 			'cacheMode'  => $this->settings->str( 'cache_mode', 'auto' ),
-			// Minted here and refreshed by `/form-config`, never cached: this is
-			// what keeps the bot-timing check honest behind a page cache.
 			'formToken'  => \Signa\Support\FormToken::issue(),
 			'renderedAt' => time(),
 			'autoVerify' => $this->settings->bool( 'auto_verify', true ),
@@ -242,15 +195,6 @@ final class Assets implements Bootable {
 			'channel'    => $this->settings->str( 'channel', 'sms' ),
 			'skin'       => $this->settings->str( 'skin', 'line' ),
 			'captcha'    => $this->captcha->clientBundle(),
-			/*
-			 * Style isolation. The form is moved into a shadow root and this
-			 * stylesheet is injected into it, so the theme's CSS cannot reach
-			 * the markup — see the note in assets/js/front.js. `css` is the
-			 * same URL the <link> already loaded (so the fetch is a cache
-			 * hit), and `assets` is the base the font URLs are rewritten
-			 * against, because a <style> element resolves `url()` next to the
-			 * page rather than next to the file the text came from.
-			 */
 			'isolate'    => $this->settings->bool( 'style_isolation', true ),
 			'css'        => esc_url_raw( add_query_arg( 'ver', SIGNA_VERSION, SIGNA_URL . 'assets/css/front.css' ) ),
 			'assets'     => esc_url_raw( SIGNA_URL . 'assets/' ),
@@ -261,11 +205,6 @@ final class Assets implements Bootable {
 				'resend'   => $this->settings->str( 'label_resend', __( 'ارسال دوبارهٔ کد', 'signa' ) ),
 				'editPhone'=> $this->settings->str( 'label_edit_phone', __( 'ویرایش شماره', 'signa' ) ),
 			),
-			/*
-			 * Wording rules (docs/UI-PLAN.fa.md §9): short sentences, no blame,
-			 * one suggested action per message, Persian digits in prose and Latin
-			 * digits inside inputs.
-			 */
 			'i18n'       => array(
 				'phonePlaceholder' => __( '۰۹۱۲۳۴۵۶۷۸۹', 'signa' ),
 				'codePlaceholder'  => __( 'کد ۵ رقمی', 'signa' ),
@@ -288,7 +227,6 @@ final class Assets implements Bootable {
 				'attemptsLeft'     => __( '{n} تلاش دیگر باقی مانده.', 'signa' ),
 				'stepOf'           => __( 'گام {n} از {total}: {name}', 'signa' ),
 				'digitLabel'       => __( 'رقم {n}', 'signa' ),
-				// Captcha loading is a real failure mode, so it has real sentences.
 				'captchaLoad'      => __( 'تأیید امنیتی بارگذاری نشد. اگر افزونهٔ مسدودکننده دارید، آن را برای این سایت غیرفعال کنید.', 'signa' ),
 				'captchaRetry'     => __( 'تلاش دوباره برای بارگذاری', 'signa' ),
 				'captchaContinue'  => __( 'می‌توانید بدون تأیید امنیتی ادامه دهید؛ سایت از روش‌های دیگر محافظت می‌کند.', 'signa' ),
@@ -305,7 +243,6 @@ final class Assets implements Bootable {
 				'trustInstant'     => __( 'ورود در چند ثانیه', 'signa' ),
 				'trustPrivate'     => __( 'شماره شما محفوظ می‌ماند', 'signa' ),
 			),
-			/* Buttons offered inside an error message, keyed by the server's code. */
 			'actions'    => array(
 				'retry'     => __( 'تلاش دوباره', 'signa' ),
 				'newCode'   => __( 'دریافت کد تازه', 'signa' ),
@@ -338,11 +275,6 @@ final class Assets implements Bootable {
 			}
 		}
 
-		/**
-		 * Decide whether assets should load on the current request.
-		 *
-		 * @param bool $load Current decision.
-		 */
 		return (bool) apply_filters( 'signa_should_load_assets', false );
 	}
 
@@ -350,21 +282,6 @@ final class Assets implements Bootable {
 		return '' !== trim( $this->settings->str( 'custom_css' ) ) || '' !== trim( $this->settings->str( 'custom_js' ) );
 	}
 
-	/**
-	 * Every design value the settings imply, as CSS custom properties.
-	 *
-	 * It is a map rather than a stylesheet because it has two consumers: the
-	 * `:root` block for the light DOM, and the form itself inside its shadow
-	 * root — where a `:root` rule cannot reach and the values have to be set on
-	 * the element.
-	 *
-	 * Every colour the accent implies is derived here, next to the accent
-	 * itself. `--signa-accent-strong` is what the button hover, its shadow and
-	 * the cooldown bar darken to; when it was a fixed teal, a crimson form
-	 * hovered green.
-	 *
-	 * @return array<string,string>
-	 */
 	public function variables(): array {
 		$accent  = $this->settings->str( 'accent', '#0f766e' );
 		$surface = $this->settings->str( 'surface', '#ffffff' );
@@ -375,18 +292,12 @@ final class Assets implements Bootable {
 			'signa-accent'        => $accent,
 			'signa-accent-strong' => $this->mix( $accent, '#000000', 0.22 ),
 			'signa-accent-soft'   => $this->rgba( $accent, 0.14 ),
-			// Empty (so not printed) at the default: the skins bring their own
-			// surface, and an inline white beat the dark skin's (see FormRenderer).
 			'signa-surface'       => '#ffffff' === strtolower( $surface ) ? '' : $surface,
 			'signa-radius'        => $radius . 'px',
 			'signa-width'         => $width . 'px',
 		);
 	}
 
-	/**
-	 * The form's stylesheet and its inline variables, for a page that prints
-	 * its own <head> (the admin form preview).
-	 */
 	public function previewStyles(): string {
 		$css = $this->cssVariables();
 		$own = trim( $this->settings->str( 'custom_css' ) );
@@ -424,12 +335,6 @@ final class Assets implements Bootable {
 		}
 	}
 
-	/**
-	 * The accent as a translucent wash.
-	 *
-	 * Alpha, not a lightened solid: the same ring has to sit on a white card
-	 * and on the dark skin without turning into an opaque band.
-	 */
 	private function rgba( string $hex, float $alpha ): string {
 		$rgb = $this->toRgb( $hex );
 
@@ -440,9 +345,6 @@ final class Assets implements Bootable {
 		return sprintf( 'rgba(%d, %d, %d, %s)', $rgb[0], $rgb[1], $rgb[2], rtrim( rtrim( number_format( $alpha, 3, '.', '' ), '0' ), '.' ) );
 	}
 
-	/**
-	 * Cheap colour mixer used for hover/soft accents.
-	 */
 	private function mix( string $hex, string $target, float $ratio ): string {
 		$from = $this->toRgb( $hex );
 		$to   = $this->toRgb( $target );
@@ -460,9 +362,6 @@ final class Assets implements Bootable {
 		return '#' . implode( '', $mixed );
 	}
 
-	/**
-	 * @return int[]|null
-	 */
 	private function toRgb( string $hex ): ?array {
 		$hex = ltrim( trim( $hex ), '#' );
 

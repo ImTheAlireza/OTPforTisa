@@ -1,27 +1,4 @@
 <?php
-/**
- * MeliPayamak driver (REST panel API).
- *
- * Checked against https://www.melipayamak.com/api/ :
- *
- *   pattern  POST https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber
- *            username, password, text (variables joined by ;), to, bodyId
- *   text     POST https://rest.payamak-panel.com/api/SendSMS/SendSMS
- *            username, password, to, from, text, isFlash
- *
- * Both are form posts (the vendor's own PHP sample) and both answer
- * `{"Value": "...", "RetStatus": n, "StrRetStatus": "..."}`. On success
- * `Value` is the recId — a long number. On failure the panel still answers
- * HTTP 200 and puts the reason code in `Value` (pattern) or `RetStatus`
- * (text), so the HTTP status alone says nothing.
- *
- * The pattern route is the one that works for login codes: it goes over the
- * shared service line, which reaches numbers on the operators' advertising
- * blacklist, and it needs no «لغو11» suffix. The text route over a dedicated
- * line is kept for accounts that have one.
- *
- * @package Signa
- */
 
 namespace Signa\Gateway\Drivers;
 
@@ -33,15 +10,8 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class MeliPayamak extends HttpGateway {
-
 	const ENDPOINT         = 'https://rest.payamak-panel.com/api/SendSMS/SendSMS';
 	const PATTERN_ENDPOINT = 'https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber';
-
-	/**
-	 * Documented reason codes (SendByBaseNumber2 / SendSms tables).
-	 *
-	 * @var array<int,array<int,string>>
-	 */
 	private static $codes = array(
 		-111 => array( 'unauthorized', 'IP این سرور برای وب‌سرویس ملی پیامک مجاز نیست.' ),
 		-110 => array( 'unauthorized', 'ملی پیامک به‌جای رمز عبور، کلید API (APIKey) می‌خواهد؛ آن را از پنل بسازید و در فیلد رمز بگذارید.' ),
@@ -128,9 +98,6 @@ final class MeliPayamak extends HttpGateway {
 		return (string) preg_replace( '/\D/', '', Phone::latinDigits( trim( $this->option( 'meli_body_id' ) ) ) );
 	}
 
-	/**
-	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
-	 */
 	public function plan(): array {
 		$sender = trim( $this->option( 'meli_from' ) );
 		$bodyId = $this->bodyId();
@@ -139,7 +106,7 @@ final class MeliPayamak extends HttpGateway {
 
 		foreach ( $this->missing() as $key ) {
 			$label    = isset( $this->fields()[ $key ]['label'] ) ? (string) $this->fields()[ $key ]['label'] : $key;
-			$issues[] = sprintf( /* translators: %s: settings field label */ __( 'مقدار «%s» تنظیم نشده است.', 'signa' ), $label );
+			$issues[] = sprintf(  __( 'مقدار «%s» تنظیم نشده است.', 'signa' ), $label );
 		}
 
 		if ( '' !== trim( $this->option( 'meli_body_id' ) ) && '' === $bodyId ) {
@@ -215,12 +182,6 @@ final class MeliPayamak extends HttpGateway {
 		);
 	}
 
-	/**
-	 * Success is a recId in `Value` with RetStatus 1. Anything else is a
-	 * refusal, even when the HTTP status is 200.
-	 *
-	 * @param array|\WP_Error $response
-	 */
 	private function evaluate( $response, string $mode ): GatewayResult {
 		if ( is_wp_error( $response ) ) {
 			return $this->transportFailure( $response );
@@ -232,10 +193,6 @@ final class MeliPayamak extends HttpGateway {
 		$value  = isset( $body['Value'] ) && is_scalar( $body['Value'] ) ? trim( (string) $body['Value'] ) : '';
 		$words  = isset( $body['StrRetStatus'] ) && is_scalar( $body['StrRetStatus'] ) ? sanitize_text_field( (string) $body['StrRetStatus'] ) : '';
 
-		/*
-		 * The documented recId is "a number of more than 15 digits"; the text
-		 * route's is at least 10. A short number in Value is a reason code.
-		 */
 		if ( 200 === $status && 1 === $ret && preg_match( '/^\d{10,}$/', $value ) ) {
 			return GatewayResult::sent( $this->id(), $value, $status, array( 'mode' => $mode ) );
 		}
@@ -263,7 +220,6 @@ final class MeliPayamak extends HttpGateway {
 		}
 
 		if ( 200 === $status && 1 === $ret ) {
-			// RetStatus says Ok but no recId came back: treat as sent, keep the words.
 			return GatewayResult::sent( $this->id(), substr( (string) preg_replace( '/[^0-9A-Za-z\-]/', '', $value ), 0, 64 ), $status, array( 'mode' => $mode ) );
 		}
 

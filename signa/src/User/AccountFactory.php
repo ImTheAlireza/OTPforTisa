@@ -1,9 +1,4 @@
 <?php
-/**
- * Creates accounts for newly verified phone numbers.
- *
- * @package Signa
- */
 
 namespace Signa\User;
 
@@ -15,29 +10,15 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class AccountFactory {
-
-	/**
-	 * Profile keys that WooCommerce also keeps, so a shop can use the address
-	 * collected at signup without asking for it twice.
-	 *
-	 * @var array<string,string>
-	 */
 	const BILLING_MIRROR = array(
 		'signa_city'     => 'billing_city',
 		'signa_address'  => 'billing_address_1',
 		'signa_postcode' => 'billing_postcode',
 	);
 
-	/** @var Settings */
 	private $settings;
-
-	/** @var PhoneLocator */
 	private $locator;
-
-	/** @var Lock */
 	private $lock;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Settings $settings, PhoneLocator $locator, Lock $lock, Logger $logger ) {
@@ -47,11 +28,6 @@ final class AccountFactory {
 		$this->logger   = $logger;
 	}
 
-	/**
-	 * @param array<string,mixed> $values Sanitised registration values keyed by field id.
-	 * @param array<int,array<string,mixed>> $fields Field definitions used.
-	 * @return \WP_User|\WP_Error
-	 */
 	public function create( string $phone, array $values = array(), array $fields = array() ) {
 		$phone = Phone::normalize( $phone );
 
@@ -74,9 +50,6 @@ final class AccountFactory {
 		return $result;
 	}
 
-	/**
-	 * @return \WP_User|\WP_Error
-	 */
 	private function build( string $phone, array $values, array $fields ) {
 		$existing = $this->locator->find( $phone );
 
@@ -113,13 +86,6 @@ final class AccountFactory {
 			$args['user_email'] = $email;
 		}
 
-		/**
-		 * Filter the arguments passed to wp_insert_user() for OTP registrations.
-		 *
-		 * @param array  $args   User arguments.
-		 * @param string $phone  Canonical phone number.
-		 * @param array  $values Sanitised field values.
-		 */
 		$args = (array) apply_filters( 'signa_new_user_args', $args, $phone, $values );
 
 		$userId = wp_insert_user( $args );
@@ -143,21 +109,11 @@ final class AccountFactory {
 
 		$this->logger->info( 'user.created', array( 'phone' => $phone, 'user_id' => $userId ) );
 
-		/**
-		 * Fires right after a new account has been created through OTP.
-		 *
-		 * @param int    $userId New user id.
-		 * @param string $phone  Canonical phone number.
-		 * @param array  $values Sanitised field values.
-		 */
 		do_action( 'signa_user_created', $userId, $phone, $values );
 
 		return get_user_by( 'id', $userId );
 	}
 
-	/**
-	 * @param array<int,array<string,mixed>> $fields
-	 */
 	private function saveFieldValues( int $userId, array $values, array $fields ): void {
 		if ( array() === $fields ) {
 			return;
@@ -173,7 +129,7 @@ final class AccountFactory {
 			$target = isset( $field['target'] ) ? (string) $field['target'] : 'meta';
 
 			if ( 'core' === $target ) {
-				continue; // Already handled by wp_insert_user().
+				continue;
 			}
 
 			$metaKey = isset( $field['meta_key'] ) && '' !== $field['meta_key'] ? (string) $field['meta_key'] : $id;
@@ -184,13 +140,6 @@ final class AccountFactory {
 		}
 	}
 
-	/**
-	 * Copy a collected value into the WooCommerce billing field, once.
-	 *
-	 * Only when WooCommerce is there, only for the three keys it shares with
-	 * us, and never over a value the customer already has — an address typed at
-	 * checkout must not be replaced by an older answer from the signup form.
-	 */
 	private function mirrorBilling( int $userId, string $metaKey, string $value ): void {
 		if ( ! isset( self::BILLING_MIRROR[ $metaKey ] ) || '' === trim( $value ) || ! class_exists( 'WooCommerce' ) ) {
 			return;
@@ -204,19 +153,9 @@ final class AccountFactory {
 
 		update_user_meta( $userId, $billingKey, $value );
 
-		/**
-		 * Fires after a signup value was mirrored into a WooCommerce billing field.
-		 *
-		 * @param int    $userId     User id.
-		 * @param string $billingKey Billing meta key.
-		 * @param string $value      Value that was copied.
-		 */
 		do_action( 'signa_billing_mirrored', $userId, $billingKey, $value );
 	}
 
-	/**
-	 * @return string|\WP_Error
-	 */
 	private function username( string $phone, string $email, array $values ) {
 		$strategy = $this->settings->str( 'username_from', 'phone' );
 
@@ -230,13 +169,6 @@ final class AccountFactory {
 
 		$base = '' !== $base ? $base : 'user';
 
-		/**
-		 * Filter the base username before uniqueness suffixes are added.
-		 *
-		 * @param string $base   Candidate username.
-		 * @param string $phone  Canonical phone.
-		 * @param array  $values Field values.
-		 */
 		$base = sanitize_user( (string) apply_filters( 'signa_username_base', $base, $phone, $values ), true );
 
 		$username = $base;
@@ -293,11 +225,6 @@ final class AccountFactory {
 			$role = 'subscriber';
 		}
 
-		/**
-		 * Filter the role assigned to accounts created through OTP.
-		 *
-		 * @param string $role Role slug.
-		 */
 		return sanitize_key( (string) apply_filters( 'signa_default_role', $role ) );
 	}
 
@@ -309,13 +236,11 @@ final class AccountFactory {
 		}
 
 		$subject = sprintf(
-			/* translators: %s: site name */
 			__( 'به %s خوش آمدید', 'signa' ),
 			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES )
 		);
 
 		$body = sprintf(
-			/* translators: 1: display name, 2: site name, 3: masked phone number, 4: site URL */
 			__( "سلام %1\$s\n\nحساب شما در %2\$s با شماره %3\$s ساخته شد.\n%4\$s", 'signa' ),
 			$user->display_name,
 			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),

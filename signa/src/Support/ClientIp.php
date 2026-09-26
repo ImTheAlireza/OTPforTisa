@@ -1,19 +1,11 @@
 <?php
-/**
- * Client IP resolution that only trusts explicitly whitelisted proxies.
- *
- * @package Signa
- */
 
 namespace Signa\Support;
 
 defined( 'ABSPATH' ) || exit;
 
 final class ClientIp {
-
 	const FALLBACK = '0.0.0.0';
-
-	/** @var array<string,string> */
 	private static $headers = array(
 		'cloudflare' => 'HTTP_CF_CONNECTING_IP',
 		'forwarded'  => 'HTTP_X_FORWARDED_FOR',
@@ -50,10 +42,6 @@ final class ClientIp {
 		return self::publish( '' !== $candidate ? $candidate : $remote, $remote );
 	}
 
-	/**
-	 * Walk the X-Forwarded-For chain from the closest hop outwards and stop at
-	 * the first address that is not one of our own trusted proxies.
-	 */
 	private static function fromForwardedChain( string $raw, array $trusted ): string {
 		$hops = array();
 
@@ -77,12 +65,6 @@ final class ClientIp {
 	}
 
 	private static function publish( string $ip, string $remote ): string {
-		/**
-		 * Filter the resolved client IP.
-		 *
-		 * @param string $ip     Resolved IP.
-		 * @param string $remote Raw REMOTE_ADDR.
-		 */
 		return (string) apply_filters( 'signa_client_ip', $ip, $remote );
 	}
 
@@ -90,9 +72,6 @@ final class ClientIp {
 		return Crypto::sign( strtolower( trim( $ip ) ), 'ip' );
 	}
 
-	/**
-	 * @return string[]
-	 */
 	private static function parseRanges( string $list ): array {
 		$ranges = array();
 

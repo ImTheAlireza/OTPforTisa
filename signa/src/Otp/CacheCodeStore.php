@@ -1,18 +1,10 @@
 <?php
-/**
- * Alternative code store for sites with a persistent object cache.
- *
- * Nothing is written to the database, which keeps high-traffic logins cheap.
- *
- * @package Signa
- */
 
 namespace Signa\Otp;
 
 defined( 'ABSPATH' ) || exit;
 
 final class CacheCodeStore implements CodeStore {
-
 	const GROUP = 'signa';
 
 	private function key( string $fingerprint ): string {
@@ -63,13 +55,6 @@ final class CacheCodeStore implements CodeStore {
 		wp_cache_delete( $this->key( $record->fingerprint() ), self::GROUP );
 	}
 
-	/**
-	 * Claim a record through a second cache key.
-	 *
-	 * `wp_cache_add()` only succeeds when the key is absent, which makes it the
-	 * closest thing a cache has to a compare-and-swap: the winner writes the
-	 * marker, everybody else is told the record is already spoken for.
-	 */
 	public function claim( CodeRecord $record ): bool {
 		$ttl = max( 1, $record->expiresAt() - time() );
 
@@ -87,7 +72,6 @@ final class CacheCodeStore implements CodeStore {
 	}
 
 	public function purge(): int {
-		// Cache entries expire on their own.
 		return 0;
 	}
 

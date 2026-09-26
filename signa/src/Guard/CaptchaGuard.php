@@ -1,19 +1,4 @@
 <?php
-/**
- * Captcha challenge, either always or once a visitor has burned some quota.
- *
- * Failure policy matters more than the challenge itself. Three very different
- * things used to produce the same dead end:
- *
- *   - the visitor did not solve anything yet  → ask them to solve it;
- *   - the token was already used or expired   → silently ask again;
- *   - the captcha *service* is unreachable    → NOT the visitor's fault. Blocking
- *     here means a site in Iran with reCAPTCHA configured can never sign anyone
- *     in. That case is let through (honeypot and quotas still apply) and logged,
- *     unless the administrator explicitly turned `captcha_fail_open` off.
- *
- * @package Signa
- */
 
 namespace Signa\Guard;
 
@@ -26,38 +11,12 @@ use Signa\Throttle\Throttle;
 defined( 'ABSPATH' ) || exit;
 
 final class CaptchaGuard implements Guard {
-
 	const TOKEN_KEYS = array( 'captcha_token', 'captcha-token', 'g-recaptcha-response', 'h-captcha-response', 'arcaptcha_token' );
-
-	/**
-	 * The browser's own report that the challenge never became usable.
-	 *
-	 * Only the browser can observe this: the script its own page loads, or the
-	 * network call `grecaptcha.execute()` makes, can fail while the server's own
-	 * verification call would still succeed — so no server-side check can find
-	 * it. A visitor in that state used to be rejected as if they were a robot,
-	 * and their rejection was counted against the site's captcha health.
-	 *
-	 * The claim is honoured **only** when the administrator turned «باز ماندن
-	 * ورود» on, which is their own statement that an outage must not lock people
-	 * out. With that setting off it is worth nothing, so forging it buys exactly
-	 * what the setting already grants, and every use is logged and counted.
-	 */
 	const STATE_UNAVAILABLE = 'unavailable';
-
-	/** Failures that say something about the service, not about the visitor. */
 	const TRANSPORT_ERRORS = array( 'captcha_unreachable', 'captcha_bad_response' );
-
-	/** Failures where the visitor should simply solve a fresh challenge. */
 	const RETRY_ERRORS = array( 'captcha_expired', 'captcha_rejected', 'captcha_missing', 'captcha_low_score' );
-
-	/** @var Manager */
 	private $captcha;
-
-	/** @var Throttle */
 	private $throttle;
-
-	/** @var Logger */
 	private $logger;
 
 	public function __construct( Manager $captcha, Throttle $throttle, Logger $logger ) {
@@ -91,11 +50,6 @@ final class CaptchaGuard implements Guard {
 			return;
 		}
 
-		/*
-		 * The browser could not obtain a challenge at all. With fail-open on this
-		 * is the same emergency as an unreachable service, and it is recorded the
-		 * same way — with the reason that says which side of the wire was down.
-		 */
 		if ( 'captcha_missing' === $result->errorCode() && $this->browserOutage( $request ) ) {
 			$this->logger->warning(
 				'captcha.fail_open',
@@ -108,12 +62,6 @@ final class CaptchaGuard implements Guard {
 				)
 			);
 
-			/**
-			 * Fires when a captcha the browser could not load lets a request through.
-			 *
-			 * @param string  $reason  Why the challenge never appeared.
-			 * @param Request $request Incoming request.
-			 */
 			do_action( 'signa_captcha_fail_open', 'browser_unavailable', $request );
 
 			return;
@@ -129,12 +77,6 @@ final class CaptchaGuard implements Guard {
 				)
 			);
 
-			/**
-			 * Fires when a captcha outage lets a request through.
-			 *
-			 * @param string  $reason  Why the service could not be reached.
-			 * @param Request $request Incoming request.
-			 */
 			do_action( 'signa_captcha_fail_open', $result->errorCode(), $request );
 
 			return;
@@ -152,9 +94,6 @@ final class CaptchaGuard implements Guard {
 		);
 	}
 
-	/**
-	 * Did the browser say the challenge could not be obtained there?
-	 */
 	private function browserOutage( Request $request ): bool {
 		if ( ! $this->captcha->failOpen() ) {
 			return false;
@@ -163,16 +102,10 @@ final class CaptchaGuard implements Guard {
 		return self::STATE_UNAVAILABLE === strtolower( trim( $request->str( 'captcha_state' ) ) );
 	}
 
-	/**
-	 * Two hundred characters of user agent, for the diagnosis only.
-	 */
 	private function shorten( string $ua ): string {
 		return substr( trim( $ua ), 0, 200 );
 	}
 
-	/**
-	 * `after_limit` keeps the form frictionless for the first few attempts.
-	 */
 	private function needed( Request $request ): bool {
 		if ( 'always' === $this->captcha->trigger() ) {
 			return true;
@@ -180,11 +113,6 @@ final class CaptchaGuard implements Guard {
 
 		$usage = $this->throttle->usage( $request->phone(), $request->ip() );
 
-		/*
-		 * The quota is charged after this guard now (Pipeline::run), so the
-		 * request being judged is not counted yet: +1 keeps the threshold
-		 * where it was — the second code for a phone asks for a challenge.
-		 */
 		return ( $usage['phone'] + 1 ) >= 2 || ( $usage['ip'] + 1 ) >= max( 3, (int) floor( $usage['ip_limit'] / 2 ) );
 	}
 

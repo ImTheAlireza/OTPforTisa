@@ -1,13 +1,4 @@
 <?php
-/**
- * The set of numbers and prefixes that may not request a code.
- *
- * Rules live in their own option row rather than the main settings array: the
- * list is written from a different screen, can grow to hundreds of entries and
- * must not be dragged through the settings sanitiser on every save.
- *
- * @package Signa
- */
 
 namespace Signa\Blocklist;
 
@@ -16,16 +7,10 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class Blocklist {
-
 	const OPTION = 'signa_blocklist';
 	const LIMIT  = 500;
-
-	/** @var Rule[]|null */
 	private $rules;
 
-	/**
-	 * @return Rule[]
-	 */
 	public function all(): array {
 		if ( null !== $this->rules ) {
 			return $this->rules;
@@ -51,11 +36,6 @@ final class Blocklist {
 		return $this->rules;
 	}
 
-	/**
-	 * Rules that are still in force, newest first.
-	 *
-	 * @return Rule[]
-	 */
 	public function active(): array {
 		return array_values(
 			array_filter(
@@ -67,9 +47,6 @@ final class Blocklist {
 		);
 	}
 
-	/**
-	 * The first rule covering this number, or null when it is allowed.
-	 */
 	public function match( string $phone ): ?Rule {
 		$canonical = Phone::normalize( $phone );
 
@@ -90,9 +67,6 @@ final class Blocklist {
 		return null !== $this->match( $phone );
 	}
 
-	/**
-	 * Add a rule. Returns false when the input was unusable or already listed.
-	 */
 	public function add( string $raw, string $note = '', int $until = 0 ): bool {
 		$rule = Rule::parse( $raw, $note, $until );
 
@@ -117,11 +91,6 @@ final class Blocklist {
 		return $this->persist( $rules );
 	}
 
-	/**
-	 * Add many at once (one per line). Returns [added, skipped].
-	 *
-	 * @return array{0:int,1:int}
-	 */
 	public function addMany( string $blob, string $note = '', int $until = 0 ): array {
 		$added   = 0;
 		$skipped = 0;
@@ -163,9 +132,6 @@ final class Blocklist {
 		return $this->persist( array() );
 	}
 
-	/**
-	 * Drop rules whose expiry has passed. Returns how many were dropped.
-	 */
 	public function purgeExpired(): int {
 		$kept = $this->active();
 		$gone = count( $this->all() ) - count( $kept );
@@ -181,9 +147,6 @@ final class Blocklist {
 		return count( $this->all() );
 	}
 
-	/**
-	 * @param Rule[] $rules
-	 */
 	private function persist( array $rules ): bool {
 		$rows = array();
 

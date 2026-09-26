@@ -1,10 +1,3 @@
-/*!
- * Signa — front-end controller.
- *
- * Dependency-free. Reads its settings from `window.signaOtp` (localized by PHP)
- * and from data attributes on `[data-signa-form]`, so several forms can live on
- * one page with different overrides.
- */
 (function (window, document) {
 	'use strict';
 
@@ -42,12 +35,6 @@
 		return latinDigits(value).replace(/\D+/g, '');
 	}
 
-	/**
-	 * Persian digits for prose (countdown, attempts, step numbers).
-	 *
-	 * Never used for values sent to the server or written into an input — those
-	 * stay Latin so `inputmode="numeric"` keyboards and validation still work.
-	 */
 	function faDigits(value) {
 		var fa = '۰۱۲۳۴۵۶۷۸۹';
 
@@ -56,19 +43,6 @@
 		});
 	}
 
-	/**
-	 * Every spelling of an Iranian mobile number, folded to `09xxxxxxxxx`.
-	 *
-	 * This is what gets sent, not what got typed. Without it the field could
-	 * accept `9123456789` (which the old validator did) and then post those ten
-	 * digits, which the server — correctly — rejected as an invalid number.
-	 */
-	/**
-	 * Can this browser hand us the clipboard at all?
-	 *
-	 * `readText` only exists in a secure context, so a plain-http site gets no
-	 * promise to reject — the function is simply absent.
-	 */
 	function supportsClipboardRead() {
 		return !!(window.navigator && navigator.clipboard && navigator.clipboard.readText);
 	}
@@ -76,8 +50,6 @@
 	function canonicalPhone(value) {
 		var digits = digitsOnly(value);
 
-		// `00` is how the international prefix is dialled in Iran; people paste
-		// `0098912…` straight out of their contacts, so fold it first.
 		if (0 === digits.indexOf('00')) {
 			digits = digits.substr(2);
 		}
@@ -110,7 +82,6 @@
 			return fallback;
 		}
 
-		// wp_localize_script stringifies booleans, the demo config does not.
 		return true === value || 1 === value || '1' === value || 'true' === value;
 	}
 
@@ -130,41 +101,12 @@
 		});
 	}
 
-	/* ---------------------------------------------------------------- Captcha */
-
-	/*
-	 * Captcha loading is the part that breaks in the real world, so it is the
-	 * part written defensively here.
-	 *
-	 * What went wrong before:
-	 *   - the vendor script was assumed to be present the instant the form was
-	 *     mounted, so a slow or blocked bundle meant `render()` silently did
-	 *     nothing and the visitor stared at an empty space;
-	 *   - ARCaptcha was called through `arcaptcha.widget.*`, an object the
-	 *     library has never exposed, so the Iranian widget never rendered at all;
-	 *   - every failure resolved to an empty token, and the server answered
-	 *     "prove you are not a robot" while showing no robot test.
-	 *
-	 * Now: the script list is walked (mirrors included), the widget is rendered
-	 * after the library is really there, a failure is *visible* with a retry
-	 * button, and the last chance is a clear sentence instead of a dead end.
-	 */
-
 	var CAPTCHA_GLOBALS = {
 		recaptcha_v3: 'grecaptcha',
 		hcaptcha: 'hcaptcha',
 		arcaptcha: 'arcaptcha'
 	};
 
-	/*
-	 * A token can arrive as a string, or wrapped in an object.
-	 *
-	 * reCAPTCHA v3 resolves a string. ARCaptcha's `execute()` resolves the same
-	 * string in v3, but its invisible flow is documented as resolving an object
-	 * carrying `arcaptcha_token`. Both are token-bearing answers; the server
-	 * wants the token itself, and posting `[object Object]` would be a rejection
-	 * the visitor could do nothing about.
-	 */
 	function unwrapToken(value) {
 		if (!value) {
 			return '';
@@ -187,38 +129,6 @@
 		return '';
 	}
 
-	/*
-	 * A captcha widget is a whole design of its own, and it arrives with its own
-	 * stylesheet — written for the page, injected into the document's head.
-	 * A shadow root cannot see the head: no selector crosses that boundary. So
-	 * the widget renders as bare markup, and bare markup is not small.
-	 *
-	 * ARCaptcha is the worked example. Its loader and its checkbox are Vue
-	 * components styled by classes (`spinner-loader`, `spinner-logo`, plus a
-	 * compiled Tailwind set), and the brand mark inside the loader is an SVG
-	 * with viewBox 0 0 621 363. With no stylesheet in reach, that SVG is laid
-	 * out at its own size and a purple cloud takes over the form — a screenshot
-	 * a customer actually sent, with the question "why does it load like this?"
-	 *
-	 * The fix is to let the vendor's styles follow the widget into our tree:
-	 * whatever the page's head gains while this form is on screen is copied
-	 * into the shadow root as well.
-	 *
-	 *   - a <link> is cloned as a <link>, so its own url() references still
-	 *     resolve against the vendor's file rather than against this page;
-	 *   - a <style> is copied as text, at the very end of the root, so the
-	 *     vendor's rules outrank this plugin's fallback sizing;
-	 *   - constructable sheets (document.adoptedStyleSheets) are adopted too,
-	 *     for bundles that inject that way;
-	 *   - anything already in the document that names the vendor is copied up
-	 *     front, in case the library loaded before this form mounted;
-	 *   - anything else the page injects later is copied too, but *before* this
-	 *     plugin's stylesheet, so a theme that loads its CSS late still cannot
-	 *     outrank the form's own layout.
-	 *
-	 * Nothing happens in the light DOM, where the page's own CSS already
-	 * applies.
-	 */
 	function mirrorVendorStyles(container) {
 		if (!container) {
 			return null;
@@ -240,11 +150,6 @@
 
 		container.signaVendorStyles = state;
 
-		/*
-		 * The widget's own classes. Its styling is compiled per component and
-		 * carries names like these; a stylesheet that mentions them is the
-		 * widget's, not the theme's.
-		 */
 		var HINT = /arcaptcha|spinner-logo|spinner-loader|bg-purple-s5/i;
 
 		var vendorish = function (node) {
@@ -264,17 +169,6 @@
 			return 'text:' + text.length + ':' + text.slice(0, 96);
 		};
 
-		/*
-		 * Where a copy lands decides who wins a tie, and the two cases want
-		 * opposite answers:
-		 *
-		 *   - the widget's own sheet goes last, so its sizing and colours beat
-		 *     this plugin's fallback caps;
-		 *   - anything else the page injects while the form is on screen goes
-		 *     *before* this plugin's stylesheet, so a theme that loads CSS late
-		 *     still cannot outrank the form's own layout — which is the whole
-		 *     point of putting the form in its own tree.
-		 */
 		var place = function (copy, own) {
 			if (own && own.parentNode === root) {
 				root.insertBefore(copy, own);
@@ -318,7 +212,6 @@
 					place(copy, own);
 				}
 			} catch (error) {
-				// A closed or detached root simply keeps the fallback sizing.
 			}
 		};
 
@@ -346,17 +239,9 @@
 
 				state.sheets = list.length;
 			} catch (error) {
-				// Older engines grew shadow-root adopted sheets late; the
-				// <link>/<style> path above carries the same stylesheet.
 			}
 		};
 
-		/*
-		 * A widget that loaded before this form mounted has already injected its
-		 * stylesheet. Recognise it by name and copy it in; the page's own sheets
-		 * are deliberately left behind, because leaving them behind is the whole
-		 * reason the form lives in its own tree.
-		 */
 		Array.prototype.forEach.call(document.querySelectorAll('head link[rel~="stylesheet"], head style'), function (node) {
 			if (vendorish(node)) {
 				spread(node);
@@ -372,9 +257,6 @@
 				adoptSheets();
 			});
 
-			// Anywhere in the light DOM, not only the head: a widget may append
-			// its sheet to the body, and the copy has to be there before the
-			// widget's own first frame.
 			state.observer.observe(document.documentElement, { childList: true, subtree: true });
 		} catch (error) {
 			state.observer = null;
@@ -386,18 +268,10 @@
 	function Captcha(root, conf) {
 		this.conf = conf || {};
 		this.config = this.conf.config || {};
-		/*
-		 * Why the last attempt produced no token. The server cannot see the
-		 * browser, so this is the only party that can report "the challenge never
-		 * became available here" — and it is reported, not assumed: the guard only
-		 * acts on it for an administrator who chose to stay open during an outage.
-		 */
 		this.state = '';
 
 		this.container = $(root, '[data-signa-captcha]');
 
-		// Installed before the vendor script can run, so no injected rule is
-		// missed; see mirrorVendorStyles above for why it is needed at all.
 		mirrorVendorStyles(this.container);
 
 		this.widgetId = null;
@@ -408,10 +282,6 @@
 		this.onSolved = null;
 	}
 
-	/**
-	 * Adopt a fresher bundle from `/form-config` (new nonce, possibly new mirror
-	 * list) without losing the widget that is already on screen.
-	 */
 	Captcha.prototype.absorb = function (bundle) {
 		if (!bundle || !bundle.enabled) {
 			return;
@@ -455,13 +325,6 @@
 		return name ? window[name] || null : null;
 	};
 
-	/**
-	 * Walk every script URL until one defines the library.
-	 *
-	 * A bundle that loads but never defines the global (blocked by an extension,
-	 * a captive portal HTML page, a wrong mirror) is treated exactly like a
-	 * network failure: the next URL is tried.
-	 */
 	Captcha.prototype.load = function () {
 		var self = this;
 
@@ -543,7 +406,6 @@
 					}
 
 					settled = true;
-					// Give the bundle a moment to define its global.
 					waitForGlobal(Date.now() + 2500);
 				};
 
@@ -567,9 +429,6 @@
 		return this.pending;
 	};
 
-	/**
-	 * Make the challenge ready to answer: script loaded, widget rendered.
-	 */
 	Captcha.prototype.prepare = function () {
 		var self = this;
 
@@ -595,9 +454,6 @@
 		return 'invisible' === this.config.size || 'invisible' === this.conf.size;
 	};
 
-	/**
-	 * Render the widget once, into the container the templates print.
-	 */
 	Captcha.prototype.render = function () {
 		var self = this;
 		var siteKey = this.siteKey();
@@ -665,7 +521,6 @@
 			return;
 		}
 
-		// A previous failure left an error block behind; clear it.
 		if (this.container.querySelector('.signa-captcha__error')) {
 			this.container.textContent = '';
 		}
@@ -673,9 +528,6 @@
 		this.container.hidden = false;
 	};
 
-	/**
-	 * The script could not be loaded. Say so, and offer the way out.
-	 */
 	Captcha.prototype.markUnavailable = function () {
 		var self = this;
 
@@ -721,7 +573,6 @@
 	};
 
 	Captcha.prototype.emitRetry = function () {
-		// Nothing to announce: the error block is already in a live region.
 	};
 
 	Captcha.prototype.retryNow = function () {
@@ -749,11 +600,6 @@
 		});
 	};
 
-	/**
-	 * The token for this request. Never resolves to "nothing" silently when the
-	 * server is going to require a challenge: either we have a token, or the
-	 * caller is told exactly why we do not.
-	 */
 	Captcha.prototype.value = function () {
 		var self = this;
 
@@ -780,19 +626,6 @@
 		});
 	};
 
-	/**
-	 * The challenge never became usable in this browser.
-	 *
-	 * Two very different things used to happen here, and both were wrong: the
-	 * form was sent with an empty token (so the server logged a rejection that
-	 * looked like a bot), or the visitor was stopped with a message about their
-	 * own identity. What is true is that the service — not the visitor — is
-	 * unreachable from here, which is exactly the case `failOpen` exists for.
-	 *
-	 * With fail-open on, the request goes without a token and says why. With it
-	 * off, the visitor is told, and nothing is sent: a rejection nobody asked for
-	 * would only land in the administrator's statistics as a mystery.
-	 */
 	Captcha.prototype.missing = function () {
 		if (!this.conf.failOpen) {
 			return Promise.reject(this.error());
@@ -807,10 +640,6 @@
 		return httpError('captcha_unavailable', i18n.captchaLoad || 'تأیید امنیتی بارگذاری نشد.');
 	};
 
-	/**
-	 * Score based challenges mint a fresh token per request — they are single
-	 * use and expire in about two minutes, so caching one is a bug.
-	 */
 	Captcha.prototype.executeScore = function () {
 		var self = this;
 		var lib = this.library();
@@ -858,32 +687,18 @@
 				return token;
 			}
 
-			/*
-			 * v3 mints a token per request over the network, and that request can
-			 * simply time out once — a cold connection, a filtered host, a phone
-			 * waking up. One retry after a short pause turns almost all of those
-			 * into a token; without it the form was posted with an empty token and
-			 * the server recorded a rejection that looked like a bot.
-			 */
 			return self.pause(600).then(once).then(function (again) {
 				return again ? again : self.missing();
 			});
 		});
 	};
 
-	/**
-	 * A pause, so a retry is not a hammer.
-	 */
 	Captcha.prototype.pause = function (ms) {
 		return new Promise(function (resolve) {
 			setTimeout(resolve, ms);
 		});
 	};
 
-	/**
-	 * Checkbox challenges answer through a getter, and the token is consumed by
-	 * the verification, so it is reset afterwards.
-	 */
 	Captcha.prototype.widgetToken = function () {
 		var value = '';
 
@@ -901,14 +716,6 @@
 			value = '';
 		}
 
-		/*
-		 * ARCaptcha's own documentation promises two ways to the token: the
-		 * getter above, and a field the library writes into the surrounding
-		 * form (`arcaptcha-token`). Whichever the installed version of the
-		 * bundle supports, the token must not be lost between them — losing it
-		 * is exactly what "the captcha is solved and the server still says no
-		 * token" looks like from the visitor's side.
-		 */
 		value = unwrapToken(value) || this.fieldToken();
 
 		if (!value) {
@@ -924,12 +731,6 @@
 		return Promise.resolve(this.token);
 	};
 
-	/**
-	 * The hidden field ARCaptcha's widget writes on a solved challenge.
-	 *
-	 * Scoped to this form: a page can carry more than one widget, and picking up
-	 * another form's token would be worse than finding none.
-	 */
 	Captcha.prototype.fieldToken = function () {
 		var scope = null;
 
@@ -946,10 +747,6 @@
 		return field && 'string' === typeof field.value ? field.value : '';
 	};
 
-	/**
-	 * Forget the solved state so the next attempt asks again. Call it right after
-	 * a request that carried a token.
-	 */
 	Captcha.prototype.consume = function () {
 		var widget = this.widgetId;
 
@@ -973,14 +770,9 @@
 		}
 	};
 
-	/**
-	 * Is a challenge on screen that still needs an answer?
-	 */
 	Captcha.prototype.waiting = function () {
 		return this.enabled() && !this.isScore() && '' === this.token;
 	};
-
-	/* ------------------------------------------------------------------- Form */
 
 	function Form(root) {
 		this.root = root;
@@ -994,7 +786,6 @@
 
 		this.configUrl = attr(root, 'config-url') || cfg.configUrl || '';
 		this.cacheMode = attr(root, 'cache-mode') || cfg.cacheMode || 'inline';
-		// Signed timestamp token; refreshed from /form-config, never cached.
 		this.formToken = attr(root, 'form-token') || cfg.formToken || '';
 		this.timeoutMs = parseInt(cfg.timeoutMs || 15000, 10);
 		this.autoVerify = flag(cfg.autoVerify, true);
@@ -1053,7 +844,6 @@
 		this.lockButtonWidths();
 		this.show(this.stepPhone);
 
-		// A cached page carries a stale nonce, so fetch a fresh one up front.
 		if ('auto' === this.cacheMode) {
 			this.refreshNonce();
 		}
@@ -1116,11 +906,6 @@
 			});
 		});
 
-		/*
-		 * The skip link points at the phone field, but on later steps that field
-		 * is display:none and unfocusable — so send focus to whatever the current
-		 * step actually shows.
-		 */
 		var skip = $(this.root, '[data-signa-skip]');
 
 		if (skip) {
@@ -1143,10 +928,6 @@
 		}
 	};
 
-	/**
-	 * Wire one digit box each. Split out of `bind()` so `renderBoxes()` can call
-	 * it again after replacing the inputs.
-	 */
 	Form.prototype.bindBoxes = function () {
 		var self = this;
 
@@ -1205,7 +986,6 @@
 			return;
 		}
 
-		// Remembered so the "try again" button in an error can repeat it.
 		if ('retry' !== action) {
 			this.lastAction = action;
 		}
@@ -1237,10 +1017,6 @@
 		}
 	};
 
-	/**
-	 * "Paste the code" — the poor cousin of WebOTP, and the only help available
-	 * when the message arrives in another app on iOS or in a desktop browser.
-	 */
 	Form.prototype.bindPaste = function () {
 		var self = this;
 
@@ -1248,13 +1024,6 @@
 			return;
 		}
 
-		/*
-		 * Reading the clipboard needs a secure context (https or localhost) and
-		 * a browser that implements readText(). Without both, the button cannot
-		 * do anything — so it is not shown, and the user pastes into the first
-		 * box as they would anywhere else. An honest missing button beats a
-		 * button that answers "no" every time.
-		 */
 		if (!supportsClipboardRead()) {
 			this.pasteBtn.hidden = true;
 
@@ -1290,7 +1059,6 @@
 			self.say(i18n.pasteDone || '', 'success');
 			self.maybeAutoVerify();
 		}).catch(function () {
-			// Refused, not broken: the first box is focused so Ctrl+V works.
 			self.say(i18n.pasteDenied || i18n.pasteManual || '', 'info');
 			self.focusCode();
 		});
@@ -1323,10 +1091,6 @@
 				body.captcha_token = token;
 			}
 
-			/*
-			 * No token, and the browser knows why. Saying it is what lets the
-			 * server tell an outage apart from a robot with a script.
-			 */
 			delete body.captcha_state;
 
 			if (!token && self.captcha.state) {
@@ -1335,32 +1099,18 @@
 
 			return self.send(route, body);
 		}).then(function (result) {
-			/*
-			 * Two things a visitor can hit through no fault of their own:
-			 *  - a cached page shipped somebody else's nonce;
-			 *  - a cached page (or a slow human) carried a form token the guard
-			 *    considered stale, or a captcha the browser could not load.
-			 * Both are answered by pulling a fresh configuration and sending once
-			 * more. One retry, never a loop.
-			 */
 			if (self.isStaleNonce(result) || self.isRecoverable(result)) {
 				if (retried) {
 					return self.unwrap(result);
 				}
 
 				return self.refreshConfig().then(function () {
-					/*
-					 * The payload was assembled before the refresh, so the fields that
-					 * came from the cached page are still in it. Swap them for the
-					 * fresh ones, otherwise the retry repeats the same rejection.
-					 */
 					body.signa_ft = self.formToken || '';
 
 					if (self.timestamp) {
 						body.signa_ts = self.timestamp.value;
 					}
 
-					// A consumed token is worthless — let the captcha mint a new one.
 					delete body.captcha_token;
 					delete body.captcha_state;
 
@@ -1374,9 +1124,6 @@
 		});
 	};
 
-	/**
-	 * Server said "your form token is stale" or "I cannot see a captcha token".
-	 */
 	Form.prototype.isRecoverable = function (result) {
 		var json = result ? result.json : null;
 
@@ -1391,9 +1138,6 @@
 		return 'captcha_missing' === json.code && this.captcha.unavailable;
 	};
 
-	/**
-	 * Fire one request, with a timeout so a dead gateway cannot hang the form.
-	 */
 	Form.prototype.send = function (route, body) {
 		var controller = window.AbortController ? new window.AbortController() : null;
 		var headers = {
@@ -1433,9 +1177,6 @@
 		});
 	};
 
-	/**
-	 * Did WordPress reject the nonce rather than the request itself?
-	 */
 	Form.prototype.isStaleNonce = function (result) {
 		if (!this.configUrl || !result) {
 			return false;
@@ -1444,12 +1185,6 @@
 		return 403 === result.status || 'rest_cookie_invalid_nonce' === (result.json && result.json.code);
 	};
 
-	/**
-	 * Turn a transport result into data, or into an error the UI can explain.
-	 *
-	 * The plugin answers {success, data} and marks rejections with success:false,
-	 * sometimes over HTTP 200 — so the flag is checked as well as the status.
-	 */
 	Form.prototype.unwrap = function (result) {
 		var json = result ? result.json : null;
 
@@ -1465,13 +1200,6 @@
 		return json.data === undefined ? json : json.data;
 	};
 
-	/**
-	 * Pull a fresh nonce (and endpoint) from `GET /form-config`.
-	 *
-	 * Full-page caches store the nonce printed into the HTML, so a cached page
-	 * would send a stale token. Refreshing on mount — and retrying once after a
-	 * rejection — keeps the form working behind any cache or CDN.
-	 */
 	Form.prototype.refreshNonce = function () {
 		return this.refreshConfig();
 	};
@@ -1521,7 +1249,6 @@
 
 			return self.nonce;
 		}).catch(function () {
-			// Offline or REST blocked: keep the nonce we already have.
 			self.nonceRequest = null;
 
 			return self.nonce;
@@ -1687,7 +1414,6 @@
 				this.say(data.message || '', 'success');
 				this.root.classList.remove('is-expired');
 
-				// Length first: the boxes have to exist before anything focuses one.
 				if (data.code_length) {
 					this.codeLength = parseInt(data.code_length, 10);
 					this.renderBoxes(this.codeLength);
@@ -1728,8 +1454,6 @@
 		var code = error ? error.code : '';
 		var message = (error && error.message) || i18n.network || 'Error';
 
-		// The server wanted a challenge the browser could never display: say that,
-		// instead of asking the visitor to solve something that is not on screen.
 		if ('captcha_missing' === code && this.captcha.unavailable) {
 			message = i18n.captchaBlocked || message;
 		}
@@ -1744,11 +1468,6 @@
 				this.captcha.consume();
 			}
 
-			/*
-			 * Finish what the visitor started as soon as the challenge is answered.
-			 * Pressing "send" twice because a checkbox appeared is the sort of
-			 * detail that decides whether a login form feels broken.
-			 */
 			this.captcha.onSolved = function () {
 				if (!self.busy) {
 					self.act(self.lastAction || 'start');
@@ -1770,8 +1489,6 @@
 
 		this.clearCode();
 
-		// Put the caret back where the fix has to happen. `clearCode` resets the
-		// invalid flag, so the error styling has to be re-applied after it.
 		if (this.isCurrent(this.stepCode)) {
 			this.setCodeInvalid(true);
 			this.focusCode();
@@ -1780,9 +1497,6 @@
 		}
 	};
 
-	/**
-	 * Show how many tries are left, when the server bothers to say.
-	 */
 	Form.prototype.showAttempts = function (left) {
 		var count = parseInt(left, 10);
 
@@ -1810,9 +1524,6 @@
 		return !!step && step.classList.contains('is-current');
 	};
 
-	/**
-	 * Move focus to the first field the server or the validator rejected.
-	 */
 	Form.prototype.focusFirstError = function () {
 		var invalid = $(this.root, '.signa-step.is-current [aria-invalid="true"]');
 
@@ -1823,7 +1534,6 @@
 				try {
 					invalid.select();
 				} catch (error) {
-					// Selects and checkboxes cannot be selected; focus is enough.
 				}
 			}
 		}
@@ -1894,9 +1604,6 @@
 		});
 	};
 
-	/**
-	 * Mark one control invalid and say why right next to it.
-	 */
 	Form.prototype.setInvalid = function (input, message) {
 		if (!input) {
 			return;
@@ -1913,9 +1620,6 @@
 		}
 	};
 
-	/**
-	 * Undo the invalid mark once the visitor starts fixing the value.
-	 */
 	Form.prototype.setValid = function (input) {
 		if (!input) {
 			return;
@@ -1938,9 +1642,6 @@
 		return key ? $(this.root, '[data-signa-error="' + key + '"]') : null;
 	};
 
-	/**
-	 * Flag the code inputs as a group — they share one meaning.
-	 */
 	Form.prototype.setCodeInvalid = function (invalid) {
 		var targets = this.boxes.slice();
 
@@ -1973,12 +1674,6 @@
 		this.emit('step', { step: step ? attr(step, 'signa-step') : '' });
 	};
 
-	/**
-	 * Sync the step bar and the sentence a screen reader hears.
-	 *
-	 * The circles are `aria-hidden`; only the sentence is announced, so nobody
-	 * has to sit through "list, 3 items, 1 of 3" on every transition.
-	 */
 	Form.prototype.markSteps = function (current) {
 		var total = this.stepMarkers.length;
 		var index = -1;
@@ -2069,19 +1764,12 @@
 					try {
 						target.select();
 					} catch (error) {
-						// Not selectable; focus alone is fine.
 					}
 				}
 			}, 60);
 		}
 	};
 
-	/**
-	 * Rebuild the digit boxes when the server reports a different code length.
-	 *
-	 * A site can change `code_length` while a page sits in a CDN cache, so the
-	 * markup and the real length disagree until this runs.
-	 */
 	Form.prototype.renderBoxes = function (length) {
 		var count = parseInt(length, 10);
 
@@ -2103,7 +1791,6 @@
 			box.setAttribute('maxlength', '1');
 			box.setAttribute('aria-invalid', 'false');
 			box.setAttribute('data-signa-box', String(index));
-			// Only the first box advertises autofill, same as the PHP template.
 			box.setAttribute('autocomplete', 0 === index ? 'one-time-code' : 'off');
 			box.setAttribute('aria-label', text(i18n.digitLabel || '', { n: faDigits(index + 1) }) || String(index + 1));
 
@@ -2120,9 +1807,6 @@
 		this.emit('code-length', { length: count });
 	};
 
-	/**
-	 * Submit the code as soon as it is complete, without a button press.
-	 */
 	Form.prototype.maybeAutoVerify = function () {
 		var self = this;
 
@@ -2132,7 +1816,6 @@
 
 		window.clearTimeout(this.autoVerifyTimer);
 
-		// A short beat lets a paste or a fast typist land its last digit first.
 		this.autoVerifyTimer = window.setTimeout(function () {
 			if (!self.busy && self.codeValue().length === self.codeLength) {
 				self.act('verify');
@@ -2140,9 +1823,6 @@
 		}, 180);
 	};
 
-	/**
-	 * Fill the code inputs from a string, e.g. a WebOTP credential.
-	 */
 	Form.prototype.fillCode = function (value) {
 		var digits = digitsOnly(value).substr(0, this.codeLength);
 
@@ -2153,13 +1833,6 @@
 		this.spread(digits);
 	};
 
-	/**
-	 * Ask the browser for the SMS code (WebOTP / `navigator.credentials.get`).
-	 *
-	 * Requires the `@example.com #12345` binding line in the message, which the
-	 * plugin appends when WebOTP is on. Android Chrome still asks the visitor to
-	 * confirm the suggestion, so nothing is filled without consent.
-	 */
 	Form.prototype.startWebOtp = function () {
 		var self = this;
 
@@ -2194,20 +1867,15 @@
 				self.act('verify');
 			}
 		}).catch(function () {
-			// Aborted, unsupported or dismissed: the visitor types it instead.
 			self.otpAbort = null;
 		});
 	};
 
-	/**
-	 * Drop a pending WebOTP request, e.g. when the visitor starts typing.
-	 */
 	Form.prototype.stopWebOtp = function () {
 		if (this.otpAbort) {
 			try {
 				this.otpAbort.abort();
 			} catch (error) {
-				// Already settled.
 			}
 
 			this.otpAbort = null;
@@ -2276,15 +1944,12 @@
 		this.paintCooldown(left);
 
 		var tick = function () {
-			// Persian digits in the sentence; the value itself stays a number.
 			var label = text(i18n.resendIn || '{s}s', { s: faDigits(left) });
 
 			if (self.resendLabel) {
 				self.resendLabel.textContent = label;
 			}
 
-			// The visible label ticks every second; the live region only speaks at
-			// quarter-minute marks so screen readers are not talked over.
 			if (left > 0 && 0 === left % 15) {
 				self.announceResend(label);
 			}
@@ -2308,12 +1973,6 @@
 		this.countdown = window.setInterval(tick, 1000);
 	};
 
-	/**
-	 * Drive the thin cooldown bar with one CSS animation.
-	 *
-	 * Restarting it needs a reflow, otherwise the browser reuses the running
-	 * animation and the bar never jumps back to full.
-	 */
 	Form.prototype.paintCooldown = function (seconds) {
 		var fill = this.cooldownBar ? this.cooldownBar.firstElementChild : null;
 
@@ -2330,14 +1989,10 @@
 		this.cooldownBar.hidden = false;
 		this.cooldownBar.style.setProperty('--signa-cooldown', seconds + 's');
 		fill.style.animation = 'none';
-		// Reading offsetWidth forces the restart.
 		void fill.offsetWidth;
 		fill.style.animation = '';
 	};
 
-	/**
-	 * Offer a way out once waiting for the SMS stops being reasonable.
-	 */
 	Form.prototype.startRescue = function () {
 		var self = this;
 
@@ -2363,12 +2018,6 @@
 		}
 	};
 
-	/**
-	 * Freeze each button label at its resting width.
-	 *
-	 * Without this, swapping "Sign in" for "Checking the code..." resizes the
-	 * button mid-click and the pointer lands somewhere else.
-	 */
 	Form.prototype.lockButtonWidths = function () {
 		$$(this.root, '.signa-btn__label').forEach(function (label) {
 			var width = label.offsetWidth;
@@ -2379,9 +2028,6 @@
 		});
 	};
 
-	/**
-	 * Speak the resend countdown at milestones instead of every single second.
-	 */
 	Form.prototype.announceResend = function (message) {
 		if (this.resendLive) {
 			this.resendLive.textContent = message || '';
@@ -2409,7 +2055,6 @@
 				self.root.classList.add('is-expired');
 				self.clearCode();
 
-				// Say so, and offer the one thing that helps.
 				if (self.isCurrent(self.stepCode)) {
 					self.say(i18n.expired || '', 'error', self.actionsFor('expired_code', {}));
 				}
@@ -2437,7 +2082,6 @@
 			this.statusTitle.hidden = !titles[type];
 		}
 
-		// Older markup (and themes overriding the template) has no inner nodes.
 		if (this.statusText) {
 			this.statusText.textContent = message;
 		} else {
@@ -2446,17 +2090,10 @@
 
 		this.renderStatusActions(actions);
 
-		// Errors interrupt; everything else waits for a pause in speech.
 		this.statusBox.setAttribute('role', isError ? 'alert' : 'status');
 		this.statusBox.setAttribute('aria-live', isError ? 'assertive' : 'polite');
 	};
 
-	/**
-	 * Render the buttons offered inside a status message.
-	 *
-	 * `actions` is a list of `{ action, label, disabled }`; the button simply
-	 * routes back into `act()`, so no new API surface is needed.
-	 */
 	Form.prototype.renderStatusActions = function (actions) {
 		var self = this;
 
@@ -2486,23 +2123,11 @@
 		});
 	};
 
-	/**
-	 * Map a server error code to the one or two things worth offering next.
-	 *
-	 * Codes come from the REST layer as they are; nothing here needs the API to
-	 * change (UI plan 4.7).
-	 */
 	Form.prototype.actionsFor = function (code, payload) {
 		var labels = cfg.actions || {};
 		var retry = { action: 'retry', label: labels.retry || '' };
 		var newCode = { action: 'resend', label: labels.newCode || '', disabled: !!(payload && payload.retry_after) };
 
-		/*
-		 * No "edit phone" button here on purpose. The number is edited on the
-		 * spot — the field itself in step 1, the chip above the boxes in step 3
-		 * — so a third control that only goes back to a screen the user can
-		 * already see is noise, not a next step.
-		 */
 		switch (code) {
 			case 'network_error':
 			case 'request_timeout':
@@ -2571,55 +2196,17 @@
 
 	Form.prototype.emit = function (name, detail) {
 		try {
-			/*
-			 * `composed` so the event still reaches the page when the form lives
-			 * inside a shadow root: a bubbling event stops at the shadow boundary
-			 * unless it is composed, and a site listening for `signa:sent` on
-			 * `document` would silently stop hearing it.
-			 */
 			this.root.dispatchEvent(new window.CustomEvent('signa:' + name, {
 				bubbles: true,
 				composed: true,
 				detail: detail || {}
 			}));
 		} catch (error) {
-			// Older browsers: the event is only a convenience for custom scripts.
 		}
 	};
 
-	/* ------------------------------------------------------- Style isolation */
-
-	/*
-	 * The form renders inside a shadow root, with the plugin's own stylesheet
-	 * injected into it. That is the difference between "the form looks like
-	 * the demo" and "the form looks like whatever the theme does to buttons".
-	 *
-	 * Two things decide a form's look on a real site, and neither of them is
-	 * WordPress rewriting anything:
-	 *
-	 *   1. cascade   — the plugin names one class per rule; a theme writing
-	 *                  `.entry-content input` or `button { ... }` outranks it,
-	 *                  so the theme wins the button, the placeholder and the
-	 *                  link colours;
-	 *   2. inheritance — a theme that sets a font, a letter-spacing or a bold
-	 *                  weight on its content column hands those down to the
-	 *                  form, which then looks like the theme's prose.
-	 *
-	 * A shadow root ends both: no outer selector matches inside it, and the
-	 * values it inherits are declared by the form itself. The stylesheet is
-	 * the same file the light DOM uses — one design, two delivery paths.
-	 *
-	 * It is progressive: the markup is in the page already (so a visitor with
-	 * JavaScript off sees a styled form), the swap happens once the stylesheet
-	 * text is in hand, and if anything goes wrong the form falls back to the
-	 * light DOM rather than disappearing.
-	 */
-
 	var SHADOW = { text: null, failed: false, loading: null };
 
-	/**
-	 * Can this form be isolated, and does the site want it?
-	 */
 	function isolatable(host) {
 		if (false === cfg.isolate || 'off' === cfg.isolate) {
 			return false;
@@ -2633,39 +2220,19 @@
 			return false;
 		}
 
-		/*
-		 * Without a stylesheet URL there is nothing to inject, and an empty
-		 * `fetch('')` would fetch *this page* and inject the HTML as CSS.
-		 */
 		if ('' === String(cfg.css || '')) {
 			return false;
 		}
 
-		// Somebody else's shadow root, or this form opted out.
 		return !host.shadowRoot && '1' !== host.getAttribute('data-signa-no-shadow');
 	}
 
-	/**
-	 * Absolute URLs, because a `<style>` element resolves `url()` against the
-	 * page, not against the file the text was read from: `../fonts/x.woff2`
-	 * inside `assets/css/` would be requested from the site root.
-	 */
 	function absolutise(css) {
 		var base = String(cfg.assets || '');
 
 		return '' === base ? css : css.replace(/url\(\s*\.\.\//g, 'url(' + base);
 	}
 
-	/**
-	 * Is this text really the plugin's stylesheet?
-	 *
-	 * A security plugin, a CDN rule, or an "optimise CSS" plugin can answer a
-	 * fetch with an HTML error page and a 200, and a browser injects that as
-	 * CSS without complaining. Inside a shadow root the result is a form with
-	 * no styling at all — and the theme cannot style it back in either, because
-	 * a shadow boundary is one-way. A stylesheet that does not name this plugin
-	 * is a failed read, and a failed read leaves the form in the light DOM.
-	 */
 	function ownStylesheet(text) {
 		return 'string' === typeof text &&
 			text.length > 4096 &&
@@ -2673,10 +2240,6 @@
 			text.indexOf('--signa-accent') > 0;
 	}
 
-	/**
-	 * The stylesheet text, fetched once per page. The URL is the same one the
-	 * `<link>` already loaded, so this is a cache hit — not a second download.
-	 */
 	function stylesheet() {
 		if (null !== SHADOW.text || SHADOW.failed) {
 			return window.Promise.resolve(SHADOW.text || '');
@@ -2697,8 +2260,6 @@
 				return SHADOW.text;
 			})
 			.catch(function () {
-				// Blocked, offline, a security plugin: the form simply stays in
-				// the light DOM, exactly as it shipped before.
 				SHADOW.failed = true;
 
 				return '';
@@ -2707,11 +2268,6 @@
 		return SHADOW.loading;
 	}
 
-	/**
-	 * Everything the form reads from its element travels with it: the classes
-	 * (skins, code mode), the inline custom properties PHP printed, the
-	 * `data-*` settings, and the direction.
-	 */
 	function carry(inner, host) {
 		inner.className = host.className;
 
@@ -2730,11 +2286,6 @@
 		});
 	}
 
-	/**
-	 * The values PHP computed for this request. They are written as inline
-	 * custom properties on the form itself, so they outrank anything — a theme
-	 * cannot recolour the button by declaring the same variable.
-	 */
 	function paint(inner) {
 		var vars = cfg.vars || {};
 
@@ -2749,15 +2300,6 @@
 		});
 	}
 
-	/**
-	 * Keep the inside in step with the outside.
-	 *
-	 * The host element stays the handle a site holds: a builder or a script
-	 * that changes the accent, the skin or the width on it must still see the
-	 * form change, even though the form no longer lives in that tree. Only the
-	 * plugin's own properties and the class list are mirrored — a theme's
-	 * styles still cannot reach in.
-	 */
 	function mirror(host, inner) {
 		if (!window.MutationObserver) {
 			return;
@@ -2782,16 +2324,9 @@
 
 			host.signaShadowObserver = observer;
 		} catch (error) {
-			// No mirroring: the values copied at build time are what the form
-			// renders with, which is exactly what a static page needs.
 		}
 	}
 
-	/**
-	 * Put this form inside its own tree. Resolves with the element the form
-	 * should be built on — the inner one, or the host when isolation is not
-	 * available.
-	 */
 	function shell(host) {
 		if (!isolatable(host)) {
 			return window.Promise.resolve(host);
@@ -2821,8 +2356,6 @@
 			shadow.appendChild(style);
 			shadow.appendChild(inner);
 
-			// Moving nodes is synchronous: the browser paints once, after the
-			// swap, so there is no frame where the form is invisible.
 			while (host.firstChild) {
 				inner.appendChild(host.firstChild);
 			}
@@ -2834,13 +2367,6 @@
 		});
 	}
 
-	/**
-	 * Undo an isolation that did not work out.
-	 *
-	 * A shadow root cannot be removed, but a slot makes the light DOM visible
-	 * again — and the light children are styled by the very same stylesheet,
-	 * so a failed swap degrades into the form as it shipped before.
-	 */
 	function unresolve(host, inner) {
 		try {
 			while (inner.firstChild) {
@@ -2854,20 +2380,10 @@
 				host.shadowRoot.innerHTML = '<slot></slot>';
 			}
 		} catch (error) {
-			// Nothing left to do: the form stays where it is.
 		}
 	}
 
-	/* ------------------------------------------------------------------ Mount */
-
-	/**
-	 * One form, mounted where it can be styled by this plugin alone.
-	 */
 	function boot(host) {
-		/*
-		 * Without isolation there is nothing to wait for: the form mounts on
-		 * the element it was printed on, synchronously, exactly as before.
-		 */
 		if (!isolatable(host)) {
 			host.signaForm = new Form(host);
 
@@ -2884,7 +2400,6 @@
 					throw error;
 				}
 
-				// A bug in the controller must not cost the visitor the form.
 				unresolve(host, root);
 				form = new Form(host);
 			}
@@ -2897,16 +2412,12 @@
 		});
 	}
 
-	/* ------------------------------------------------------------------ Mount */
-
 	function mount() {
 		$$(document, '[data-signa-form]').forEach(function (host) {
 			if (host.dataset.signaMounted) {
 				return;
 			}
 
-			// Marked before the swap so a second call cannot mount twice while
-			// the stylesheet is still in flight.
 			host.dataset.signaMounted = '1';
 
 			boot(host);
@@ -2919,14 +2430,6 @@
 		mount();
 	}
 
-	/*
-	 * Once more when the page has finished loading.
-	 *
-	 * The WoodMart sign-in panel is printed in the footer, and a site that
-	 * defers or injects its footer after `DOMContentLoaded` would otherwise
-	 * leave that one form inert. `mount()` skips anything already mounted, so
-	 * this costs a `querySelectorAll` and nothing else.
-	 */
 	window.addEventListener('load', mount);
 
 	window.signaOtpForms = {

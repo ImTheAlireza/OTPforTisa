@@ -1,9 +1,4 @@
 <?php
-/**
- * Event log browser with filters and CSV export.
- *
- * @package Signa
- */
 
 namespace Signa\Admin;
 
@@ -15,15 +10,9 @@ use Signa\Log\Report;
 defined( 'ABSPATH' ) || exit;
 
 final class LogsScreen implements Bootable {
-
 	const SLUG = 'signa-logs';
-
 	const PER_PAGE = 40;
-
-	/** @var LogStore */
 	private $logs;
-
-	/** @var Settings */
 	private $settings;
 
 	public function __construct( LogStore $logs, Settings $settings ) {
@@ -42,7 +31,7 @@ final class LogsScreen implements Bootable {
 		}
 
 		$filters = $this->filters();
-		$page    = max( 1, isset( $_GET['paged'] ) ? (int) $_GET['paged'] : 1 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page    = max( 1, isset( $_GET['paged'] ) ? (int) $_GET['paged'] : 1 );
 		$offset  = ( $page - 1 ) * self::PER_PAGE;
 
 		$rows   = $this->logs->query( array_merge( $filters, array( 'limit' => self::PER_PAGE + 1, 'offset' => $offset ) ) );
@@ -168,7 +157,7 @@ final class LogsScreen implements Bootable {
 			printf( '<a class="button" href="%s">%s</a>', esc_url( $this->pageUrl( $page - 1, $filters ) ), esc_html__( 'صفحه قبل', 'signa' ) );
 		}
 
-		echo '<span class="signa-pager__current">' . esc_html( sprintf( /* translators: %d: page number */ __( 'صفحه %d', 'signa' ), $page ) ) . '</span>';
+		echo '<span class="signa-pager__current">' . esc_html( sprintf(  __( 'صفحه %d', 'signa' ), $page ) ) . '</span>';
 
 		if ( $hasMore ) {
 			printf( '<a class="button" href="%s">%s</a>', esc_url( $this->pageUrl( $page + 1, $filters ) ), esc_html__( 'صفحه بعد', 'signa' ) );
@@ -183,11 +172,11 @@ final class LogsScreen implements Bootable {
 
 	private function filters(): array {
 		return array(
-			'severity' => isset( $_GET['severity'] ) ? sanitize_key( wp_unslash( $_GET['severity'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			'event'    => isset( $_GET['event'] ) ? sanitize_text_field( wp_unslash( $_GET['event'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			'gateway'  => isset( $_GET['gateway'] ) ? sanitize_key( wp_unslash( $_GET['gateway'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			'search'   => isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			'hours'    => isset( $_GET['hours'] ) ? (int) $_GET['hours'] : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			'severity' => isset( $_GET['severity'] ) ? sanitize_key( wp_unslash( $_GET['severity'] ) ) : '',
+			'event'    => isset( $_GET['event'] ) ? sanitize_text_field( wp_unslash( $_GET['event'] ) ) : '',
+			'gateway'  => isset( $_GET['gateway'] ) ? sanitize_key( wp_unslash( $_GET['gateway'] ) ) : '',
+			'search'   => isset( $_GET['search'] ) ? sanitize_text_field( wp_unslash( $_GET['search'] ) ) : '',
+			'hours'    => isset( $_GET['hours'] ) ? (int) $_GET['hours'] : 0,
 		);
 	}
 
@@ -216,7 +205,7 @@ final class LogsScreen implements Bootable {
 
 		$out = fopen( 'php://output', 'w' );
 
-		fwrite( $out, "\xEF\xBB\xBF" ); // UTF-8 BOM so Excel reads Persian correctly.
+		fwrite( $out, "\xEF\xBB\xBF" );
 		fputcsv( $out, Report::row( array( 'created_at', 'severity', 'event', 'channel', 'gateway', 'error_code', 'phone_mask', 'user_id', 'message' ) ) );
 
 		foreach ( $rows as $row ) {

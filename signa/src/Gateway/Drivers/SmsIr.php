@@ -1,19 +1,4 @@
 <?php
-/**
- * SMS.ir driver.
- *
- * Two documented ways to send: a verification template (`/v1/send/verify`,
- * which is what an OTP should use) and free text over a dedicated line
- * (`/v1/send/bulk`). The panel answers both with its own status code in the
- * body — `status: 1` means accepted, anything else is a documented refusal with
- * a number (10 invalid key … 123 line not activated). Those numbers are the
- * whole answer to "why was my code not sent", so they are translated here
- * instead of being flattened into "rejected".
- *
- * @see https://sms.ir/rest-api/
- *
- * @package Signa
- */
 
 namespace Signa\Gateway\Drivers;
 
@@ -27,22 +12,11 @@ use Signa\Support\Transport;
 defined( 'ABSPATH' ) || exit;
 
 final class SmsIr extends HttpGateway implements AccountProbe {
-
 	const VERIFY_ENDPOINT = 'https://api.sms.ir/v1/send/verify';
 	const BULK_ENDPOINT   = 'https://api.sms.ir/v1/send/bulk';
 	const CREDIT_ENDPOINT = 'https://api.sms.ir/v1/credit';
 	const LINE_ENDPOINT   = 'https://api.sms.ir/v1/line';
-
-	/** Documented limit for one template parameter value. */
 	const PARAM_MAX = 25;
-
-	/**
-	 * The panel's own status codes: our error code, and what the owner should do.
-	 *
-	 * @see https://sms.ir/rest-api/ (جدول کدهای وضعیت)
-	 *
-	 * @var array<int,array<int,string>>
-	 */
 	private static $statuses = array(
 		0   => array( 'upstream', 'سامانهٔ SMS.ir خطا داد؛ چند دقیقه بعد دوباره تلاش کنید و اگر تکرار شد با پشتیبانی تماس بگیرید.' ),
 		10  => array( 'unauthorized', 'کلید API نامعتبر است؛ از پنل SMS.ir، بخش برنامه‌نویسان، کلید تازه بسازید و همین‌جا بگذارید.' ),
@@ -113,25 +87,16 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		return '' === trim( $this->option( 'smsir_api_key' ) ) ? array( 'smsir_api_key' ) : array();
 	}
 
-	/**
-	 * The configured line, with Persian digits folded and separators removed.
-	 */
 	private function line(): string {
 		return (string) preg_replace( '/\D/', '', Phone::latinDigits( trim( $this->option( 'smsir_sender' ) ) ) );
 	}
 
-	/**
-	 * The configured template id, or '' when it is not a plain number.
-	 */
 	private function template(): string {
 		$value = trim( Phone::latinDigits( $this->option( 'smsir_template_id' ) ) );
 
 		return (string) preg_replace( '/\D/', '', $value );
 	}
 
-	/**
-	 * @return array{mode:string,sender:string,template:string,endpoint:string,issues:string[],notes:string[]}
-	 */
 	public function plan(): array {
 		$key      = trim( $this->option( 'smsir_api_key' ) );
 		$template = $this->template();
@@ -186,17 +151,7 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		return $this->sendBulk( $request, $args );
 	}
 
-	/**
-	 * Templated send. The panel refuses an empty parameter name (116) and a
-	 * value longer than 25 characters (114) with a bare number, so both are
-	 * caught here with a sentence that says which one it is.
-	 */
 	private function sendVerify( DeliveryRequest $request, array $args ): GatewayResult {
-		/**
-		 * The parameter name written between # in the SMS.ir template.
-		 *
-		 * @param string $name Parameter name.
-		 */
 		$name = trim( (string) apply_filters( 'signa_smsir_param', $this->paramName( 'smsir_param', 'CODE' ) ) );
 		$code = $request->code();
 
@@ -207,7 +162,6 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		if ( mb_strlen( $code ) > self::PARAM_MAX ) {
 			return $this->reject(
 				sprintf(
-					/* translators: %d: maximum number of characters */
 					__( 'کد تولیدشده بیش از %d نویسه است؛ SMS.ir آن را در الگو نمی‌پذیرد.', 'signa' ),
 					self::PARAM_MAX
 				),
@@ -231,15 +185,6 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		return $this->evaluate( $this->post( self::VERIFY_ENDPOINT, $args ) );
 	}
 
-	/**
-	 * Free text over the dedicated line.
-	 *
-	 * `lineNumber` is documented as a number, so it must reach the panel as a
-	 * JSON number and not as a quoted string. It is not cast to an int for that
-	 * either: on a 32-bit PHP (where the largest int is 2 147 483 647) casting a
-	 * 14-digit line number saturates and the panel would receive a line that
-	 * belongs to nobody. The digits are written into the JSON as they are.
-	 */
 	private function sendBulk( DeliveryRequest $request, array $args ): GatewayResult {
 		$sender = $this->line();
 
@@ -263,9 +208,6 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		return GatewayResult::failed( $this->id(), 'rejected', $message, 0, array( 'reason' => $reason ) );
 	}
 
-	/**
-	 * @param array|\WP_Error $response
-	 */
 	private function evaluate( $response ): GatewayResult {
 		if ( is_wp_error( $response ) ) {
 			return $this->transportFailure( $response );
@@ -284,12 +226,6 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		return GatewayResult::failed( $this->id(), $issue['code'], $issue['message'], $status, $issue['meta'] );
 	}
 
-	/**
-	 * Turn whatever the panel answered into our code, a sentence for the owner
-	 * and the panel's own words as the reason that travels to the log.
-	 *
-	 * @return array{code:string,message:string,meta:array<string,mixed>}
-	 */
 	private function issue( ?int $api, int $http, array $body ): array {
 		$sentence = isset( $body['message'] ) && is_scalar( $body['message'] ) ? sanitize_text_field( (string) $body['message'] ) : '';
 
@@ -326,13 +262,6 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		);
 	}
 
-	/**
-	 * Ask the account, not the message: key accepted? credit left? line ours?
-	 *
-	 * Nothing is sent and nothing is charged, so this can be run as often as an
-	 * owner likes — and it separates the three refusals that all look like "the
-	 * code did not arrive".
-	 */
 	public function probe(): array {
 		$out = array(
 			'ok'         => false,
@@ -400,11 +329,6 @@ final class SmsIr extends HttpGateway implements AccountProbe {
 		return $out;
 	}
 
-	/**
-	 * One read-only GET against the panel.
-	 *
-	 * @return array{ok:bool,code:string,message:string,reason:string,data:mixed}
-	 */
 	private function read( string $url, string $apiKey ): array {
 		$response = $this->get(
 			$url,

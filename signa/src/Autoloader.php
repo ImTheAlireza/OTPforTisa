@@ -1,19 +1,11 @@
 <?php
-/**
- * PSR-4 style autoloader for the Signa namespace.
- *
- * @package Signa
- */
 
 namespace Signa;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Autoloader {
-
 	const PREFIX = 'Signa\\';
-
-	/** @var bool */
 	private static $registered = false;
 
 	public static function register(): void {
@@ -37,9 +29,6 @@ final class Autoloader {
 		}
 	}
 
-	/**
-	 * Map a class name to its expected file (used by diagnostics).
-	 */
 	public static function pathFor( string $class ): string {
 		return SIGNA_PATH . 'src/' . str_replace( '\\', '/', substr( $class, strlen( self::PREFIX ) ) ) . '.php';
 	}

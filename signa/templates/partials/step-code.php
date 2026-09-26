@@ -1,9 +1,4 @@
 <?php
-/**
- * Step 3 — enter the one-time code.
- *
- * @package Signa
- */
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,7 +11,6 @@ $codeTitleId = $instance . '-code-title';
 		<p class="signa-step__hint">
 			<?php
 			printf(
-				/* translators: %s: masked phone number */
 				esc_html__( 'کد ارسال‌شده به %s را وارد کنید.', 'signa' ),
 				'<span class="signa__masked" data-signa-masked>—</span>'
 			);
@@ -24,7 +18,6 @@ $codeTitleId = $instance . '-code-title';
 		</p>
 	</header>
 
-	<?php // Which number this code went to, with the way back to fix it. ?>
 	<div class="signa-code__phone" data-signa-phone-chip hidden>
 		<span class="signa-code__phone-label"><?php esc_html_e( 'کد ارسال‌شده به', 'signa' ); ?></span>
 		<strong class="signa-code__phone-value" data-signa-phone-chip-value dir="ltr">—</strong>
@@ -59,9 +52,8 @@ $codeTitleId = $instance . '-code-title';
 					type="text"
 					inputmode="numeric"
 					maxlength="1"
-					<?php // The first box carries the autofill hint; the rest stay opaque. ?>
 					autocomplete="<?php echo 0 === $digit ? 'one-time-code' : 'off'; ?>"
-					aria-label="<?php echo esc_attr( sprintf( /* translators: %d: digit position */ __( 'رقم %d', 'signa' ), $digit + 1 ) ); ?>"
+					aria-label="<?php echo esc_attr( sprintf(  __( 'رقم %d', 'signa' ), $digit + 1 ) ); ?>"
 					aria-invalid="false"
 					data-signa-box="<?php echo esc_attr( (string) $digit ); ?>"
 				>
@@ -79,7 +71,6 @@ $codeTitleId = $instance . '-code-title';
 		<span class="signa-btn__spinner" aria-hidden="true"></span>
 	</button>
 
-	<?php // Server-reported remaining attempts; hidden until the server sends one. ?>
 	<p class="signa-code__attempts" data-signa-attempts role="status" aria-live="polite" hidden></p>
 
 	<div class="signa-code__footer">
@@ -89,19 +80,8 @@ $codeTitleId = $instance . '-code-title';
 		<button type="button" class="signa-link" data-signa-action="edit-phone"><?php echo esc_html( $editLabel ); ?></button>
 	</div>
 
-	<?php // One CSS animation, no second timer. Hidden while no cooldown runs. ?>
 	<div class="signa-code__cooldown" data-signa-cooldown aria-hidden="true" hidden><i></i></div>
 
-	<?php
-	/*
-	 * Revealed 30 seconds in, when "it never arrived" becomes plausible.
-	 *
-	 * This is a callout, not a toolbar: it explains and points at the two
-	 * controls that already exist above it ("resend" beside the countdown, and
-	 * the edit link on the number chip). A third copy of those buttons would
-	 * only raise the question "are these the same button?".
-	 */
-	?>
 	<div class="signa-code__rescue" data-signa-rescue hidden>
 		<p class="signa-code__rescue-title">
 			<span class="signa-code__rescue-icon" aria-hidden="true">
@@ -115,6 +95,5 @@ $codeTitleId = $instance . '-code-title';
 		</ul>
 	</div>
 
-	<?php // The visible countdown changes every second; this region speaks only at milestones. ?>
 	<p class="signa-screen-reader" role="status" aria-live="polite" data-signa-resend-live></p>
 </section>

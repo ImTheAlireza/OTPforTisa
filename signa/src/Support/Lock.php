@@ -1,12 +1,4 @@
 <?php
-/**
- * Short-lived mutual exclusion built on the state table.
- *
- * Used to stop two concurrent requests from creating the same account or
- * running two import batches at once.
- *
- * @package Signa
- */
 
 namespace Signa\Support;
 
@@ -15,11 +7,7 @@ use Signa\State\StateStore;
 defined( 'ABSPATH' ) || exit;
 
 final class Lock {
-
-	/** @var StateStore */
 	private $state;
-
-	/** @var array<string,string> */
 	private $held = array();
 
 	public function __construct( StateStore $state ) {
@@ -50,11 +38,6 @@ final class Lock {
 		unset( $this->held[ $key ] );
 	}
 
-	/**
-	 * Run a callback while holding a lock; returns null when the lock is busy.
-	 *
-	 * @return mixed|null
-	 */
 	public function withLock( string $name, callable $callback, int $ttl = 30 ) {
 		if ( ! $this->acquire( $name, $ttl ) ) {
 			return null;

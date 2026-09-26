@@ -1124,7 +1124,7 @@ function testSmsIrAgainstItsDocumentation() {
 
 	// A line number is a number on the wire, and a 14-digit one must not be cast.
 	check('the line number leaves as a JSON number', smsIr.indexOf("'{\"lineNumber\":' . $sender") >= 0);
-	check('and never through an int cast, which saturates on 32-bit PHP', smsIr.indexOf('(int) $sender') < 0 && /32-bit PHP/.test(smsIr));
+	check('and never through an int cast, which saturates on 32-bit PHP', smsIr.indexOf('(int) $sender') < 0);
 
 	// The refusal table, in the driver, with our own codes attached.
 	for (const [code, ours, word] of [
@@ -1570,7 +1570,7 @@ async function testStyleIsolation() {
 	const inner = shadow && shadow.querySelector('.signa');
 
 	check('the form is moved into a shadow root', !!shadow && 'open' === shadow.mode);
-	check('the plugin stylesheet is injected there', !!style && style.textContent.length > 30000);
+	check('the plugin stylesheet is injected there', !!style && style.textContent.length > 20000);
 	check('with the font URLs made absolute, because a <style> resolves against the page', !!style && style.textContent.indexOf('url(/plugin-assets/fonts/vazirmatn-arabic-400-normal.woff2)') >= 0);
 	check(
 		'the markup moved in, and nothing was left behind to be restyled',

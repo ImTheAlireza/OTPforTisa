@@ -1,12 +1,4 @@
 <?php
-/**
- * One blocklist entry.
- *
- * A rule is stored as a plain array inside the settings row, so it survives
- * export/import with the rest of the configuration and needs no extra table.
- *
- * @package Signa
- */
 
 namespace Signa\Blocklist;
 
@@ -15,24 +7,13 @@ use Signa\Support\Phone;
 defined( 'ABSPATH' ) || exit;
 
 final class Rule {
-
 	const KIND_EXACT  = 'exact';
 	const KIND_PREFIX = 'prefix';
 	const KIND_WILD   = 'wildcard';
-
-	/** @var string */
 	private $kind;
-
-	/** @var string Canonical digits (no separators). */
 	private $pattern;
-
-	/** @var string */
 	private $note;
-
-	/** @var int Unix timestamp, 0 = never expires. */
 	private $until;
-
-	/** @var string */
 	private $addedAt;
 
 	public function __construct( string $kind, string $pattern, string $note = '', int $until = 0, string $addedAt = '' ) {
@@ -43,13 +24,6 @@ final class Rule {
 		$this->addedAt = $addedAt;
 	}
 
-	/**
-	 * Build a rule from whatever an administrator typed.
-	 *
-	 * Accepts `0912...` (exact), `0912*` or `0912` shorter than a full number
-	 * (prefix), and `0912*4567` (wildcard). Persian and Arabic digits are
-	 * folded to Latin first so a copy-paste from a support ticket works.
-	 */
 	public static function parse( string $raw, string $note = '', int $until = 0 ): ?self {
 		$raw = trim( Phone::latinDigits( $raw ) );
 
@@ -59,25 +33,21 @@ final class Rule {
 
 		$hasWildcard = false !== strpos( $raw, '*' );
 
-		// Keep digits, a single leading +, and wildcards.
 		$clean = preg_replace( '/[^0-9*]/', '', $raw );
 
 		if ( ! is_string( $clean ) || '' === $clean ) {
 			return null;
 		}
 
-		// Collapse runs of wildcards; `**` means the same as `*`.
 		$clean = preg_replace( '/\*{2,}/', '*', $clean );
 
 		if ( ! is_string( $clean ) || '' === trim( $clean, '*' ) ) {
-			// A bare `*` would block every number on the site. Refuse it.
 			return null;
 		}
 
 		$addedAt = current_time( 'mysql', true );
 
 		if ( $hasWildcard ) {
-			// A trailing-only wildcard is just a prefix, which is cheaper to match.
 			if ( substr_count( $clean, '*' ) === 1 && '*' === substr( $clean, -1 ) ) {
 				return new self( self::KIND_PREFIX, self::canonicalPrefix( rtrim( $clean, '*' ) ), $note, $until, $addedAt );
 			}
@@ -87,7 +57,6 @@ final class Rule {
 
 		$canonical = Phone::normalize( $clean );
 
-		// A complete, valid number is an exact rule; anything shorter is a prefix.
 		if ( '' !== $canonical && Phone::isValid( $canonical ) ) {
 			return new self( self::KIND_EXACT, $canonical, $note, $until, $addedAt );
 		}
@@ -95,9 +64,6 @@ final class Rule {
 		return new self( self::KIND_PREFIX, self::canonicalPrefix( $clean ), $note, $until, $addedAt );
 	}
 
-	/**
-	 * @param array<string,mixed> $row
-	 */
 	public static function fromArray( array $row ): ?self {
 		$kind    = isset( $row['kind'] ) ? (string) $row['kind'] : '';
 		$pattern = isset( $row['pattern'] ) ? (string) $row['pattern'] : '';
@@ -115,9 +81,6 @@ final class Rule {
 		);
 	}
 
-	/**
-	 * @return array<string,mixed>
-	 */
 	public function toArray(): array {
 		return array(
 			'kind'     => $this->kind,
@@ -152,16 +115,10 @@ final class Rule {
 		return $this->until > 0 && $this->until < time();
 	}
 
-	/**
-	 * Stable identifier used by the remove button.
-	 */
 	public function id(): string {
 		return substr( md5( $this->kind . '|' . $this->pattern ), 0, 12 );
 	}
 
-	/**
-	 * Does this rule cover the given canonical phone number?
-	 */
 	public function matches( string $canonicalPhone ): bool {
 		if ( '' === $canonicalPhone || $this->isExpired() ) {
 			return false;
@@ -181,9 +138,6 @@ final class Rule {
 		return false;
 	}
 
-	/**
-	 * Human label for the admin table.
-	 */
 	public function label(): string {
 		switch ( $this->kind ) {
 			case self::KIND_EXACT:
@@ -196,10 +150,6 @@ final class Rule {
 		return __( 'الگو', 'signa' );
 	}
 
-	/**
-	 * Normalise a prefix the same way a full number would be normalised, so
-	 * `+98912`, `0098912`, `98912` and `0912` all block the same range.
-	 */
 	private static function canonicalPrefix( string $digits ): string {
 		$digits = preg_replace( '/\D/', '', $digits );
 

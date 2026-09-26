@@ -1,14 +1,3 @@
-/*!
- * Signa — admin styles.
- *
- * Scoped to `.signa-wrap` (and the modal, which lives on <body>) so nothing
- * leaks into other admin screens. The design language: a quiet grey page,
- * white cards with a soft shadow, one teal accent, rounded controls, and a
- * floating save bar. Every colour below is a token; tests/contrast.js reads
- * the tokens straight out of this block and checks the pairs WCAG constrains.
- */
-
-/* Vazirmatn ships with the plugin (assets/fonts, OFL): no request to a font CDN. */
 @font-face {
 	font-family: 'Vazirmatn';
 	font-style: normal;
@@ -151,8 +140,6 @@
 	border: 0;
 }
 
-/* One visible focus ring for everything the panel can reach. WordPress styles
-   `:focus` on some controls and not others, so it is drawn here once. */
 .signa-wrap a:focus-visible,
 .signa-wrap button:focus-visible,
 .signa-wrap .button:focus-visible,
@@ -167,8 +154,6 @@
 	outline-offset: 2px;
 	box-shadow: none;
 }
-
-/* Hero ---------------------------------------------------------------------- */
 
 .signa-hero {
 	position: relative;
@@ -294,8 +279,6 @@
 	display: none;
 }
 
-/* Body: side navigation + main column --------------------------------------- */
-
 .signa-body {
 	display: grid;
 	grid-template-columns: 236px minmax(0, 1fr);
@@ -386,8 +369,6 @@
 	background: var(--signa-accent);
 }
 
-/* Section head -------------------------------------------------------------- */
-
 .signa-section[hidden] {
 	display: none;
 }
@@ -432,8 +413,6 @@
 	font-size: 11px;
 	font-weight: 700;
 }
-
-/* Cards --------------------------------------------------------------------- */
 
 .signa-card {
 	margin: 0 0 18px;
@@ -507,7 +486,6 @@
 	font-weight: 600;
 }
 
-/* The tool screens draw older cards: a bare <h2>, an intro, then content. */
 .signa-panel.signa-card,
 .signa-card.signa-panel {
 	padding: 18px 22px 20px;
@@ -531,8 +509,6 @@
 .signa-panel {
 	margin-bottom: 18px;
 }
-
-/* Setting rows and fields --------------------------------------------------- */
 
 .signa-sr {
 	display: flex;
@@ -612,8 +588,6 @@
 	font-size: 11.5px;
 	line-height: 1.8;
 }
-
-/* Inputs -------------------------------------------------------------------- */
 
 .signa-wrap .signa-inp {
 	width: 100%;
@@ -714,7 +688,6 @@
 	border-radius: 10px;
 }
 
-/* Toggle: a real checkbox with role="switch", drawn as a switch. */
 .signa-wrap input.signa-tgl[type="checkbox"] {
 	position: relative;
 	flex: none;
@@ -766,7 +739,6 @@
 	cursor: not-allowed;
 }
 
-/* Checkbox. */
 .signa-wrap input.signa-chk[type="checkbox"] {
 	position: relative;
 	flex: none;
@@ -821,7 +793,6 @@
 	color: var(--signa-accent);
 }
 
-/* Option cards (radio). */
 .signa-opts {
 	display: flex;
 	flex-wrap: wrap;
@@ -910,8 +881,6 @@
 	line-height: 1.7;
 }
 
-/* Chips, code, tokens ------------------------------------------------------- */
-
 .signa-chip {
 	display: inline-flex;
 	align-items: center;
@@ -998,8 +967,6 @@
 	text-align: center;
 }
 
-/* Notices ------------------------------------------------------------------- */
-
 .signa-notice {
 	display: flex;
 	align-items: flex-start;
@@ -1056,8 +1023,6 @@
 	margin-top: 0;
 	margin-bottom: 16px;
 }
-
-/* Buttons ------------------------------------------------------------------- */
 
 .signa-btn,
 .signa-wrap .button,
@@ -1182,8 +1147,6 @@
 	margin-top: 12px;
 }
 
-/* Accordions (gateways, captcha providers) ---------------------------------- */
-
 .signa-accs {
 	padding-top: 6px;
 }
@@ -1246,8 +1209,6 @@
 .signa-acc__bd {
 	padding: 12px 20px 18px;
 }
-
-/* Form section with the live preview beside it ------------------------------ */
 
 .signa-split {
 	display: grid;
@@ -1333,8 +1294,6 @@
 	background: transparent;
 }
 
-/* Registration fields repeater ---------------------------------------------- */
-
 .signa-repeater {
 	padding-top: 6px;
 }
@@ -1377,8 +1336,6 @@
 	color: var(--signa-danger);
 	cursor: pointer;
 }
-
-/* Save bar ------------------------------------------------------------------ */
 
 .signa-savebar {
 	position: fixed;
@@ -1456,8 +1413,6 @@
 	from { opacity: 1; }
 	to { opacity: 0.35; }
 }
-
-/* Dashboard ----------------------------------------------------------------- */
 
 .signa-health {
 	display: grid;
@@ -1733,8 +1688,6 @@
 	white-space: nowrap;
 }
 
-/* Reports ------------------------------------------------------------------- */
-
 .signa-report-bar {
 	display: flex;
 	flex-wrap: wrap;
@@ -1864,8 +1817,6 @@
 	background: var(--signa-danger);
 }
 
-/* Tables -------------------------------------------------------------------- */
-
 .signa-table-wrap {
 	overflow-x: auto;
 }
@@ -1950,8 +1901,6 @@
 .signa-rules tr.is-muted {
 	opacity: 0.55;
 }
-
-/* Events screen ------------------------------------------------------------- */
 
 .signa-statbar {
 	display: grid;
@@ -2058,8 +2007,6 @@
 	color: var(--signa-muted);
 	font-size: 13px;
 }
-
-/* Tools screen -------------------------------------------------------------- */
 
 .signa-inline {
 	display: flex;
@@ -2203,8 +2150,6 @@
 	background: var(--signa-danger);
 }
 
-/* Access screen ------------------------------------------------------------- */
-
 .signa-access-form {
 	margin: 0 0 14px;
 }
@@ -2274,13 +2219,6 @@
 	letter-spacing: 0.06em;
 }
 
-/* Self-test modal ----------------------------------------------------------- */
-
-/*
- * Every section can be tested without leaving it. The results arrive in a
- * native <dialog>, so the focus trap, the ESC key and the top layer are the
- * browser's job rather than ours.
- */
 .signa-modal {
 	width: min(620px, calc(100vw - 32px));
 	max-height: min(80vh, 720px);
@@ -2479,7 +2417,6 @@
 	line-height: 1.9;
 }
 
-/* The server's own sentence: English, machine-shaped, and better read apart. */
 .signa-test-row__why {
 	margin: 2px 0 0;
 	color: var(--signa-muted);
@@ -2491,8 +2428,6 @@
 	unicode-bidi: isolate;
 	word-break: break-word;
 }
-
-/* Narrow screens ------------------------------------------------------------ */
 
 @media (max-width: 1100px) {
 	.signa-kpis--6 {
@@ -2610,16 +2545,6 @@
 	}
 }
 
-/* App mode ------------------------------------------------------------------ */
-
-/*
- * Everything outside `.signa-wrap` belongs to WordPress. In app mode the
- * administrator asked for the plugin and not for the frame around it, so the
- * bar, the side menu, the footer and the screen-options row step aside and the
- * panel gets the whole window. Notices stay: a saved-settings message is
- * feedback, not furniture. The switch sits in the header of every screen, so
- * leaving the mode is always one click away.
- */
 html:has(body.signa-app),
 html.signa-app {
 	padding-top: 0 !important;
@@ -2655,7 +2580,6 @@ body.signa-app .signa-pv {
 	top: 18px;
 }
 
-/* A switch with its own label, used where a row has no title of its own. */
 .signa-wrap .signa-toggle {
 	display: inline-flex;
 	align-items: center;
