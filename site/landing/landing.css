@@ -17,6 +17,18 @@
 	--warn: #d97706;
 	--night: #0b1220;
 	--radius: 22px;
+
+	/* Width, one system for the whole page ------------------------------
+	 * The page widens with the screen instead of sitting in a fixed column:
+	 * the side margin and the content cap are fluid, the type is not. Gaps
+	 * and section spacing grow a little with the width, so a wider page
+	 * keeps its proportions instead of looking stretched or zoomed.
+	 *   1280 → ~1200 of content · 1440 → ~1350 · 1920 → 1520 (the cap) */
+	--gutter: clamp(16px, 3vw, 56px);
+	--content: 1520px;
+	--space: clamp(16px, 0.6rem + 0.9vw, 26px);
+	--section-y: clamp(72px, 40px + 4vw, 120px);
+	--tile-pad: clamp(20px, 14px + 0.8vw, 30px);
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 86px; }
@@ -39,7 +51,7 @@ code {
 	font-size: 0.88em;
 }
 h1, h2, h3 { line-height: 1.45; margin: 0; }
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.wrap { max-width: calc(var(--content) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
 .muted { color: var(--muted); }
 .kicker { margin: 0 0 8px; color: var(--accent); font-size: 13.5px; font-weight: 800; letter-spacing: 0.01em; }
 .kicker--light { color: #5eead4; }
@@ -234,10 +246,11 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .stage {
 	position: relative;
 	display: grid;
-	grid-template-columns: minmax(0, 480px) minmax(80px, 130px) auto;
+	/* The window widens, the form inside it does not; the signal between
+	 * the form and the phone gets longer. */
+	grid-template-columns: minmax(0, clamp(480px, 20vw + 250px, 640px)) clamp(80px, 20vw - 150px, 300px) auto;
 	justify-content: center;
 	align-items: start;
-	max-width: 1020px;
 	margin: 26px auto 0;
 }
 .stage__site { display: grid; gap: 16px; min-width: 0; }
@@ -509,21 +522,21 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 }
 
 /* Sections --------------------------------------------------------------- */
-.section { padding: 92px 0; }
+.section { padding: var(--section-y) 0; }
 .section--alt { background: var(--paper); border-block: 1px solid var(--line); }
-.section__head { max-width: 660px; margin: 0 auto 44px; text-align: center; }
+.section__head { max-width: 720px; margin: 0 auto clamp(40px, 2vw + 16px, 56px); text-align: center; }
 .section__head h2 { font-size: clamp(25px, 3.2vw, 36px); font-weight: 800; letter-spacing: -0.01em; }
 .section__head p:not(.kicker) { margin: 10px 0 0; color: var(--muted); }
 
 /* Bento: every feature shown as the piece of product it is -------------- */
-.bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+.bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space); }
 .tile {
 	position: relative;
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
 	min-width: 0;
-	padding: 20px;
+	padding: var(--tile-pad);
 	overflow: hidden;
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
@@ -757,7 +770,7 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .is-live .drawer__panel, .tour__card:hover .drawer__panel { animation: drawer-in 4.5s ease-in-out infinite; }
 
 /* Setup ------------------------------------------------------------------ */
-.setup { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0 0 40px; padding: 0; list-style: none; }
+.setup { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space); margin: 0 0 40px; padding: 0; list-style: none; }
 .setup__step { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 22px 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
 .setup__step h3 { font-size: 17px; font-weight: 800; }
 .setup__step p { margin: 0; color: var(--ink-2); font-size: 14px; }
@@ -803,9 +816,9 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .admin {
 	display: grid;
 	grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-	gap: 36px;
+	gap: clamp(36px, 3vw, 64px);
 	align-items: center;
-	padding: 36px;
+	padding: clamp(28px, 1vw + 22px, 48px);
 	border-radius: 28px;
 	background:
 		radial-gradient(34rem 20rem at 0% 0%, rgba(20, 184, 166, 0.25), transparent 70%),
@@ -837,7 +850,7 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .win__btn { justify-self: start; padding: 4px 12px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; }
 
 /* Requirements as the plugin's own self-test ---------------------------- */
-.req { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 40px; align-items: center; }
+.req { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(40px, 4vw, 88px); align-items: center; }
 .req h2 { font-size: 32px; font-weight: 800; }
 .check { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: 0 30px 60px -50px rgba(11, 19, 36, 0.5); }
 .check__head { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--bg); }
@@ -853,6 +866,17 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 
 /* FAQ -------------------------------------------------------------------- */
 .faq { max-width: 820px; }
+/* Wide screens: the questions in two columns instead of one narrow strip. */
+@media (min-width: 1200px) {
+	.faq {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		align-items: start;
+		gap: 0 var(--space);
+		max-width: calc(1240px + 2 * var(--gutter));
+	}
+	.faq > .section__head { grid-column: 1 / -1; }
+}
 .faq details { margin-bottom: 10px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); transition: background 0.2s ease, border-color 0.2s ease; }
 .faq details[open] { background: var(--paper); border-color: var(--accent-line); box-shadow: 0 20px 40px -34px rgba(15, 118, 110, 0.6); }
 .faq summary { position: relative; padding: 16px 20px 16px 52px; font-weight: 700; cursor: pointer; list-style: none; }
@@ -878,7 +902,7 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .foot__in { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
 /* Demo tour cards --------------------------------------------------------- */
-.tour { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.tour { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space); }
 .tour__card { display: grid; gap: 6px; padding: 16px 16px 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--ink); text-decoration: none; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
 .tour__card:hover { transform: translateY(-3px); border-color: var(--accent-line); box-shadow: 0 28px 50px -40px rgba(15, 118, 110, 0.7); }
 .tour__card > b { margin-top: 8px; font-size: 17px; }
