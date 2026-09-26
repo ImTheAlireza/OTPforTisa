@@ -8,14 +8,7 @@ $codeTitleId = $instance . '-code-title';
 <section class="signa-step" data-signa-step="code" aria-labelledby="<?php echo esc_attr( $codeTitleId ); ?>">
 	<header class="signa-step__head">
 		<h2 class="signa-step__title" id="<?php echo esc_attr( $codeTitleId ); ?>" tabindex="-1"><?php echo esc_html( $codeLabel ); ?></h2>
-		<p class="signa-step__hint">
-			<?php
-			printf(
-				esc_html__( 'کد ارسال‌شده به %s را وارد کنید.', 'signa' ),
-				'<span class="signa__masked" data-signa-masked>—</span>'
-			);
-			?>
-		</p>
+		<p class="signa-step__hint"><?php esc_html_e( 'کدی را که پیامک شد اینجا وارد کنید.', 'signa' ); ?></p>
 	</header>
 
 	<div class="signa-code__phone" data-signa-phone-chip hidden>

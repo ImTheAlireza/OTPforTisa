@@ -181,7 +181,15 @@ function liveForm() {
 		fail('index.html: the signaOtp config block was not found');
 	}
 
-	return { form: form.trim(), cfg: index.slice(cfgStart, cfgEnd + '</script>'.length) };
+	/* The demo skips the sign-up step, so its progress bar has two steps. */
+	const twoSteps = replaceOnce(
+		replaceOnce(form, /\s*<li data-signa-step-marker="fields">[^<]*<\/li>/, '', 'fields step marker'),
+		'گام ۱ از ۳',
+		'گام ۱ از ۲',
+		'step sentence'
+	);
+
+	return { form: twoSteps.trim(), cfg: index.slice(cfgStart, cfgEnd + '</script>'.length) };
 }
 
 /* The stage both pages share: the form in a browser frame, the appearance

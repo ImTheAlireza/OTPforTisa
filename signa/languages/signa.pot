@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Signa 2.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/signa\n"
-"POT-Creation-Date: 2026-09-26 21:19+0000\n"
+"POT-Creation-Date: 2026-09-26 21:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3758,7 +3758,7 @@ msgid "تأیید امنیتی در مرورگر شما بارگذاری نشد.
 msgstr ""
 
 #: src/Front/Assets.php:234
-#: templates/partials/step-code.php:66
+#: templates/partials/step-code.php:59
 msgid "چسباندن کد از پیامک"
 msgstr ""
 
@@ -4710,27 +4710,27 @@ msgstr ""
 msgid "گام %1$s از %2$s: %3$s"
 msgstr ""
 
-#: templates/partials/step-code.php:14
-msgid "کد ارسال‌شده به %s را وارد کنید."
+#: templates/partials/step-code.php:11
+msgid "کدی را که پیامک شد اینجا وارد کنید."
 msgstr ""
 
-#: templates/partials/step-code.php:22
+#: templates/partials/step-code.php:15
 msgid "کد ارسال‌شده به"
 msgstr ""
 
-#: templates/partials/step-code.php:56
+#: templates/partials/step-code.php:49
 msgid "رقم %d"
 msgstr ""
 
-#: templates/partials/step-code.php:90
+#: templates/partials/step-code.php:83
 msgid "پیامک نرسید؟"
 msgstr ""
 
-#: templates/partials/step-code.php:93
+#: templates/partials/step-code.php:86
 msgid "معمولاً تا یک دقیقه می‌رسد؛ اگر نرسید، «ارسال دوبارهٔ کد» را بزنید."
 msgstr ""
 
-#: templates/partials/step-code.php:94
+#: templates/partials/step-code.php:87
 msgid "اگر شماره را اشتباه وارد کرده‌اید، «ویرایش شماره» را بزنید."
 msgstr ""
 

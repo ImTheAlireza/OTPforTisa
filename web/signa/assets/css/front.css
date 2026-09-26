@@ -604,6 +604,10 @@
 	display: none;
 }
 
+.signa-code__phone:not([hidden]) ~ .signa-code__footer [data-signa-action="edit-phone"] {
+	display: none;
+}
+
 .signa-code__phone-value {
 	color: var(--signa-text);
 	font-weight: 700;
