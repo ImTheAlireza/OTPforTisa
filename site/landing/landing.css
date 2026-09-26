@@ -313,7 +313,7 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 		#0b1220;
 }
 
-/* The studio: live appearance controls under the form ------------------- */
+/* The studio: live appearance controls beside (or under) the form -------- */
 .studio {
 	--sg-accent: #0f766e;
 	padding: 16px 18px 18px;
@@ -500,6 +500,7 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 	.stage .studio { padding: 16px 16px 18px; }
 	.stage .studio__head { flex-wrap: wrap; row-gap: 8px; }
 	.stage .studio__head > div { flex: 1 1 0; min-width: 0; }
+	.stage .studio__ic { display: none; }
 	.stage .studio__title { font-size: 14.5px; line-height: 1.55; }
 	.stage .studio__reset span { display: none; }
 	.stage .studio__reset { padding: 7px; }
