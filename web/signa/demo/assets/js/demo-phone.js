@@ -1,15 +1,3 @@
-/**
- * Signa demo: a phone next to the form that receives the demo SMS.
- *
- * demo-shim.js announces `signa-demo:sms` with the code it minted for that
- * request. This file shows it the way a customer would see it: the phone
- * buzzes, a message notification drops onto the lock screen, and tapping it
- * fills the code in — like the "from Messages" suggestion on a real phone.
- *
- * Where there is room, the phone is drawn inside `[data-sg-phone]`; on small
- * screens (or pages without a mount) the same notification drops from the top
- * of the viewport instead, which is exactly where a real phone would put it.
- */
 (function () {
 	'use strict';
 
@@ -55,8 +43,6 @@
 
 		return { time: time, date: date };
 	}
-
-	/* ------------------------------------------------------------ the phone */
 
 	var phone = null;
 
@@ -108,8 +94,6 @@
 		return phone && visible(phone.mount);
 	}
 
-	/* ------------------------------------------------------- the notification */
-
 	function note(sms) {
 		var button = el('button', 'sg-note');
 		button.type = 'button';
@@ -160,7 +144,6 @@
 		wrap.appendChild(card);
 		tip(wrap);
 
-		// Next frame, so the drop-in transition runs.
 		window.requestAnimationFrame(function () {
 			wrap.classList.add('is-on');
 		});
@@ -196,8 +179,6 @@
 		});
 	}
 
-	// When the first SMS of this round arrived: the success card says how long
-	// it took from there to being signed in.
 	var started = 0;
 
 	function receive(sms) {
@@ -224,7 +205,6 @@
 			phone.stack.insertBefore(card, phone.stack.firstChild);
 			tip(phone.stack);
 
-			// Drop in on the next frame, and buzz.
 			window.requestAnimationFrame(function () {
 				card.classList.add('is-in');
 			});
@@ -237,7 +217,6 @@
 				try {
 					navigator.vibrate(60);
 				} catch (error) {
-					// Not allowed without a gesture; the drawing buzzes anyway.
 				}
 			}
 		});
@@ -279,10 +258,6 @@
 		});
 	}
 
-	/**
-	 * Signed in on the stage: the form, the signal and the phone step back and
-	 * one card takes their place, in the colour the visitor picked.
-	 */
 	function win(stageEl, info, next) {
 		var frame = stageEl.querySelector('[data-sg-frame]');
 		var host = stageEl.querySelector('[data-signa-form]');
@@ -329,8 +304,6 @@
 			actions.appendChild(go);
 		}
 
-		// Where the form and the phone were: from the top of the form, as tall
-		// as the taller of the two.
 		var top = 0;
 		var height = 0;
 		var right = 0;
@@ -343,8 +316,6 @@
 
 			top = frameRect.top - stageRect.top;
 			height = Math.max(frameRect.height, phoneRect.height);
-			// From the form's edge across to the phone's, and no further: the
-			// studio under them stays usable.
 			var far = phone && usePhone() ? phone.mount.getBoundingClientRect() : frameRect;
 
 			right = Math.max(0, stageRect.right - frameRect.right);
@@ -378,10 +349,6 @@
 			title.focus();
 		}
 
-		// The whole card in view, buttons included: measured on the card
-		// itself, because the box around it is as tall as the form was.
-		// From the layout, not getBoundingClientRect(): the card is still
-		// mid-way through its entrance transform here.
 		var card = box.querySelector('.sg-win__card');
 		var cardTop = stageEl.getBoundingClientRect().top + top + card.offsetTop;
 		var rect = { top: cardTop, height: card.offsetHeight, bottom: cardTop + card.offsetHeight };
@@ -396,15 +363,10 @@
 		}
 	}
 
-	/** What steps back while the card is up. */
 	function sleepers(stageEl) {
 		return Array.prototype.slice.call(stageEl.querySelectorAll('[data-sg-frame], .stage__link, [data-sg-phone]'));
 	}
 
-	/**
-	 * Back to the start without reloading: the look chosen in the studio, the
-	 * scroll position and the page all stay; only the round starts over.
-	 */
 	function reset() {
 		var stageEl = document.querySelector('.stage');
 		var wrap = document.querySelector('.sg-banner');
@@ -481,7 +443,6 @@
 			return;
 		}
 
-		// Pages without the stage: the card drops in from the top.
 		if (!wrap) {
 			wrap = el('div', 'sg-banner');
 			document.body.appendChild(wrap);
@@ -495,8 +456,6 @@
 			wrap.classList.remove('is-on');
 		}, 9000);
 	}
-
-	/* --------------------------------------------- fill the waiting form in */
 
 	function fill(code) {
 		var hosts = document.querySelectorAll('[data-signa-form]');
@@ -518,8 +477,6 @@
 				form.bulk.dispatchEvent(new window.Event('input', { bubbles: true }));
 			}
 
-			// Auto-verify normally takes it from here; if it is switched off in
-			// the demo controls, send it the way the button would.
 			(function (target) {
 				window.setTimeout(function () {
 					if (!target.busy && !target.root.classList.contains('is-signed-in')) {
@@ -533,8 +490,6 @@
 
 		return false;
 	}
-
-	/* ----------------------------------------------------------------- boot */
 
 	function boot() {
 		var mount = document.querySelector('[data-sg-phone]');
@@ -551,7 +506,6 @@
 			signedIn(event.detail || {});
 		});
 
-		// The first step lights up as soon as somebody starts typing a number.
 		document.addEventListener('focusin', function (event) {
 			var path = event.composedPath ? event.composedPath() : [event.target];
 			for (var i = 0; i < path.length; i++) {

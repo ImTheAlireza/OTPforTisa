@@ -1,13 +1,3 @@
-/**
- * Signa demo: the plugin's REST API, answered inside the browser.
- *
- * The public demo runs on plain static hosting, so there is no WordPress and
- * no PHP behind it. The plugin's real front.js and admin.js still call
- * `…/signa/v1/<route>` with window.fetch; this file answers those calls with
- * the same JSON contract the preview server uses (the mock is lifted from
- * preview/server.js at build time, see tools/build_site.js). Nothing leaves
- * the visitor's browser and no SMS is ever sent.
- */
 (function () {
 	'use strict';
 
@@ -79,7 +69,6 @@
 		}
 	}
 
-	/* A real server takes a moment; an instant answer makes the spinner flash. */
 	function later(ms, signal, produce) {
 		return new Promise(function (resolve, reject) {
 			if (signal && signal.aborted) {
@@ -107,12 +96,6 @@
 		});
 	}
 
-	/*
-	 * Every request gets its own code, delivered as a demo SMS (see
-	 * demo-phone.js), so the visitor goes through what their customers will:
-	 * ask, read the message, type the code. The mock itself only knows one
-	 * code, so a correct answer is translated to it on the way in.
-	 */
 	var MOCK_CODE = '12345';
 	var codes = {};
 
@@ -134,7 +117,6 @@
 		try {
 			window.dispatchEvent(new window.CustomEvent('signa-demo:' + name, { detail: detail }));
 		} catch (error) {
-			// Very old browsers: the form still works, only the phone stays quiet.
 		}
 	}
 
@@ -147,9 +129,6 @@
 
 		var result = mock.handleRest(route, body, headers);
 
-		// In the public demo every number goes straight to the SMS: the signup
-		// fields are a setting the buyer can switch on, not the first thing a
-		// visitor should have to fill in.
 		if ('start' === route && result.body && result.body.success && 'register_form' === (result.body.data || {}).step) {
 			result = mock.handleRest('code', body, headers);
 
@@ -195,8 +174,6 @@
 			});
 		}
 
-		// The admin panel's live form preview posts the unsaved settings and
-		// shows the page that comes back; here that page is pre-rendered.
 		if (/(^|\/)form-preview(\?|$)/.test(url)) {
 			var body = parse(options.body);
 			var query = /[?&]step=([a-z]+)/.exec(url);
@@ -209,8 +186,6 @@
 
 		return realFetch(input, init);
 	};
-
-	/* ---------------------------------------------------- server-only actions */
 
 	var toastTimer = 0;
 
@@ -242,7 +217,6 @@
 		try {
 			window.sessionStorage.setItem(APP_KEY, on ? '1' : '0');
 		} catch (error) {
-			// Private mode: the switch still works for this page.
 		}
 	}
 
@@ -257,7 +231,6 @@
 			return;
 		}
 
-		// options.php is the settings form: admin.js saves it itself in demo mode.
 		if (/options\.php/.test(action)) {
 			return;
 		}
@@ -266,8 +239,6 @@
 
 		var kind = form.querySelector('input[name="action"]');
 
-		// The generated admin pages toggle app mode themselves; remember the
-		// result so the next screen opens the same way.
 		if (kind && kind.value === 'signa_app_mode') {
 			window.setTimeout(function () {
 				appMode(document.body.classList.contains('signa-app'));

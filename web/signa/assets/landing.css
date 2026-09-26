@@ -1,5 +1,3 @@
-/* Signa site: the landing page and the demo's front page share this file.
-   The font faces come from the plugin's own front.css. */
 :root {
 	--ink: #0b1324;
 	--ink-2: #334155;
@@ -18,12 +16,6 @@
 	--night: #0b1220;
 	--radius: 22px;
 
-	/* Width, one system for the whole page ------------------------------
-	 * The page widens with the screen instead of sitting in a fixed column:
-	 * the side margin and the content cap are fluid, the type is not. Gaps
-	 * and section spacing grow a little with the width, so a wider page
-	 * keeps its proportions instead of looking stretched or zoomed.
-	 *   1280 → ~1200 of content · 1440 → ~1350 · 1920 → 1520 (the cap) */
 	--gutter: clamp(16px, 3vw, 56px);
 	--content: 1520px;
 	--space: clamp(16px, 0.6rem + 0.9vw, 26px);
@@ -56,7 +48,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .kicker { margin: 0 0 8px; color: var(--accent); font-size: 13.5px; font-weight: 800; letter-spacing: 0.01em; }
 .kicker--light { color: #5eead4; }
 
-/* Buttons ---------------------------------------------------------------- */
 .btn {
 	display: inline-flex;
 	align-items: center;
@@ -85,7 +76,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .btn--sm { padding: 8px 15px; font-size: 13.5px; border-radius: 11px; }
 .btn[aria-disabled="true"] { cursor: default; opacity: 0.85; transform: none; }
 
-/* Header ----------------------------------------------------------------- */
 .top {
 	position: sticky;
 	top: 0;
@@ -148,7 +138,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 	box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.18), 0 0 14px rgba(20, 184, 166, 0.9);
 }
 
-/* Hero ------------------------------------------------------------------- */
 .hero {
 	position: relative;
 	overflow: hidden;
@@ -186,7 +175,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 .try { max-width: 720px; margin: 22px auto 0; color: var(--muted); font-size: 13.5px; line-height: 2; text-align: center; }
 
-/* Three steps above the stage */
 .flow {
 	display: flex;
 	justify-content: center;
@@ -241,13 +229,9 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .flow[data-sg-stage="done"] .flow__step[data-step="phone"] span::after,
 .flow[data-sg-stage="done"] .flow__step[data-step="sms"] span::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; }
 
-/* The stage: the site (the form), the signal, the customer's phone; the
- * studio runs under all three. */
 .stage {
 	position: relative;
 	display: grid;
-	/* The window widens, the form inside it does not; the signal between
-	 * the form and the phone gets longer. */
 	grid-template-columns: minmax(0, clamp(480px, 20vw + 250px, 640px)) clamp(80px, 20vw - 150px, 300px) auto;
 	justify-content: center;
 	align-items: start;
@@ -268,7 +252,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 	opacity: 0.8;
 }
 .stage__phone { position: sticky; top: 92px; display: flex; justify-content: center; }
-/* Rings behind the phone, as if it were receiving. */
 .stage__phone::before {
 	content: '';
 	position: absolute;
@@ -327,7 +310,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 		#0b1220;
 }
 
-/* The studio: live appearance controls under the form and the phone ------ */
 .studio {
 	--sg-accent: #0f766e;
 	padding: 16px 18px 18px;
@@ -467,14 +449,8 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .scen__btn b { font-size: 12px; }
 .scen__btn small { color: var(--muted); font-size: 10.5px; }
 
-/* The studio under the form and the phone -------------------------------
- * One row across the whole stage, from the form's edge to the phone's: a
- * title bar, three columns (skin │ colour │ corners and code), and the
- * scenarios along the bottom. Wide and short instead of tall and thin. */
 .stage > .studio {
 	grid-column: 1 / -1;
-	/* Takes the width the form and the phone make, and adds none: without
-	 * this its own contents widened the phone's column and squeezed the form. */
 	width: 0;
 	min-width: 100%;
 	margin-top: 22px;
@@ -496,17 +472,14 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 		border-bottom: 0;
 	}
 	.stage > .studio .studio__row:first-of-type { padding-inline-start: 0; }
-	/* Hairlines between the three columns. */
 	.stage > .studio .studio__row + .studio__row:not(.studio__row--try) { border-inline-start: 1px solid #edf1f5; }
 	.stage > .studio .studio__row--split { padding-inline-end: 0; gap: 10px; }
 	.stage > .studio .studio__row--split .studio__label { margin-bottom: 6px; }
 	.stage > .studio .swatches { flex-wrap: nowrap; gap: 6px; }
 	.stage > .studio .swatch { flex: none; width: 24px; height: 24px; }
-	/* The hex code up on the label's line, so the swatches get the row. */
 	.stage > .studio .studio__row:nth-of-type(2) { position: relative; }
 	.stage > .studio .swatches__hex { position: absolute; top: -3px; left: 22px; }
 
-	/* The scenarios: one strip along the bottom, label and three buttons. */
 	.stage > .studio .studio__row--try {
 		grid-column: 1 / -1;
 		flex-direction: row;
@@ -521,14 +494,12 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 	.stage > .studio .scen__btn { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 12px; }
 }
 
-/* Sections --------------------------------------------------------------- */
 .section { padding: var(--section-y) 0; }
 .section--alt { background: var(--paper); border-block: 1px solid var(--line); }
 .section__head { max-width: 720px; margin: 0 auto clamp(40px, 2vw + 16px, 56px); text-align: center; }
 .section__head h2 { font-size: clamp(25px, 3.2vw, 36px); font-weight: 800; letter-spacing: -0.01em; }
 .section__head p:not(.kicker) { margin: 10px 0 0; color: var(--muted); }
 
-/* Bento: every feature shown as the piece of product it is -------------- */
 .bento { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space); }
 .tile {
 	position: relative;
@@ -552,7 +523,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .tile__copy p { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; line-height: 2; }
 .tile > div[aria-hidden], .tile > a.fan { flex: none; }
 
-/* The dark failover tile */
 .tile--dark {
 	display: grid;
 	grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -591,7 +561,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .fo__all { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 14px 0 0; border-top: 1px solid #1e293b; list-style: none; }
 .fo__all li { padding: 3px 12px; border: 1px solid #1e293b; border-radius: 999px; background: #0f172a; color: #cbd5e1; font-size: 12.5px; font-weight: 700; }
 
-/* Live when in view: the log plays out, then starts again. */
 .is-live .fo__gw--a { animation: fo-a 7s infinite; }
 .is-live .fo__gw--b { animation: fo-b 7s infinite; }
 .is-live .fo__row--1 { animation: fo-r1 7s infinite; }
@@ -600,7 +569,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .is-live .fo__wire i { animation: fo-dot 7s infinite; }
 .is-live .fo__wire--late i { animation-name: fo-dot-late; }
 
-/* Rate limit */
 .bot { position: relative; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); font-size: 12.5px; }
 .bot__head { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 700; }
 .bot__head em { color: var(--muted); font-style: normal; font-weight: 600; }
@@ -629,7 +597,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .is-live .bot__r--4 { animation: bot-4 6s infinite; }
 .is-live .bot__stamp { animation: bot-stamp 6s infinite; }
 
-/* WooCommerce checkout */
 .woo { display: grid; gap: 7px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); font-size: 12.5px; }
 .woo__head { display: flex; justify-content: space-between; align-items: baseline; }
 .woo__head span { color: var(--muted); font-size: 11.5px; }
@@ -640,7 +607,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .woo__field:first-of-type { box-shadow: inset 0 0 0 1.5px var(--accent-line), 0 0 0 3px var(--accent-soft); }
 .woo__btn { padding: 7px; border-radius: 10px; background: #7f54b3; color: #fff; font-weight: 800; text-align: center; }
 
-/* Skins fan */
 .fan { position: relative; display: block; height: 150px; }
 .fan__card {
 	position: absolute;
@@ -680,7 +646,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .fan:hover .fan__card--slate, .is-live .fan__card--slate { transform: rotate(16deg) translateY(-8px); }
 .fan:hover .fan__card--pill, .is-live .fan__card--pill { transform: rotate(32deg) translateY(-4px); }
 
-/* Digits import */
 .imp { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); font-size: 12.5px; }
 .imp__head { display: flex; justify-content: space-between; align-items: center; }
 .imp__badge { padding: 0 9px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 800; }
@@ -696,7 +661,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .imp__act span { padding: 3px 12px; border-radius: 9px; background: var(--ink); color: #fff; font-weight: 700; }
 .imp__act .imp__undo { background: var(--paper); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line); }
 
-/* Weekly chart */
 .chart { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); font-size: 12.5px; }
 .chart__head { display: flex; justify-content: space-between; align-items: center; }
 .chart__head span { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px; }
@@ -716,7 +680,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .is-live .chart__bars span:nth-child(7) { animation-delay: 0.36s; }
 .chart__why { margin-top: 12px; padding: 6px 10px; border-radius: 10px; background: #fff1f3; color: #9f1239; font-size: 12px; }
 
-/* Emergency code ticket */
 .ticket {
 	position: relative;
 	display: grid;
@@ -735,7 +698,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .ticket__meta { display: flex; gap: 10px; color: #a16207; font-size: 11.5px; font-weight: 600; }
 .ticket__meta span + span::before { content: '·'; margin-left: 10px; }
 
-/* Cache / Cloudflare chain */
 .cdn { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 16px 12px 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); }
 .cdn::before { content: ''; position: absolute; top: 32px; right: 14%; left: 14%; height: 2px; background: repeating-linear-gradient(270deg, #cbd5e1 0 5px, transparent 5px 10px); }
 .cdn::after { content: ''; position: absolute; top: 28px; right: 14%; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); opacity: 0; }
@@ -745,7 +707,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .cdn__hop--wp { color: var(--accent-strong); box-shadow: inset 0 0 0 1.5px var(--accent-line); }
 .cdn__ok { grid-column: 1 / -1; justify-self: center; margin-top: 4px; padding: 1px 12px; border-radius: 999px; background: #dcfce7; color: #15803d; font-size: 12px; font-weight: 800; }
 
-/* Drawer (WoodMart) */
 .drawer { position: relative; display: block; height: 128px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--bg); }
 .drawer__page { position: absolute; inset: 14px; display: grid; align-content: start; gap: 8px; }
 .drawer__page b { display: block; height: 10px; border-radius: 4px; background: #e2e8f0; }
@@ -769,7 +730,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .drawer__panel u { height: 14px; border-radius: 7px; background: var(--accent); }
 .is-live .drawer__panel, .tour__card:hover .drawer__panel { animation: drawer-in 4.5s ease-in-out infinite; }
 
-/* Setup ------------------------------------------------------------------ */
 .setup { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space); margin: 0 0 40px; padding: 0; list-style: none; }
 .setup__step { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 22px 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
 .setup__step h3 { font-size: 17px; font-weight: 800; }
@@ -812,7 +772,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .sc__copy:hover { background: rgba(255, 255, 255, 0.18); }
 .sc__copy.is-done { background: #16a34a; }
 
-/* The admin panel, in miniature ------------------------------------------ */
 .admin {
 	display: grid;
 	grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -849,7 +808,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .win__gw i.is-warn { background: var(--warn); box-shadow: 0 0 0 3px #fef3c7; }
 .win__btn { justify-self: start; padding: 4px 12px; border-radius: 8px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; }
 
-/* Requirements as the plugin's own self-test ---------------------------- */
 .req { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(40px, 4vw, 88px); align-items: center; }
 .req h2 { font-size: 32px; font-weight: 800; }
 .check { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); box-shadow: 0 30px 60px -50px rgba(11, 19, 36, 0.5); }
@@ -864,9 +822,7 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .check__list li.is-opt i::after { border-color: #94a3b8; }
 .check__list span { color: var(--muted); text-align: left; }
 
-/* FAQ -------------------------------------------------------------------- */
 .faq { max-width: 820px; }
-/* Wide screens: the questions in two columns instead of one narrow strip. */
 @media (min-width: 1200px) {
 	.faq {
 		display: grid;
@@ -886,7 +842,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .faq details[open] summary::after { transform: rotate(0); }
 .faq details p { margin: 0; padding: 0 20px 18px; color: var(--ink-2); font-size: 15px; }
 
-/* Final call ------------------------------------------------------------- */
 .final { position: relative; overflow: hidden; padding: 86px 0; background: linear-gradient(150deg, #0b1220, #0f3b3a); color: #fff; text-align: center; }
 .final__in { position: relative; }
 .final__waves { position: absolute; top: 50%; left: 50%; width: 0; height: 0; pointer-events: none; }
@@ -901,7 +856,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .foot { padding: 26px 0; color: var(--muted); font-size: 13.5px; }
 .foot__in { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
-/* Demo tour cards --------------------------------------------------------- */
 .tour { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space); }
 .tour__card { display: grid; gap: 6px; padding: 16px 16px 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); color: var(--ink); text-decoration: none; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
 .tour__card:hover { transform: translateY(-3px); border-color: var(--accent-line); box-shadow: 0 28px 50px -40px rgba(15, 118, 110, 0.7); }
@@ -922,7 +876,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .mini-acc b { width: 42%; height: 9px; border-radius: 4px; background: #cbd5e1; }
 .mini-acc em { width: 62%; height: 12px; border-radius: 6px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
 
-/* Keyframes -------------------------------------------------------------- */
 @keyframes sg-wave { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 @keyframes sg-live { 0% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.6); } 100% { box-shadow: 0 0 0 9px rgba(20, 184, 166, 0); } }
 @keyframes fo-a { 0%, 12% { background: #111a2e; border-color: #334155; color: #e2e8f0; text-decoration-color: transparent; } 16%, 92% { background: rgba(225, 29, 72, 0.12); border-color: rgba(225, 29, 72, 0.6); color: #fda4af; text-decoration-color: rgba(253, 164, 175, 0.6); } 100% { background: #111a2e; border-color: #334155; color: #e2e8f0; text-decoration-color: transparent; } }
@@ -944,7 +897,6 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 @keyframes gw-toast { 0%, 30% { opacity: 0; transform: translateY(6px); } 38%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 @keyframes final-wave { from { transform: scale(0.4); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
 
-/* Responsive ------------------------------------------------------------- */
 @media (max-width: 1100px) {
 	.stage { grid-template-columns: minmax(0, 460px) 70px auto; }
 	.stage__label { display: none; }

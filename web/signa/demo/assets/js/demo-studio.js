@@ -1,14 +1,3 @@
-/**
- * Signa demo: the "form appearance" studio under the live form.
- *
- * Every control does what the matching setting on the plugin's «ظاهر فرم»
- * tab does, the same way the plugin does it: a skin class and a few
- * `--signa-*` custom properties on the form element. front.js mirrors both
- * into the form's shadow root, so nothing here reaches inside it.
- *
- * The choices are kept for the session, so they carry over between the
- * landing page and the demo.
- */
 (function () {
 	'use strict';
 
@@ -43,11 +32,9 @@
 		try {
 			window.sessionStorage.setItem(KEY, JSON.stringify(look));
 		} catch (error) {
-			// Private mode: the look simply resets on the next page.
 		}
 	}
 
-	/* Same rules as Assets::mix() in PHP, so the shades match the plugin's. */
 	function shade(hex, ratio) {
 		var out = '#';
 
@@ -177,7 +164,6 @@
 			apply();
 		});
 
-		// Keys 1–5 switch skins, as on the plugin's preview.
 		document.addEventListener('keydown', function (event) {
 			var target = event.composedPath ? event.composedPath()[0] : event.target;
 
@@ -193,7 +179,6 @@
 			}
 		});
 
-		/* Scenarios: fill a number in and send, as a visitor would. */
 		var scenarios = studio.querySelector('[data-sg-scenarios]');
 
 		scenarios.addEventListener('click', function (event) {
@@ -206,7 +191,6 @@
 
 			var fresh = form.root.classList.contains('is-signed-in');
 
-			// Signed in already: start the round over in place, then run it.
 			if (fresh && window.SignaDemoPhone && window.SignaDemoPhone.reset) {
 				window.SignaDemoPhone.reset();
 			} else if (fresh) {

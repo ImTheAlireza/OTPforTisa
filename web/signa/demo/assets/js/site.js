@@ -1,11 +1,3 @@
-/**
- * Signa site: the small things around the demo.
- *
- * - the signal line under the header fills as the page scrolls;
- * - the menu marks the section on screen;
- * - live illustrations only start moving once they are in view;
- * - the shortcode copy button.
- */
 (function () {
 	'use strict';
 

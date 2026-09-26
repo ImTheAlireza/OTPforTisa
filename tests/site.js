@@ -1,5 +1,5 @@
 /**
- * The public sites (web/signa, web/demo) work on their own: every link lands,
+ * The public sites (web/signa and web/signa/demo) work on their own: every link lands,
  * the live form signs in against the in-browser mock, and the admin demo's
  * buttons answer without a server.
  *
@@ -96,7 +96,7 @@ function text(node) {
 function linkCheck() {
 	scenario('Every internal link and asset of the built sites exists');
 
-	for (const root of ['signa', 'demo']) {
+	for (const root of ['signa', 'signa/demo']) {
 		const dir = path.join(WEB, root);
 		const pages = fs.readdirSync(dir).filter((f) => f.endsWith('.html'));
 		const missing = [];
@@ -202,7 +202,7 @@ async function landing(base) {
 async function demoForm(base) {
 	scenario('Demo: the login form, a new number and the strip');
 
-	const ctx = await open(base, '/demo/');
+	const ctx = await open(base, '/signa/demo/');
 	const strip = ctx.doc.querySelector('.sg-strip');
 
 	check('the demo strip is on top', !!strip && ctx.doc.body.firstElementChild === strip);
@@ -221,7 +221,7 @@ async function demoForm(base) {
 
 	ctx.win.close();
 
-	const again = await open(base, '/demo/');
+	const again = await open(base, '/signa/demo/');
 	let rejected = null;
 	const done = await signIn(again, '09121234567', 'tap', async () => {});
 	check('the demo page has the same stage as the landing page: form, studio and phone', !!again.doc.querySelector('.stage [data-sg-frame] [data-signa-form]') && !!again.doc.querySelector('.stage [data-sg-studio]') && !!again.doc.querySelector('.stage [data-sg-phone] .sg-phone'));
@@ -231,7 +231,7 @@ async function demoForm(base) {
 	again.win.close();
 
 	// The old universal code must not open the door any more.
-	const third = await open(base, '/demo/');
+	const third = await open(base, '/signa/demo/');
 	const host3 = third.doc.querySelector('[data-signa-form]');
 	await until(() => host3 && host3.signaForm);
 	const form3 = host3.signaForm;
@@ -249,7 +249,7 @@ async function demoForm(base) {
 	check('12345 is rejected: only the code from the SMS works', rejected, text((host3.shadowRoot || host3).querySelector('[data-signa-status-text]')));
 	third.win.close();
 
-	const fourth = await open(base, '/demo/');
+	const fourth = await open(base, '/signa/demo/');
 	const done4 = await signIn(fourth, '09121234567', 'type');
 	check('signing in works on the demo page too', done4.form.root.classList.contains('is-signed-in'));
 	const stageEl = fourth.doc.querySelector('.stage');
@@ -326,7 +326,7 @@ async function studio(base) {
 	check('no script error on the page', ctx.errors.length === 0, ctx.errors.slice(0, 3).join(' | '));
 	ctx.win.close();
 
-	const next = await open(base, '/demo/');
+	const next = await open(base, '/signa/demo/');
 	const host2 = next.doc.querySelector('[data-signa-form]');
 	await until(() => host2 && host2.signaForm);
 	next.doc.querySelector('[data-sg-scenarios] [data-phone="new"]').click();
@@ -338,7 +338,7 @@ async function studio(base) {
 async function demoAdmin(base) {
 	scenario('Demo: the admin panel answers without a server');
 
-	const ctx = await open(base, '/demo/admin-settings.html');
+	const ctx = await open(base, '/signa/demo/admin-settings.html');
 	const check1 = ctx.doc.querySelector('[data-signa-check="gateways"]');
 
 	check('the settings screen loads with the strip', !!ctx.doc.querySelector('.sg-strip') && !!ctx.doc.querySelector('.signa-wrap'));
@@ -361,11 +361,11 @@ async function demoAdmin(base) {
 	}
 
 	const frame = ctx.doc.querySelector('iframe.signa-pv__iframe');
-	check('the live form preview points at a page that exists', !!frame && fs.existsSync(path.join(WEB, 'demo', frame.getAttribute('src'))), frame ? frame.getAttribute('src') : 'no iframe');
+	check('the live form preview points at a page that exists', !!frame && fs.existsSync(path.join(WEB, 'signa', 'demo', frame.getAttribute('src'))), frame ? frame.getAttribute('src') : 'no iframe');
 	check('no script error on the page', ctx.errors.length === 0, ctx.errors.slice(0, 3).join(' | '));
 	ctx.win.close();
 
-	const tools = await open(base, '/demo/admin-tools.html');
+	const tools = await open(base, '/signa/demo/admin-tools.html');
 	const link = tools.doc.querySelector('a[href*="example.test"]');
 	if (link) {
 		const event = new tools.win.MouseEvent('click', { bubbles: true, cancelable: true });
@@ -376,14 +376,14 @@ async function demoAdmin(base) {
 	tools.win.close();
 
 	for (const page of ['admin.html', 'admin-reports.html', 'admin-logs.html', 'admin-access.html', 'account.html', 'woodmart.html']) {
-		const one = await open(base, '/demo/' + page);
+		const one = await open(base, '/signa/demo/' + page);
 		check(page + ' loads without script errors, under the strip', one.errors.length === 0 && !!one.doc.querySelector('.sg-strip'), one.errors.slice(0, 2).join(' | '));
 		one.win.close();
 	}
 }
 
 async function main() {
-	if (!fs.existsSync(path.join(WEB, 'demo', 'index.html'))) {
+	if (!fs.existsSync(path.join(WEB, 'signa', 'demo', 'index.html'))) {
 		console.log('web/ is not built; run node tools/build_site.js');
 		process.exit(1);
 	}

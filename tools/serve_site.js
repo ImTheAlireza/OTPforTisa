@@ -1,12 +1,7 @@
 #!/usr/bin/env node
 /**
- * Serve the built sites locally, the way the host will:
- *
- *   /signa/   web/signa   (parsena.ir/signa/)
- *   /demo/    web/demo    (demo.parsena.ir/)
- *
- * The pages link to each other by their production addresses (site/site.json);
- * here those are rewritten to the local paths so every link can be clicked.
+ * Serve web/ locally the way the host will: /signa/ is the landing page and
+ * /signa/demo/ the demo.
  *
  *   node tools/build_site.js && node tools/serve_site.js    (PORT, default 4180)
  */
@@ -19,7 +14,6 @@ const path = require('path');
 const REPO = path.join(__dirname, '..');
 const WEB = path.join(REPO, 'web');
 const PORT = Number(process.env.PORT || 4180);
-const config = JSON.parse(fs.readFileSync(path.join(REPO, 'site', 'site.json'), 'utf8'));
 
 const MIME = {
 	'.html': 'text/html; charset=utf-8',
@@ -30,14 +24,14 @@ const MIME = {
 	'.txt': 'text/plain; charset=utf-8',
 };
 
-const MOUNTS = { '/signa/': 'signa', '/demo/': 'demo' };
+const MOUNTS = { '/signa/': 'signa' };
 
 function handler(req, res) {
 	const url = new URL(req.url, 'http://local');
 	let pathname = decodeURIComponent(url.pathname);
 
-	if (pathname === '/' || pathname === '/signa' || pathname === '/demo') {
-		res.writeHead(302, { Location: pathname === '/demo' ? '/demo/' : '/signa/' });
+	if (pathname === '/' || pathname === '/signa' || pathname === '/signa/demo' || /^\/demo\/?$/.test(pathname)) {
+		res.writeHead(302, { Location: /demo$|demo\/$/.test(pathname) ? '/signa/demo/' : '/signa/' });
 		res.end();
 		return;
 	}
@@ -72,13 +66,6 @@ function handler(req, res) {
 
 		const type = MIME[path.extname(file)] || 'application/octet-stream';
 
-		if (path.extname(file) === '.html') {
-			data = Buffer.from(
-				data.toString('utf8').split(config.demoUrl).join('/demo/').split(config.landingUrl).join('/signa/'),
-				'utf8'
-			);
-		}
-
 		res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'no-store' });
 		res.end(data);
 	});
@@ -88,6 +75,6 @@ module.exports = { handler, create: () => http.createServer(handler) };
 
 if (require.main === module) {
 	http.createServer(handler).listen(PORT, '0.0.0.0', () => {
-		console.log('Signa sites on http://0.0.0.0:' + PORT + '  →  /signa/ (landing)  /demo/ (demo)');
+		console.log('Signa sites on http://0.0.0.0:' + PORT + '  →  /signa/ (landing)  /signa/demo/ (demo)');
 	});
 }

@@ -2,8 +2,11 @@
 /**
  * Build the two public sites from the plugin itself:
  *
- *   web/signa/   the landing page     → upload to parsena.ir/signa/
- *   web/demo/    the live demo        → upload to the root of demo.parsena.ir
+ *   web/signa/        the landing page   → parsena.ir/signa/
+ *   web/signa/demo/   the live demo      → parsena.ir/signa/demo/
+ *
+ * One folder to upload: web/signa goes to public_html/signa. The two pages
+ * link to each other with relative addresses, so they work on any domain.
  *
  * Both are plain static files (no PHP, no database), sized for a small host.
  * Nothing is drawn by hand twice:
@@ -140,7 +143,7 @@ function strip(current) {
 		'<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark">' + MARK + '</span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دموی زنده · نسخهٔ ' + versionFa + '</small></span></a>',
 		'<nav class="sg-strip__nav">' + links + '</nav>',
 		'<span class="sg-strip__note">داده‌ها نمونه‌اند؛ پیامک واقعی ارسال نمی‌شود</span>',
-		'<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="' + config.landingUrl + '">معرفی سیگنا</a>' + buyButton('strip') + '</span>',
+		'<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="../">معرفی سیگنا</a>' + buyButton('strip') + '</span>',
 		'</div>',
 		'<div class="sg-strip__signal" aria-hidden="true"><i></i></div>',
 		'</div>',
@@ -250,7 +253,7 @@ function landing() {
 
 	html = fillIn(html, 'landing', {
 		'{{version_fa}}': versionFa,
-		'{{demo_url}}': config.demoUrl,
+		'{{demo_url}}': 'demo/',
 		'{{buy_small}}': buyButton('small'),
 		'{{buy_large}}': buyButton('large'),
 	});
@@ -287,11 +290,115 @@ const HTACCESS = [
 	'',
 ].join('\n');
 
+/* ------------------------------------------------------------ comments out */
+
+let acorn = null;
+
+function jsComments(text) {
+	if (!acorn) {
+		try {
+			acorn = require('acorn');
+		} catch (error) {
+			fail('acorn is needed to build the site: npm install --no-save acorn');
+		}
+	}
+
+	const ranges = [];
+	acorn.parse(text, { ecmaVersion: 'latest', sourceType: 'script', onComment: (block, body, start, end) => ranges.push([start, end]) });
+	return ranges;
+}
+
+function cssComments(text) {
+	const ranges = [];
+	let quote = null;
+
+	for (let i = 0; i < text.length; i++) {
+		const c = text[i];
+		if (quote) {
+			if (c === '\\') {
+				i++;
+			} else if (c === quote) {
+				quote = null;
+			}
+		} else if (c === '"' || c === "'") {
+			quote = c;
+		} else if (c === '/' && text[i + 1] === '*') {
+			const end = text.indexOf('*/', i + 2);
+			ranges.push([i, end + 2]);
+			i = end + 1;
+		}
+	}
+
+	return ranges;
+}
+
+function cut(text, ranges) {
+	if (!ranges.length) {
+		return text;
+	}
+
+	let out = '';
+	let at = 0;
+	for (const [a, b] of ranges) {
+		out += text.slice(at, a) + '\u0000';
+		at = b;
+	}
+	out += text.slice(at);
+
+	return out
+		.split('\n')
+		.filter((line) => !(line.includes('\u0000') && line.replace(/\u0000/g, '').trim() === ''))
+		.map((line) => (line.includes('\u0000') ? line.replace(/\u0000/g, '').replace(/[ \t]+$/, '') : line))
+		.join('\n')
+		.replace(/\n{3,}/g, '\n\n');
+}
+
+function htmlComments(text) {
+	const parts = text.split(/(<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>)/);
+
+	return parts
+		.map((part, i) => {
+			if (i % 2 === 0) {
+				const ranges = [];
+				part.replace(/<!--[\s\S]*?-->/g, (m, at) => ranges.push([at, at + m.length]));
+				return cut(part, ranges);
+			}
+			const m = /^(<(script|style)\b[^>]*>)([\s\S]*?)(<\/\2>)$/.exec(part);
+			if (m[2] === 'style') {
+				return m[1] + cut(m[3], cssComments(m[3])) + m[4];
+			}
+			if (/\bsrc=|type="application\/(ld\+)?json"/.test(m[1]) || !m[3].trim()) {
+				return part;
+			}
+			return m[1] + cut(m[3], jsComments(m[3])) + m[4];
+		})
+		.join('');
+}
+
+function withoutComments(name, data) {
+	if (/\.js$/.test(name)) {
+		return cut(data, jsComments(data));
+	}
+	if (/\.css$/.test(name)) {
+		return cut(data, cssComments(data));
+	}
+	if (/\.html$/.test(name)) {
+		return htmlComments(data);
+	}
+	if (/\.htaccess$/.test(name)) {
+		return data.replace(/^#.*\n/gm, '');
+	}
+	return data;
+}
+
 /* ------------------------------------------------------------------ output */
 
 function files() {
 	const out = new Map();
-	const put = (name, data) => out.set(name, Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8'));
+	const put = (name, data) => {
+		const text = /\.(html|js|css|htaccess)$/.test(name) ? withoutComments(name, data.toString('utf8')) : data;
+		out.set(name, Buffer.isBuffer(text) ? text : Buffer.from(text, 'utf8'));
+	};
 	const copy = (name, ...src) => put(name, fs.readFileSync(path.join(...src)));
 
 	const mock = mockScript();
@@ -320,17 +427,17 @@ function files() {
 	shared('signa', false);
 	put('signa/index.html', landing());
 
-	shared('demo', true);
-	copy('demo/assets/demo.css', SITE, 'shared', 'demo.css');
-	put('demo/index.html', demoIndex());
-	put('demo/account.html', demoAccount());
-	put('demo/woodmart.html', demoWoodmart());
+	shared('signa/demo', true);
+	copy('signa/demo/assets/demo.css', SITE, 'shared', 'demo.css');
+	put('signa/demo/index.html', demoIndex());
+	put('signa/demo/account.html', demoAccount());
+	put('signa/demo/woodmart.html', demoWoodmart());
 
 	for (const file of fs.readdirSync(PREVIEW).sort()) {
 		if (/^admin(-[a-z]+)?\.html$/.test(file) && !/^admin-preview-/.test(file)) {
-			put('demo/' + file, demoAdmin(file));
+			put('signa/demo/' + file, demoAdmin(file));
 		} else if (/^admin-preview-[a-z]+\.html$/.test(file)) {
-			put('demo/' + file, rewrite(read(PREVIEW, file)));
+			put('signa/demo/' + file, rewrite(read(PREVIEW, file)));
 		}
 	}
 
@@ -430,11 +537,11 @@ function main() {
 		const target = path.join(OUT, name);
 		fs.mkdirSync(path.dirname(target), { recursive: true });
 		fs.writeFileSync(target, data);
-		bytes[name.split('/')[0]] += data.length;
+		bytes[name.startsWith('signa/demo/') ? 'demo' : 'signa'] += data.length;
 	}
 
 	const kb = (n) => Math.round(n / 1024) + ' KB';
-	console.log('wrote web/signa (' + kb(bytes.signa) + ') and web/demo (' + kb(bytes.demo) + '), ' + out.size + ' files, version ' + version);
+	console.log('wrote web/signa (' + kb(bytes.signa) + ') with the demo in web/signa/demo (' + kb(bytes.demo) + '), ' + out.size + ' files, version ' + version);
 }
 
 main();

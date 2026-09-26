@@ -4,11 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>سیگنا — فرم OTP داخل سایدبار ورود وودمارت</title>
-<!--
-	پوستهٔ واقعی وودمارت این صفحه را نمی‌سازد: اینجا فقط چهارچوب پوسته (هدر، کشو،
-	رنگ‌های تیره) بازسازی شده تا فرم در همان جایی دیده شود که روی سایت دیده
-	می‌شود. خود فرم، خروجی واقعی افزونه است.
--->
 <link rel="stylesheet" href="assets/css/front.css">
 <style>
 	:root { color-scheme: dark; }
@@ -52,7 +47,6 @@
 		margin-top: 12px; background: #0f766e; color: #fff; border: 0; border-radius: 10px;
 		padding: 9px 16px; font: inherit; font-size: 14px; cursor: pointer;
 	}
-	/* چهارچوب پوسته: عنوان کشو، دکمهٔ بستن، و فرم قدیمی ووکامرس */
 	.wm-side .wd-heading { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; }
 	.wm-side .wd-heading .title { font-weight: 700; }
 	.wm-side .close-side-widget { color: #8d97a3; text-decoration: none; font-size: 13px; }
@@ -67,8 +61,6 @@
 		background: #333941; color: #fff; border: 0; border-radius: 10px; padding: 10px 18px; font: inherit; cursor: pointer;
 	}
 	.wm-side .create-account-question { padding: 0 20px 22px; font-size: 14px; color: #a9b1bc; text-align: center; }
-	/* وودمارت همین آیکن را با فونت آیکن خودش روی همین عنصر می‌کشد؛ اینجا
-	   همان تصویر با یک SVG درون‌خطی بازسازی شده تا وابستگی به فونت پوسته نباشد. */
 	.wm-side .create-account-question:before {
 		content: ""; display: block; width: 54px; height: 54px; margin: 0 auto 14px;
 		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9c0c9' stroke-width='1.3' stroke-linecap='round'%3E%3Ccircle cx='12' cy='7.6' r='3.6'/%3E%3Cpath d='M4.6 20.2c1.2-3.8 4.1-5.7 7.4-5.7s6.2 1.9 7.4 5.7'/%3E%3C/svg%3E") center / contain no-repeat;
@@ -88,7 +80,7 @@
 <a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3" width="11" height="18" rx="2.8"/><path d="M7.8 6h2.4"/><path d="m6.6 12.3 1.8 1.8 3.3-3.7"/><path class="w1" d="M17.2 9.3a3.8 3.8 0 0 1 0 5.4"/><path class="w2" d="M19.6 7.1a7 7 0 0 1 0 9.8"/></svg></span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دموی زنده · نسخهٔ ۲.۱.۰</small></span></a>
 <nav class="sg-strip__nav"><a href="index.html">فرم ورود</a><a href="account.html">حساب کاربری</a><a href="woodmart.html" aria-current="page">کشوی وودمارت</a><a href="admin.html">پیشخوان مدیریت</a></nav>
 <span class="sg-strip__note">داده‌ها نمونه‌اند؛ پیامک واقعی ارسال نمی‌شود</span>
-<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="https://parsena.ir/signa/">معرفی سیگنا</a><a class="sg-strip__btn" aria-disabled="true">به‌زودی در راست‌چین</a></span>
+<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="../">معرفی سیگنا</a><a class="sg-strip__btn" aria-disabled="true">به‌زودی در راست‌چین</a></span>
 </div>
 <div class="sg-strip__signal" aria-hidden="true"><i></i></div>
 </div>
@@ -159,7 +151,6 @@
 	<div class="widget woocommerce widget_shopping_cart_content"></div>
 	<div class="woocommerce-notices-wrapper"></div>
 	
-<!-- signa: woodmart login sidebar -->
 <div
 	class="signa signa-skin-line signa-align-center signa-code-boxes signa--woodmart"
 	id="signa-form-1-1"
@@ -507,7 +498,6 @@
 		<p class="lost-password"><a href="#">گذرواژه را فراموش کرده‌اید؟</a></p>
 	</form>
 	
-<!-- signa: woodmart login sidebar -->
 <div
 	class="signa signa-skin-line signa-align-center signa-code-boxes signa--woodmart"
 	id="signa-form-2-2"
@@ -830,7 +820,6 @@
 </main>
 
 <script>
-	/* Stands in for wp_localize_script( 'signa-front', 'signaOtp', ... ) */
 	window.signaOtp = {
 		restUrl: 'demo-api/signa/v1/',
 		nonce: 'demo-nonce',
@@ -881,7 +870,6 @@
 		}
 	});
 
-	/* One panel open on load, so the form is visible without a click. */
 	window.addEventListener('DOMContentLoaded', function () {
 		document.querySelector('#wm-after').closest('[data-drawer]').classList.add('is-open');
 	});

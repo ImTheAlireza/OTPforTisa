@@ -2,5 +2,5 @@
 	"_comment": "Addresses the built pages point at. buyUrl stays empty until the product page exists on rtl-theme.com; the buttons then read «به‌زودی در راست‌چین» instead of linking nowhere.",
 	"buyUrl": "",
 	"landingUrl": "https://parsena.ir/signa/",
-	"demoUrl": "https://demo.parsena.ir/"
+	"demoUrl": "https://parsena.ir/signa/demo/"
 }

@@ -4,10 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>سیگنا — پیش‌نمایش پنل کاربری</title>
-<!-- Same stylesheet the plugin loads on the front end. -->
-<!-- The font is not borrowed from a CDN any more: signa/assets/fonts is
-	     served with the plugin and declared in front.css, exactly as it is on a
-	     real site. -->
 <link rel="stylesheet" href="assets/css/front.css">
 <style>
 	body {
@@ -147,11 +143,10 @@
 <a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3" width="11" height="18" rx="2.8"/><path d="M7.8 6h2.4"/><path d="m6.6 12.3 1.8 1.8 3.3-3.7"/><path class="w1" d="M17.2 9.3a3.8 3.8 0 0 1 0 5.4"/><path class="w2" d="M19.6 7.1a7 7 0 0 1 0 9.8"/></svg></span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دموی زنده · نسخهٔ ۲.۱.۰</small></span></a>
 <nav class="sg-strip__nav"><a href="index.html">فرم ورود</a><a href="account.html" aria-current="page">حساب کاربری</a><a href="woodmart.html">کشوی وودمارت</a><a href="admin.html">پیشخوان مدیریت</a></nav>
 <span class="sg-strip__note">داده‌ها نمونه‌اند؛ پیامک واقعی ارسال نمی‌شود</span>
-<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="https://parsena.ir/signa/">معرفی سیگنا</a><a class="sg-strip__btn" aria-disabled="true">به‌زودی در راست‌چین</a></span>
+<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="../">معرفی سیگنا</a><a class="sg-strip__btn" aria-disabled="true">به‌زودی در راست‌چین</a></span>
 </div>
 <div class="sg-strip__signal" aria-hidden="true"><i></i></div>
 </div>
-
 
 <div class="account">
 
@@ -199,7 +194,6 @@
 				<h2>تغییر شمارهٔ موبایل</h2>
 				<p class="card__note">شماره جدید پیش از ثبت، با یک کد تأیید کنترل می‌شود.</p>
 
-				<!-- The plugin's own form, mounted by the same script the site loads. -->
 				<div class="signa" dir="rtl" data-signa-form data-skin="line">
 					<form class="signa__form" method="post" novalidate autocomplete="on">
 						<a class="signa__skip" href="#account-phone" data-signa-skip>رفتن به فرم ورود</a>
@@ -252,10 +246,6 @@
 </div>
 
 <script>
-	/*
-	 * The account page has no endpoint of its own in the demo, so the plugin's
-	 * own script is pointed at the mock REST routes the form demo uses.
-	 */
 	window.signaOtp = {
 		restUrl: 'demo-api/signa/v1/',
 		nonce: 'demo-nonce',

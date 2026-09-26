@@ -1,5 +1,3 @@
-/* Signa demo phone: the device, the SMS notification, the signal and the banner. */
-
 .sg-phone {
 	--sg-w: 272px;
 	position: relative;
@@ -17,7 +15,6 @@
 	-webkit-user-select: none;
 	user-select: none;
 }
-/* Side buttons, for the silhouette. */
 .sg-phone::before,
 .sg-phone::after {
 	content: '';
@@ -92,7 +89,6 @@
 
 .sg-phone.is-buzz { animation: sg-buzz 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 
-/* The notification ---------------------------------------------------- */
 .sg-note {
 	display: flex;
 	align-items: flex-start;
@@ -154,7 +150,6 @@
 	animation: sg-fade 0.4s ease 0.5s both;
 }
 
-/* Signed in ----------------------------------------------------------- */
 .sg-done {
 	display: flex;
 	flex-direction: column;
@@ -186,7 +181,6 @@
 	cursor: pointer;
 }
 
-/* The signal between the form and the phone --------------------------- */
 .sg-signal {
 	position: relative;
 	height: 4px;
@@ -211,7 +205,6 @@
 .sg-signal.is-live i:nth-child(2) { animation-delay: 0.12s; }
 .sg-signal.is-live i:nth-child(3) { animation-delay: 0.24s; }
 
-/* The same notification, dropped from the top of a small screen ------- */
 .sg-banner {
 	position: fixed;
 	top: 12px;
@@ -249,12 +242,8 @@
 }
 .sg-done__go { display: inline-block; text-decoration: none; }
 .sg-done__again--ghost { margin-top: 6px; background: transparent; color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5); }
-/* The success card when it drops from the top of a small screen. */
 .sg-banner.is-done .sg-done { margin: 0; background: linear-gradient(160deg, #0f766e, #134e4a); color: #fff; box-shadow: 0 20px 40px -18px rgba(15, 23, 42, 0.55); }
 
-/* Signed in on the stage ------------------------------------------------
- * The form, the signal and the phone step back; one card takes their place,
- * in the colour picked in the studio (`--win`, set from the form's accent). */
 .stage [data-sg-frame],
 .stage .stage__link,
 .stage [data-sg-phone] {
@@ -303,7 +292,6 @@
 	text-align: center;
 	box-shadow: 0 50px 90px -50px rgba(15, 23, 42, 0.45), 0 2px 6px rgba(15, 23, 42, 0.04);
 }
-/* A soft wash of the chosen colour from the top, where the badge sits. */
 .sg-win__card::before {
 	content: '';
 	position: absolute;
@@ -327,7 +315,6 @@
 .sg-win__badge svg { position: relative; width: 38px; height: 38px; }
 .sg-win__badge svg path { stroke-dasharray: 24; stroke-dashoffset: 24; }
 .sg-win.is-on .sg-win__badge svg path { animation: sg-win-tick 0.5s ease 0.55s forwards; }
-/* Two rings go out once: the signal, answered. */
 .sg-win__badge i {
 	position: absolute;
 	inset: 0;
@@ -347,7 +334,6 @@
 }
 .sg-win__title { position: relative; margin: 0; font-size: 25px; font-weight: 900; line-height: 1.5; outline: none; }
 .sg-win__sub { position: relative; margin: 6px 0 0; color: #475569; font-size: 14.5px; }
-/* A receipt, not a banner: what just happened, in three facts. */
 .sg-win__facts {
 	display: flex;
 	justify-content: center;
@@ -387,7 +373,6 @@
 .sg-win__again:focus-visible,
 .sg-win__go:focus-visible { outline: 3px solid color-mix(in srgb, var(--win) 45%, transparent); outline-offset: 2px; }
 
-/* The dark skins get a dark card. */
 .sg-win.is-dark .sg-win__card { border-color: #1e293b; background: #0f172a; color: #f1f5f9; box-shadow: 0 50px 90px -40px rgba(2, 6, 23, 0.8); }
 .sg-win.is-dark .sg-win__sub,
 .sg-win.is-dark .sg-win__facts dt { color: #94a3b8; }
