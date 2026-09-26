@@ -334,6 +334,7 @@
 		var top = 0;
 		var height = 0;
 		var right = 0;
+		var left = 0;
 
 		if (frame) {
 			var stageRect = stageEl.getBoundingClientRect();
@@ -342,13 +343,17 @@
 
 			top = frameRect.top - stageRect.top;
 			height = Math.max(frameRect.height, phoneRect.height);
-			// From the form's edge across to the phone: where the studio sits
-			// beside the form, the card stays off it.
+			// From the form's edge across to the phone's, and no further: the
+			// studio under them stays usable.
+			var far = phone && usePhone() ? phone.mount.getBoundingClientRect() : frameRect;
+
 			right = Math.max(0, stageRect.right - frameRect.right);
+			left = Math.max(0, Math.min(far.left, frameRect.left) - stageRect.left);
 		}
 
 		box.style.top = top + 'px';
 		box.style.right = right + 'px';
+		box.style.left = left + 'px';
 
 		if (height > 0) {
 			box.style.minHeight = height + 'px';

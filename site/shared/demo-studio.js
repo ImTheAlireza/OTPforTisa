@@ -121,11 +121,6 @@
 
 			studio.style.setProperty('--sg-accent', look.accent);
 
-			// The knot on the line between the studio and the form.
-			if (studio.parentNode && studio.parentNode.style) {
-				studio.parentNode.style.setProperty('--sg-accent', look.accent);
-			}
-
 			pick(skins, 'skin', look.skin);
 			pick(accents, 'accent', look.accent);
 			pick(codes, 'code', look.code);

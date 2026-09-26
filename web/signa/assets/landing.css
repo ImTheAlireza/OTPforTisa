@@ -229,7 +229,8 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .flow[data-sg-stage="done"] .flow__step[data-step="phone"] span::after,
 .flow[data-sg-stage="done"] .flow__step[data-step="sms"] span::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; }
 
-/* The stage: the site (form + studio), the signal, the customer's phone. */
+/* The stage: the site (the form), the signal, the customer's phone; the
+ * studio runs under all three. */
 .stage {
 	position: relative;
 	display: grid;
@@ -313,7 +314,7 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 		#0b1220;
 }
 
-/* The studio: live appearance controls beside (or under) the form -------- */
+/* The studio: live appearance controls under the form and the phone ------ */
 .studio {
 	--sg-accent: #0f766e;
 	padding: 16px 18px 18px;
@@ -453,71 +454,58 @@ h1, h2, h3 { line-height: 1.45; margin: 0; }
 .scen__btn b { font-size: 12px; }
 .scen__btn small { color: var(--muted); font-size: 10.5px; }
 
-/* Wide screens: the studio beside the form, a line between them --------
- * From the right (RTL): studio │ form · signal · phone. The stage may run a
- * little wider than the text column so the four fit without squeezing. */
-@media (min-width: 1200px) {
-	.stage {
-		--stage-w: min(1280px, calc(100vw - 48px));
-		width: var(--stage-w);
-		max-width: none;
-		margin-inline: calc((100% - var(--stage-w)) / 2);
-		grid-template-columns: auto 80px auto;
-	}
-	.stage__site {
-		/* As wide as the screen allows: 330px at 1200, 380px from 1250; the form
-		 * gives up 40px below about 1340 so the studio does not have to. */
-		grid-template-columns: min(380px, calc(100vw - 870px)) 1px auto;
-		column-gap: 22px;
-		align-items: start;
-	}
-	.stage__site > .studio { grid-column: 1; grid-row: 1; }
-	.stage__site > [data-sg-frame] { grid-column: 3; grid-row: 1; width: clamp(420px, calc(100vw - 880px), 460px); }
-	/* Two short lines under the signal instead of one clipped one. */
-	.stage__label { white-space: normal; line-height: 1.6; }
-	.stage__label span { display: inline-block; white-space: nowrap; }
-	/* The divider: a hairline that fades out at both ends, with a small
-	 * knot in the middle where the controls meet the form. */
-	.stage__site::before {
-		content: '';
-		grid-column: 2;
-		grid-row: 1;
-		align-self: stretch;
-		width: 1px;
-		min-height: 420px;
-		background: linear-gradient(to bottom, transparent, var(--line) 12%, #cfd8e3 50%, var(--line) 88%, transparent);
-	}
-	.stage__site::after {
-		content: '';
-		grid-column: 2;
-		grid-row: 1;
-		align-self: center;
-		justify-self: center;
-		width: 9px;
-		height: 9px;
-		border: 2px solid var(--paper);
-		border-radius: 50%;
-		background: var(--sg-accent, var(--accent));
-		box-shadow: 0 0 0 1px var(--line);
-	}
-
-	/* The studio as a wide, short panel: labels beside their controls,
-	 * radius and code side by side, the scenarios in one row. */
-	.stage .studio { padding: 16px 18px 18px; }
-	.stage .studio__title { font-size: 15px; line-height: 1.55; }
-	.stage .studio__reset { padding: 7px; }
-	.stage .studio__reset span { display: none; }
-	.stage .studio__row { grid-template-columns: 46px minmax(0, 1fr); gap: 10px; }
-	.stage .studio__row--split { grid-template-columns: 1fr 1fr; gap: 16px; }
-	.stage .studio__row--try { grid-template-columns: 1fr; gap: 8px; }
-	.stage .swatches { gap: 7px; }
-	.stage .swatch { width: 24px; height: 24px; }
-	.stage .swatches__hex { font-size: 11.5px; padding: 2px 6px; }
-	.stage .scen { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+/* The studio under the form and the phone -------------------------------
+ * One row across the whole stage, from the form's edge to the phone's: a
+ * title bar, three columns (skin │ colour │ corners and code), and the
+ * scenarios along the bottom. Wide and short instead of tall and thin. */
+.stage > .studio {
+	grid-column: 1 / -1;
+	/* Takes the width the form and the phone make, and adds none: without
+	 * this its own contents widened the phone's column and squeezed the form. */
+	width: 0;
+	min-width: 100%;
+	margin-top: 22px;
 }
-@media (min-width: 1200px) and (max-width: 1339px) {
-	.stage .studio__ic { display: none; }
-	.stage .scen__btn small { display: none; }
+
+@media (min-width: 981px) {
+	.stage > .studio {
+		display: grid;
+		grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.1fr) minmax(0, 0.95fr);
+		padding: 16px 22px 18px;
+	}
+	.stage > .studio .studio__head { grid-column: 1 / -1; margin-bottom: 14px; }
+	.stage > .studio .studio__row {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
+		padding: 0 22px;
+		border-bottom: 0;
+	}
+	.stage > .studio .studio__row:first-of-type { padding-inline-start: 0; }
+	/* Hairlines between the three columns. */
+	.stage > .studio .studio__row + .studio__row:not(.studio__row--try) { border-inline-start: 1px solid #edf1f5; }
+	.stage > .studio .studio__row--split { padding-inline-end: 0; gap: 10px; }
+	.stage > .studio .studio__row--split .studio__label { margin-bottom: 6px; }
+	.stage > .studio .swatches { flex-wrap: nowrap; gap: 6px; }
+	.stage > .studio .swatch { flex: none; width: 24px; height: 24px; }
+	/* The hex code up on the label's line, so the swatches get the row. */
+	.stage > .studio .studio__row:nth-of-type(2) { position: relative; }
+	.stage > .studio .swatches__hex { position: absolute; top: -3px; left: 22px; }
+
+	/* The scenarios: one strip along the bottom, label and three buttons. */
+	.stage > .studio .studio__row--try {
+		grid-column: 1 / -1;
+		flex-direction: row;
+		align-items: center;
+		gap: 14px;
+		margin-top: 16px;
+		padding: 14px 0 0;
+		border-top: 1px dashed var(--line);
+	}
+	.stage > .studio .studio__row--try .studio__label { flex: none; }
+	.stage > .studio .scen { flex: 1 1 auto; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+	.stage > .studio .scen__btn { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 12px; }
 }
 
 /* Sections --------------------------------------------------------------- */
