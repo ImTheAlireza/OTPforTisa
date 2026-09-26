@@ -252,8 +252,30 @@ async function demoForm(base) {
 	const fourth = await open(base, '/demo/');
 	const done4 = await signIn(fourth, '09121234567', 'type');
 	check('signing in works on the demo page too', done4.form.root.classList.contains('is-signed-in'));
-	const go = await until(() => fourth.doc.querySelector('.sg-done__go')) ? fourth.doc.querySelector('.sg-done__go') : null;
-	check('after signing in, the phone offers the member page', !!go && go.getAttribute('href') === 'account.html');
+	const stageEl = fourth.doc.querySelector('.stage');
+	const card = await until(() => fourth.doc.querySelector('.stage .sg-win')) ? fourth.doc.querySelector('.stage .sg-win') : null;
+	check('signing in fades the form and the phone out', !!stageEl && stageEl.classList.contains('is-done') && fourth.doc.querySelector('[data-sg-frame]').hasAttribute('inert') && fourth.doc.querySelector('[data-sg-phone]').hasAttribute('inert'));
+	check('and the success card takes their place, not the phone', !!card && /وارد شدید/.test(text(card)) && !fourth.doc.querySelector('[data-sg-phone] .sg-done'));
+	check('the card reads like a receipt: masked number, no password', !!card && /۰۹۱۲\*\*\*۵۶۷/.test(text(card)) && /لازم نشد/.test(text(card)));
+	const go = card && card.querySelector('.sg-win__go');
+	check('it offers the member page', !!go && go.getAttribute('href') === 'account.html');
+
+	// «امتحان دوباره»: the same page, a new round.
+	const again4 = card && card.querySelector('[data-sg-again]');
+	check('it has a try-again button', !!again4 && /امتحان دوباره/.test(text(again4)));
+	if (again4) {
+		again4.click();
+	}
+	const form4 = done4.form;
+	const scope4 = done4.scope();
+	check('trying again brings the form back on the number step, without a reload',
+		!stageEl.classList.contains('is-done') && !fourth.doc.querySelector('[data-sg-frame]').hasAttribute('inert')
+		&& !form4.root.classList.contains('is-signed-in') && form4.stepPhone.classList.contains('is-current')
+		&& scope4.querySelector('[data-signa-phone]').value === '' && fourth.win.SignaDemoPhone && fourth.doc.querySelector('.flow').getAttribute('data-sg-stage') !== 'done');
+	check('and the phone is waiting again', !fourth.doc.querySelector('.sg-phone .sg-note') && /منتظر پیامک/.test(text(fourth.doc.querySelector('[data-sg-phone]'))));
+	const round2 = await signIn(fourth, '09351112233', 'tap');
+	check('a second round signs in again, with a fresh code', round2.form.root.classList.contains('is-signed-in') && /^[0-9]{5}$/.test(round2.code) && round2.code !== done4.code);
+	check('and shows the card again', await until(() => fourth.doc.querySelector('.stage.is-done .sg-win.is-on')) && /وارد شدید/.test(text(fourth.doc.querySelector('.sg-win'))));
 	check('no script error on the page', fourth.errors.length === 0, fourth.errors.slice(0, 3).join(' | '));
 	fourth.win.close();
 }

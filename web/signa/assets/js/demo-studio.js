@@ -6,8 +6,8 @@
  * `--signa-*` custom properties on the form element. front.js mirrors both
  * into the form's shadow root, so nothing here reaches inside it.
  *
- * The choices are kept for the session, so they survive the reload after a
- * sign-in and carry over between the landing page and the demo.
+ * The choices are kept for the session, so they carry over between the
+ * landing page and the demo.
  */
 (function () {
 	'use strict';
@@ -203,7 +203,12 @@
 				return;
 			}
 
-			if (form.root.classList.contains('is-signed-in')) {
+			var fresh = form.root.classList.contains('is-signed-in');
+
+			// Signed in already: start the round over in place, then run it.
+			if (fresh && window.SignaDemoPhone && window.SignaDemoPhone.reset) {
+				window.SignaDemoPhone.reset();
+			} else if (fresh) {
 				window.location.reload();
 				return;
 			}

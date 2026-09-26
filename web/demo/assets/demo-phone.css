@@ -251,3 +251,167 @@
 .sg-done__again--ghost { margin-top: 6px; background: transparent; color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5); }
 /* The success card when it drops from the top of a small screen. */
 .sg-banner.is-done .sg-done { margin: 0; background: linear-gradient(160deg, #0f766e, #134e4a); color: #fff; box-shadow: 0 20px 40px -18px rgba(15, 23, 42, 0.55); }
+
+/* Signed in on the stage ------------------------------------------------
+ * The form, the signal and the phone step back; one card takes their place,
+ * in the colour picked in the studio (`--win`, set from the form's accent). */
+.stage [data-sg-frame],
+.stage .stage__link,
+.stage [data-sg-phone] {
+	transition: opacity 0.45s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.45s ease;
+}
+.stage.is-done [data-sg-frame],
+.stage.is-done .stage__link,
+.stage.is-done [data-sg-phone] {
+	opacity: 0;
+	transform: scale(0.94);
+	filter: blur(8px);
+	pointer-events: none;
+}
+.stage.is-done [data-sg-phone] { transform: scale(0.9) translateY(18px); }
+
+.sg-win {
+	--win: #0f766e;
+	position: absolute;
+	right: 0;
+	left: 0;
+	z-index: 5;
+	display: grid;
+	place-items: center;
+	padding: 12px;
+	opacity: 0;
+	transform: translateY(16px) scale(0.97);
+	transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+	pointer-events: none;
+}
+.sg-win.is-on {
+	opacity: 1;
+	transform: none;
+	transition-delay: 0.22s;
+	pointer-events: auto;
+}
+.sg-win__card {
+	position: relative;
+	width: min(470px, 100%);
+	padding: 40px 32px 28px;
+	overflow: hidden;
+	border: 1px solid #e3e8ef;
+	border-radius: 28px;
+	background: #fff;
+	color: #0b1324;
+	text-align: center;
+	box-shadow: 0 50px 90px -50px rgba(15, 23, 42, 0.45), 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+/* A soft wash of the chosen colour from the top, where the badge sits. */
+.sg-win__card::before {
+	content: '';
+	position: absolute;
+	inset: 0 0 auto;
+	height: 170px;
+	background: radial-gradient(120% 100% at 50% 0%, color-mix(in srgb, var(--win) 14%, transparent), transparent 70%);
+	pointer-events: none;
+}
+.sg-win__badge {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 76px;
+	height: 76px;
+	margin: 0 auto 18px;
+	border-radius: 50%;
+	background: var(--win);
+	color: #fff;
+	box-shadow: 0 16px 34px -14px var(--win);
+}
+.sg-win__badge svg { position: relative; width: 38px; height: 38px; }
+.sg-win__badge svg path { stroke-dasharray: 24; stroke-dashoffset: 24; }
+.sg-win.is-on .sg-win__badge svg path { animation: sg-win-tick 0.5s ease 0.55s forwards; }
+/* Two rings go out once: the signal, answered. */
+.sg-win__badge i {
+	position: absolute;
+	inset: 0;
+	border: 2px solid var(--win);
+	border-radius: 50%;
+	opacity: 0;
+}
+.sg-win.is-on .sg-win__badge i { animation: sg-win-ring 1.4s ease-out 0.5s; }
+.sg-win.is-on .sg-win__badge i + i { animation-delay: 0.8s; }
+.sg-win__kicker {
+	position: relative;
+	margin: 0 0 4px;
+	color: var(--win);
+	font-size: 12.5px;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+}
+.sg-win__title { position: relative; margin: 0; font-size: 25px; font-weight: 900; line-height: 1.5; outline: none; }
+.sg-win__sub { position: relative; margin: 6px 0 0; color: #475569; font-size: 14.5px; }
+/* A receipt, not a banner: what just happened, in three facts. */
+.sg-win__facts {
+	display: flex;
+	justify-content: center;
+	margin: 24px 0 0;
+	padding: 14px 0 0;
+	border-top: 1.5px dashed #e3e8ef;
+}
+.sg-win__facts div { flex: 1 1 0; min-width: 0; padding: 0 8px; }
+.sg-win__facts div + div { border-right: 1px solid #eef2f6; }
+.sg-win__facts dt { color: #64748b; font-size: 11.5px; font-weight: 600; }
+.sg-win__facts dd { margin: 4px 0 0; font-size: 15px; font-weight: 800; white-space: nowrap; }
+.sg-win__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 26px; }
+.sg-win__again,
+.sg-win__go {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 48px;
+	padding: 0 24px;
+	border: 0;
+	border-radius: 14px;
+	font: inherit;
+	font-size: 15px;
+	font-weight: 800;
+	text-decoration: none;
+	cursor: pointer;
+	transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.sg-win__again { background: var(--win); color: #fff; box-shadow: 0 14px 28px -16px var(--win); }
+.sg-win__again svg { width: 19px; height: 19px; transition: transform 0.4s ease; }
+.sg-win__again:hover svg { transform: rotate(-200deg); }
+.sg-win__go { background: transparent; color: #0b1324; box-shadow: inset 0 0 0 1.5px #d6dde6; }
+.sg-win__again:hover,
+.sg-win__go:hover { transform: translateY(-1px); }
+.sg-win__go:hover { box-shadow: inset 0 0 0 1.5px var(--win); color: var(--win); }
+.sg-win__again:focus-visible,
+.sg-win__go:focus-visible { outline: 3px solid color-mix(in srgb, var(--win) 45%, transparent); outline-offset: 2px; }
+
+/* The dark skins get a dark card. */
+.sg-win.is-dark .sg-win__card { border-color: #1e293b; background: #0f172a; color: #f1f5f9; box-shadow: 0 50px 90px -40px rgba(2, 6, 23, 0.8); }
+.sg-win.is-dark .sg-win__sub,
+.sg-win.is-dark .sg-win__facts dt { color: #94a3b8; }
+.sg-win.is-dark .sg-win__facts { border-color: #1e293b; }
+.sg-win.is-dark .sg-win__facts div + div { border-color: #1e293b; }
+.sg-win.is-dark .sg-win__go { color: #f1f5f9; box-shadow: inset 0 0 0 1.5px #334155; }
+
+@keyframes sg-win-tick { to { stroke-dashoffset: 0; } }
+@keyframes sg-win-ring {
+	0% { opacity: 0.55; transform: scale(1); }
+	100% { opacity: 0; transform: scale(2.1); }
+}
+
+@media (max-width: 520px) {
+	.sg-win { padding: 0; }
+	.sg-win__card { padding: 32px 18px 22px; border-radius: 22px; }
+	.sg-win__title { font-size: 21px; }
+	.sg-win__facts dd { font-size: 13.5px; }
+	.sg-win__again, .sg-win__go { flex: 1 1 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.stage [data-sg-frame], .stage .stage__link, .stage [data-sg-phone], .sg-win { transition: opacity 0.2s ease; }
+	.stage.is-done [data-sg-frame], .stage.is-done .stage__link, .stage.is-done [data-sg-phone], .sg-win { transform: none; filter: none; }
+	.sg-win.is-on .sg-win__badge i { animation: none; }
+	.sg-win__badge svg path { stroke-dashoffset: 0; }
+	.sg-win.is-on .sg-win__badge svg path { animation: none; }
+}

@@ -18,6 +18,7 @@
 
 	var ICON_MSG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4C7 4 3 7.4 3 11.5c0 2.3 1.3 4.4 3.3 5.8L5.5 21l4-2.2c.8.2 1.6.3 2.5.3 5 0 9-3.4 9-7.6S17 4 12 4Z" fill="currentColor"/></svg>';
 	var ICON_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 12.5 4 4 8-9"/></svg>';
+	var ICON_AGAIN = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>';
 	var ICON_STATUS = '<svg viewBox="0 0 18 12" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>'
 		+ '<svg viewBox="0 0 26 12" aria-hidden="true"><rect x="0.5" y="0.5" width="22" height="11" rx="3.5" fill="none" stroke="currentColor" opacity="0.5"/><rect x="2.5" y="2.5" width="15" height="7" rx="2"/><rect x="24" y="4" width="1.8" height="4" rx="0.9" opacity="0.5"/></svg>';
 
@@ -195,8 +196,16 @@
 		});
 	}
 
+	// When the first SMS of this round arrived: the success card says how long
+	// it took from there to being signed in.
+	var started = 0;
+
 	function receive(sms) {
 		stage('sms');
+
+		if (!started) {
+			started = Date.now();
+		}
 
 		signal(function () {
 			if (!usePhone()) {
@@ -205,11 +214,6 @@
 			}
 
 			phone.idle.hidden = true;
-
-			var done = phone.stack.querySelector('.sg-done');
-			if (done) {
-				done.remove();
-			}
 
 			Array.prototype.forEach.call(phone.stack.querySelectorAll('.sg-note'), function (old) {
 				old.classList.add('is-old');
@@ -263,36 +267,212 @@
 		return card;
 	}
 
+	function mask(phone) {
+		var digits = String(phone || '').replace(/\D/g, '');
+
+		return digits.length >= 8 ? digits.slice(0, 4) + '***' + digits.slice(-3) : digits;
+	}
+
+	function escape(text) {
+		return String(text).replace(/[&<>"]/g, function (c) {
+			return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+		});
+	}
+
+	/**
+	 * Signed in on the stage: the form, the signal and the phone step back and
+	 * one card takes their place, in the colour the visitor picked.
+	 */
+	function win(stageEl, info, next) {
+		var frame = stageEl.querySelector('[data-sg-frame]');
+		var host = stageEl.querySelector('[data-signa-form]');
+		var accent = host ? window.getComputedStyle(host).getPropertyValue('--signa-accent').trim() : '';
+		var seconds = started ? Math.max(1, Math.round((Date.now() - started) / 1000)) : 0;
+		var old = stageEl.querySelector('.sg-win');
+
+		if (old) {
+			old.remove();
+		}
+
+		var box = el('div', 'sg-win' + (frame && frame.classList.contains('is-dark') ? ' is-dark' : ''));
+		box.setAttribute('role', 'status');
+		box.setAttribute('aria-live', 'polite');
+
+		if (/^#[0-9a-f]{3,8}$/i.test(accent)) {
+			box.style.setProperty('--win', accent);
+		}
+
+		box.innerHTML = ''
+			+ '<div class="sg-win__card">'
+			+ '<span class="sg-win__badge" aria-hidden="true"><i></i><i></i>' + ICON_CHECK + '</span>'
+			+ '<p class="sg-win__kicker">ورود موفق</p>'
+			+ '<h3 class="sg-win__title" tabindex="-1">' + (info && info.created ? 'حساب ساخته شد و وارد شدید' : 'وارد شدید') + '</h3>'
+			+ '<p class="sg-win__sub">بدون رمز عبور، فقط با یک پیامک.</p>'
+			+ '<dl class="sg-win__facts">'
+			+ (info && info.phone ? '<div><dt>شماره</dt><dd dir="ltr">' + escape(fa(mask(info.phone))) + '</dd></div>' : '')
+			+ (seconds ? '<div><dt>از پیامک تا ورود</dt><dd>' + fa(seconds) + ' ثانیه</dd></div>' : '')
+			+ '<div><dt>رمز عبور</dt><dd>لازم نشد</dd></div>'
+			+ '</dl>'
+			+ '<div class="sg-win__actions"></div>'
+			+ '</div>';
+
+		var actions = box.querySelector('.sg-win__actions');
+		var again = el('button', 'sg-win__again', ICON_AGAIN + '<span>امتحان دوباره</span>');
+		again.type = 'button';
+		again.setAttribute('data-sg-again', '');
+		again.addEventListener('click', reset);
+		actions.appendChild(again);
+
+		if (next) {
+			var go = el('a', 'sg-win__go', 'صفحهٔ حساب کاربری');
+			go.href = next;
+			actions.appendChild(go);
+		}
+
+		// Where the form and the phone were: from the top of the form, as tall
+		// as the taller of the two.
+		var top = 0;
+		var height = 0;
+
+		if (frame) {
+			var stageRect = stageEl.getBoundingClientRect();
+			var frameRect = frame.getBoundingClientRect();
+			var phoneRect = phone && usePhone() ? phone.root.getBoundingClientRect() : { height: 0 };
+
+			top = frameRect.top - stageRect.top;
+			height = Math.max(frameRect.height, phoneRect.height);
+		}
+
+		box.style.top = top + 'px';
+
+		if (height > 0) {
+			box.style.minHeight = height + 'px';
+		}
+
+		stageEl.appendChild(box);
+		stageEl.classList.add('is-done');
+		sleepers(stageEl).forEach(function (node) {
+			node.setAttribute('inert', '');
+			node.setAttribute('aria-hidden', 'true');
+		});
+
+		window.requestAnimationFrame(function () {
+			box.classList.add('is-on');
+		});
+
+		var title = box.querySelector('.sg-win__title');
+
+		try {
+			title.focus({ preventScroll: true });
+		} catch (error) {
+			title.focus();
+		}
+
+		var rect = box.getBoundingClientRect();
+
+		if (box.scrollIntoView && (rect.top < 0 || rect.top > window.innerHeight - 120)) {
+			box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	}
+
+	/** What steps back while the card is up. */
+	function sleepers(stageEl) {
+		return Array.prototype.slice.call(stageEl.querySelectorAll('[data-sg-frame], .stage__link, [data-sg-phone]'));
+	}
+
+	/**
+	 * Back to the start without reloading: the look chosen in the studio, the
+	 * scroll position and the page all stay; only the round starts over.
+	 */
+	function reset() {
+		var stageEl = document.querySelector('.stage');
+		var wrap = document.querySelector('.sg-banner');
+
+		if (wrap) {
+			wrap.classList.remove('is-on');
+		}
+
+		started = 0;
+		stage('idle');
+
+		if (phone) {
+			phone.stack.innerHTML = '';
+			phone.idle.hidden = false;
+		}
+
+		Array.prototype.forEach.call(document.querySelectorAll('[data-signa-form]'), function (host) {
+			var form = host.signaForm;
+
+			if (!form) {
+				return;
+			}
+
+			form.root.classList.remove('is-signed-in');
+
+			if (form.clearStatus) {
+				form.clearStatus();
+			}
+
+			var input = (host.shadowRoot || host).querySelector('[data-signa-phone]');
+
+			if (input) {
+				input.value = '';
+				input.dispatchEvent(new window.Event('input', { bubbles: true }));
+			}
+
+			form.resetToPhone();
+		});
+
+		if (!stageEl) {
+			return;
+		}
+
+		sleepers(stageEl).forEach(function (node) {
+			node.removeAttribute('inert');
+			node.removeAttribute('aria-hidden');
+		});
+		stageEl.classList.remove('is-done');
+
+		var box = stageEl.querySelector('.sg-win');
+
+		if (box) {
+			box.classList.remove('is-on');
+			window.setTimeout(function () {
+				box.remove();
+			}, 400);
+		}
+	}
+
 	function signedIn(info) {
 		stage('done');
 
 		var mount = document.querySelector('[data-sg-phone]');
 		var next = mount ? mount.getAttribute('data-sg-next') : '';
 		var wrap = document.querySelector('.sg-banner');
-
-		if (!usePhone()) {
-			// Small screens: the same card drops in from the top.
-			if (!wrap) {
-				wrap = el('div', 'sg-banner');
-				document.body.appendChild(wrap);
-			}
-
-			wrap.innerHTML = '';
-			wrap.appendChild(doneCard(info, next));
-			wrap.classList.add('is-on', 'is-done');
-			window.clearTimeout(bannerTimer);
-			bannerTimer = window.setTimeout(function () {
-				wrap.classList.remove('is-on');
-			}, 9000);
-			return;
-		}
+		var stageEl = document.querySelector('.stage');
 
 		if (wrap) {
 			wrap.classList.remove('is-on');
 		}
 
-		phone.stack.innerHTML = '';
-		phone.stack.appendChild(doneCard(info, next));
+		if (stageEl) {
+			win(stageEl, info, next);
+			return;
+		}
+
+		// Pages without the stage: the card drops in from the top.
+		if (!wrap) {
+			wrap = el('div', 'sg-banner');
+			document.body.appendChild(wrap);
+		}
+
+		wrap.innerHTML = '';
+		wrap.appendChild(doneCard(info, next));
+		wrap.classList.add('is-on', 'is-done');
+		window.clearTimeout(bannerTimer);
+		bannerTimer = window.setTimeout(function () {
+			wrap.classList.remove('is-on');
+		}, 9000);
 	}
 
 	/* --------------------------------------------- fill the waiting form in */
@@ -370,5 +550,5 @@
 		boot();
 	}
 
-	window.SignaDemoPhone = { fill: fill };
+	window.SignaDemoPhone = { fill: fill, reset: reset };
 })();
