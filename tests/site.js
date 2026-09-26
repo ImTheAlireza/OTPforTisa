@@ -370,7 +370,7 @@ async function demoAdmin(base) {
 	if (link) {
 		const event = new tools.win.MouseEvent('click', { bubbles: true, cancelable: true });
 		link.dispatchEvent(event);
-		check('a server-only link is stopped and explained', event.defaultPrevented && /در دمو فقط نمایشی/.test(text(tools.doc.getElementById('sg-toast'))));
+		check('a server-only link is stopped and explained', event.defaultPrevented && /اینجا فقط نمایش است/.test(text(tools.doc.getElementById('sg-toast'))));
 	}
 	check('the tools screen loads without script errors', tools.errors.length === 0, tools.errors.slice(0, 3).join(' | '));
 	tools.win.close();

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>سیگنا — فرم OTP داخل سایدبار ورود وودمارت</title>
+<title>کشوی ورود وودمارت | دموی سیگنا</title>
 <!--
 	پوستهٔ واقعی وودمارت این صفحه را نمی‌سازد: اینجا فقط چهارچوب پوسته (هدر، کشو،
 	رنگ‌های تیره) بازسازی شده تا فرم در همان جایی دیده شود که روی سایت دیده
@@ -89,24 +89,24 @@
 
 <main>
 	<section class="wm-lead">
-		<h1>فرم OTP داخل سایدبار ورود وودمارت</h1>
+		<h1>سیگنا در کشوی ورود وودمارت</h1>
 		<p>
-			ستون وسط، خروجی واقعی افزونه است: پوسته وودمارت پنل ورود را در فوتر چاپ می‌کند و افزونه همان
-			فراخوانی را قاب می‌گیرد و فقط فرم ووکامرس داخل پنل را عوض می‌کند. هیچ فایلی از پوسته تغییر نمی‌کند.
+			اگر قالب سایتتان وودمارت است، سیگنا خودش داخل کشوی ورود قرار می‌گیرد و لازم نیست به فایل‌های قالب
+			دست بزنید.
 		</p>
 		<p>
-			همین سه ستون در پیش‌نمایش ساخته شده‌اند تا حالت‌ها را کنار هم ببینید؛ روی سایت واقعی فقط یکی از آن دو
-			اتفاق می‌افتد، بسته به تنظیم <code>سایدبار ورود وودمارت</code> در پنل.
+			اینجا سه حالت را کنار هم گذاشته‌ایم. روی سایت واقعی، یکی از دو حالت سیگنا را در تنظیمات انتخاب
+			می‌کنید.
 		</p>
 	</section>
 
 	<div class="wm-grid">
 		<section class="wm-col">
-			<h2 class="wm-col__title">پیش از افزونه</h2>
-			<p class="wm-col__note">این همان چیزی است که وودمارت خودش چاپ می‌کند: نام کاربری و گذرواژه، و پایین پنل آیکن و متن و لینک «ایجاد حساب کاربری».</p>
+			<h2 class="wm-col__title">بدون سیگنا</h2>
+			<p class="wm-col__note">فرم ورود معمولی وودمارت، با نام کاربری و رمز عبور.</p>
 			<div class="wm-shell" data-drawer>
 				<div class="wm-backdrop" data-close></div>
-				<aside class="wm-sidewm-before" id="wm-before" aria-label="پیش از افزونه">
+				<aside class="wm-sidewm-before" id="wm-before" aria-label="بدون سیگنا">
 					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
 	<div class="wd-heading">
 		<span class="title">ورود</span>
@@ -139,11 +139,11 @@
 			</div>
 			<button type="button" class="wm-open" data-open="wm-before">کشو را باز کن</button>
 		</section>		<section class="wm-col">
-			<h2 class="wm-col__title">با افزونه، حالت «جایگزین شود»</h2>
-			<p class="wm-col__note">فرم ووکامرس از داخل همان پنل برداشته می‌شود و فرم OTP جای آن می‌آید. بخش «ایجاد حساب کاربری» وودمارت هم می‌رود، چون فرم افزونه خودش عضویت می‌سازد؛ عنوان و دکمهٔ بستن دست‌نخورده‌اند.</p>
+			<h2 class="wm-col__title">با سیگنا، به‌جای فرم قبلی</h2>
+			<p class="wm-col__note">فرم سیگنا جای فرم ورود وودمارت را می‌گیرد. دکمهٔ «ایجاد حساب کاربری» هم برداشته می‌شود، چون عضویت از همین فرم انجام می‌شود.</p>
 			<div class="wm-shell" data-drawer>
 				<div class="wm-backdrop" data-close></div>
-				<aside class="wm-sidewm-after" id="wm-after" aria-label="با افزونه، حالت «جایگزین شود»">
+				<aside class="wm-sidewm-after" id="wm-after" aria-label="با سیگنا، به‌جای فرم قبلی">
 					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
 	<div class="wd-heading">
 		<span class="title">ورود</span>
@@ -472,11 +472,11 @@
 			</div>
 			<button type="button" class="wm-open" data-open="wm-after">کشو را باز کن</button>
 		</section>		<section class="wm-col">
-			<h2 class="wm-col__title">حالت «بماند»</h2>
-			<p class="wm-col__note">اگر بخواهید ورود با گذرواژه هم بماند، فرم OTP زیر آن می‌آید و هیچ فرمی داخل فرم دیگر نمی‌رود.</p>
+			<h2 class="wm-col__title">با سیگنا، کنار فرم قبلی</h2>
+			<p class="wm-col__note">اگر بخواهید ورود با رمز عبور هم بماند، فرم سیگنا زیر فرم قبلی قرار می‌گیرد.</p>
 			<div class="wm-shell" data-drawer>
 				<div class="wm-backdrop" data-close></div>
-				<aside class="wm-sidewm-alongside" id="wm-alongside" aria-label="حالت «بماند»">
+				<aside class="wm-sidewm-alongside" id="wm-alongside" aria-label="با سیگنا، کنار فرم قبلی">
 					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
 	<div class="wd-heading">
 		<span class="title">ورود</span>

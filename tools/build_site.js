@@ -140,9 +140,9 @@ function strip(current) {
 	return [
 		'<div class="sg-strip" role="navigation" aria-label="دموی سیگنا">',
 		'<div class="sg-strip__in">',
-		'<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark">' + MARK + '</span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دموی زنده · نسخهٔ ' + versionFa + '</small></span></a>',
+		'<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark">' + MARK + '</span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دمو · نسخهٔ ' + versionFa + '</small></span></a>',
 		'<nav class="sg-strip__nav">' + links + '</nav>',
-		'<span class="sg-strip__note">داده‌ها نمونه‌اند؛ پیامک واقعی ارسال نمی‌شود</span>',
+		'<span class="sg-strip__note">پیامک واقعی فرستاده نمی‌شود</span>',
 		'<span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="../">معرفی سیگنا</a>' + buyButton('strip') + '</span>',
 		'</div>',
 		'<div class="sg-strip__signal" aria-hidden="true"><i></i></div>',

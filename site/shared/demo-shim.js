@@ -221,7 +221,7 @@
 	}
 
 	var SERVER = /example\.test\//;
-	var NOTE = 'این کار در سایت واقعی روی سرور انجام می‌شود؛ در دمو فقط نمایشی است.';
+	var NOTE = 'در سایت واقعی این کار روی سرور انجام می‌شود. اینجا فقط نمایش است.';
 
 	document.addEventListener('submit', function (event) {
 		var form = event.target;

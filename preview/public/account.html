@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>سیگنا — پیش‌نمایش پنل کاربری (نسخهٔ ۱.۶.۱)</title>
+<title>حساب کاربری | دموی سیگنا (نسخهٔ ۱.۶.۱)</title>
 <!-- Same stylesheet the plugin loads on the front end. -->
 <!-- The font is not borrowed from a CDN any more: signa/assets/fonts is
 	     served with the plugin and declared in front.css, exactly as it is on a
@@ -155,7 +155,7 @@
 		<span class="account__avatar" aria-hidden="true">م</span>
 		<div class="account__who">
 			<h1>محمد رضایی</h1>
-			<p>u12345678 · <span dir="ltr">09121234567</span> <span class="badge badge--ok">تأیید‌شده با کد یکبارمصرف</span></p>
+			<p>u12345678 · <span dir="ltr">09121234567</span> <span class="badge badge--ok">شماره تأیید شده</span></p>
 		</div>
 	</div>
 
@@ -163,7 +163,7 @@
 
 		<div class="card">
 			<h2>اطلاعات حساب</h2>
-			<p class="card__note">این‌ها همان فیلدهایی است که فرم عضویت جمع می‌کند و مستقیم در پروفایل کاربر ذخیره می‌شود.</p>
+			<p class="card__note">اطلاعاتی که کاربر موقع عضویت وارد کرده است.</p>
 
 			<dl class="kv">
 				<div><dt>نام</dt><dd>محمد</dd></div>
@@ -173,14 +173,14 @@
 				<div><dt>کد پستی</dt><dd dir="ltr">1234567890</dd></div>
 				<div><dt>آدرس</dt><dd style="font-weight:500;text-align:end">خیابان ولیعصر، کوچهٔ بهار، پلاک ۱۲، واحد ۳</dd></div>
 				<div><dt>شماره موبایل</dt><dd dir="ltr">09121234567</dd></div>
-				<div><dt>کانال ثبت‌نام</dt><dd><code dir="ltr">otp</code></dd></div>
+				<div><dt>روش عضویت</dt><dd>کد پیامکی</dd></div>
 			</dl>
 		</div>
 
 		<div>
 			<div class="card" style="margin-bottom:18px">
 				<h2>امنیت ورود</h2>
-				<p class="card__note">ورود همیشه با کد پیامکی انجام می‌شود؛ رمز عبوری برای این حساب لازم نیست.</p>
+				<p class="card__note">این حساب رمز عبور ندارد و ورود با کد پیامکی انجام می‌شود.</p>
 				<dl class="kv">
 					<div><dt>شمارهٔ تأییدشده</dt><dd dir="ltr">۰۹۱۲***۵۶۷</dd></div>
 					<div><dt>آخرین ورود</dt><dd dir="ltr">1405/06/31 – 14:03</dd></div>
@@ -193,7 +193,7 @@
 
 			<div class="card">
 				<h2>تغییر شمارهٔ موبایل</h2>
-				<p class="card__note">شماره جدید پیش از ثبت، با یک کد تأیید کنترل می‌شود.</p>
+				<p class="card__note">برای عوض کردن شماره، اول یک کد به شمارهٔ جدید فرستاده می‌شود.</p>
 
 				<!-- The plugin's own form, mounted by the same script the site loads. -->
 				<div class="signa" dir="rtl" data-signa-form data-skin="line">
@@ -227,7 +227,7 @@
 							<ul class="signa__trust">
 								<li class="signa__trust-item">
 									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><path d="M10 2.5 4 5v5c0 3.2 2.5 6.1 6 7.5 3.5-1.4 6-4.3 6-7.5V5l-6-2.5Z" stroke-linejoin="round"></path><path d="m7.5 9.8 1.8 1.8 3.4-3.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-									<span>شمارهٔ قبلی تا تأیید شمارهٔ تازه فعال می‌ماند</span>
+									<span>تا شمارهٔ جدید تأیید نشود، شمارهٔ قبلی عوض نمی‌شود</span>
 								</li>
 								<li class="signa__trust-item">
 									<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 5.8V10l2.8 1.7" stroke-linecap="round" stroke-linejoin="round"></path></svg>

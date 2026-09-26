@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>سیگنا — فرم OTP داخل سایدبار ورود وودمارت</title>
+<title>کشوی ورود وودمارت | دموی سیگنا</title>
 <link rel="stylesheet" href="assets/css/front.css">
 <style>
 	:root { color-scheme: dark; }
@@ -77,9 +77,9 @@
 <body>
 <div class="sg-strip" role="navigation" aria-label="دموی سیگنا">
 <div class="sg-strip__in">
-<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3" width="11" height="18" rx="2.8"/><path d="M7.8 6h2.4"/><path d="m6.6 12.3 1.8 1.8 3.3-3.7"/><path class="w1" d="M17.2 9.3a3.8 3.8 0 0 1 0 5.4"/><path class="w2" d="M19.6 7.1a7 7 0 0 1 0 9.8"/></svg></span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دموی زنده · نسخهٔ ۲.۱.۰</small></span></a>
+<a class="sg-strip__brand" href="index.html"><span class="sg-strip__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3" width="11" height="18" rx="2.8"/><path d="M7.8 6h2.4"/><path d="m6.6 12.3 1.8 1.8 3.3-3.7"/><path class="w1" d="M17.2 9.3a3.8 3.8 0 0 1 0 5.4"/><path class="w2" d="M19.6 7.1a7 7 0 0 1 0 9.8"/></svg></span><span class="sg-strip__name">سیگنا<small><i class="sg-strip__live"></i>دمو · نسخهٔ ۲.۱.۰</small></span></a>
 <nav class="sg-strip__nav"><a href="index.html">فرم ورود</a><a href="account.html">حساب کاربری</a><a href="woodmart.html" aria-current="page">کشوی وودمارت</a><a href="admin.html">پیشخوان مدیریت</a></nav>
-<span class="sg-strip__note">داده‌ها نمونه‌اند؛ پیامک واقعی ارسال نمی‌شود</span>
+<span class="sg-strip__note">پیامک واقعی فرستاده نمی‌شود</span>
 <span class="sg-strip__end"><a class="sg-strip__btn sg-strip__btn--ghost" href="../">معرفی سیگنا</a><a class="sg-strip__btn" aria-disabled="true">به‌زودی در راست‌چین</a></span>
 </div>
 <div class="sg-strip__signal" aria-hidden="true"><i></i></div>
@@ -87,24 +87,24 @@
 
 <main>
 	<section class="wm-lead">
-		<h1>فرم OTP داخل سایدبار ورود وودمارت</h1>
+		<h1>سیگنا در کشوی ورود وودمارت</h1>
 		<p>
-			ستون وسط، خروجی واقعی افزونه است: پوسته وودمارت پنل ورود را در فوتر چاپ می‌کند و افزونه همان
-			فراخوانی را قاب می‌گیرد و فقط فرم ووکامرس داخل پنل را عوض می‌کند. هیچ فایلی از پوسته تغییر نمی‌کند.
+			اگر قالب سایتتان وودمارت است، سیگنا خودش داخل کشوی ورود قرار می‌گیرد و لازم نیست به فایل‌های قالب
+			دست بزنید.
 		</p>
 		<p>
-			همین سه ستون در پیش‌نمایش ساخته شده‌اند تا حالت‌ها را کنار هم ببینید؛ روی سایت واقعی فقط یکی از آن دو
-			اتفاق می‌افتد، بسته به تنظیم <code>سایدبار ورود وودمارت</code> در پنل.
+			اینجا سه حالت را کنار هم گذاشته‌ایم. روی سایت واقعی، یکی از دو حالت سیگنا را در تنظیمات انتخاب
+			می‌کنید.
 		</p>
 	</section>
 
 	<div class="wm-grid">
 		<section class="wm-col">
-			<h2 class="wm-col__title">پیش از افزونه</h2>
-			<p class="wm-col__note">این همان چیزی است که وودمارت خودش چاپ می‌کند: نام کاربری و گذرواژه، و پایین پنل آیکن و متن و لینک «ایجاد حساب کاربری».</p>
+			<h2 class="wm-col__title">بدون سیگنا</h2>
+			<p class="wm-col__note">فرم ورود معمولی وودمارت، با نام کاربری و رمز عبور.</p>
 			<div class="wm-shell" data-drawer>
 				<div class="wm-backdrop" data-close></div>
-				<aside class="wm-sidewm-before" id="wm-before" aria-label="پیش از افزونه">
+				<aside class="wm-sidewm-before" id="wm-before" aria-label="بدون سیگنا">
 					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
 	<div class="wd-heading">
 		<span class="title">ورود</span>
@@ -137,11 +137,11 @@
 			</div>
 			<button type="button" class="wm-open" data-open="wm-before">کشو را باز کن</button>
 		</section>		<section class="wm-col">
-			<h2 class="wm-col__title">با افزونه، حالت «جایگزین شود»</h2>
-			<p class="wm-col__note">فرم ووکامرس از داخل همان پنل برداشته می‌شود و فرم OTP جای آن می‌آید. بخش «ایجاد حساب کاربری» وودمارت هم می‌رود، چون فرم افزونه خودش عضویت می‌سازد؛ عنوان و دکمهٔ بستن دست‌نخورده‌اند.</p>
+			<h2 class="wm-col__title">با سیگنا، به‌جای فرم قبلی</h2>
+			<p class="wm-col__note">فرم سیگنا جای فرم ورود وودمارت را می‌گیرد. دکمهٔ «ایجاد حساب کاربری» هم برداشته می‌شود، چون عضویت از همین فرم انجام می‌شود.</p>
 			<div class="wm-shell" data-drawer>
 				<div class="wm-backdrop" data-close></div>
-				<aside class="wm-sidewm-after" id="wm-after" aria-label="با افزونه، حالت «جایگزین شود»">
+				<aside class="wm-sidewm-after" id="wm-after" aria-label="با سیگنا، به‌جای فرم قبلی">
 					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
 	<div class="wd-heading">
 		<span class="title">ورود</span>
@@ -469,11 +469,11 @@
 			</div>
 			<button type="button" class="wm-open" data-open="wm-after">کشو را باز کن</button>
 		</section>		<section class="wm-col">
-			<h2 class="wm-col__title">حالت «بماند»</h2>
-			<p class="wm-col__note">اگر بخواهید ورود با گذرواژه هم بماند، فرم OTP زیر آن می‌آید و هیچ فرمی داخل فرم دیگر نمی‌رود.</p>
+			<h2 class="wm-col__title">با سیگنا، کنار فرم قبلی</h2>
+			<p class="wm-col__note">اگر بخواهید ورود با رمز عبور هم بماند، فرم سیگنا زیر فرم قبلی قرار می‌گیرد.</p>
 			<div class="wm-shell" data-drawer>
 				<div class="wm-backdrop" data-close></div>
-				<aside class="wm-sidewm-alongside" id="wm-alongside" aria-label="حالت «بماند»">
+				<aside class="wm-sidewm-alongside" id="wm-alongside" aria-label="با سیگنا، کنار فرم قبلی">
 					<div class="login-form-side wd-side-hidden woocommerce wd-right color-scheme-light" role="complementary" aria-label="ورود">
 	<div class="wd-heading">
 		<span class="title">ورود</span>
